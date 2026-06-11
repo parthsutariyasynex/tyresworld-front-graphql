@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Fraunces", "Times New Roman", serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-white text-ink font-sans;
+  }
+
+  ::selection {
+    background: #ff6b35;
+    color: #fff;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded-full
+           transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2
+           focus-visible:ring-offset-2 focus-visible:ring-ink disabled:opacity-50 cursor-pointer;
+  }
+
+  .btn-primary {
+    @apply btn bg-ink text-white px-6 py-3 hover:bg-ink-soft active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply btn bg-white text-ink border border-ink/10 px-6 py-3 hover:border-ink/30 hover:bg-cream;
+  }
+
+  .btn-accent {
+    @apply btn bg-accent text-white px-6 py-3 hover:brightness-95 active:scale-[0.98];
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted;
+  }
+
+  .section-title {
+    @apply font-display text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.05];
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .input-field {
+    @apply w-full bg-cream border border-ink/10 rounded-xl px-4 py-3 text-sm text-ink
+           placeholder:text-ink/30 outline-none transition-all
+           focus:border-ink/30 focus:bg-white focus:ring-2 focus:ring-ink/5;
+  }
+}
+
+/* Swiper Hero Customizations */
+.hero-swiper .swiper-pagination {
+  bottom: 2rem !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: max(1rem, calc((100vw - 1280px) / 2 + 2rem));
+  gap: 6px;
+}
+
+.hero-swiper .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.45);
+  opacity: 1;
+  margin: 0 !important;
+  border-radius: 4px;
+  transition: all 0.4s ease;
+}
+
+.hero-swiper .swiper-pagination-bullet-active {
+  width: 28px;
+  background: #ff6b35;
+}

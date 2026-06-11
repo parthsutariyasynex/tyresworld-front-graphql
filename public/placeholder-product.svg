@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" role="img" aria-label="Product image unavailable">
+  <rect width="400" height="400" fill="#f3efe8"/>
+  <g fill="none" stroke="#c9c1b3" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="200" cy="180" r="70"/>
+    <circle cx="200" cy="180" r="26"/>
+    <path d="M200 110v24M200 226v24M130 180h24M246 180h24M150 130l17 17M250 230l-17-17M250 130l-17 17M150 230l17-17"/>
+  </g>
+  <text x="200" y="320" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" fill="#a89f8d">Image unavailable</text>
+</svg>
