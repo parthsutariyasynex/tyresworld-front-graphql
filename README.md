@@ -109,3 +109,27 @@ npm run build   # production build
 npm run start   # run the production build
 npm run lint    # lint
 ```
+
+## Deploy on Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/parthsutariyasynex/ecommerce-homepage-demo)
+
+1. Push to GitHub, then on [vercel.com](https://vercel.com) → **Add New… → Project**
+   and import this repository. Next.js is auto-detected (no build config needed).
+2. Add the **environment variables** (Settings → Environment Variables) — these are
+   required because `.env.local` is not committed:
+
+   | Key | Value |
+   |-----|-------|
+   | `MAGENTO_GRAPHQL_URL` | `https://demo2.tyrescart.ae/graphql` |
+   | `MAGENTO_API_TOKEN` | *(leave empty for guest/public)* |
+
+3. Click **Deploy**. Every subsequent `git push` to `main` auto-deploys to
+   production; other branches get preview URLs.
+
+> The `/api/*` routes run as serverless functions and fetch the Magento GraphQL
+> API server-side — cart and guest checkout work the same as locally.
+
+## License
+
+[MIT](./LICENSE) © Parth Sutariya
