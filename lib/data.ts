@@ -62,7 +62,7 @@ export const categories: Category[] = [
     id: "wheels",
     name: "Alloy Wheels",
     description: "Stylish and engineered alloy wheels",
-    image: "https://images.unsplash.com/photo-1611245644910-67253503023e?w=800&auto=format&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1616422285623-13ff0162193c?w=800&auto=format&fit=crop&q=80",
     count: 380,
     href: "/shop?categoryUid=MTExNw==",
   },

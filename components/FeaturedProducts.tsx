@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import ProductCard from "./ProductCard";
 import ProductCardSkeleton from "./ProductCardSkeleton";
+// import { allProducts } from "@/lib/data";
 import type { Product } from "@/lib/data";
 import type { ApiProductsResponse } from "@/lib/magento";
 
@@ -13,12 +14,12 @@ import type { ApiProductsResponse } from "@/lib/magento";
    `uid` is the Magento GraphQL category uid (base64 of the cat id).
 ───────────────────────────────────────────────────────────────── */
 const TABS = [
-  { id: "All",        label: "All",            uid: "Mg==" },        // Default Category (root)
-  { id: "Tyres",      label: "Tyres",          uid: "MTg=" },        // 18
-  { id: "Motorcycle", label: "Motorcycle",     uid: "MTExNg==" },    // 1116
-  { id: "Wheels",     label: "Wheels",         uid: "MTExNw==" },    // 1117
-  { id: "Battery",    label: "Battery",        uid: "MTExOA==" },    // 1118
-  { id: "Rims",       label: "Rim Protectors", uid: "MTM0NQ==" },    // 1345
+  { id: "All", label: "All", uid: "Mg==" },        // Default Category (root)
+  { id: "Tyres", label: "Tyres", uid: "MTg=" },        // 18
+  { id: "Motorcycle", label: "Motorcycle", uid: "MTExNg==" },    // 1116
+  { id: "Wheels", label: "Wheels", uid: "MTExNw==" },    // 1117
+  { id: "Battery", label: "Battery", uid: "MTExOA==" },    // 1118
+  { id: "Rims", label: "Rim Protectors", uid: "MTM0NQ==" },    // 1345
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -40,9 +41,9 @@ export default function FeaturedProducts() {
   const sectionId = useId();
 
   const [activeTab, setActiveTab] = useState<TabId>("All");
-  const [cache, setCache]         = useState<Record<string, TabData>>({});
-  const [status, setStatus]       = useState<Status>("idle");
-  const [errorMsg, setErrorMsg]   = useState<string | null>(null);
+  const [cache, setCache] = useState<Record<string, TabData>>({});
+  const [status, setStatus] = useState<Status>("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   /* ── Fetch one category from the GraphQL proxy ─────────────────── */
   async function loadTab(tab: (typeof TABS)[number], force = false) {
@@ -67,10 +68,10 @@ export default function FeaturedProducts() {
 
       /* Other error — fall back to static data for this tab */
       if (!res.ok || json.error) {
-        console.warn("[FeaturedProducts] API error:", json.error);
+        console.warn("[FeaturedProducts] API error, using static fallback:", json.error);
         setCache((c) => ({
           ...c,
-          [tab.id]: { products: [], total: 0, source: "fallback" },
+          // [tab.id]: { products: allProducts, total: allProducts.length, source: "fallback" },
         }));
         setStatus("idle");
         return;
@@ -81,16 +82,16 @@ export default function FeaturedProducts() {
         ...c,
         [tab.id]: {
           products: json.products,
-          total:    json.total ?? json.products.length,
-          source:   json.products.length > 0 ? "api" : "fallback",
+          total: json.total ?? json.products.length,
+          source: json.products.length > 0 ? "api" : "fallback",
         },
       }));
       setStatus("idle");
     } catch {
-      console.warn("[FeaturedProducts] Network error.");
+      console.warn("[FeaturedProducts] Network error, using static fallback.");
       setCache((c) => ({
         ...c,
-        [tab.id]: { products: [], total: 0, source: "fallback" },
+        // [tab.id]: { products: allProducts, total: allProducts.length, source: "fallback" },
       }));
       setStatus("idle");
     }
@@ -102,7 +103,7 @@ export default function FeaturedProducts() {
     loadTab(tab);
   }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const current  = cache[activeTab];
+  const current = cache[activeTab];
   const filtered = status === "loading" ? [] : current?.products ?? [];
 
   /* ── Source pill ───────────────────────────────────────────────── */
@@ -176,8 +177,8 @@ export default function FeaturedProducts() {
           className="flex items-center gap-2 mb-10 overflow-x-auto hide-scrollbar pb-1 -mx-1 px-1"
         >
           {TABS.map((tab) => {
-            const isActive  = activeTab === tab.id;
-            const count     = cache[tab.id]?.total;          // only known once loaded
+            const isActive = activeTab === tab.id;
+            const count = cache[tab.id]?.total;          // only known once loaded
             const isLoading = status === "loading";
 
             return (
@@ -248,7 +249,7 @@ export default function FeaturedProducts() {
                   key={product.id}
                   className="animate-fade-in"
                   style={{
-                    animationDelay:    `${Math.min(i * 45, 270)}ms`,
+                    animationDelay: `${Math.min(i * 45, 270)}ms`,
                     animationFillMode: "both",
                   }}
                 >
@@ -264,8 +265,8 @@ export default function FeaturedProducts() {
               <div className="w-16 h-16 rounded-full bg-ink/5 flex items-center justify-center">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
                   stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="m21 21-4.35-4.35"/>
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
                 </svg>
               </div>
               <p className="text-ink/40 font-medium">
