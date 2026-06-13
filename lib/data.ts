@@ -1,6 +1,7 @@
 export type Product = {
   id: string;
   sku?: string;          // Magento SKU — required to add the product to the server cart
+  urlKey?: string;       // Magento url_key — used for the product detail page route
   name: string;
   price: number;
   originalPrice?: number;

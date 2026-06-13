@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import ProductImage from "./ProductImage";
 import { ShoppingBag, Heart, Check } from "lucide-react";
 import type { Product } from "@/lib/data";
@@ -61,6 +62,8 @@ export default function ProductCard({ product }: { product: Product }) {
     setWishlisted((v) => !v);
   }
 
+  const href = product.urlKey ? `/product/${product.urlKey}` : "/shop";
+
   return (
     <article className="group flex flex-col cursor-pointer">
 
@@ -84,6 +87,9 @@ export default function ProductCard({ product }: { product: Product }) {
           ].join(" ")}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
+
+        {/* Clickable overlay → product detail (buttons below sit above it at z-10) */}
+        <Link href={href} aria-label={product.name} className="absolute inset-0 z-[5]" />
 
         {/* Badge */}
         {product.badge && (
@@ -157,9 +163,9 @@ export default function ProductCard({ product }: { product: Product }) {
         </p>
 
         {/* Name */}
-        <h3 className="text-sm font-medium text-ink leading-snug group-hover:text-accent transition-colors duration-150 line-clamp-2">
+        <Link href={href} className="text-sm font-medium text-ink leading-snug group-hover:text-accent transition-colors duration-150 line-clamp-2">
           {product.name}
-        </h3>
+        </Link>
 
         {/* Rating */}
         <div className="flex items-center gap-1.5 mt-0.5">

@@ -190,6 +190,7 @@ export function adaptGqlProduct(p: GqlProduct): Product {
   return {
     id,
     sku:          p.sku ?? undefined,
+    urlKey:       p.url_key ?? undefined,
     name:         p.name ?? "Unnamed Product",
     price,
     originalPrice,
@@ -235,6 +236,104 @@ export function parseAggregations(data: unknown): FilterGroup[] {
         })),
     }))
     .filter((g) => g.options.length > 0);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   PRODUCT DETAIL — single product by url_key
+───────────────────────────────────────────────────────────────── */
+export const PRODUCT_DETAIL_QUERY = /* GraphQL */ `
+  query ProductDetail($urlKey: String!) {
+    products(filter: { url_key: { eq: $urlKey } }, pageSize: 1) {
+      items {
+        uid
+        sku
+        name
+        url_key
+        stock_status
+        rating_summary
+        review_count
+        short_description { html }
+        description { html }
+        image { url label }
+        media_gallery { url label }
+        categories { name }
+        price_range {
+          minimum_price {
+            regular_price { value currency }
+            final_price { value currency }
+            discount { percent_off }
+          }
+        }
+      }
+    }
+  }
+`;
+
+interface GqlProductDetailItem extends GqlProduct {
+  stock_status?: string;
+  short_description?: { html?: string } | null;
+  description?: { html?: string } | null;
+  media_gallery?: Array<{ url?: string | null; label?: string | null }> | null;
+}
+
+export interface GqlProductDetailResponse {
+  data?: { products?: { items?: GqlProductDetailItem[] } | null };
+  errors?: Array<{ message: string }>;
+}
+
+export interface ProductDetail {
+  uid: string;
+  sku: string;
+  name: string;
+  urlKey: string;
+  inStock: boolean;
+  rating: number;
+  reviewCount: number;
+  price: number;
+  originalPrice?: number;
+  currency: string;
+  discountPercent?: number;
+  shortDescriptionHtml?: string;
+  descriptionHtml?: string;
+  image: string;
+  gallery: { url: string; label: string }[];
+  category: string;
+  categories: string[];
+}
+
+export function parseProductDetail(data: unknown): ProductDetail | null {
+  const item = (data as GqlProductDetailResponse)?.data?.products?.items?.[0];
+  if (!item) return null;
+
+  const [price, originalPrice] = resolvePrices(item);
+  const min = item.price_range?.minimum_price;
+  const gallery = (item.media_gallery ?? [])
+    .filter((g) => g?.url)
+    .map((g) => ({ url: g.url as string, label: g.label || item.name || "" }));
+  const mainImage = item.image?.url || gallery[0]?.url || FALLBACK_IMAGE;
+  const categories = (item.categories ?? [])
+    .map((c) => c?.name?.trim())
+    .filter((n): n is string => !!n);
+
+  return {
+    uid:        String(item.uid ?? item.sku ?? ""),
+    sku:        item.sku ?? "",
+    name:       item.name ?? "Unnamed Product",
+    urlKey:     item.url_key ?? "",
+    inStock:    (item.stock_status ?? "IN_STOCK") === "IN_STOCK",
+    rating:     resolveRating(item),
+    reviewCount: Number(item.review_count ?? 0),
+    price,
+    originalPrice,
+    currency:   min?.final_price?.currency || min?.regular_price?.currency || "AED",
+    discountPercent: min?.discount?.percent_off ? Math.round(min.discount.percent_off) : undefined,
+    shortDescriptionHtml: item.short_description?.html || undefined,
+    descriptionHtml:      item.description?.html || undefined,
+    image:      mainImage,
+    gallery:    gallery.length ? gallery : [{ url: mainImage, label: item.name ?? "" }],
+    category:   resolveCategory(item),
+    categories,
+  };
 }
 
 /* ─────────────────────────────────────────────────────────────────
