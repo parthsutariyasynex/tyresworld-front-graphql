@@ -1,36 +1,67 @@
-# dependencies
-/node_modules
-/.pnp
+# ── Dependencies ──────────────────────────────────────────────────
+node_modules/
+.pnp
 .pnp.js
+.yarn/install-state.gz
 
-# testing
-/coverage
+# ── Next.js build output ──────────────────────────────────────────
+.next/
+out/
+build/
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files (keep secrets/endpoints out of git)
+# ── Environment / secrets (never commit these) ────────────────────
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env*.local
 
-# typescript
+# ── Testing & coverage ────────────────────────────────────────────
+/coverage
+.nyc_output/
+
+# ── TypeScript ────────────────────────────────────────────────────
 *.tsbuildinfo
 next-env.d.ts
 
-# editor / OS
+# ── Debug logs ────────────────────────────────────────────────────
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── OS artefacts ──────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Editor / IDE ──────────────────────────────────────────────────
 .vscode/
 .idea/
-Thumbs.db
+*.swp
+*.swo
+*~
+.project
+.classpath
+
+# ── Certificates & keys ───────────────────────────────────────────
+*.pem
+*.key
+*.cert
+
+# ── Vercel ────────────────────────────────────────────────────────
+.vercel
+
+# ── Misc tooling ──────────────────────────────────────────────────
+.cache/
+.parcel-cache/
+.turbo/
+.eslintcache
+.stylelintcache
