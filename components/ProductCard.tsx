@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import ProductImage from "./ProductImage";
-import { ShoppingBag, Heart, Check } from "lucide-react";
+import { ShoppingBag, Heart, Check, Loader2, AlertCircle } from "lucide-react";
 import type { Product } from "@/lib/data";
 import { useCart } from "@/lib/cart-context";
 
@@ -36,24 +36,35 @@ function Stars({ rating }: { rating: number }) {
 
 /* ─── Component ───────────────────────────────────────────────── */
 export default function ProductCard({ product }: { product: Product }) {
-  const { addItem } = useCart();
-  const [wishlisted, setWishlisted]     = useState(false);
-  const [cartAdded,  setCartAdded]      = useState(false);
-  const [imgLoaded,  setImgLoaded]      = useState(false);
+  const { addItem, currency } = useCart();
+  const [wishlisted, setWishlisted] = useState(false);
+  const [cartAdded,  setCartAdded]  = useState(false);
+  const [adding,     setAdding]     = useState(false);
+  const [addError,   setAddError]   = useState<string | null>(null);
+  const [imgLoaded,  setImgLoaded]  = useState(false);
 
   const discount = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : null;
 
+  const fmt = (v: number) => `${currency || "SAR"} ${v.toLocaleString()}`;
+
   async function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
-    if (cartAdded) return;
+    if (cartAdded || adding) return;
+    setAdding(true);
+    setAddError(null);
     try {
-      await addItem(product);      // adds to the Magento server cart
-      setCartAdded(true);
-      setTimeout(() => setCartAdded(false), 2000);
-    } catch (err) {
-      console.warn("[ProductCard] add to cart failed:", err);
+      const result = await addItem(product);
+      if (result.error) {
+        setAddError(result.error);
+        setTimeout(() => setAddError(null), 4000);
+      } else {
+        setCartAdded(true);
+        setTimeout(() => setCartAdded(false), 2000);
+      }
+    } finally {
+      setAdding(false);
     }
   }
 
@@ -91,8 +102,12 @@ export default function ProductCard({ product }: { product: Product }) {
         {/* Clickable overlay → product detail (buttons below sit above it at z-10) */}
         <Link href={href} aria-label={product.name} className="absolute inset-0 z-[5]" />
 
-        {/* Badge */}
-        {product.badge && (
+        {/* Badge — out-of-stock takes priority over sale/new */}
+        {product.inStock === false ? (
+          <span className="absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full z-10 bg-ink/60 text-white">
+            Out of stock
+          </span>
+        ) : product.badge && (
           <span
             className={`absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full z-10 ${BADGE_STYLES[product.badge]}`}
           >
@@ -125,32 +140,41 @@ export default function ProductCard({ product }: { product: Product }) {
           />
         </button>
 
-        {/* Quick-add button — slides up on hover */}
+        {/* Quick-add button — slides up on hover, hidden for out-of-stock */}
         <div className="absolute bottom-0 inset-x-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-10">
+          {product.inStock === false ? (
+            <div className="w-full flex items-center justify-center gap-2 text-xs font-semibold py-2.5 rounded-xl bg-ink/10 text-ink/40 cursor-default">
+              Out of stock
+            </div>
+          ) : (
           <button
             onClick={handleAddToCart}
+            disabled={adding}
             aria-label={cartAdded ? "Added to cart" : "Quick add to cart"}
             className={[
               "w-full flex items-center justify-center gap-2",
               "text-xs font-semibold py-2.5 rounded-xl shadow-card",
-              "transition-all duration-200",
+              "transition-all duration-200 disabled:cursor-not-allowed",
               cartAdded
                 ? "bg-emerald-500 text-white"
+                : addError
+                ? "bg-red-500 text-white"
+                : adding
+                ? "bg-ink/80 text-white"
                 : "bg-white text-ink hover:bg-ink hover:text-white",
             ].join(" ")}
           >
             {cartAdded ? (
-              <>
-                <Check size={13} />
-                Added to cart!
-              </>
+              <><Check size={13} /> Added!</>
+            ) : addError ? (
+              <><AlertCircle size={13} /> Failed</>
+            ) : adding ? (
+              <><Loader2 size={13} className="animate-spin" /> Adding…</>
             ) : (
-              <>
-                <ShoppingBag size={13} />
-                Quick add
-              </>
+              <><ShoppingBag size={13} /> Quick add</>
             )}
           </button>
+          )}
         </div>
       </div>
 
@@ -178,11 +202,11 @@ export default function ProductCard({ product }: { product: Product }) {
         {/* Price row */}
         <div className="flex items-center gap-2 mt-auto pt-2">
           <span className="text-sm font-bold text-ink">
-            ${product.price}
+            {fmt(product.price)}
           </span>
           {product.originalPrice && (
             <span className="text-xs text-ink/30 line-through">
-              ${product.originalPrice}
+              {fmt(product.originalPrice)}
             </span>
           )}
           {discount && (

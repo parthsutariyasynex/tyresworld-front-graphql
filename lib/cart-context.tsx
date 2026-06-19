@@ -23,7 +23,7 @@ type CartContextValue = {
   currency: string;
   loading: boolean;
   ready: boolean;
-  addItem: (product: Product, qty?: number) => Promise<void>;
+  addItem: (product: Product, qty?: number) => Promise<{ error?: string }>;
   updateQty: (uid: string, qty: number) => Promise<void>;
   removeItem: (uid: string) => Promise<void>;
   applyCoupon: (code: string) => Promise<string | null>;
@@ -103,22 +103,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart(c ?? null);
   }, []);
 
-  const addItem = useCallback(async (product: Product, qty = 1) => {
-    if (!product.sku) { console.warn("[cart] product has no SKU, cannot add:", product.id); return; }
+  const addItem = useCallback(async (product: Product, qty = 1): Promise<{ error?: string }> => {
+    if (!product.sku) {
+      const msg = "This product cannot be added to cart (missing SKU).";
+      console.warn("[cart] product has no SKU, cannot add:", product.id);
+      return { error: msg };
+    }
     setLoading(true);
     try {
       let id = await ensureCart();
-      if (!id) return;
+      if (!id) return { error: "Could not create cart. Please try again." };
+
       let res = await api({ op: "add", cartId: id, sku: product.sku, qty });
+
       // Cart expired between sessions → make a fresh one and retry once.
       if (!res.cart && res.error) {
         persistId(null);
         id = await ensureCart();
-        if (!id) return;
+        if (!id) return { error: "Could not create cart. Please try again." };
         res = await api({ op: "add", cartId: id, sku: product.sku, qty });
       }
-      if (res.cart) setCart(res.cart);
-      else if (res.userError) console.warn("[cart] add rejected:", res.userError);
+
+      // userError (e.g. OUT_OF_STOCK, PRODUCT_NOT_FOUND) takes priority —
+      // Magento still returns the unchanged cart on failure so we must check this first.
+      if (res.userError) return { error: res.userError };
+      if (res.error)     return { error: res.error };
+      if (res.cart) {
+        setCart(res.cart);
+        return {};
+      }
+      return { error: "Could not add item to cart." };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : "Failed to add item." };
     } finally {
       setLoading(false);
     }
@@ -126,6 +142,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const updateQty = useCallback(async (uid: string, qty: number) => {
     if (!cartIdRef.current) return;
+    // qty ≤ 0 means remove the item entirely
+    if (qty <= 0) {
+      setLoading(true);
+      try {
+        const res = await api({ op: "remove", cartId: cartIdRef.current, uid });
+        if (res.cart) setCart(res.cart);
+      } finally { setLoading(false); }
+      return;
+    }
     setLoading(true);
     try {
       const res = await api({ op: "update", cartId: cartIdRef.current, uid, qty });

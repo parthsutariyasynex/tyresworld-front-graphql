@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Minus, Plus, ShoppingBag, Check, ArrowLeft, Truck, ShieldCheck, Star } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Check, ArrowLeft, Truck, ShieldCheck, Star, Loader2, AlertCircle } from "lucide-react";
 import ProductImage from "@/components/ProductImage";
 import { useCart } from "@/lib/cart-context";
 import type { ProductDetail } from "@/lib/magento";
@@ -33,6 +33,8 @@ export default function ProductDetailPage() {
   const [activeImg, setActiveImg] = useState(0);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -62,12 +64,21 @@ export default function ProductDetailPage() {
   );
 
   async function handleAdd() {
-    if (!cartProduct) return;
+    if (!cartProduct || adding) return;
+    setAdding(true);
+    setAddError(null);
     try {
-      await addItem(cartProduct, qty);
-      setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
-    } catch { /* cart layer handles errors */ }
+      const result = await addItem(cartProduct, qty);
+      if (result.error) {
+        setAddError(result.error);
+        setTimeout(() => setAddError(null), 5000);
+      } else {
+        setAdded(true);
+        setTimeout(() => setAdded(false), 2500);
+      }
+    } finally {
+      setAdding(false);
+    }
   }
 
   /* ── Loading ─────────────────────────────────────────────────── */
@@ -206,14 +217,33 @@ export default function ProductDetailPage() {
 
               <button
                 onClick={handleAdd}
-                disabled={!p.inStock || cartBusy}
+                disabled={!p.inStock || cartBusy || adding}
                 className={`flex-1 min-w-[200px] flex items-center justify-center gap-2 text-sm font-semibold py-3.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                  added ? "bg-emerald-500 text-white" : "btn-accent"
+                  added
+                    ? "bg-emerald-500 text-white"
+                    : addError
+                    ? "bg-red-500 text-white"
+                    : "btn-accent"
                 }`}
               >
-                {added ? <><Check size={16} /> Added to cart!</> : <><ShoppingBag size={16} /> Add to cart</>}
+                {added ? (
+                  <><Check size={16} /> Added to cart!</>
+                ) : adding ? (
+                  <><Loader2 size={16} className="animate-spin" /> Adding…</>
+                ) : addError ? (
+                  <><AlertCircle size={16} /> Failed — try again</>
+                ) : (
+                  <><ShoppingBag size={16} /> Add to cart</>
+                )}
               </button>
             </div>
+
+            {addError && (
+              <p className="text-sm text-red-500 flex items-center gap-1.5 -mt-2">
+                <AlertCircle size={14} className="flex-shrink-0" />
+                {addError}
+              </p>
+            )}
 
             <Link href="/cart" className="text-sm text-ink/50 hover:text-ink transition-colors">
               View cart →

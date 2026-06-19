@@ -18,6 +18,7 @@ export interface GqlProduct {
   sku?: string;
   name?: string;
   url_key?: string;
+  stock_status?: string | null;     // "IN_STOCK" | "OUT_OF_STOCK"
   rating_summary?: number | null;   // 0-100 in Magento
   review_count?: number | null;
   image?: { url?: string | null; label?: string | null } | null;
@@ -108,6 +109,7 @@ export const PRODUCTS_QUERY = /* GraphQL */ `
         sku
         name
         url_key
+        stock_status
         rating_summary
         review_count
         image { url label }
@@ -199,6 +201,7 @@ export function adaptGqlProduct(p: GqlProduct): Product {
     badge:        originalPrice ? "Sale" : undefined,
     rating:       resolveRating(p),
     reviewCount:  Number(p.review_count ?? 0),
+    inStock:      p.stock_status == null ? undefined : p.stock_status === "IN_STOCK",
   };
 }
 

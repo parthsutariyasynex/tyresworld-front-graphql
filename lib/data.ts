@@ -10,6 +10,7 @@ export type Product = {
   badge?: "New" | "Sale" | "Bestseller";
   rating: number;
   reviewCount: number;
+  inStock?: boolean;     // false = out of stock, undefined = unknown
 };
 
 export type Category = {
