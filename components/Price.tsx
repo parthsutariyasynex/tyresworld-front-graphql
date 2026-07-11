@@ -1,4 +1,6 @@
+"use client";
 import React from "react";
+import { useCurrencyCode } from "@/lib/store-config-context";
 
 /* ─────────────────────────────────────────────────────────────────
    Shared price rendering.
@@ -22,27 +24,29 @@ export function isRiyal(code?: string | null): boolean {
 
 /** Currency label — Saudi Riyal gets the riyal-symbol glyph; other currencies render as plain text.
  *  The vendored 'saudi-riyal' icon font maps "#" (U+0023) to the official Riyal symbol. */
-export function Currency({ code = "SAR" }: { code?: string }) {
-  if (isRiyal(code)) {
+export function Currency({ code }: { code?: string }) {
+  const storeCurrency = useCurrencyCode();
+  const resolved = code || storeCurrency;
+  if (isRiyal(resolved)) {
     return (
       <span className="currency-riyal" aria-label="SAR">
         {"#"}
       </span>
     );
   }
-  return <>{code}</>;
+  return <>{resolved}</>;
 }
 
 type MoneyProps = {
   value: number;
-  /** ISO code from Magento (defaults to SAR) */
+  /** ISO code from Magento; falls back to the store's currency. */
   currency?: string;
   /** Fixed fraction digits (min = max). Omit for the locale default. */
   digits?: number;
 };
 
 /** Renders "⃁ 1,352.00" — riyal symbol (or currency code) first, then the amount. */
-export function Money({ value, currency = "SAR", digits }: MoneyProps) {
+export function Money({ value, currency, digits }: MoneyProps) {
   const formatted = value.toLocaleString(
     undefined,
     digits === undefined

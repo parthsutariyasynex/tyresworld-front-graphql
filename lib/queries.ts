@@ -543,7 +543,6 @@ export const STORE_CONFIG_QUERY = /* GraphQL */ `
       locale
       base_currency_code
       default_display_currency_code
-      default_country_id
       timezone
       copyright
       catalog_default_sort_by

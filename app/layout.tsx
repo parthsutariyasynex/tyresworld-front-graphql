@@ -11,6 +11,8 @@ import { CompareProvider } from "@/lib/compare-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
 import CartAuthSync from "@/components/CartAuthSync";
 import LocaleDirectionSetter from "@/components/LocaleDirectionSetter";
+import { StoreConfigProvider } from "@/lib/store-config-context";
+import { getStoreConfig } from "@/lib/services/store.service";
 
 export const metadata: Metadata = {
   title: {
@@ -35,11 +37,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const storeConfig = await getStoreConfig();
+
   return (
     <html lang="en">
       <head>
@@ -56,22 +60,24 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <LocaleDirectionSetter />
-        <AuthProvider>
-          <CartProvider>
-            <CompareProvider>
-              <WishlistProvider>
-                <CartAuthSync />
-                <Suspense fallback={null}>
-                  <Header />
-                </Suspense>
-                <main>{children}</main>
-                <Footer />
-                <FloatingContact />
-                <FloatingGoogleReviews />
-              </WishlistProvider>
-            </CompareProvider>
-          </CartProvider>
-        </AuthProvider>
+        <StoreConfigProvider value={storeConfig}>
+          <AuthProvider>
+            <CartProvider>
+              <CompareProvider>
+                <WishlistProvider>
+                  <CartAuthSync />
+                  <Suspense fallback={null}>
+                    <Header />
+                  </Suspense>
+                  <main>{children}</main>
+                  <Footer />
+                  <FloatingContact />
+                  <FloatingGoogleReviews />
+                </WishlistProvider>
+              </CompareProvider>
+            </CartProvider>
+          </AuthProvider>
+        </StoreConfigProvider>
       </body>
     </html>
   );

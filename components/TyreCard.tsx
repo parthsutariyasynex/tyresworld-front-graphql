@@ -288,11 +288,11 @@ export default function TyreCard({ product }: { product: Product }) {
           ) : (
             <>
               <p className="text-[17px] font-black text-gray-900 leading-tight">
-                <Money value={product.price} currency={product.currency ?? "SAR"} />
+                <Money value={product.price} currency={product.currency} />
               </p>
               {product.originalPrice && product.originalPrice > product.price && (
                 <p className="text-[12px] text-gray-400 line-through">
-                  <Money value={product.originalPrice} currency={product.currency ?? "SAR"} />
+                  <Money value={product.originalPrice} currency={product.currency} />
                 </p>
               )}
             </>

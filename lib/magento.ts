@@ -158,7 +158,9 @@ function resolvePrices(p: GqlProduct): [number, number | undefined, number | und
   const regular = Number(min?.regular_price?.value ?? 0);
   const final = Number(min?.final_price?.value ?? regular);
   const max = Number(p.price_range?.maximum_price?.final_price?.value ?? 0) || undefined;
-  const currency = min?.final_price?.currency ?? min?.regular_price?.currency ?? "AED";
+  // No hardcoded currency fallback — when Magento omits it, the display
+  // layer (<Money/>) resolves the store's currency from store config.
+  const currency = min?.final_price?.currency ?? min?.regular_price?.currency ?? "";
 
   if (final > 0 && final < regular) return [final, regular, max, currency];
   return [regular || final, undefined, max, currency];

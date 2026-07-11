@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import ProductDetailInner from "@/components/ProductDetailInner";
 import type { ProductDetail } from "@/lib/magento";
+import { storeCode, type Locale } from "@/lib/i18n";
 
 /* ── Skeleton ──────────────────────────────────────────────────── */
 function ProductDetailSkeleton() {
@@ -52,7 +53,7 @@ export default function ProductDetailPage() {
     setLoading(true);
     setError(null);
 
-    fetch(`/api/product?urlKey=${encodeURIComponent(urlKey)}&store=${locale === "ar" ? "arabic" : "default"}`)
+    fetch(`/api/product?urlKey=${encodeURIComponent(urlKey)}&store=${storeCode(locale as Locale)}`)
       .then(r => r.json())
       .then(j => {
         if (!active) return;

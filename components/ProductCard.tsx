@@ -54,7 +54,7 @@ export default function ProductCard({ product }: { product: Product }) {
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : null;
 
-  const fmt = (v: number) => <Money value={v} currency={currency || "SAR"} />;
+  const fmt = (v: number) => <Money value={v} currency={currency} />;
 
   async function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();

@@ -250,7 +250,7 @@ function PricingCard({
   onAddToCartSuccess: () => void;
   onShareClick: () => void;
 }) {
-  const currency = product.currency ?? "SAR";
+  const currency = product.currency || undefined;
   const hasPrice = product.price > 0;
   const fmt = (v: number) => <Money value={v} currency={currency} />;
 
