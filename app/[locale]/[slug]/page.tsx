@@ -7,6 +7,10 @@ import { getCmsPage } from "@/lib/services/cms.service";
 import { getCategoryMeta } from "@/lib/services/category.service";
 import { CATEGORY_HERO } from "@/src/config/routes";
 import { storeCode, t, type Locale } from "@/lib/i18n";
+import { APP_CONFIG } from "@/src/config/app-config";
+import JsonLd from "@/components/JsonLd";
+
+const SITE_URL = `https://${APP_CONFIG.brand.domain}`;
 
 export const revalidate = 300;
 
@@ -101,22 +105,33 @@ export default async function DynamicSlugPage({ params }: PageProps) {
   if (route.type === "CATEGORY") {
     const urlKey = route.url_key ?? slug;
     const hero = CATEGORY_HERO[urlKey] ?? {};
+    const breadcrumbJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/${locale}` },
+        { "@type": "ListItem", position: 2, name: route.name ?? urlKey, item: `${SITE_URL}/${locale}/${urlKey}` },
+      ],
+    };
     return (
-      <Suspense
-        fallback={
-          <div className="container py-20 text-center text-gray-400 animate-pulse">
-            {t(locale, "common.loading")}
-          </div>
-        }
-      >
-        <CategoryPageInner
-          urlKey={urlKey}
-          locale={locale}
-          heroTitle={hero.heroTitle}
-          heroTitleAr={hero.heroTitleAr}
-          showTyreFinder={hero.showTyreFinder}
-        />
-      </Suspense>
+      <>
+        <JsonLd data={breadcrumbJsonLd} />
+        <Suspense
+          fallback={
+            <div className="container py-20 text-center text-gray-400 animate-pulse">
+              {t(locale, "common.loading")}
+            </div>
+          }
+        >
+          <CategoryPageInner
+            urlKey={urlKey}
+            locale={locale}
+            heroTitle={hero.heroTitle}
+            heroTitleAr={hero.heroTitleAr}
+            showTyreFinder={hero.showTyreFinder}
+          />
+        </Suspense>
+      </>
     );
   }
 

@@ -13,6 +13,10 @@ import CartAuthSync from "@/components/CartAuthSync";
 import LocaleDirectionSetter from "@/components/LocaleDirectionSetter";
 import { StoreConfigProvider } from "@/lib/store-config-context";
 import { getStoreConfig } from "@/lib/services/store.service";
+import { APP_CONFIG } from "@/src/config/app-config";
+import JsonLd from "@/components/JsonLd";
+
+const SITE_URL = `https://${APP_CONFIG.brand.domain}`;
 
 export const metadata: Metadata = {
   title: {
@@ -44,6 +48,26 @@ export default async function RootLayout({
 }) {
   const storeConfig = await getStoreConfig();
 
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: storeConfig.storeName,
+    url: SITE_URL,
+    logo: `${SITE_URL}${APP_CONFIG.brand.logoPath}`,
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: APP_CONFIG.contact.phone,
+      email: APP_CONFIG.contact.email,
+      contactType: "customer service",
+    },
+  };
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: storeConfig.storeName,
+    url: SITE_URL,
+  };
+
   return (
     <html lang="en">
       <head>
@@ -57,6 +81,7 @@ export default async function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Cairo:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
+        <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
       </head>
       <body className="antialiased">
         <LocaleDirectionSetter />

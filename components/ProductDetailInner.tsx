@@ -16,6 +16,8 @@ import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
 import TyreFinder from "@/components/TyreFinder";
 import { APP_CONFIG } from "@/src/config/app-config";
+import JsonLd from "@/components/JsonLd";
+import { useCurrencyCode } from "@/lib/store-config-context";
 import { Money } from "@/components/Price";
 
 import "swiper/css";
@@ -659,8 +661,39 @@ export default function ProductDetailInner({
     specs.oemMarking
   ].filter(Boolean).join(" ") || product.name;
 
+  /* ── Product structured data (schema.org) ───────────────────── */
+  const storeCurrency = useCurrencyCode();
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.image,
+    sku: product.sku,
+    description:
+      (product.shortDescriptionHtml ?? "").replace(/<[^>]+>/g, "").trim() || product.name,
+    ...(product.brandName ? { brand: { "@type": "Brand", name: product.brandName } } : {}),
+    offers: {
+      "@type": "Offer",
+      priceCurrency: product.currency || storeCurrency,
+      price: product.price,
+      availability:
+        product.inStock === false ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+    },
+    ...(product.rating && product.reviewCount
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.rating,
+            reviewCount: product.reviewCount,
+          },
+        }
+      : {}),
+  };
+
   return (
     <>
+      <JsonLd data={productJsonLd} />
+
       {/* ── Tyre Search ───────────────────────────────────────── */}
       <TyreFinder categoryUid={APP_CONFIG.magento.tyresCategoryUid} />
 
