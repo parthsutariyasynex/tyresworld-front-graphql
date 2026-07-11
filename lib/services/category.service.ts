@@ -4,7 +4,7 @@
    the category's own metadata (name, description, SEO fields).
 ───────────────────────────────────────────────────────────────── */
 import { magentoFetch } from "@/lib/graphql/client";
-import { CATEGORY_PRODUCTS_BY_UID_QUERY } from "@/lib/queries";
+import { CATEGORY_PRODUCTS_BY_UID_QUERY, CATEGORY_PAGE_QUERY } from "@/lib/queries";
 import { parseGraphqlResponse, type GqlProductsResponse } from "@/lib/magento";
 import { APP_CONFIG } from "@/src/config/app-config";
 import type { Product } from "@/lib/data";
@@ -38,6 +38,28 @@ interface CategoryQueryData {
     page_info?: { total_pages?: number; current_page?: number };
     items?: unknown[];
   } | null;
+}
+
+/**
+ * Lightweight category metadata lookup (name + SEO fields) by url_key,
+ * used for `generateMetadata()` without fetching the full product page.
+ */
+export async function getCategoryMeta(urlKey: string, store?: string): Promise<CategoryMeta | null> {
+  const r = await magentoFetch<{ categories?: { items?: Array<Record<string, unknown>> } | null }>(
+    CATEGORY_PAGE_QUERY,
+    { urlKey, filters: { category_url_path: { eq: urlKey } }, pageSize: 1, currentPage: 1 },
+    { store, revalidate: APP_CONFIG.cache.category },
+  );
+  const cat = r.data?.categories?.items?.[0];
+  if (!cat) return null;
+  return {
+    uid: String(cat.uid ?? ""),
+    name: String(cat.name ?? ""),
+    description: (cat.description as string) ?? null,
+    metaTitle: (cat.meta_title as string) ?? null,
+    metaDescription: (cat.meta_description as string) ?? null,
+    urlKey: String(cat.url_key ?? urlKey),
+  };
 }
 
 export async function getCategoryProducts(params: {
