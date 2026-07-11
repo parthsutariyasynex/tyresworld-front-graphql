@@ -4,8 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Phone, Mail, Clock, MapPin } from "lucide-react";
+import { APP_CONFIG } from "@/src/config/app-config";
 
 type SocialLink = { social_type: string; url: string };
+
+/** Tyres category UID — centralized, not hardcoded per link. */
+const TYRES_UID = APP_CONFIG.magento.tyresCategoryUid;
 
 // Custom SVG Icons for WhatsApp, Snapchat, TikTok, Facebook, Instagram, X
 const WhatsAppIcon = () => (
@@ -47,22 +51,22 @@ const XIcon = () => (
 );
 
 const EXPLORE_TIRES = [
-  { label: "Off Road Tires", href: "/shop?categoryUid=MTg=&tyre_type=Off+Road" },
-  { label: "On Road Tires", href: "/shop?categoryUid=MTg=&tyre_type=On+Road" },
-  { label: "Run Flat Tires", href: "/shop?categoryUid=MTg=&runflat=RunFlat" },
-  { label: "EV Tires", href: "/shop?categoryUid=MTg=&ev=EV" }
+  { label: "Off Road Tires", href: `/shop?categoryUid=${TYRES_UID}&tyre_type=Off+Road` },
+  { label: "On Road Tires", href: `/shop?categoryUid=${TYRES_UID}&tyre_type=On+Road` },
+  { label: "Run Flat Tires", href: `/shop?categoryUid=${TYRES_UID}&runflat=RunFlat` },
+  { label: "EV Tires", href: `/shop?categoryUid=${TYRES_UID}&ev=EV` }
 ];
 
 const PREMIUM_TIRE = [
-  { label: "Pirelli", href: "/shop?categoryUid=MTg=&mgs_brand=pirelli" },
-  { label: "Michelin", href: "/shop?categoryUid=MTg=&mgs_brand=michelin" },
-  { label: "Continental", href: "/shop?categoryUid=MTg=&mgs_brand=continental" },
-  { label: "Bridgestone", href: "/shop?categoryUid=MTg=&mgs_brand=bridgestone" },
-  { label: "BFGoodrich", href: "/shop?categoryUid=MTg=&mgs_brand=bfgoodrich" },
-  { label: "Goodyear", href: "/shop?categoryUid=MTg=&mgs_brand=goodyear" },
-  { label: "Kumho", href: "/shop?categoryUid=MTg=&mgs_brand=kumho" },
-  { label: "Hankook", href: "/shop?categoryUid=MTg=&mgs_brand=hankook" },
-  { label: "Yokohama", href: "/shop?categoryUid=MTg=&mgs_brand=yokohama" }
+  { label: "Pirelli", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=pirelli` },
+  { label: "Michelin", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=michelin` },
+  { label: "Continental", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=continental` },
+  { label: "Bridgestone", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=bridgestone` },
+  { label: "BFGoodrich", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=bfgoodrich` },
+  { label: "Goodyear", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=goodyear` },
+  { label: "Kumho", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=kumho` },
+  { label: "Hankook", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=hankook` },
+  { label: "Yokohama", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=yokohama` }
 ];
 
 const WHY_POWERTIRE = [

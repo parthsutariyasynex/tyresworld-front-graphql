@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { X, Search } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useScrollLock } from "@/lib/useScrollLock";
+import { APP_CONFIG } from "@/src/config/app-config";
 
 type Option = { label: string; value: string; count?: number };
 type TrimOption = { trim: string; size: { width: string; height: string; rim: string } };
@@ -12,7 +13,7 @@ interface TyreSearchProps {
   categoryUid?: string;
 }
 
-export default function TyreSearch({ categoryUid = "MTg=" }: TyreSearchProps) {
+export default function TyreSearch({ categoryUid = APP_CONFIG.magento.tyresCategoryUid }: TyreSearchProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<"size" | "vehicle" | "brand">("size");

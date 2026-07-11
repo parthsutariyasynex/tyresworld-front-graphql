@@ -40,8 +40,21 @@ export const APP_CONFIG = {
     tyresCategoryUid: "MTg=",
   },
 
-  /** Root category UID for "All Products" — used by /shop */
+  /** Root category UID for "All Products" */
   rootCategoryUid: "Mg==",
+
+  /** Homepage merchandising config — the single place to change featured tabs. */
+  homepage: {
+    /** Category tabs on the homepage FeaturedProducts section (Magento category UIDs). */
+    featuredCategories: [
+      { id: "All",        label: "All",            uid: "Mg==" },
+      { id: "Tyres",      label: "Tyres",          uid: "MTg=" },
+      { id: "Motorcycle", label: "Motorcycle",     uid: "MTExNg==" },
+      { id: "Wheels",     label: "Wheels",         uid: "MTExNw==" },
+      { id: "Battery",    label: "Battery",        uid: "MTExOA==" },
+      { id: "Rims",       label: "Rim Protectors", uid: "MTM0NQ==" },
+    ],
+  },
 
   pagination: {
     defaultPageSize: 12,

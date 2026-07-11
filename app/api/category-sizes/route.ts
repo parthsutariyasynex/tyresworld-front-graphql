@@ -24,7 +24,7 @@ type AttrOption = { label: string; value: string };
 type CustomAttr = { attribute_code: string; value: string };
 type ProductItem = { custom_attributes: CustomAttr[] | null };
 
-const TYRES_CATEGORY_UID = "MTg=";
+const TYRES_CATEGORY_UID = APP_CONFIG.magento.tyresCategoryUid;
 const PAGE_SIZE = 200;
 const SIZE_CODES = ["width", "height", "rim"] as const;
 type SizeCode = typeof SIZE_CODES[number];

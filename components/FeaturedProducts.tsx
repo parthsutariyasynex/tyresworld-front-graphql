@@ -8,19 +8,11 @@ import ProductCardSkeleton from "./ProductCardSkeleton";
 // import { allProducts } from "@/lib/data";
 import type { Product } from "@/lib/data";
 import type { ApiProductsResponse } from "@/lib/magento";
+import { APP_CONFIG } from "@/src/config/app-config";
 
-/* ─────────────────────────────────────────────────────────────────
-   TAB DEFINITIONS — real Magento categories from tyrescart.ae.
-   `uid` is the Magento GraphQL category uid (base64 of the cat id).
-───────────────────────────────────────────────────────────────── */
-const TABS = [
-  { id: "All", label: "All", uid: "Mg==" },        // Default Category (root)
-  { id: "Tyres", label: "Tyres", uid: "MTg=" },        // 18
-  { id: "Motorcycle", label: "Motorcycle", uid: "MTExNg==" },    // 1116
-  { id: "Wheels", label: "Wheels", uid: "MTExNw==" },    // 1117
-  { id: "Battery", label: "Battery", uid: "MTExOA==" },    // 1118
-  { id: "Rims", label: "Rim Protectors", uid: "MTM0NQ==" },    // 1345
-] as const;
+/* Featured-category tabs are centralized in APP_CONFIG.homepage — no
+   category UIDs are hardcoded in the component. */
+const TABS = APP_CONFIG.homepage.featuredCategories;
 
 type TabId = (typeof TABS)[number]["id"];
 

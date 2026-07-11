@@ -15,6 +15,7 @@ import { useCart } from "@/lib/cart-context";
 import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
 import TyreFinder from "@/components/TyreFinder";
+import { APP_CONFIG } from "@/src/config/app-config";
 import { Money } from "@/components/Price";
 
 import "swiper/css";
@@ -661,7 +662,7 @@ export default function ProductDetailInner({
   return (
     <>
       {/* ── Tyre Search ───────────────────────────────────────── */}
-      <TyreFinder categoryUid="MTg=" />
+      <TyreFinder categoryUid={APP_CONFIG.magento.tyresCategoryUid} />
 
       {/* ── Breadcrumb ─────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-100">
