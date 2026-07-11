@@ -1,23 +1,54 @@
 import HeroSlider from "@/components/home/HeroSlider";
-import TrustBar from "@/components/TrustBar";
-import CategorySection from "@/components/CategorySection";
-import FeaturedProducts from "@/components/FeaturedProducts";
+import TyreFinder from "@/components/TyreFinder";
+import OffersSection from "@/components/OffersSection";
+import FastSelling from "@/components/FastSelling";
+import HowItWorks from "@/components/HowItWorks";
+import MobileDeliverySection from "@/components/MobileDeliverySection";
+import AutoCareServices from "@/components/AutoCareServices";
+import WhyChooseUs from "@/components/WhyChooseUs";
+import FaqSection from "@/components/FaqSection";
+// import NewsletterSection from "@/components/NewsletterSection";
 import BrandStrip from "@/components/BrandStrip";
-import TrendingProducts from "@/components/home/TrendingProducts";
-import Testimonials from "@/components/home/Testimonials";
-import NewsletterSection from "@/components/NewsletterSection";
+import AutomotiveBlog from "@/components/AutomotiveBlog";
 
 export default function HomePage() {
   return (
-    <>
-      <HeroSlider />
-      <TrustBar />
-      <CategorySection />
-      <FeaturedProducts />
+    <div className="cms-home relative">
+      {/* Hero banner slider */}
+      <div className="main-banner" id="hero-section">
+        <HeroSlider />
+      </div>
+
+      {/* Tyre / vehicle / brand search */}
+      <TyreFinder />
+
+      {/* Dynamic offers from Magento aggregations */}
+      <OffersSection />
+
+      {/* Fast-selling product carousel */}
+      <FastSelling />
+
+      {/* How it works */}
+      <HowItWorks />
+
+      {/* Auto care service categories */}
+      <AutoCareServices />
+
+      {/* Why choose us */}
+      <WhyChooseUs />
+
+      {/* Mobile delivery coverage — technician + Saudi Arabia map + van */}
+      <MobileDeliverySection />
+
+      {/* Shop by Tyre Brands */}
       <BrandStrip />
-      <TrendingProducts />
-      <Testimonials />
-      <NewsletterSection />
-    </>
+
+      {/* FAQ */}
+      <FaqSection />
+
+      {/* Automotive Blog */}
+      <AutomotiveBlog />
+
+    </div>
   );
 }

@@ -1,16 +1,58 @@
 export type Product = {
   id: string;
-  sku?: string;          // Magento SKU — required to add the product to the server cart
-  urlKey?: string;       // Magento url_key — used for the product detail page route
+  sku?: string;
+  urlKey?: string;
+  urlPath?: string;
+  typeId?: string;
   name: string;
+  displayName?: string;
+  itemCode?: string;
+
+  // Pricing
   price: number;
   originalPrice?: number;
-  category: string;
+  maxPrice?: number;
+  currency?: string;
+
+  // Images
   image: string;
+  smallImage?: string;
+  thumbnail?: string;
+
+  // Descriptions
+  descriptionHtml?: string;
+  shortDescriptionHtml?: string;
+
+  // Tyre-specific attributes
+  brand?: string;
+  brandName?: string;    // display name from backend
+  brandLogoUrl?: string; // logo image URL from backend
+  brandPageUrl?: string; // brand landing page URL from backend
+  manufacturer?: string;
+  size?: string;
+  tyreSize?: string;
+  pattern?: string;
+  width?: string;
+  height?: string;
+  rim?: string;
+  year?: string;
+  origin?: string;
+  country?: string;
+  warrantyPeriod?: string;
+
+  // Categorisation
+  category: string;
+  categories?: { id?: number | null; name: string; urlKey?: string }[];
+
+  // Offers — raw Magento option ID; resolve to label via useOfferLabels()
+  offersId?: string;
+
+  // Meta
   badge?: "New" | "Sale" | "Bestseller";
   rating: number;
   reviewCount: number;
-  inStock?: boolean;     // false = out of stock, undefined = unknown
+  inStock?: boolean;
+  quantity?: number;
 };
 
 export type Category = {
@@ -58,7 +100,7 @@ export const categories: Category[] = [
     description: "Premium car, SUV and performance tyres",
     image: "https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=800&auto=format&fit=crop&q=80",
     count: 1420,
-    href: "/shop?categoryUid=MTg=",
+    href: "/",
   },
   {
     id: "wheels",
@@ -66,7 +108,7 @@ export const categories: Category[] = [
     description: "Stylish and engineered alloy wheels",
     image: "https://images.unsplash.com/photo-1616422285623-13ff0162193c?w=800&auto=format&fit=crop&q=80",
     count: 380,
-    href: "/shop?categoryUid=MTExNw==",
+    href: "/",
   },
   {
     id: "batteries",
@@ -74,7 +116,7 @@ export const categories: Category[] = [
     description: "Long-lasting car batteries",
     image: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800&auto=format&fit=crop&q=80",
     count: 240,
-    href: "/shop?categoryUid=MTExOA==",
+    href: "/",
   },
   {
     id: "motorcycle",
@@ -82,7 +124,7 @@ export const categories: Category[] = [
     description: "High performance motorcycle tyres",
     image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&auto=format&fit=crop&q=80",
     count: 190,
-    href: "/shop?categoryUid=MTExNg==",
+    href: "/",
   },
 ];
 

@@ -24,7 +24,7 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <a href="/shop" className="btn-primary text-sm px-8 py-3.5">
+              <a href="/" className="btn-primary text-sm px-8 py-3.5">
                 Shop the collection
                 <ArrowRight size={15} />
               </a>

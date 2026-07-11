@@ -1,46 +1,74 @@
-import { NextResponse } from "next/server";
-import { MENU_QUERY, parseMenu, type GqlCategoriesResponse } from "@/lib/magento";
+import { NextRequest, NextResponse } from "next/server";
+import { MENU_QUERY } from "@/lib/queries";
+import { type GqlCategoriesResponse, type GqlCategory, type MenuItem } from "@/lib/magento";
+import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
 
-/* ─────────────────────────────────────────────────────────────────
-   Navigation menu — built from the Magento category tree via GraphQL.
-   Endpoint comes from MAGENTO_GRAPHQL_URL (.env.local).
-───────────────────────────────────────────────────────────────── */
-const GRAPHQL_URL =
-  (process.env.MAGENTO_GRAPHQL_URL ?? "https://www.tyrescart.ae/graphql").replace(/\/$/, "");
-const MAGENTO_TOKEN = process.env.MAGENTO_API_TOKEN ?? "";
 
-export async function GET() {
-  const headers: HeadersInit = {
-    Accept:         "application/json",
-    "Content-Type": "application/json",
+function catHref(urlPath?: string): string {
+  if (!urlPath) return "/";
+  return `/en/${urlPath}`;
+}
+
+/** include_in_menu: 0 means explicitly hidden; anything else (1, null, undefined) = visible */
+function visible(c: GqlCategory): boolean {
+  return c.include_in_menu !== 0;
+}
+
+function adaptCat(c: GqlCategory): MenuItem | null {
+  if (!c.uid || !c.name) return null;
+  const children = (c.children ?? [])
+    .filter(visible)
+    .map(adaptCat)
+    .filter((x): x is MenuItem => x !== null);
+  return {
+    uid: c.uid,
+    label: c.name,
+    href: catHref(c.url_path),
+    ...(children.length ? { children } : {}),
   };
-  if (MAGENTO_TOKEN) headers["Authorization"] = `Bearer ${MAGENTO_TOKEN}`;
+}
+
+function buildNavMenu(raw: GqlCategoriesResponse): MenuItem[] {
+  const rootCats = (raw?.data?.categories?.items ?? []).filter(visible);
+  return rootCats
+    .map(adaptCat)
+    .filter((x): x is MenuItem => x !== null);
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const locale = searchParams.get("locale") ?? "en";
 
   try {
-    const res = await fetch(GRAPHQL_URL, {
+    const res = await fetch(APP_CONFIG.magento.graphqlUrl, {
       method: "POST",
-      headers,
+      headers: magentoHeaders(locale),
       body: JSON.stringify({ query: MENU_QUERY }),
-      next: { revalidate: 3600 },   // menu changes rarely — cache 1h
+      // no-store: bypass Next.js Data Cache so stale cached responses never silently serve
+      // an empty menu. The response-level Cache-Control header handles CDN/browser caching.
+      cache: "no-store",
     });
 
     const raw = (await res.json().catch(() => null)) as GqlCategoriesResponse | null;
 
-    if (!res.ok || raw?.errors?.length) {
+    // Only fail if the HTTP request itself failed OR Magento returned no category data.
+    // Do NOT bail on raw.errors — Magento frequently emits deprecation warnings or
+    // non-fatal partial errors alongside perfectly valid data, which would make the
+    // menu silently empty if we treated any error as fatal.
+    if (!res.ok || !raw?.data?.categories?.items?.length) {
       return NextResponse.json(
-        { menu: [], error: raw?.errors?.[0]?.message ?? `Magento GraphQL returned HTTP ${res.status}` },
-        { status: res.ok ? 200 : res.status }
+        { menu: [], error: raw?.errors?.[0]?.message ?? `HTTP ${res.status}` },
+        { status: 200 }
       );
     }
 
-    const menu = parseMenu(raw);
     return NextResponse.json(
-      { menu },
-      { headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=600" } }
+      { menu: buildNavMenu(raw) },
+      { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } }
     );
   } catch (err) {
     return NextResponse.json(
-      { menu: [], error: err instanceof Error ? err.message : "Network error reaching Magento GraphQL" },
+      { menu: [], error: err instanceof Error ? err.message : "Network error" },
       { status: 502 }
     );
   }

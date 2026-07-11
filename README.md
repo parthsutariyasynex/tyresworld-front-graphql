@@ -4,7 +4,7 @@ A Next.js storefront for a tyre/automotive shop. All catalog, navigation, cart,
 and checkout data comes from a **Magento 2 GraphQL** backend through server-side
 API proxy routes — there is no hardcoded product data.
 
-Live demo backend: `https://demo2.tyrescart.ae/graphql`
+Live demo backend: `https://powertire.klever.ae/graphql`
 
 ## Tech stack
 
@@ -51,7 +51,7 @@ Create a `.env.local` file in the project root:
 
 ```bash
 # Magento GraphQL endpoint (required)
-MAGENTO_GRAPHQL_URL=https://demo2.tyrescart.ae/graphql
+MAGENTO_GRAPHQL_URL=https://powertire.klever.ae/graphql
 
 # Bearer token — only if the endpoint requires auth (leave blank for public/guest)
 MAGENTO_API_TOKEN=
@@ -121,7 +121,7 @@ npm run lint    # lint
 
    | Key | Value |
    |-----|-------|
-   | `MAGENTO_GRAPHQL_URL` | `https://demo2.tyrescart.ae/graphql` |
+   | `MAGENTO_GRAPHQL_URL` | `https://powertire.klever.ae/graphql` |
    | `MAGENTO_API_TOKEN` | *(leave empty for guest/public)* |
 
 3. Click **Deploy**. Every subsequent `git push` to `main` auto-deploys to

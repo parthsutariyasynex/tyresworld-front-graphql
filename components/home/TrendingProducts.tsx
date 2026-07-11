@@ -46,7 +46,7 @@ export default function TrendingProducts() {
             </h2>
           </div>
           <Link
-            href="/shop"
+            href="/"
             className="inline-flex items-center gap-2 text-sm font-medium text-ink/60 hover:text-ink transition-colors group"
           >
             View all trends

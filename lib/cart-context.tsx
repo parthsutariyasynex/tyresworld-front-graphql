@@ -9,13 +9,15 @@ import {
   useState,
 } from "react";
 import type { Product } from "./data";
-import type { ServerCart, ServerCartItem } from "./cart-queries";
+import type { ServerCart, ServerCartItem } from "./types";
 
-const STORAGE_KEY = "magento_cart_id";
+const CART_KEY = "magento_cart_id";
+const AUTH_KEY = "customer_token"; // mirrors auth-context's STORAGE_KEY
 
 type CartContextValue = {
   cart: ServerCart | null;
   cartId: string | null;
+  cartToken: string | null;
   items: ServerCartItem[];
   count: number;
   subtotal: number;
@@ -30,6 +32,9 @@ type CartContextValue = {
   removeCoupon: () => Promise<void>;
   refresh: () => Promise<void>;
   clearLocal: () => void;
+  setInactive: (cartId: string) => Promise<{ success: boolean; error?: string | null }>;
+  loginWithToken: (token: string) => Promise<void>;
+  logoutCart: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -45,115 +50,176 @@ async function api(payload: Record<string, unknown>): Promise<Record<string, any
     try {
       return JSON.parse(text);
     } catch {
-      // Route returned HTML (error page / 404 / 500), not JSON.
       console.warn("[cart] non-JSON response, HTTP", res.status);
       return { error: `Cart service error (HTTP ${res.status})` };
     }
   } catch (e) {
-    // Network error / aborted request — never throw to the UI.
     console.warn("[cart] request failed:", e);
     return { error: e instanceof Error ? e.message : "Network error reaching cart API" };
   }
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cartId, setCartId] = useState<string | null>(null);
-  const [cart, setCart] = useState<ServerCart | null>(null);
+  const [cartId, setCartId]   = useState<string | null>(null);
+  const [cart, setCart]       = useState<ServerCart | null>(null);
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady]     = useState(false);
   const cartIdRef = useRef<string | null>(null);
+  const tokenRef  = useRef<string | null>(null);
 
   const persistId = useCallback((id: string | null) => {
     cartIdRef.current = id;
     setCartId(id);
     try {
-      if (id) localStorage.setItem(STORAGE_KEY, id);
-      else localStorage.removeItem(STORAGE_KEY);
+      if (id) localStorage.setItem(CART_KEY, id);
+      else    localStorage.removeItem(CART_KEY);
     } catch {/* ignore */}
   }, []);
 
-  /* Hydrate: load saved cart id and fetch its contents. */
+  /* Hydrate: prefer customer cart when a token exists. */
   useEffect(() => {
     let active = true;
     (async () => {
-      let id: string | null = null;
-      try { id = localStorage.getItem(STORAGE_KEY); } catch {/* ignore */}
-      if (id) {
-        const { cart: c } = await api({ op: "get", cartId: id });
+      let authToken: string | null = null;
+      try { authToken = localStorage.getItem(AUTH_KEY); } catch {/* ignore */}
+
+      if (authToken) {
+        tokenRef.current = authToken;
+        const { cartId: customerId } = await api({ op: "customerCart", token: authToken });
         if (!active) return;
-        if (c) { cartIdRef.current = id; setCartId(id); setCart(c); }
-        else { persistId(null); }   // expired/invalid cart id
+        if (customerId) {
+          cartIdRef.current = customerId;
+          setCartId(customerId);
+          try { localStorage.setItem(CART_KEY, customerId); } catch {}
+          const { cart: c } = await api({ op: "get", cartId: customerId, token: authToken });
+          if (!active) return;
+          if (c) setCart(c);
+        }
+      } else {
+        let id: string | null = null;
+        try { id = localStorage.getItem(CART_KEY); } catch {/* ignore */}
+        if (id) {
+          const { cart: c } = await api({ op: "get", cartId: id });
+          if (!active) return;
+          if (c) { cartIdRef.current = id; setCartId(id); setCart(c); }
+          else   { persistId(null); }
+        }
       }
+
       if (active) setReady(true);
     })();
     return () => { active = false; };
   }, [persistId]);
 
-  /* Ensure a cart exists, returning its id. */
-  const ensureCart = useCallback(async (): Promise<string | null> => {
-    if (cartIdRef.current) return cartIdRef.current;
-    const { cartId: id } = await api({ op: "create" });
-    if (id) persistId(id);
-    return id ?? null;
+  /* Called by CartAuthSync after a successful login. */
+  const loginWithToken = useCallback(async (token: string) => {
+    tokenRef.current = token;
+    setLoading(true);
+    try {
+      const { cartId: customerCartId } = await api({ op: "customerCart", token });
+      if (!customerCartId) return;
+
+      const guestId = cartIdRef.current;
+      if (guestId && guestId !== customerCartId) {
+        await api({ op: "mergeCart", guestCartId: guestId, customerCartId, token });
+      }
+
+      cartIdRef.current = customerCartId;
+      setCartId(customerCartId);
+      try { localStorage.setItem(CART_KEY, customerCartId); } catch {}
+      const { cart: c } = await api({ op: "get", cartId: customerCartId, token });
+      if (c) setCart(c);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /* Called by CartAuthSync on logout. */
+  const logoutCart = useCallback(() => {
+    // Mark the customer cart inactive on Magento before clearing local state.
+    // Fire-and-forget: UI clears immediately; network call runs in background.
+    const idToInactivate = cartIdRef.current;
+    const tokToUse = tokenRef.current;
+    if (idToInactivate) {
+      api({ op: "setInactive", cartId: idToInactivate, token: tokToUse || undefined })
+        .catch(() => {/* best-effort */});
+    }
+    tokenRef.current = null;
+    persistId(null);
+    setCart(null);
   }, [persistId]);
 
   const refresh = useCallback(async () => {
     if (!cartIdRef.current) return;
-    const { cart: c } = await api({ op: "get", cartId: cartIdRef.current });
+    const { cart: c } = await api({ op: "get", cartId: cartIdRef.current, token: tokenRef.current || undefined });
     setCart(c ?? null);
   }, []);
 
   const addItem = useCallback(async (product: Product, qty = 1): Promise<{ error?: string }> => {
     if (!product.sku) {
-      const msg = "This product cannot be added to cart (missing SKU).";
-      console.warn("[cart] product has no SKU, cannot add:", product.id);
-      return { error: msg };
+      return { error: "This product cannot be added to cart (missing SKU)." };
     }
+
+    const cartItems = [{ sku: product.sku, quantity: qty }];
+    const tok = tokenRef.current || undefined;
+
     setLoading(true);
     try {
-      let id = await ensureCart();
-      if (!id) return { error: "Could not create cart. Please try again." };
+      // ── No cart yet: create cart + add item in one Magento round-trip ──────
+      if (!cartIdRef.current) {
+        const res = await api({ op: "addToNewCart", cartItems, token: tok });
+        if (res.userError) return { error: String(res.userError) };
+        if (res.error)     return { error: String(res.error) };
+        if (res.cart?.id) {
+          persistId(res.cart.id as string);
+          setCart(res.cart as ServerCart);
+          return {};
+        }
+        return { error: "Could not add item to cart." };
+      }
 
-      let res = await api({ op: "add", cartId: id, sku: product.sku, qty });
+      // ── Cart exists: add to existing cart ───────────────────────────────────
+      let res = await api({ op: "add", cartId: cartIdRef.current, cartItems, token: tok });
 
-      // Cart expired between sessions → make a fresh one and retry once.
+      // Stale cartId (e.g. cart expired on Magento): clear and recover with a fresh cart
       if (!res.cart && res.error) {
         persistId(null);
-        id = await ensureCart();
-        if (!id) return { error: "Could not create cart. Please try again." };
-        res = await api({ op: "add", cartId: id, sku: product.sku, qty });
+        const retryRes = await api({ op: "addToNewCart", cartItems, token: tok });
+        if (retryRes.userError) return { error: String(retryRes.userError) };
+        if (retryRes.error)     return { error: String(retryRes.error) };
+        if (retryRes.cart?.id) {
+          persistId(retryRes.cart.id as string);
+          setCart(retryRes.cart as ServerCart);
+          return {};
+        }
+        return { error: "Could not add item to cart." };
       }
 
-      // userError (e.g. OUT_OF_STOCK, PRODUCT_NOT_FOUND) takes priority —
-      // Magento still returns the unchanged cart on failure so we must check this first.
-      if (res.userError) return { error: res.userError };
-      if (res.error)     return { error: res.error };
-      if (res.cart) {
-        setCart(res.cart);
-        return {};
-      }
+      if (res.userError) return { error: String(res.userError) };
+      if (res.error)     return { error: String(res.error) };
+      if (res.cart)      { setCart(res.cart as ServerCart); return {}; }
       return { error: "Could not add item to cart." };
     } catch (e) {
       return { error: e instanceof Error ? e.message : "Failed to add item." };
     } finally {
       setLoading(false);
     }
-  }, [ensureCart, persistId]);
+  }, [persistId]);
 
   const updateQty = useCallback(async (uid: string, qty: number) => {
     if (!cartIdRef.current) return;
-    // qty ≤ 0 means remove the item entirely
+    const tok = tokenRef.current || undefined;
     if (qty <= 0) {
       setLoading(true);
       try {
-        const res = await api({ op: "remove", cartId: cartIdRef.current, uid });
+        const res = await api({ op: "remove", cartId: cartIdRef.current, uid, token: tok });
         if (res.cart) setCart(res.cart);
       } finally { setLoading(false); }
       return;
     }
     setLoading(true);
     try {
-      const res = await api({ op: "update", cartId: cartIdRef.current, uid, qty });
+      const res = await api({ op: "update", cartId: cartIdRef.current, uid, qty, token: tok });
       if (res.cart) setCart(res.cart);
     } finally { setLoading(false); }
   }, []);
@@ -162,7 +228,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!cartIdRef.current) return;
     setLoading(true);
     try {
-      const res = await api({ op: "remove", cartId: cartIdRef.current, uid });
+      const res = await api({ op: "remove", cartId: cartIdRef.current, uid, token: tokenRef.current || undefined });
       if (res.cart) setCart(res.cart);
     } finally { setLoading(false); }
   }, []);
@@ -171,7 +237,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!cartIdRef.current) return "No cart";
     setLoading(true);
     try {
-      const res = await api({ op: "applyCoupon", cartId: cartIdRef.current, code });
+      const res = await api({ op: "applyCoupon", cartId: cartIdRef.current, code, token: tokenRef.current || undefined });
       if (res.cart) { setCart(res.cart); return null; }
       return res.error ?? "Could not apply coupon";
     } finally { setLoading(false); }
@@ -181,7 +247,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!cartIdRef.current) return;
     setLoading(true);
     try {
-      const res = await api({ op: "removeCoupon", cartId: cartIdRef.current });
+      const res = await api({ op: "removeCoupon", cartId: cartIdRef.current, token: tokenRef.current || undefined });
       if (res.cart) setCart(res.cart);
     } finally { setLoading(false); }
   }, []);
@@ -191,18 +257,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart(null);
   }, [persistId]);
 
-  const items = cart?.items ?? [];
-  const count = cart?.total_quantity ?? 0;
-  const subtotal = cart?.prices?.subtotal_excluding_tax?.value ?? 0;
+  const setInactive = useCallback(async (id: string): Promise<{ success: boolean; error?: string | null }> => {
+    if (!id) return { success: false, error: "cartId is required" };
+    const res = await api({ op: "setInactive", cartId: id, token: tokenRef.current || undefined });
+    return { success: res.success === true, error: res.error ?? null };
+  }, []);
+
+  const items     = cart?.items ?? [];
+  const count     = cart?.total_quantity ?? 0;
+  const subtotal  = cart?.prices?.subtotal_excluding_tax?.value ?? 0;
   const grandTotal = cart?.prices?.grand_total?.value ?? 0;
-  const currency = cart?.prices?.grand_total?.currency ?? "AED";
+  const currency  = cart?.prices?.grand_total?.currency ?? "SAR";
 
   return (
     <CartContext.Provider
       value={{
-        cart, cartId, items, count, subtotal, grandTotal, currency,
-        loading, ready, addItem, updateQty, removeItem,
-        applyCoupon, removeCoupon, refresh, clearLocal,
+        cart, cartId, cartToken: tokenRef.current, items, count,
+        subtotal, grandTotal, currency, loading, ready,
+        addItem, updateQty, removeItem, applyCoupon, removeCoupon,
+        refresh, clearLocal, setInactive, loginWithToken, logoutCart,
       }}
     >
       {children}

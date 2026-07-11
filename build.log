@@ -1,0 +1,22 @@
+
+> ecommerce-homepage@1.0.0 build
+> next build
+
+  ▲ Next.js 14.2.5
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./components/TyreSearch.tsx:117:5
+Type error: Cannot find name 'router'.
+
+[0m [90m 115 |[39m     [36mif[39m (selectedHeight) params[33m.[39m[36mset[39m([32m"height"[39m[33m,[39m selectedHeight)[33m;[39m[0m
+[0m [90m 116 |[39m     [36mif[39m (selectedRim) params[33m.[39m[36mset[39m([32m"rim"[39m[33m,[39m selectedRim)[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 117 |[39m     router[33m.[39mpush([32m`/shop?${params.toString()}`[39m)[33m;[39m[0m
+[0m [90m     |[39m     [31m[1m^[22m[39m[0m
+[0m [90m 118 |[39m   }[33m;[39m[0m
+[0m [90m 119 |[39m[0m
+[0m [90m 120 |[39m   [36mconst[39m handleVehicleSearch [33m=[39m (e[33m:[39m [33mReact[39m[33m.[39m[33mFormEvent[39m) [33m=>[39m {[0m

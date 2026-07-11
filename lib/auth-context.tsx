@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import type { Customer } from "./auth-queries";
+import type { Customer } from "./types";
 
 const STORAGE_KEY = "customer_token";
 

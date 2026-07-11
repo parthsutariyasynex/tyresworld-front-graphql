@@ -1,134 +1,135 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Navigation, Pagination, EffectFade } from "swiper/modules";
+import { Autoplay, Pagination, EffectFade } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
-import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { HeroSliderSkeleton } from "@/components/HomeSkeletons";
+
 import "swiper/css";
 import "swiper/css/effect-fade";
 import "swiper/css/pagination";
 
-/* Presentational hero content (no product/API source). */
-const heroSlides = [
-  {
-    id: "slide-1",
-    badge: "Premium Range",
-    eyebrow: "Tyres for every road",
-    heading: "Grip the road,\nwhatever the weather",
-    sub: "Thousands of car, SUV and performance tyres from the brands you trust — fitted and delivered across the UAE.",
-    cta: { label: "Shop Tyres", href: "/shop?categoryUid=MTg=" },
-    secondary: { label: "Browse all", href: "/shop" },
-    gradient: "from-ink to-slate-700",
-  },
-  {
-    id: "slide-2",
-    badge: "Free Fitting",
-    eyebrow: "Wheels & rims",
-    heading: "Style that\nrolls with you",
-    sub: "Alloy wheels and rim protectors engineered to fit — upgrade your ride with a perfect match.",
-    cta: { label: "Shop Wheels", href: "/shop?categoryUid=MTExNw==" },
-    secondary: { label: "View deals", href: "/shop" },
-    gradient: "from-accent to-rose-700",
-  },
-  {
-    id: "slide-3",
-    badge: "Same-Day",
-    eyebrow: "Batteries & more",
-    heading: "Power that\nnever lets you down",
-    sub: "Reliable car batteries with quick fitting and warranty — keep moving without the wait.",
-    cta: { label: "Shop Batteries", href: "/shop?categoryUid=MTExOA==" },
-    secondary: { label: "Learn more", href: "/about" },
-    gradient: "from-emerald-800 to-emerald-600",
-  },
-];
+type Slide = {
+  id: string;
+  badge: string;
+  eyebrow: string;
+  heading: string;
+  sub: string;
+  cta: { label: string; href: string };
+  secondary: { label: string; href: string };
+  gradient?: string;
+  image?: string;
+};
 
 export default function HeroSlider() {
   const swiperRef = useRef<SwiperType | null>(null);
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/homepage")
+      .then((res) => res.json())
+      .then((data) => {
+        if (active) {
+          setSlides(data.banners ?? []);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load hero slides", err);
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  if (loading) return <HeroSliderSkeleton />;
+  if (slides.length === 0) return null;
 
   return (
-    <section className="relative overflow-hidden h-[88vh] min-h-[580px] max-h-[900px]">
-      <Swiper
-        onSwiper={(s) => { swiperRef.current = s; }}
-        modules={[Autoplay, Navigation, Pagination, EffectFade]}
-        effect="fade"
-        autoplay={{ delay: 3000, disableOnInteraction: false, pauseOnMouseEnter: true }}
-        pagination={{ clickable: true, el: ".hero-pagination" }}
-        loop
-        className="hero-swiper h-full"
-      >
-        {heroSlides.map((slide) => (
-          <SwiperSlide key={slide.id} className="relative">
-            {/* Background */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${slide.gradient}`}>
-              <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/45 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-ink/30 via-transparent to-transparent" />
-            </div>
+    <section className="hero-section">
+      {/*
+       * .banner-aspect: aspect-ratio: 1905/644 gives the container its height
+       * without any vh units, eliminating CLS.
+       * All image dimensions are 1920×590 which maps perfectly to this ratio.
+       *
+       * Layout chain (each layer fills its parent):
+       *   .banner-aspect  →  .hero-swiper (CSS: absolute, inset:0, h:100%)
+       *   .hero-swiper    →  .swiper-slide (CSS: h:100%)
+       *   .swiper-slide   →  .slide-img-wrap (relative, w-full, h-full)
+       *   .slide-img-wrap →  next/image fill (object-cover)
+       */}
+      <div className="banner-aspect">
 
-            {/* Content */}
-            <div className="relative h-full container flex items-center">
-              <div className="max-w-2xl">
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-6">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                  <span className="text-xs font-semibold text-white uppercase tracking-widest">
-                    {slide.badge}
-                  </span>
-                </div>
-
-                <p className="text-white/60 text-sm font-medium uppercase tracking-[0.18em] mb-4">
-                  {slide.eyebrow}
-                </p>
-
-                <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-white leading-[1.03] tracking-tight mb-6 whitespace-pre-line">
-                  {slide.heading}
-                </h1>
-
-                <p className="text-white/65 text-base lg:text-lg leading-relaxed max-w-md mb-9">
-                  {slide.sub}
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Link
-                    href={slide.cta.href}
-                    className="btn bg-accent text-white px-8 py-3.5 text-sm hover:brightness-95 active:scale-[0.98]"
+        {/* Swiper — CSS class controls all sizing (see globals.css .hero-swiper rules) */}
+        <Swiper
+          onSwiper={(s) => { swiperRef.current = s; }}
+          modules={[Autoplay, Pagination, EffectFade]}
+          effect="fade"
+          fadeEffect={{ crossFade: true }}
+          autoplay={{ delay: 4500, disableOnInteraction: false, pauseOnMouseEnter: true }}
+          pagination={{ clickable: true, el: ".hero-pagination" }}
+          loop
+          className="hero-swiper"
+        >
+          {slides.map((slide, index) => (
+            <SwiperSlide key={slide.id}>
+              {/*
+               * .slide-img-wrap must be position:relative for next/image fill.
+               * w-full h-full ensures it fills the slide (which Swiper sizes to 100% via CSS).
+               */}
+              <div className="slide-img-wrap relative w-full h-full">
+                {slide.image ? (
+                  <>
+                    <Image
+                      src={slide.image}
+                      alt={slide.heading}
+                      fill
+                      priority={index === 0}
+                      sizes="100vw"
+                      className="object-cover object-center"
+                    />
+                    {/* No overlay, image is displayed with full brightness */}
+                  </>
+                ) : (
+                  /* Fallback gradient when no image URL is provided */
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${
+                      slide.gradient || "from-gray-900 to-gray-700"
+                    }`}
                   >
-                    {slide.cta.label}
-                    <ArrowRight size={15} />
-                  </Link>
-                  <Link
-                    href={slide.secondary.href}
-                    className="btn border border-white/30 text-white px-8 py-3.5 text-sm hover:bg-white/10"
-                  >
-                    {slide.secondary.label}
-                  </Link>
-                </div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+                  </div>
+                )}
               </div>
-            </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
+            </SwiperSlide>
+          ))}
+        </Swiper>
 
-      {/* Custom pagination */}
-      <div className="hero-pagination absolute bottom-8 z-10 flex items-center" />
+        {/* Pagination dots — z-10 so they sit above the Swiper */}
+        <div className="hero-pagination absolute bottom-8 z-10 flex items-center pointer-events-none" />
 
-      {/* Nav buttons */}
-      <div className="absolute bottom-6 right-6 lg:right-10 z-10 flex gap-2">
-        <button
-          onClick={() => swiperRef.current?.slidePrev()}
-          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
-          aria-label="Previous slide"
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <button
-          onClick={() => swiperRef.current?.slideNext()}
-          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
-          aria-label="Next slide"
-        >
-          <ChevronRight size={18} />
-        </button>
+        {/* Prev / Next arrows */}
+        <div className="absolute bottom-6 right-6 lg:right-10 z-10 flex gap-2">
+          <button
+            onClick={() => swiperRef.current?.slidePrev()}
+            className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            onClick={() => swiperRef.current?.slideNext()}
+            className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+            aria-label="Next slide"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
+
       </div>
     </section>
   );

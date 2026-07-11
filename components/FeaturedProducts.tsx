@@ -141,7 +141,7 @@ export default function FeaturedProducts() {
           </div>
 
           <Link
-            href="/shop"
+            href="/"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-ink/55 hover:text-ink transition-colors group self-start sm:self-auto"
           >
             Shop all products
@@ -296,7 +296,7 @@ export default function FeaturedProducts() {
 
         {/* ── Bottom CTA ──────────────────────────────────────── */}
         <div className="mt-10 text-center">
-          <Link href="/shop" className="btn-primary text-sm px-8 py-3.5">
+          <Link href="/" className="btn-primary text-sm px-8 py-3.5">
             View all products
             <ArrowRight size={15} />
           </Link>

@@ -97,9 +97,28 @@ export default function ContactPage() {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    setSent(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          telephone: "",
+          message: `[${form.subject}] ${form.message}`,
+        }),
+      });
+      const data = (await res.json().catch(() => ({ ok: false }))) as { ok?: boolean };
+      if (data.ok) {
+        setSent(true);
+      } else {
+        setErrors({ message: "Could not send your message. Please try again." });
+      }
+    } catch {
+      setErrors({ message: "Network error. Please check your connection and try again." });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

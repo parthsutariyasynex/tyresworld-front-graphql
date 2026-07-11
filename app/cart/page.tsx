@@ -1,254 +1,363 @@
 "use client";
 
-import { useState } from "react";
-import ProductImage from "@/components/ProductImage";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  Minus,
-  Plus,
-  Trash2,
-  Tag,
-  ArrowRight,
-  ShoppingBag,
-  Truck,
-  ShieldCheck,
-  CheckCircle,
-} from "lucide-react";
+import { ShoppingBag, ArrowRight, X, Tag, Loader2 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { usePathname } from "next/navigation";
+import { Money } from "@/components/Price";
 
+/* ── Qty stepper ──────────────────────────────────────────────── */
+function QtyInput({
+  uid,
+  quantity,
+  onUpdate,
+}: {
+  uid: string;
+  quantity: number;
+  onUpdate: (uid: string, qty: number) => void;
+}) {
+  const [val, setVal] = useState(quantity);
+  useEffect(() => { setVal(quantity); }, [quantity]);
+
+  const dec = () => { if (val > 1) { setVal(v => v - 1); onUpdate(uid, val - 1); } };
+  const inc = () => { setVal(v => v + 1); onUpdate(uid, val + 1); };
+
+  return (
+    <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden w-fit">
+      <button
+        onClick={dec}
+        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors text-base leading-none"
+      >
+        −
+      </button>
+      <span className="w-9 text-center text-sm font-bold text-gray-900 select-none">{val}</span>
+      <button
+        onClick={inc}
+        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors text-base leading-none"
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
+/* ── Main page ────────────────────────────────────────────────── */
 export default function CartPage() {
+  const pathname = usePathname();
+  const locale   = pathname.split("/")[1] === "ar" ? "ar" : "en";
+  const isAr     = locale === "ar";
+
   const {
     items, subtotal, grandTotal, currency, cart, ready, loading,
     updateQty, removeItem, applyCoupon, removeCoupon,
   } = useCart();
 
-  const [coupon, setCoupon] = useState("");
-  const [couponError, setCouponError] = useState("");
+  const [couponInput,   setCouponInput]   = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponMsg,     setCouponMsg]     = useState<{ text: string; ok: boolean } | null>(null);
 
-  const money = (v: number) => `${currency} ${v.toLocaleString()}`;
-  const discounts = cart?.prices?.discounts ?? [];
-  const totalQty = items.reduce((s, i) => s + i.quantity, 0);
+  const activeCoupon   = cart?.applied_coupons?.[0]?.code ?? null;
+  const discounts      = cart?.prices?.discounts ?? [];
+  const discountAmount = discounts.reduce((acc, d) => acc + Math.abs(d.amount.value), 0);
+  const appliedTaxes   = cart?.prices?.applied_taxes ?? [];
+  const totalTax       = appliedTaxes.reduce((acc, t) => acc + t.amount.value, 0);
+  const shippingAmount = cart?.shipping_addresses?.[0]?.selected_shipping_method?.amount?.value ?? 0;
 
-  async function handleApply() {
-    const code = coupon.trim();
+  const fmt = (v: number) => <Money value={v} currency={currency} digits={2} />;
+
+  async function handleApplyCoupon() {
+    const code = couponInput.trim();
     if (!code) return;
-    const err = await applyCoupon(code);
-    setCouponError(err ?? "");
-    if (!err) setCoupon("");
+    setCouponLoading(true);
+    setCouponMsg(null);
+    const errMsg = await applyCoupon(code);
+    if (errMsg) {
+      setCouponMsg({ text: errMsg, ok: false });
+    } else {
+      setCouponMsg({ text: isAr ? "تم تطبيق الكوبون" : "Coupon applied!", ok: true });
+      setCouponInput("");
+    }
+    setCouponLoading(false);
   }
 
-  /* Loading (first hydration) */
+  async function handleRemoveCoupon() {
+    setCouponLoading(true);
+    setCouponMsg(null);
+    await removeCoupon();
+    setCouponLoading(false);
+  }
+
+  /* ── Loading skeleton ──────────────────────────────────────── */
   if (!ready) {
     return (
-      <div className="container py-24 text-center text-ink/40">Loading your cart…</div>
+      <>
+        {/* Header skeleton */}
+        <div className="bg-white border-b border-gray-100 py-6">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="h-3 w-24 bg-gray-200 rounded animate-pulse mb-3" />
+            <div className="h-7 w-36 bg-gray-200 rounded animate-pulse" />
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 py-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
+            <div className="space-y-4">
+              <div className="h-24 bg-gray-100 rounded-xl animate-pulse" />
+              <div className="h-24 bg-gray-100 rounded-xl animate-pulse" />
+            </div>
+            <div className="h-72 bg-gray-100 rounded-xl animate-pulse" />
+          </div>
+        </div>
+      </>
     );
   }
 
-  /* Empty */
+  /* ── Empty cart ──────────────────────────────────────────────── */
   if (items.length === 0) {
     return (
-      <div className="container py-24 text-center max-w-md mx-auto">
-        <div className="w-20 h-20 rounded-full bg-cream flex items-center justify-center mx-auto mb-6">
-          <ShoppingBag size={32} className="text-ink/30" />
+      <>
+        <div className="bg-white border-b border-gray-100 py-6">
+          <div className="max-w-7xl mx-auto px-4">
+            <p className="text-xs text-gray-400 mb-1">
+              <Link href={`/${locale}`} className="hover:text-gray-700 transition-colors">Home</Link>
+              {" / "}
+              <span className="text-gray-700">Cart</span>
+            </p>
+            <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">
+              {isAr ? "سلة التسوق" : "Shopping Cart"}
+            </h1>
+          </div>
         </div>
-        <h1 className="font-display text-3xl text-ink mb-3">Your cart is empty</h1>
-        <p className="text-ink/50 mb-8">
-          You haven&apos;t added anything yet. Explore our collection to find something you love.
-        </p>
-        <Link href="/shop" className="btn-primary text-sm px-8 py-3.5">
-          Start shopping <ArrowRight size={15} />
-        </Link>
-      </div>
+        <div className="max-w-7xl mx-auto px-4 py-28 text-center max-w-sm">
+          <div className="w-20 h-20 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-6">
+            <ShoppingBag size={30} className="text-gray-300" />
+          </div>
+          <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight mb-2">
+            {isAr ? "سلتك فارغة" : "Your cart is empty"}
+          </h2>
+          <p className="text-gray-500 text-sm mb-8 leading-relaxed">
+            {isAr ? "لم تضف أي إطارات بعد." : "You haven't added any tyres yet."}
+          </p>
+          <Link
+            href={`/${locale}/tyres`}
+            className="inline-flex items-center gap-2 bg-[#ed1c24] hover:bg-[#c6181d] text-white font-black text-xs uppercase tracking-widest py-4 px-8 rounded-lg transition-colors"
+          >
+            {isAr ? "تسوق الآن" : "Browse Tyres"}
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      </>
     );
   }
 
+  /* ── Cart ─────────────────────────────────────────────────────── */
   return (
-    <>
+    <div dir={isAr ? "rtl" : "ltr"}>
+
       {/* Header */}
-      <div className="bg-cream border-b border-ink/5 py-10">
-        <div className="container">
-          <p className="text-xs text-ink/40 mb-3">
-            <Link href="/" className="hover:text-ink transition-colors">Home</Link>
+      <div className="bg-white border-b border-gray-100 py-6 mb-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <p className="text-xs text-gray-400 mb-1">
+            <Link href={`/${locale}`} className="hover:text-gray-700 transition-colors">
+              {isAr ? "الرئيسية" : "Home"}
+            </Link>
             {" / "}
-            <span className="text-ink">Cart</span>
+            <span className="text-gray-700">{isAr ? "سلة التسوق" : "Cart"}</span>
           </p>
-          <h1 className="section-title">
-            Your Cart
-            <span className="text-base font-sans font-normal text-ink/40 ml-3">
-              {totalQty} item{totalQty !== 1 ? "s" : ""}
-            </span>
+          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">
+            {isAr ? "سلة التسوق" : "Shopping Cart"}
           </h1>
+          <p className="text-gray-400 text-xs mt-1 font-medium">
+            {isAr
+              ? `${items.length} ${items.length === 1 ? "منتج" : "منتجات"}`
+              : `${items.length} ${items.length === 1 ? "item" : "items"}`}
+          </p>
         </div>
       </div>
 
-      <div className="container py-10 lg:py-14">
-        <div className="grid lg:grid-cols-[1fr_380px] gap-10 lg:gap-14 items-start">
-          {/* Cart items */}
-          <div className={loading ? "opacity-60 pointer-events-none transition-opacity" : "transition-opacity"}>
-            <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto] gap-4 text-xs font-semibold uppercase tracking-wider text-ink/40 pb-4 border-b border-ink/6">
-              <span>Product</span>
-              <span className="text-center">Qty</span>
-              <span className="text-right">Price</span>
-              <span />
+      <div className="max-w-7xl mx-auto px-4 pb-20">
+        <div className={`grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start ${loading ? "opacity-60 pointer-events-none" : ""}`}>
+
+          {/* ── Left: Cart Items ──────────────────────────────── */}
+          <div className="space-y-4">
+
+            {/* Items Card */}
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+              {/* Table header */}
+              <div className="hidden md:grid grid-cols-[1fr_120px_140px_120px] bg-gray-50 border-b border-gray-100 px-5 py-3">
+                <span className="text-[11px] font-black uppercase tracking-widest text-gray-500">{isAr ? "المنتج" : "Item"}</span>
+                <span className="text-[11px] font-black uppercase tracking-widest text-gray-500 text-center">{isAr ? "السعر" : "Price"}</span>
+                <span className="text-[11px] font-black uppercase tracking-widest text-gray-500 text-center">{isAr ? "الكمية" : "Qty"}</span>
+                <span className="text-[11px] font-black uppercase tracking-widest text-gray-500 text-right">{isAr ? "الإجمالي" : "Subtotal"}</span>
+              </div>
+
+              {/* Desktop rows */}
+              <div className="hidden md:block divide-y divide-gray-50">
+                {items.map((item) => {
+                  const productUrl = `/${locale}/product/${item.product.url_key ?? item.product.sku}`;
+                  return (
+                    <div key={item.uid} className="grid grid-cols-[1fr_120px_140px_120px] items-center px-5 py-4">
+                      {/* Product */}
+                      <div className="flex items-center gap-4">
+                        <Link href={productUrl} className="w-16 h-16 bg-gray-50 border border-gray-100 rounded-lg overflow-hidden flex items-center justify-center p-2 shrink-0 hover:border-gray-300 transition-colors">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={item.product.thumbnail?.url ?? ""}
+                            alt={item.product.name}
+                            className="w-full h-full object-contain"
+                          />
+                        </Link>
+                        <div className="min-w-0">
+                          <Link href={productUrl} className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 hover:text-[#ed1c24] transition-colors">{item.product.name}</Link>
+                          <button
+                            onClick={() => removeItem(item.uid)}
+                            className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-gray-400 hover:text-[#ed1c24] transition-colors font-medium"
+                          >
+                            <X size={10} />
+                            {isAr ? "حذف" : "Remove"}
+                          </button>
+                        </div>
+                      </div>
+                      {/* Price */}
+                      <p className="text-sm text-gray-600 text-center tabular-nums">{fmt(item.prices.price.value)}</p>
+                      {/* Qty */}
+                      <div className="flex justify-center">
+                        <QtyInput uid={item.uid} quantity={item.quantity} onUpdate={updateQty} />
+                      </div>
+                      {/* Row total */}
+                      <p className="text-sm font-bold text-gray-900 text-right tabular-nums">{fmt(item.prices.row_total.value)}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Mobile cards */}
+              <div className="md:hidden divide-y divide-gray-50">
+                {items.map((item) => {
+                  const productUrl = `/${locale}/product/${item.product.url_key ?? item.product.sku}`;
+                  return (
+                  <div key={item.uid} className="p-4">
+                    <div className="flex gap-3">
+                      <Link href={productUrl} className="w-[72px] h-[72px] bg-gray-50 border border-gray-100 rounded-lg flex items-center justify-center p-2 shrink-0 hover:border-gray-300 transition-colors">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={item.product.thumbnail?.url ?? ""} alt={item.product.name} className="w-full h-full object-contain" />
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <Link href={productUrl} className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 hover:text-[#ed1c24] transition-colors">{item.product.name}</Link>
+                        <p className="text-sm text-gray-500 mt-1 tabular-nums">{fmt(item.prices.price.value)}</p>
+                      </div>
+                      <button onClick={() => removeItem(item.uid)} className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-[#ed1c24] rounded-lg hover:bg-red-50 transition-colors shrink-0">
+                        <X size={14} />
+                      </button>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <QtyInput uid={item.uid} quantity={item.quantity} onUpdate={updateQty} />
+                      <div className="text-right">
+                        <p className="text-[11px] text-gray-400 uppercase tracking-wide">{isAr ? "الإجمالي" : "Total"}</p>
+                        <p className="text-sm font-bold text-gray-900 tabular-nums">{fmt(item.prices.row_total.value)}</p>
+                      </div>
+                    </div>
+                  </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="flex flex-col divide-y divide-ink/5">
-              {items.map((item) => (
-                <div
-                  key={item.uid}
-                  className="py-5 grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto_auto_auto] gap-4 items-center"
-                >
-                  {/* Image */}
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-cream flex-shrink-0 relative">
-                    <ProductImage
-                      src={item.product.thumbnail?.url ?? ""}
-                      alt={item.product.name}
-                      fill
-                      className="object-cover"
-                      sizes="96px"
-                    />
-                  </div>
+            {/* Continue Shopping */}
+            <div>
+              <Link
+                href={`/${locale}/tyres`}
+                className="inline-flex items-center gap-2 bg-[#ed1c24] hover:bg-[#c6181d] text-white font-black text-xs uppercase tracking-widest py-3 px-7 rounded-lg transition-colors"
+              >
+                {isAr ? "مواصلة التسوق" : "CONTINUE SHOPPING"}
+              </Link>
+            </div>
+          </div>
 
-                  {/* Info */}
-                  <div className="min-w-0">
-                    <p className="text-xs text-ink/40 uppercase tracking-wider mb-0.5">
-                      {item.product.sku}
-                    </p>
-                    <p className="font-medium text-ink text-sm leading-snug">
-                      {item.product.name}
-                    </p>
-                    <p className="sm:hidden font-semibold text-ink mt-1.5">
-                      {money(item.prices.row_total.value)}
-                    </p>
-                  </div>
+          {/* ── Right: Order Summary ───────────────────────────── */}
+          <div className="lg:sticky lg:top-24 bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
 
-                  {/* Qty */}
-                  <div className="flex items-center gap-1 border border-ink/10 rounded-xl p-1 col-start-1 sm:col-auto row-start-2 sm:row-auto">
-                    <button
-                      onClick={() => updateQty(item.uid, item.quantity - 1)}
-                      className="w-7 h-7 rounded-lg hover:bg-cream flex items-center justify-center transition-colors text-ink/60 hover:text-ink"
-                      aria-label="Decrease quantity"
-                    >
-                      <Minus size={13} />
-                    </button>
-                    <span className="text-sm font-medium text-ink w-7 text-center">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQty(item.uid, item.quantity + 1)}
-                      className="w-7 h-7 rounded-lg hover:bg-cream flex items-center justify-center transition-colors text-ink/60 hover:text-ink"
-                      aria-label="Increase quantity"
-                    >
-                      <Plus size={13} />
-                    </button>
-                  </div>
-
-                  {/* Price desktop */}
-                  <p className="hidden sm:block font-semibold text-ink text-sm text-right w-24">
-                    {money(item.prices.row_total.value)}
-                  </p>
-
-                  {/* Remove */}
-                  <button
-                    onClick={() => removeItem(item.uid)}
-                    className="p-2 rounded-full hover:bg-cream text-ink/30 hover:text-red-400 transition-colors"
-                    aria-label="Remove item"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              ))}
+            {/* Summary header */}
+            <div className="bg-[#f3f4f6] px-5 py-4 border-b border-gray-100">
+              <h2 className="font-extrabold text-sm uppercase tracking-wider text-gray-800">
+                {isAr ? "ملخص الطلب" : "Order Summary"}
+              </h2>
             </div>
 
-            {/* Coupon */}
-            <div className="mt-6 pt-6 border-t border-ink/6">
-              <p className="text-sm font-semibold text-ink mb-3 flex items-center gap-2">
-                <Tag size={15} className="text-accent" />
-                Coupon code
-              </p>
+            {/* Price rows */}
+            <div className="px-5 py-4 space-y-3">
+              <div className="flex justify-between text-sm text-gray-600 font-medium">
+                <span>{isAr ? "المجموع الجزئي" : "Subtotal"}</span>
+                <span className="font-bold text-gray-900 tabular-nums">{fmt(subtotal)}</span>
+              </div>
 
-              {discounts.length > 0 ? (
-                <div className="flex items-center justify-between bg-accent/8 border border-accent/20 rounded-xl px-4 py-3">
-                  <div className="flex items-center gap-2 text-sm font-medium text-accent">
-                    <CheckCircle size={16} />
-                    <span>{discounts.map((d) => d.label).join(", ")} applied!</span>
-                  </div>
-                  <button onClick={removeCoupon} className="text-xs text-ink/40 hover:text-ink transition-colors">
-                    Remove
-                  </button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={coupon}
-                    onChange={(e) => { setCoupon(e.target.value); setCouponError(""); }}
-                    onKeyDown={(e) => e.key === "Enter" && handleApply()}
-                    placeholder="Enter coupon code"
-                    className="input-field flex-1"
-                  />
-                  <button onClick={handleApply} className="btn-secondary text-sm px-5 py-3 flex-shrink-0">
-                    Apply
-                  </button>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-sm text-gray-600 font-medium">
+                  <span className="text-[#ed1c24]">{isAr ? "الخصم" : "Discount"}</span>
+                  <span className="font-bold text-[#ed1c24] tabular-nums">− {fmt(discountAmount)}</span>
                 </div>
               )}
-              {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
-            </div>
-          </div>
 
-          {/* Order summary */}
-          <div className="lg:sticky lg:top-24">
-            <div className="bg-cream rounded-2xl p-6">
-              <h2 className="font-semibold text-ink text-base mb-6">Order Summary</h2>
-
-              <div className="flex flex-col gap-3 text-sm">
-                <div className="flex justify-between text-ink/60">
-                  <span>Subtotal</span>
-                  <span>{money(subtotal)}</span>
+              {shippingAmount > 0 && (
+                <div className="flex justify-between text-sm text-gray-600 font-medium">
+                  <span>{isAr ? "رسوم التوصيل" : "Delivery Charges"}</span>
+                  <span className="font-bold text-gray-900 tabular-nums">{fmt(shippingAmount)}</span>
                 </div>
+              )}
 
-                {discounts.map((d) => (
-                  <div key={d.label} className="flex justify-between text-accent font-medium">
-                    <span>{d.label}</span>
-                    <span>−{money(d.amount.value)}</span>
-                  </div>
-                ))}
-
-                <div className="flex justify-between text-ink/60">
-                  <span>Shipping</span>
-                  <span className="text-ink/40">Calculated at checkout</span>
+              {appliedTaxes.length > 0 ? appliedTaxes.map((tax) => (
+                <div key={tax.label} className="flex justify-between text-sm text-gray-600 font-medium">
+                  <span>{tax.label}</span>
+                  <span className="font-bold text-gray-900 tabular-nums">{fmt(tax.amount.value)}</span>
                 </div>
-
-                <div className="border-t border-ink/10 pt-3 flex justify-between font-semibold text-ink">
-                  <span>Total</span>
-                  <span className="text-lg">{money(grandTotal)}</span>
+              )) : (
+                <div className="flex justify-between text-sm text-gray-600 font-medium">
+                  <span>{isAr ? "ضريبة القيمة المضافة (15%)" : "VAT (15%)"}</span>
+                  <span className="font-bold text-gray-900 tabular-nums">{fmt(totalTax)}</span>
                 </div>
+              )}
+
+              <div className="flex justify-between text-[15px] font-black text-gray-900 border-t border-gray-200 pt-3">
+                <span>{isAr ? "إجمالي الطلب" : "Order Total"}</span>
+                <span className="text-[#ed1c24] tabular-nums">{fmt(grandTotal)}</span>
               </div>
+            </div>
 
-              <Link href="/checkout" className="btn-accent w-full text-sm py-4 mt-6 rounded-xl">
-                Proceed to Checkout <ArrowRight size={15} />
+            {/* CTA */}
+            <div className="px-5 pb-5">
+              <Link
+                href={`/${locale}/storelocator?ref=cart`}
+                className="flex items-center justify-center gap-2 w-full bg-black hover:bg-[#ed1c24] text-white font-black text-xs uppercase tracking-widest py-4 rounded-xl transition-colors"
+              >
+                {isAr ? "متابعة الدفع" : "PROCEED TO CHECKOUT"}
+                {!isAr && <ArrowRight size={13} />}
               </Link>
 
-              <div className="mt-5 flex flex-col gap-2.5">
-                {[
-                  { icon: ShieldCheck, text: "Secure 256-bit SSL checkout" },
-                  { icon: Truck, text: "Free shipping available" },
-                ].map(({ icon: Icon, text }) => (
-                  <div key={text} className="flex items-center gap-2 text-xs text-ink/45">
-                    <Icon size={14} className="text-ink/30 flex-shrink-0" />
-                    {text}
+              {/* Payment badges — exact match to product page */}
+              <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col gap-2 mt-3">
+                <p className="text-[11px] text-gray-500 font-medium">
+                  {isAr ? "قسّم على 4 دفعات مع" : "Split in 4 Payment with"}
+                </p>
+                <div className="flex items-center gap-2.5">
+                  {/* Tabby */}
+                  <div className="inline-flex items-center justify-center bg-[#05FFD2] text-black px-3.5 py-1.5 rounded-lg font-black text-[11px] tracking-wide select-none">
+                    tabby
                   </div>
-                ))}
+                  {/* Tamara */}
+                  <div className="inline-flex items-center justify-center bg-gradient-to-r from-[#FFB399] via-[#FF7D82] to-[#C095FF] text-black px-3.5 py-1.5 rounded-lg font-black text-[11px] tracking-wide select-none">
+                    tamara
+                  </div>
+                  {/* EMKAN */}
+                  <div className="text-[#2e3162] font-black text-[14px] tracking-widest uppercase select-none font-sans">
+                    EMKΛN
+                  </div>
+                </div>
               </div>
             </div>
-
-            <Link
-              href="/shop"
-              className="flex items-center justify-center gap-2 text-sm text-ink/50 hover:text-ink transition-colors mt-4"
-            >
-              ← Continue shopping
-            </Link>
           </div>
+
         </div>
       </div>
-    </>
+    </div>
   );
 }

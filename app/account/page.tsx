@@ -1,25 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import ProductImage from "@/components/ProductImage";
 import {
   LayoutDashboard, Package, Heart, MapPin, User, LogOut,
-  ArrowRight, Loader2, CheckCircle, MapPinned,
+  ArrowRight, Loader2, CheckCircle, MapPinned, X, ShoppingBag,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
+import { useWishlist } from "@/lib/wishlist-context";
 import type { Product } from "@/lib/data";
+import DynamicAddressForm from "@/components/account/address";
+import { Money } from "@/components/Price";
 
 type Tab = "dashboard" | "orders" | "wishlist" | "addresses" | "profile";
-
-const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "orders", label: "My Orders", icon: Package },
-  { id: "wishlist", label: "Wishlist", icon: Heart },
-  { id: "addresses", label: "Addresses", icon: MapPin },
-  { id: "profile", label: "Profile", icon: User },
-];
 
 /* ─────────────────────────────────────────────────────────────────
    LOGIN / REGISTER PANEL (logged-out state)
@@ -29,6 +25,8 @@ function AuthPanel() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [form, setForm] = useState({ firstname: "", lastname: "", email: "", password: "" });
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -43,45 +41,255 @@ function AuthPanel() {
   }
 
   return (
-    <div className="container py-16 lg:py-24">
-      <div className="max-w-md mx-auto bg-white border border-ink/8 rounded-2xl p-8 shadow-card">
-        <h1 className="font-display text-2xl text-ink mb-1 text-center">
-          {mode === "login" ? "Sign in" : "Create account"}
-        </h1>
-        <p className="text-sm text-ink/50 text-center mb-7">
-          {mode === "login" ? "Access your orders and details" : "Join to track orders and check out faster"}
-        </p>
+    <div className="bg-white min-h-screen pb-16">
+      {/* Hero Banner */}
+      <div
+        className="relative bg-cover bg-center py-20 flex items-center justify-center text-center"
+        style={{ backgroundImage: `url('/heropage-banner/banner-continetal.jpg')` }}
+      >
+        <div className="absolute inset-0 bg-black/65" />
+        <div className="relative z-10 container">
+          <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-widest">
+            {mode === "login" ? "LOGIN TO YOUR ACCOUNT - POWERTYRE" : "CREATE AN ACCOUNT - POWERTYRE"}
+          </h1>
+        </div>
+      </div>
 
-        {error && (
-          <div className="mb-5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+      {/* Google Sign-in Option */}
+      <div className="container mt-8 flex justify-center">
+        <button
+          type="button"
+          className="flex items-center gap-3 bg-[#ed1c24] hover:bg-[#c6181d] text-white py-3 px-6 rounded-md font-bold text-xs uppercase tracking-wider transition-colors shadow-md shadow-red-500/10"
+        >
+          <div className="bg-white p-1 rounded">
+            <svg width="14" height="14" viewBox="0 0 24 24">
+              <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.47 15 0 12 0 7.35 0 3.39 2.67 1.47 6.56l3.87 3C6.27 6.84 8.91 5.04 12 5.04z" />
+              <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.71 2.88c2.17-2 3.71-4.94 3.71-8.61z" />
+              <path fill="#FBBC05" d="M5.34 14.59c-.24-.71-.38-1.47-.38-2.26s.14-1.55.38-2.26L1.47 7.07C.53 8.94 0 11.02 0 13.2s.53 4.26 1.47 6.13l3.87-3.01c-.24-.71-.38-1.47-.38-2.26z" />
+              <path fill="#34A853" d="M12 24c3.24 0 5.97-1.07 7.96-2.91l-3.71-2.88c-1.03.69-2.35 1.1-4.25 1.1-3.09 0-5.73-1.8-6.66-4.52L1.47 17.8c1.92 3.89 5.88 6.56 10.53 6.56z" />
+            </svg>
+          </div>
+          <span>Sign in with Google</span>
+        </button>
+      </div>
+
+      {error && (
+        <div className="container max-w-6xl mx-auto mt-6 px-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
             {error}
           </div>
-        )}
+        </div>
+      )}
 
-        <form onSubmit={submit} className="flex flex-col gap-3">
-          {mode === "register" && (
-            <div className="grid grid-cols-2 gap-3">
-              <input required placeholder="First name" value={form.firstname} onChange={set("firstname")} className="input-field" />
-              <input required placeholder="Last name" value={form.lastname} onChange={set("lastname")} className="input-field" />
+      {/* Main content grid */}
+      <div className="container max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        {mode === "login" ? (
+          <>
+            {/* REGISTERED CUSTOMERS */}
+            <div className="bg-[#f8f9fa] border border-gray-200/50 rounded-xl p-6 lg:p-8 flex flex-col justify-between min-h-[420px]">
+              <div>
+                <h2 className="text-base font-black text-gray-900 uppercase tracking-wider mb-2">
+                  REGISTERED CUSTOMERS
+                </h2>
+                <p className="text-sm text-gray-500 mb-6">
+                  If you have an account, sign in with your email address.
+                </p>
+
+                <form onSubmit={submit} className="flex flex-col gap-4">
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                      Email *
+                    </label>
+                    <input
+                      required
+                      type="email"
+                      value={form.email}
+                      onChange={set("email")}
+                      className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                      Password *
+                    </label>
+                    <input
+                      required
+                      type={showPassword ? "text" : "password"}
+                      value={form.password}
+                      onChange={set("password")}
+                      className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="show-pass-login"
+                      checked={showPassword}
+                      onChange={(e) => setShowPassword(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#ed1c24] focus:ring-[#ed1c24] border-gray-300"
+                    />
+                    <label htmlFor="show-pass-login" className="text-xs font-bold text-gray-700 select-none cursor-pointer">
+                      Show Password
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4 mt-2">
+                    <button
+                      type="submit"
+                      disabled={busy}
+                      className="bg-black hover:bg-[#ed1c24] text-white py-3.5 px-8 rounded-lg font-black uppercase tracking-wider text-xs transition-colors flex items-center justify-center min-w-[120px]"
+                    >
+                      {busy ? <Loader2 size={14} className="animate-spin" /> : "Sign In"}
+                    </button>
+                    <Link
+                      href="#"
+                      className="text-xs font-bold text-gray-800 hover:text-[#ed1c24] transition-colors uppercase tracking-wider"
+                    >
+                      Forgot Your Password?
+                    </Link>
+                  </div>
+                </form>
+              </div>
             </div>
-          )}
-          <input required type="email" placeholder="Email" value={form.email} onChange={set("email")} className="input-field" />
-          <input required type="password" placeholder="Password" value={form.password} onChange={set("password")} className="input-field" />
 
-          <button type="submit" disabled={busy} className="btn-primary text-sm py-3.5 mt-2 disabled:opacity-60">
-            {busy ? <Loader2 size={15} className="animate-spin" /> : (mode === "login" ? "Sign in" : "Create account")}
-          </button>
-        </form>
+            {/* NEW CUSTOMERS */}
+            <div className="bg-[#f8f9fa] border border-gray-200/50 rounded-xl p-6 lg:p-8 flex flex-col justify-between min-h-[420px]">
+              <div>
+                <h2 className="text-base font-black text-gray-900 uppercase tracking-wider mb-2">
+                  NEW CUSTOMERS
+                </h2>
+                <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                  Creating an account has many benefits: check out faster, keep more than one address, track orders and more.
+                </p>
+              </div>
+              <button
+                onClick={() => { setMode("register"); setError(""); }}
+                className="bg-black hover:bg-[#ed1c24] text-white py-3.5 px-8 rounded-lg font-black uppercase tracking-wider text-xs transition-colors self-start"
+              >
+                Create an Account
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* CREATE AN ACCOUNT */}
+            <div className="bg-[#f8f9fa] border border-gray-200/50 rounded-xl p-6 lg:p-8 flex flex-col justify-between min-h-[420px]">
+              <div>
+                <h2 className="text-base font-black text-gray-900 uppercase tracking-wider mb-2">
+                  CREATE AN ACCOUNT
+                </h2>
+                <p className="text-sm text-gray-500 mb-6">
+                  Please fill in the information below to create your account.
+                </p>
 
-        <p className="text-sm text-ink/50 text-center mt-6">
-          {mode === "login" ? "New here?" : "Already have an account?"}{" "}
-          <button
-            onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); }}
-            className="text-accent font-medium hover:underline"
-          >
-            {mode === "login" ? "Create an account" : "Sign in"}
-          </button>
-        </p>
+                <form onSubmit={submit} className="flex flex-col gap-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                        First Name *
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={form.firstname}
+                        onChange={set("firstname")}
+                        className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                        Last Name *
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={form.lastname}
+                        onChange={set("lastname")}
+                        className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                      Email *
+                    </label>
+                    <input
+                      required
+                      type="email"
+                      value={form.email}
+                      onChange={set("email")}
+                      className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                      Password *
+                    </label>
+                    <input
+                      required
+                      type={showPassword ? "text" : "password"}
+                      value={form.password}
+                      onChange={set("password")}
+                      className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="show-pass-register"
+                      checked={showPassword}
+                      onChange={(e) => setShowPassword(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#ed1c24] focus:ring-[#ed1c24] border-gray-300"
+                    />
+                    <label htmlFor="show-pass-register" className="text-xs font-bold text-gray-700 select-none cursor-pointer">
+                      Show Password
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4 mt-2">
+                    <button
+                      type="submit"
+                      disabled={busy}
+                      className="bg-black hover:bg-[#ed1c24] text-white py-3.5 px-8 rounded-lg font-black uppercase tracking-wider text-xs transition-colors flex items-center justify-center min-w-[150px]"
+                    >
+                      {busy ? <Loader2 size={14} className="animate-spin" /> : "Create Account"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setMode("login"); setError(""); }}
+                      className="text-xs font-bold text-gray-800 hover:text-[#ed1c24] transition-colors uppercase tracking-wider"
+                    >
+                      Back to Login
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            {/* ALREADY REGISTERED */}
+            <div className="bg-[#f8f9fa] border border-gray-200/50 rounded-xl p-6 lg:p-8 flex flex-col justify-between min-h-[420px]">
+              <div>
+                <h2 className="text-base font-black text-gray-900 uppercase tracking-wider mb-2">
+                  REGISTERED CUSTOMERS
+                </h2>
+                <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                  Already have an account? Sign in to access your dashboard, orders, and addresses.
+                </p>
+              </div>
+              <button
+                onClick={() => { setMode("login"); setError(""); }}
+                className="bg-black hover:bg-[#ed1c24] text-white py-3.5 px-8 rounded-lg font-black uppercase tracking-wider text-xs transition-colors self-start"
+              >
+                Sign In
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -90,175 +298,1120 @@ function AuthPanel() {
 /* ─────────────────────────────────────────────────────────────────
    ACCOUNT DASHBOARD (logged-in state)
 ───────────────────────────────────────────────────────────────── */
+function FormatAddress({ address }: { address: any }) {
+  return (
+    <div className="text-sm text-gray-700 leading-relaxed text-left">
+      <p className="font-semibold text-gray-800">{address.firstname} {address.lastname}</p>
+      <p className="mt-1">{address.street.join(", ")}</p>
+      <p>{address.city}{address.region?.region ? `, ${address.region.region}` : ""} {address.postcode ?? ""}</p>
+      {address.country_code && <p className="uppercase">{address.country_code}</p>}
+      {address.telephone && <p className="mt-1 text-xs text-gray-500">T: {address.telephone}</p>}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   ACCOUNT DASHBOARD (logged-in state)
+   Matches the layout in Image 1
+───────────────────────────────────────────────────────────────── */
 function AccountDashboard() {
-  const { customer, logout, busy } = useAuth();
+  const { customer, logout, busy, refresh } = useAuth();
   const { addItem } = useCart();
-  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
-  const [wishlist, setWishlist] = useState<Product[]>([]);
+  const { wishlistItems, removeFromWishlist, moveToCart } = useWishlist();
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const t = searchParams.get("tab") as Tab;
+    if (t && ["dashboard", "orders", "wishlist", "addresses", "profile"].includes(t)) {
+      return t;
+    }
+    return "dashboard";
+  });
 
   useEffect(() => {
+    const t = searchParams.get("tab") as Tab;
+    if (t && ["dashboard", "orders", "wishlist", "addresses", "profile"].includes(t)) {
+      setActiveTab(t);
+    }
+  }, [searchParams]);
+
+  // Address management state
+  const [addressMode, setAddressMode] = useState<"list" | "create" | "edit">("list");
+  const [editingAddress, setEditingAddress] = useState<any | null>(null);
+
+  // Order Detail View state
+  const [selectedOrderNumber, setSelectedOrderNumber] = useState<string | null>(null);
+  const [orderDetail, setOrderDetail] = useState<any | null>(null);
+  const [orderDetailLoading, setOrderDetailLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedOrderNumber) {
+      setOrderDetail(null);
+      return;
+    }
     let active = true;
-    fetch("/api/products?categoryUid=MTg=&pageSize=4", { cache: "no-store" })
+    setOrderDetailLoading(true);
+    const token = localStorage.getItem("customer_token");
+    fetch("/api/account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "orderDetail", token, number: selectedOrderNumber }),
+    })
       .then((r) => r.json())
-      .then((j) => { if (active) setWishlist(j.products ?? []); })
-      .catch(() => {});
-    return () => { active = false; };
-  }, []);
+      .then((data) => {
+        if (!active) return;
+        if (data.error) {
+          alert(data.error);
+        } else {
+          setOrderDetail(data.order);
+        }
+        setOrderDetailLoading(false);
+      })
+      .catch((err) => {
+        if (active) setOrderDetailLoading(false);
+        console.error(err);
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedOrderNumber]);
+
+  async function handleDeleteAddress(id: number) {
+    if (!confirm("Are you sure you want to delete this address?")) return;
+    try {
+      const token = localStorage.getItem("customer_token");
+      const res = await fetch("/api/account", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ op: "deleteAddress", token, id }),
+      });
+      const data = await res.json();
+      if (data.error) alert(data.error);
+      else await refresh();
+    } catch (err: any) { alert(err.message || "Failed to delete address"); }
+  }
+
+  // ── Profile / Edit Account state ──────────────────────────────────
+  const [profileForm, setProfileForm] = useState({ firstname: "", lastname: "" });
+  const [changeEmail, setChangeEmail] = useState(false);
+  const [changePassword, setChangePassword] = useState(false);
+  const [allowRemote, setAllowRemote] = useState(false);
+  const [profileEmail, setProfileEmail] = useState("");
+  const [profileCurrentPwd, setProfileCurrentPwd] = useState("");
+  const [profileNewPwd, setProfileNewPwd] = useState("");
+  const [profileConfirmPwd, setProfileConfirmPwd] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+
+  useEffect(() => {
+    if (customer) {
+      setProfileForm({ firstname: customer.firstname || "", lastname: customer.lastname || "" });
+      setProfileEmail(customer.email || "");
+    }
+  }, [customer]);
+
+  async function handleSaveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setProfileSaving(true);
+    setProfileError("");
+    setProfileSuccess("");
+
+    if (changePassword && profileNewPwd !== profileConfirmPwd) {
+      setProfileError("New passwords do not match.");
+      setProfileSaving(false);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("customer_token");
+
+      // 1. Update name
+      const nameRes = await fetch("/api/account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          op: "updateProfile",
+          token,
+          input: { firstname: profileForm.firstname, lastname: profileForm.lastname },
+        }),
+      });
+      const nameData = await nameRes.json();
+      if (nameData.error) throw new Error(nameData.error);
+
+      // 2. Update email if checked
+      if (changeEmail && profileEmail !== customer?.email) {
+        const emailRes = await fetch("/api/account", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            op: "updateEmail",
+            token,
+            email: profileEmail,
+            password: profileCurrentPwd,
+          }),
+        });
+        const emailData = await emailRes.json();
+        if (emailData.error) throw new Error(emailData.error);
+      }
+
+      // 3. Change password if checked
+      if (changePassword && profileCurrentPwd && profileNewPwd) {
+        const pwdRes = await fetch("/api/account", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            op: "changePassword",
+            token,
+            currentPassword: profileCurrentPwd,
+            newPassword: profileNewPwd,
+          }),
+        });
+        const pwdData = await pwdRes.json();
+        if (pwdData.error) throw new Error(pwdData.error);
+      }
+
+      await refresh();
+      setProfileSuccess("Account information saved successfully.");
+      setProfileCurrentPwd("");
+      setProfileNewPwd("");
+      setProfileConfirmPwd("");
+    } catch (err: any) {
+      setProfileError(err.message || "Failed to save account information.");
+    } finally {
+      setProfileSaving(false);
+    }
+  }
 
   if (!customer) return null;
-  const money = (v: number, c: string) => `${c} ${v.toLocaleString()}`;
+  const money = (v: number, c: string) => <Money value={v} currency={c} />;
   const orders = customer.orders?.items ?? [];
 
-  const stats = [
-    { label: "Orders", value: customer.orders?.total_count ?? 0 },
-    { label: "Wishlist", value: wishlist.length },
-    { label: "Addresses", value: customer.addresses?.length ?? 0 },
-  ];
+  const defaultBillingAddress = customer.addresses?.find((a) => a.default_billing);
+  const defaultShippingAddress = customer.addresses?.find((a) => a.default_shipping);
 
   return (
-    <div className="container py-10 lg:py-14">
-      <div className="grid lg:grid-cols-[240px_1fr] gap-8 lg:gap-12 items-start">
-        {/* Sidebar */}
-        <aside className="lg:sticky lg:top-24">
-          <div className="bg-cream rounded-2xl p-5 mb-4">
-            <p className="text-xs text-ink/40 mb-0.5">Signed in as</p>
-            <p className="font-semibold text-ink leading-tight">{customer.firstname} {customer.lastname}</p>
-            <p className="text-xs text-ink/50 truncate">{customer.email}</p>
-          </div>
-          <nav className="flex lg:flex-col gap-1 overflow-x-auto hide-scrollbar">
-            {TABS.map((t) => {
-              const Icon = t.icon;
-              const active = activeTab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
-                    active ? "bg-ink text-white" : "text-ink/60 hover:text-ink hover:bg-cream"
+    <div className="bg-white min-h-screen py-10 lg:py-16">
+      <div className="container max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-8 items-start">
+          {/* Sidebar */}
+          <aside className="bg-[#f8f9fa] border border-gray-200 rounded-lg p-6 flex flex-col gap-6 lg:sticky lg:top-24">
+            <div className="flex flex-col gap-3.5">
+              <button
+                onClick={() => { setActiveTab("dashboard"); setSelectedOrderNumber(null); }}
+                className={`text-left text-sm transition-colors ${activeTab === "dashboard" ? "text-[#ed1c24] font-bold" : "text-gray-700 hover:text-black font-medium"
                   }`}
-                >
-                  <Icon size={16} /> {t.label}
-                </button>
-              );
-            })}
-            <button
-              onClick={logout}
-              disabled={busy}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-ink/60 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-60"
-            >
-              <LogOut size={16} /> Sign out
-            </button>
-          </nav>
-        </aside>
-
-        {/* Content */}
-        <div className="min-w-0">
-          {/* Dashboard */}
-          {activeTab === "dashboard" && (
-            <div>
-              <h1 className="font-display text-3xl text-ink mb-6">Hello, {customer.firstname} 👋</h1>
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                {stats.map((s) => (
-                  <div key={s.label} className="bg-cream rounded-2xl p-5">
-                    <p className="text-2xl font-bold text-ink">{s.value}</p>
-                    <p className="text-xs text-ink/50 mt-1">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-              <h2 className="font-semibold text-ink mb-3">Recent orders</h2>
-              {orders.length === 0 ? (
-                <p className="text-sm text-ink/50">No orders yet. <Link href="/shop" className="text-accent hover:underline">Start shopping →</Link></p>
-              ) : (
-                <OrdersList orders={orders.slice(0, 3)} money={money} />
-              )}
-            </div>
-          )}
-
-          {/* Orders */}
-          {activeTab === "orders" && (
-            <div>
-              <h1 className="font-display text-2xl text-ink mb-6">My Orders</h1>
-              {orders.length === 0 ? (
-                <p className="text-sm text-ink/50">You have no orders yet.</p>
-              ) : (
-                <OrdersList orders={orders} money={money} />
-              )}
-            </div>
-          )}
-
-          {/* Wishlist */}
-          {activeTab === "wishlist" && (
-            <div>
-              <h1 className="font-display text-2xl text-ink mb-6">Wishlist</h1>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {wishlist.map((p) => (
-                  <div key={p.id} className="group bg-cream rounded-2xl overflow-hidden">
-                    <Link href={p.urlKey ? `/product/${p.urlKey}` : "/shop"} className="block aspect-square relative">
-                      <ProductImage src={p.image} alt={p.name} fill className="object-cover" sizes="200px" />
-                    </Link>
-                    <div className="p-3">
-                      <p className="text-xs font-medium text-ink truncate">{p.name}</p>
-                      <p className="text-sm font-semibold text-ink mt-0.5">${p.price}</p>
-                      <button onClick={() => addItem(p)} className="btn-primary w-full text-xs py-2 mt-2 rounded-xl">
-                        Add to cart
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Addresses */}
-          {activeTab === "addresses" && (
-            <div>
-              <h1 className="font-display text-2xl text-ink mb-6">Addresses</h1>
-              {(customer.addresses?.length ?? 0) === 0 ? (
-                <p className="text-sm text-ink/50">No saved addresses yet.</p>
-              ) : (
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {customer.addresses.map((a) => (
-                    <div key={a.id} className="border border-ink/10 rounded-2xl p-5">
-                      <div className="flex items-center gap-2 mb-2">
-                        <MapPinned size={15} className="text-accent" />
-                        <span className="font-medium text-ink text-sm">{a.firstname} {a.lastname}</span>
-                        {a.default_shipping && <span className="text-[10px] uppercase tracking-wide bg-ink/5 text-ink/50 px-2 py-0.5 rounded-full">Default</span>}
-                      </div>
-                      <p className="text-sm text-ink/60 leading-relaxed">
-                        {a.street.join(", ")}<br />
-                        {a.city}{a.region?.region ? `, ${a.region.region}` : ""} {a.postcode ?? ""}<br />
-                        {a.country_code}<br />
-                        {a.telephone}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Profile */}
-          {activeTab === "profile" && (
-            <div className="max-w-md">
-              <h1 className="font-display text-2xl text-ink mb-6">Profile</h1>
-              <div className="flex flex-col gap-4">
-                {[
-                  { label: "First name", value: customer.firstname },
-                  { label: "Last name", value: customer.lastname },
-                  { label: "Email", value: customer.email },
-                  { label: "Newsletter", value: customer.is_subscribed ? "Subscribed" : "Not subscribed" },
-                ].map((f) => (
-                  <div key={f.label}>
-                    <p className="text-xs text-ink/40 mb-1">{f.label}</p>
-                    <p className="text-sm text-ink font-medium border border-ink/8 rounded-xl px-4 py-3 bg-cream/50">{f.value}</p>
-                  </div>
-                ))}
-              </div>
-              <button onClick={logout} disabled={busy} className="btn-secondary text-sm px-6 py-3 mt-6 disabled:opacity-60">
-                <LogOut size={15} /> Sign out
+              >
+                My Account
+              </button>
+              <button
+                onClick={() => { setActiveTab("orders"); setSelectedOrderNumber(null); }}
+                className={`text-left text-sm transition-colors ${activeTab === "orders" ? "text-[#ed1c24] font-bold" : "text-gray-700 hover:text-black font-medium"
+                  }`}
+              >
+                My Orders
               </button>
             </div>
-          )}
+
+            <div className="flex flex-col gap-3.5 pt-6 border-t border-gray-200">
+              <button
+                onClick={() => { setActiveTab("addresses"); setSelectedOrderNumber(null); }}
+                className={`text-left text-sm transition-colors ${activeTab === "addresses" ? "text-[#ed1c24] font-bold" : "text-gray-700 hover:text-black font-medium"
+                  }`}
+              >
+                Address Book
+              </button>
+              <button
+                onClick={() => { setActiveTab("profile"); setSelectedOrderNumber(null); }}
+                className={`text-left text-sm transition-colors ${activeTab === "profile" ? "text-[#ed1c24] font-bold" : "text-gray-700 hover:text-black font-medium"
+                  }`}
+              >
+                Account Information
+              </button>
+            </div>
+
+            <div className="pt-6 border-t border-gray-200">
+              <button
+                onClick={logout}
+                disabled={busy}
+                className="text-left text-sm text-gray-700 hover:text-red-600 font-medium transition-colors disabled:opacity-60"
+              >
+                Logout
+              </button>
+            </div>
+          </aside>
+
+          {/* Content Box */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 lg:p-8 min-h-[480px]">
+            {/* Dashboard tab */}
+            {activeTab === "dashboard" && (
+              <div>
+                <h1 className="text-2xl font-black uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-4 mb-6">
+                  My Account
+                </h1>
+
+                {/* Account Information */}
+                <div className="mb-8">
+                  <h2 className="text-sm font-black uppercase tracking-wider text-gray-900 mb-3.5">
+                    Account Information
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                      <div className="bg-[#f8f9fa] border-b border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-700 text-left uppercase tracking-wider">
+                        Contact Information
+                      </div>
+                      <div className="p-5 text-left flex flex-col items-start">
+                        <p className="text-sm font-semibold text-gray-800">
+                          {customer.firstname} {customer.lastname}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">{customer.email}</p>
+                        <div className="flex justify-start gap-2 mt-5 pt-4 border-t border-gray-100 w-full">
+                          <button
+                            onClick={() => setActiveTab("profile")}
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => setActiveTab("profile")}
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                          >
+                            Change Password
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Address Book */}
+                <div className="mb-8">
+                  <div className="flex items-center justify-between border-b border-gray-200 pb-2.5 mb-4">
+                    <h2 className="text-sm font-black uppercase tracking-wider text-gray-900">
+                      Address Book
+                    </h2>
+                    <button
+                      onClick={() => setActiveTab("addresses")}
+                      className="border border-gray-300 hover:bg-gray-50 text-gray-800 px-3.5 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                    >
+                      Manage Addresses
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Default Billing Card */}
+                    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white flex flex-col">
+                      <div className="bg-[#f8f9fa] border-b border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-700 text-left uppercase tracking-wider">
+                        Default Billing Address
+                      </div>
+                      <div className="p-5 text-left flex-1 flex flex-col justify-between min-h-[160px]">
+                        {defaultBillingAddress ? (
+                          <div className="text-left mb-4">
+                            <FormatAddress address={defaultBillingAddress} />
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500 my-auto py-4">
+                            You have not set a default billing address.
+                          </p>
+                        )}
+                        <div className="pt-4 border-t border-gray-100">
+                          <button
+                            onClick={() => setActiveTab("addresses")}
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                          >
+                            Edit Address
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Default Shipping Card */}
+                    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white flex flex-col">
+                      <div className="bg-[#f8f9fa] border-b border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-700 text-left uppercase tracking-wider">
+                        Default Shipping Address
+                      </div>
+                      <div className="p-5 text-left flex-1 flex flex-col justify-between min-h-[160px]">
+                        {defaultShippingAddress ? (
+                          <div className="text-left mb-4">
+                            <FormatAddress address={defaultShippingAddress} />
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500 my-auto py-4">
+                            You have not set a default shipping address.
+                          </p>
+                        )}
+                        <div className="pt-4 border-t border-gray-100">
+                          <button
+                            onClick={() => setActiveTab("addresses")}
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                          >
+                            Edit Address
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Orders */}
+                <div>
+                  <div className="flex items-center justify-between border-b border-gray-200 pb-2.5 mb-4">
+                    <h2 className="text-sm font-black uppercase tracking-wider text-gray-900">
+                      Recent Orders
+                    </h2>
+                    <button
+                      onClick={() => setActiveTab("orders")}
+                      className="border border-gray-300 hover:bg-gray-50 text-gray-800 px-3.5 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                    >
+                      View All
+                    </button>
+                  </div>
+                  {orders.length === 0 ? (
+                    <p className="text-sm text-gray-500 py-4">You have placed no orders.</p>
+                  ) : (
+                    <OrdersList
+                      orders={orders}
+                      money={money}
+                      token={localStorage.getItem("customer_token")}
+                      limit={5}
+                      onViewOrder={(number) => {
+                        setSelectedOrderNumber(number);
+                        setActiveTab("orders");
+                      }}
+                      customerName={`${customer.firstname} ${customer.lastname}`}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Orders tab */}
+            {activeTab === "orders" && (
+              selectedOrderNumber ? (
+                <OrderDetailView
+                  number={selectedOrderNumber}
+                  order={orderDetail}
+                  loading={orderDetailLoading}
+                  money={money}
+                  onBack={() => setSelectedOrderNumber(null)}
+                />
+              ) : (
+                <div>
+                  <h1 className="text-2xl font-black uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-4 mb-6">
+                    My Orders
+                  </h1>
+                  {orders.length === 0 ? (
+                    <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded px-4 py-3 text-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 flex-shrink-0 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-5a1 1 0 00-1 1v2a1 1 0 002 0V9a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      <span>You have placed no orders.</span>
+                    </div>
+                  ) : (
+                    <OrdersList
+                      orders={orders}
+                      money={money}
+                      token={localStorage.getItem("customer_token")}
+                      customerName={`${customer.firstname} ${customer.lastname}`}
+                      onViewOrder={(number) => setSelectedOrderNumber(number)}
+                    />
+                  )}
+                </div>
+              )
+            )}
+
+            {/* Wishlist tab */}
+            {activeTab === "wishlist" && (
+              <div>
+                <h1 className="text-2xl font-black uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-4 mb-6">
+                  Wishlist
+                </h1>
+                {wishlistItems.length === 0 ? (
+                  <p className="text-sm text-gray-500">Your wishlist is empty.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {wishlistItems.map((item) => {
+                      const p = item.product;
+                      return (
+                        <div key={item.id} className="group bg-[#f8f9fa] border border-gray-200 rounded-xl overflow-hidden flex flex-col relative">
+                          <button
+                            onClick={() => removeFromWishlist(p.sku)}
+                            className="absolute top-2 right-2 z-10 bg-white/80 hover:bg-red-50 p-1.5 rounded-full shadow-sm text-gray-400 hover:text-red-500 transition-colors"
+                            title="Remove"
+                          >
+                            <X size={14} />
+                          </button>
+                          <Link href={p.urlKey ? `/product/${p.urlKey}` : "/"} className="block aspect-square relative bg-white border-b border-gray-100">
+                            <ProductImage src={p.image} alt={p.name} fill className="object-contain p-2" sizes="200px" />
+                          </Link>
+                          <div className="p-3.5 flex-1 flex flex-col justify-between">
+                            <div>
+                              <p className="text-xs font-semibold text-gray-900 truncate">{p.name}</p>
+                              <p className="text-sm font-extrabold text-gray-900 mt-1">${p.price}</p>
+                            </div>
+                            <button
+                              onClick={() => moveToCart(item.id)}
+                              className="bg-black hover:bg-[#ed1c24] text-white text-[11px] font-bold py-2 mt-3 rounded-lg uppercase tracking-wider transition-colors w-full"
+                            >
+                              Add to cart
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Addresses tab */}
+            {activeTab === "addresses" && (
+              <div>
+                {/* ── List View ── */}
+                {addressMode === "list" && (
+                  <>
+                    <h1 className="text-2xl font-black uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-4 mb-6">
+                      ADDRESS BOOK
+                    </h1>
+
+                    {/* Default Addresses */}
+                    <div className="mb-8">
+                      <h2 className="text-sm font-black uppercase tracking-wider text-gray-900 mb-4">
+                        Default Addresses
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {/* Default Billing */}
+                        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                          <div className="bg-[#f8f9fa] border-b border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-700 text-center uppercase tracking-wider">
+                            Default Billing Address
+                          </div>
+                          <div className="p-5 flex flex-col justify-between min-h-[160px]">
+                            {defaultBillingAddress ? (
+                              <div className="text-sm text-gray-800 leading-relaxed">
+                                <p className="font-semibold">{defaultBillingAddress.firstname} {defaultBillingAddress.lastname}</p>
+                                <p>{defaultBillingAddress.street?.join(", ")}</p>
+                                <p className="text-[#ed1c24]">{defaultBillingAddress.city}{defaultBillingAddress.region?.region ? `, ${defaultBillingAddress.region.region}` : ""}{defaultBillingAddress.postcode ? `, ${defaultBillingAddress.postcode}` : ""}</p>
+                                <p className="text-[#ed1c24]">{defaultBillingAddress.country_code === "SA" ? "Saudi Arabia" : defaultBillingAddress.country_code}</p>
+                                {defaultBillingAddress.telephone && <p>T: {defaultBillingAddress.telephone}</p>}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">You have not set a default billing address.</p>
+                            )}
+                            <button
+                              onClick={() => { setEditingAddress(defaultBillingAddress || null); setAddressMode(defaultBillingAddress ? "edit" : "create"); }}
+                              className="mt-4 border border-gray-300 hover:bg-gray-100 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                            >
+                              Change Billing Address
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Default Shipping */}
+                        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                          <div className="bg-[#f8f9fa] border-b border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-700 text-center uppercase tracking-wider">
+                            Default Shipping Address
+                          </div>
+                          <div className="p-5 flex flex-col justify-between min-h-[160px]">
+                            {defaultShippingAddress ? (
+                              <div className="text-sm text-gray-800 leading-relaxed">
+                                <p className="font-semibold">{defaultShippingAddress.firstname} {defaultShippingAddress.lastname}</p>
+                                <p>{defaultShippingAddress.street?.join(", ")}</p>
+                                <p className="text-[#ed1c24]">{defaultShippingAddress.city}{defaultShippingAddress.region?.region ? `, ${defaultShippingAddress.region.region}` : ""}{defaultShippingAddress.postcode ? `, ${defaultShippingAddress.postcode}` : ""}</p>
+                                <p className="text-[#ed1c24]">{defaultShippingAddress.country_code === "SA" ? "Saudi Arabia" : defaultShippingAddress.country_code}</p>
+                                {defaultShippingAddress.telephone && <p>T: {defaultShippingAddress.telephone}</p>}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500">You have not set a default shipping address.</p>
+                            )}
+                            <button
+                              onClick={() => { setEditingAddress(defaultShippingAddress || null); setAddressMode(defaultShippingAddress ? "edit" : "create"); }}
+                              className="mt-4 border border-gray-300 hover:bg-gray-100 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                            >
+                              Change Shipping Address
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Additional Entries */}
+                    <div>
+                      <h2 className="text-sm font-black uppercase tracking-wider text-gray-900 mb-4 border-b border-gray-100 pb-2">
+                        Additional Address Entries
+                      </h2>
+                      {(customer.addresses?.filter(a => !a.default_billing && !a.default_shipping).length ?? 0) === 0 ? (
+                        <p className="text-sm text-gray-500 mb-5">You have no other address entries in your address book.</p>
+                      ) : (() => {
+                        const extras = customer.addresses.filter(a => !a.default_billing && !a.default_shipping);
+                        return (
+                          <div className="mb-5 overflow-x-auto">
+                            <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+                              <thead>
+                                <tr className="bg-[#f8f9fa] border-b border-gray-200">
+                                  {["First Name", "Last Name", "Street Address", "City", "Country", "State", "Zip/Postal Code", "Phone", ""].map((h) => (
+                                    <th key={h} className="text-left text-[11px] font-black uppercase tracking-wider text-gray-700 px-3 py-2.5 whitespace-nowrap">{h}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {extras.map((a, i) => (
+                                  <tr key={a.id} className={i % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}>
+                                    <td className="px-3 py-2.5 text-gray-800">{a.firstname}</td>
+                                    <td className="px-3 py-2.5 text-gray-800">{a.lastname}</td>
+                                    <td className="px-3 py-2.5 text-gray-800">{a.street?.join(", ")}</td>
+                                    <td className="px-3 py-2.5 text-gray-800">{a.city}</td>
+                                    <td className="px-3 py-2.5 text-gray-800">{a.country_code === "SA" ? "Saudi Arabia" : a.country_code === "AE" ? "United Arab Emirates" : a.country_code}</td>
+                                    <td className="px-3 py-2.5 text-[#ed1c24]">{a.region?.region ?? ""}</td>
+                                    <td className="px-3 py-2.5 text-gray-800">{a.postcode ?? ""}</td>
+                                    <td className="px-3 py-2.5 text-gray-800 whitespace-nowrap">{a.telephone ?? ""}</td>
+                                    <td className="px-3 py-2.5 whitespace-nowrap">
+                                      <button onClick={() => { setEditingAddress(a); setAddressMode("edit"); }}
+                                        className="border border-gray-300 hover:bg-gray-100 text-gray-800 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-colors mr-1.5">Edit</button>
+                                      <button onClick={() => handleDeleteAddress(a.id)}
+                                        className="border border-red-300 hover:bg-red-50 text-red-600 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-colors">Delete</button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            <div className="flex items-center justify-between mt-2 text-xs text-gray-500 px-1">
+                              <span>{extras.length} Item{extras.length !== 1 ? "s" : ""}</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                      <button
+                        onClick={() => setAddressMode("create")}
+                        className="bg-black hover:bg-[#ed1c24] text-white px-5 py-2.5 rounded font-black text-xs uppercase tracking-wider transition-colors"
+                      >
+                        Add New Address
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* ── Create / Edit Form ── */}
+                {(addressMode === "create" || addressMode === "edit") && (
+                  <DynamicAddressForm
+                    mode={addressMode as "create" | "edit"}
+                    editingAddress={editingAddress}
+                    customer={customer}
+                    onSuccess={async () => {
+                      await refresh();
+                      setAddressMode("list");
+                      setEditingAddress(null);
+                    }}
+                    onBack={() => {
+                      setAddressMode("list");
+                      setEditingAddress(null);
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
+
+
+            {activeTab === "profile" && (
+              <div>
+                <h1 className="text-2xl font-black uppercase tracking-wider text-gray-900 border-b border-gray-100 pb-4 mb-6">
+                  EDIT ACCOUNT INFORMATION
+                </h1>
+
+                {profileError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-6">
+                    {profileError}
+                  </div>
+                )}
+                {profileSuccess && (
+                  <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3 mb-6">
+                    {profileSuccess}
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveProfile} className="flex flex-col gap-8">
+                  {/* Account Information */}
+                  <div>
+                    <h2 className="text-xs font-black uppercase tracking-wider text-gray-900 mb-4 border-b border-gray-100 pb-2">
+                      Account Information
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                          First Name *
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={profileForm.firstname}
+                          onChange={(e) => setProfileForm({ ...profileForm, firstname: e.target.value })}
+                          className="w-full bg-white border border-gray-300 rounded px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                          Last Name *
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={profileForm.lastname}
+                          onChange={(e) => setProfileForm({ ...profileForm, lastname: e.target.value })}
+                          className="w-full bg-white border border-gray-300 rounded px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Checkboxes */}
+                    <div className="flex flex-col gap-2.5 mt-5">
+                      <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={changeEmail}
+                          onChange={(e) => setChangeEmail(e.target.checked)}
+                          className="w-4 h-4 accent-[#ed1c24] cursor-pointer"
+                        />
+                        <span className="text-sm text-gray-800">Change Email</span>
+                      </label>
+                      <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={changePassword}
+                          onChange={(e) => setChangePassword(e.target.checked)}
+                          className="w-4 h-4 accent-[#ed1c24] cursor-pointer"
+                        />
+                        <span className="text-sm text-gray-800">Change Password</span>
+                      </label>
+                      <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={allowRemote}
+                          onChange={(e) => setAllowRemote(e.target.checked)}
+                          className="w-4 h-4 accent-[#ed1c24] cursor-pointer"
+                        />
+                        <span className="text-sm text-gray-800">Allow remote shopping assistance</span>
+                        <span
+                          title="Allows a store representative to view and assist with your session."
+                          className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 text-gray-500 text-[10px] font-bold cursor-help"
+                        >
+                          ?
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Change Email & Password section — only shows if at least one box is checked */}
+                  {(changeEmail || changePassword) && (
+                    <div>
+                      <h2 className="text-xs font-black uppercase tracking-wider text-gray-900 mb-4 border-b border-gray-100 pb-2">
+                        Change Email and Password
+                      </h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Email — shown only when changeEmail is checked */}
+                        {changeEmail && (
+                          <div>
+                            <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                              Email *
+                            </label>
+                            <input
+                              required
+                              type="email"
+                              value={profileEmail}
+                              onChange={(e) => setProfileEmail(e.target.value)}
+                              className="w-full bg-white border border-gray-300 rounded px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                            />
+                          </div>
+                        )}
+
+                        {/* Current Password — always required when either box is checked */}
+                        <div>
+                          <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                            Current Password *
+                          </label>
+                          <input
+                            required
+                            type={showPassword ? "text" : "password"}
+                            value={profileCurrentPwd}
+                            onChange={(e) => setProfileCurrentPwd(e.target.value)}
+                            className="w-full bg-white border border-gray-300 rounded px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                          />
+                        </div>
+
+                        {/* New Password — shown only when changePassword is checked */}
+                        {changePassword && (
+                          <>
+                            <div>
+                              <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                                New Password *
+                              </label>
+                              <input
+                                required
+                                type={showPassword ? "text" : "password"}
+                                value={profileNewPwd}
+                                onChange={(e) => setProfileNewPwd(e.target.value)}
+                                className="w-full bg-white border border-gray-300 rounded px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
+                                Confirm New Password *
+                              </label>
+                              <input
+                                required
+                                type={showPassword ? "text" : "password"}
+                                value={profileConfirmPwd}
+                                onChange={(e) => setProfileConfirmPwd(e.target.value)}
+                                className="w-full bg-white border border-gray-300 rounded px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Show Password toggle */}
+                      <label className="flex items-center gap-2.5 mt-4 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={showPassword}
+                          onChange={(e) => setShowPassword(e.target.checked)}
+                          className="w-4 h-4 accent-[#ed1c24] cursor-pointer"
+                        />
+                        <span className="text-sm text-gray-800">Show Password</span>
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Save button */}
+                  <div>
+                    <button
+                      type="submit"
+                      disabled={profileSaving}
+                      className="bg-black hover:bg-[#ed1c24] text-white px-6 py-2.5 rounded font-black text-xs uppercase tracking-wider transition-colors disabled:opacity-60"
+                    >
+                      {profileSaving ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+
+                  {/* Danger zone — Delete Account */}
+                  <div className="border border-red-200 rounded-lg p-5 bg-red-50">
+                    <h2 className="text-xs font-black uppercase tracking-wider text-red-700 mb-2">
+                      Danger Zone
+                    </h2>
+                    <p className="text-sm text-red-600 mb-4">
+                      Permanently delete your account and all associated data. This action cannot be undone.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!confirm("Are you absolutely sure? This will permanently delete your account.")) return;
+                        const tok = localStorage.getItem("customer_token");
+                        const res = await fetch("/api/account", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ op: "deleteCustomer", token: tok }),
+                        });
+                        const data = await res.json() as { ok?: boolean; error?: string };
+                        if (data.ok) {
+                          localStorage.removeItem("customer_token");
+                          window.location.href = "/";
+                        } else {
+                          alert(data.error || "Failed to delete account. Please try again.");
+                        }
+                      }}
+                      className="border border-red-400 hover:bg-red-600 hover:text-white text-red-700 px-5 py-2 rounded font-black text-xs uppercase tracking-wider transition-colors"
+                    >
+                      Delete My Account
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderDetailView({
+  number,
+  order,
+  loading,
+  money,
+  onBack,
+}: {
+  number: string;
+  order: any;
+  loading: boolean;
+  money: (v: number, c: string) => React.ReactNode;
+  onBack: () => void;
+}) {
+  if (loading) {
+    return (
+      <div className="animate-pulse">
+        {/* Back button placeholder */}
+        <div className="h-4 bg-gray-200 rounded w-1/4 mb-6" />
+
+        {/* Header placeholder */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 mb-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="h-7 bg-gray-200 rounded w-48" />
+              <div className="h-6 bg-gray-200 rounded w-16" />
+            </div>
+            <div className="h-3 bg-gray-200 rounded w-32" />
+          </div>
+        </div>
+
+        {/* Tab placeholder */}
+        <div className="border-b border-gray-200 flex mb-0.5">
+          <div className="border border-b-0 border-gray-200 bg-white px-5 py-2.5 rounded-t-md">
+            <div className="h-4 bg-gray-200 rounded w-24" />
+          </div>
+        </div>
+
+        {/* Table placeholder */}
+        <div className="border border-gray-200 rounded-b-md overflow-hidden bg-white mb-8">
+          <div className="bg-[#f8f9fa] border-b border-gray-200 px-4 py-3 flex justify-between">
+            <div className="h-3 bg-gray-200 rounded w-1/4" />
+            <div className="h-3 bg-gray-200 rounded w-12" />
+            <div className="h-3 bg-gray-200 rounded w-12" />
+          </div>
+          <div className="divide-y divide-gray-100 px-4 py-4 space-y-4">
+            <div className="flex justify-between items-center py-2">
+              <div className="space-y-2 w-1/3">
+                <div className="h-4 bg-gray-200 rounded w-full" />
+                <div className="h-3 bg-gray-200 rounded w-2/3" />
+              </div>
+              <div className="h-4 bg-gray-200 rounded w-16" />
+              <div className="h-4 bg-gray-200 rounded w-12" />
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <div className="space-y-2 w-1/3">
+                <div className="h-4 bg-gray-200 rounded w-full" />
+                <div className="h-3 bg-gray-200 rounded w-2/3" />
+              </div>
+              <div className="h-4 bg-gray-200 rounded w-16" />
+              <div className="h-4 bg-gray-200 rounded w-12" />
+            </div>
+          </div>
+          <div className="flex justify-end p-5 bg-[#fafafa] border-t border-gray-100">
+            <div className="w-full max-w-[280px] space-y-3">
+              <div className="flex justify-between"><div className="h-3 bg-gray-200 rounded w-16" /><div className="h-3 bg-gray-200 rounded w-12" /></div>
+              <div className="flex justify-between"><div className="h-3 bg-gray-200 rounded w-24" /><div className="h-3 bg-gray-200 rounded w-12" /></div>
+              <div className="flex justify-between pt-2 border-t border-gray-200"><div className="h-4 bg-gray-200 rounded w-20" /><div className="h-4 bg-gray-200 rounded w-16" /></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Order Info placeholder */}
+        <div className="h-5 bg-gray-200 rounded w-1/4 mb-4" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          <div className="border border-gray-200 rounded-lg h-32 bg-white" />
+          <div className="border border-gray-200 rounded-lg h-32 bg-white" />
+          <div className="border border-gray-200 rounded-lg h-32 bg-white" />
+          <div className="border border-gray-200 rounded-lg h-32 bg-white" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-sm text-[#ed1c24] font-bold uppercase tracking-wider mb-4">Order not found.</p>
+        <button
+          onClick={onBack}
+          className="border border-gray-300 hover:bg-gray-50 text-gray-800 px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+        >
+          Back to Orders
+        </button>
+      </div>
+    );
+  }
+
+  const orderDateFormatted = (() => {
+    try {
+      const d = new Date(order.order_date.replace(/-/g, "/"));
+      return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    } catch {
+      return order.order_date;
+    }
+  })();
+
+  const billing = order.billing_address;
+  const shipping = order.shipping_address;
+
+  // Format tax display (sum all taxes)
+  const taxSum = order.total.taxes?.reduce((sum: number, tax: any) => sum + (tax.amount?.value || 0), 0) || 0;
+  const taxCurrency = order.total.taxes?.[0]?.amount?.currency || "SAR";
+
+  return (
+    <div>
+      {/* Back button */}
+      <button
+        onClick={onBack}
+        className="flex items-center gap-1.5 text-gray-500 hover:text-black text-xs font-bold uppercase tracking-wider mb-6 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        Back to My Orders
+      </button>
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 mb-6">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-black uppercase tracking-wider text-gray-900">
+              ORDER # {order.number}
+            </h1>
+            <span className="border border-gray-300 text-gray-700 bg-gray-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-widest rounded-sm">
+              {order.status}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+            {orderDateFormatted}
+          </p>
+        </div>
+      </div>
+
+      {/* Tab bar */}
+      <div className="border-b border-gray-200 flex mb-0.5">
+        <div className="border border-b-0 border-gray-200 bg-white px-5 py-2.5 text-xs font-bold text-gray-900 rounded-t-md select-none">
+          Items Ordered
+        </div>
+      </div>
+
+      {/* Items Table */}
+      <div className="border border-gray-200 rounded-b-md overflow-hidden bg-white mb-8">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[#f8f9fa] border-b border-gray-200">
+                <th className="text-left text-[11px] font-black uppercase tracking-wider text-gray-700 px-4 py-3">Product Name</th>
+                <th className="text-left text-[11px] font-black uppercase tracking-wider text-gray-700 px-4 py-3">SKU</th>
+                <th className="text-right text-[11px] font-black uppercase tracking-wider text-gray-700 px-4 py-3">Price</th>
+                <th className="text-center text-[11px] font-black uppercase tracking-wider text-gray-700 px-4 py-3">Qty</th>
+                <th className="text-right text-[11px] font-black uppercase tracking-wider text-gray-700 px-4 py-3">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {order.items?.map((item: any) => (
+                <tr key={item.id} className="hover:bg-[#fafafa] transition-colors">
+                  <td className="px-4 py-4 text-gray-900 font-bold leading-normal max-w-xs">{item.product_name}</td>
+                  <td className="px-4 py-4 text-gray-500 font-medium">{item.product_sku}</td>
+                  <td className="px-4 py-4 text-right text-gray-900 font-bold whitespace-nowrap">
+                    {money(item.product_sale_price.value, item.product_sale_price.currency)}
+                  </td>
+                  <td className="px-4 py-4 text-center text-gray-700 font-bold whitespace-nowrap">
+                    Ordered {item.quantity_ordered}
+                  </td>
+                  <td className="px-4 py-4 text-right text-gray-900 font-extrabold whitespace-nowrap">
+                    {money(item.product_sale_price.value * item.quantity_ordered, item.product_sale_price.currency)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Totals Section */}
+        <div className="flex justify-end p-5 bg-[#fafafa] border-t border-gray-100">
+          <div className="w-full max-w-[280px] space-y-2.5">
+            <div className="flex justify-between items-center text-[12px] text-gray-600 font-medium">
+              <span>Subtotal</span>
+              <span className="text-gray-900 font-bold">
+                {money(order.total.subtotal.value, order.total.subtotal.currency)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-[12px] text-gray-600 font-medium">
+              <span>Shipping & Handling</span>
+              <span className="text-gray-900 font-bold">
+                {money(order.total.shipping_handling?.total_amount?.value || 0, order.total.shipping_handling?.total_amount?.currency || "SAR")}
+              </span>
+            </div>
+            {taxSum > 0 && (
+              <div className="flex justify-between items-center text-[12px] text-gray-600 font-medium">
+                <span>VAT(15%)</span>
+                <span className="text-gray-900 font-bold">{money(taxSum, taxCurrency)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center text-[13px] text-gray-955 font-black pt-2.5 border-t border-gray-200">
+              <span>Grand Total</span>
+              <span className="text-base text-gray-955">
+                {money(order.total.grand_total.value, order.total.grand_total.currency)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Order Information Section */}
+      <h2 className="text-base font-black uppercase tracking-wider text-gray-900 mb-4">
+        Order Information
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        {/* Billing Address Box */}
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+          <div className="bg-[#f8f9fa] border-b border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-700 text-left uppercase tracking-wider">
+            Billing Address
+          </div>
+          <div className="p-5 text-left text-sm text-gray-800 leading-relaxed">
+            {billing ? (
+              <>
+                <p className="font-semibold text-gray-900">{billing.firstname} {billing.lastname}</p>
+                <p>{billing.street?.join(", ")}</p>
+                <p>{billing.city}{billing.region ? `, ${billing.region}` : ""}{billing.postcode ? `, ${billing.postcode}` : ""}</p>
+                <p>{billing.country_code === "SA" ? "Saudi Arabia" : billing.country_code}</p>
+                {billing.telephone && <p className="text-xs text-gray-500 mt-1">T: {billing.telephone}</p>}
+              </>
+            ) : (
+              <p className="text-gray-400">No billing address found.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Shipping Method Box */}
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+          <div className="bg-[#f8f9fa] border-b border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-700 text-left uppercase tracking-wider">
+            Shipping Method
+          </div>
+          <div className="p-5 text-left text-sm text-gray-800 leading-relaxed font-semibold">
+            Ship to an Installer Partners
+          </div>
+        </div>
+
+        {/* Shipping Address Box */}
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+          <div className="bg-[#f8f9fa] border-b border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-700 text-left uppercase tracking-wider">
+            Shipping Address
+          </div>
+          <div className="p-5 text-left text-sm text-gray-800 leading-relaxed">
+            {shipping ? (
+              <>
+                <p className="font-semibold text-gray-900">{shipping.firstname} {shipping.lastname}</p>
+                <p>{shipping.street?.join(", ")}</p>
+                <p>{shipping.city}{shipping.region ? `, ${shipping.region}` : ""}{shipping.postcode ? `, ${shipping.postcode}` : ""}</p>
+                <p>{shipping.country_code === "SA" ? "Saudi Arabia" : shipping.country_code}</p>
+                {shipping.telephone && <p className="text-xs text-gray-500 mt-1">T: {shipping.telephone}</p>}
+              </>
+            ) : (
+              <p className="text-gray-400">No shipping address found.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Payment Method Box */}
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+          <div className="bg-[#f8f9fa] border-b border-gray-200 px-4 py-2.5 text-xs font-bold text-gray-700 text-left uppercase tracking-wider">
+            Payment Method
+          </div>
+          <div className="p-5 text-left text-sm text-gray-800 leading-relaxed font-semibold">
+            {order.payment_methods?.[0]?.name || "Cash payment after fitting/delivery"}
+          </div>
         </div>
       </div>
     </div>
@@ -266,29 +1419,93 @@ function AccountDashboard() {
 }
 
 function OrdersList({
-  orders, money,
+  orders, money, token, limit, onViewOrder, customerName,
 }: {
   orders: { number: string; order_date: string; status: string; total: { grand_total: { value: number; currency: string } } }[];
-  money: (v: number, c: string) => string;
+  money: (v: number, c: string) => React.ReactNode;
+  token?: string | null;
+  limit?: number;
+  onViewOrder?: (number: string) => void;
+  customerName: string;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] === "ar" ? "ar" : "en";
+
+  const [reordering, setReordering] = useState<string | null>(null);
+  const [reorderMsg, setReorderMsg] = useState<{ number: string; ok: boolean; msg: string } | null>(null);
+
+  async function handleReorder(orderNumber: string) {
+    setReordering(orderNumber); setReorderMsg(null);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ op: "reorder", orderNumber, token }),
+      });
+      const data = await res.json() as { cartId?: string; error?: string; userInputErrors?: { message: string }[] };
+      const errs = data.userInputErrors?.map((e: { message: string }) => e.message).join(", ");
+      const ok = !data.error && !errs;
+      setReorderMsg({ number: orderNumber, ok, msg: errs || data.error || "Items added to cart!" });
+      if (ok) {
+        router.push(`/${locale}/cart`);
+      }
+    } catch { setReorderMsg({ number: orderNumber, ok: false, msg: "Network error" }); }
+    finally { setReordering(null); }
+  }
+
+  const itemsToShow = limit ? orders.slice(0, limit) : orders;
+
   return (
-    <div className="flex flex-col gap-3">
-      {orders.map((o) => (
-        <div key={o.number} className="flex items-center justify-between gap-4 border border-ink/8 rounded-2xl px-5 py-4">
-          <div className="min-w-0">
-            <p className="font-medium text-ink text-sm">Order #{o.number}</p>
-            <p className="text-xs text-ink/45 mt-0.5">{o.order_date}</p>
-          </div>
-          <div className="flex items-center gap-4 flex-shrink-0">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ink/60 bg-cream px-3 py-1.5 rounded-full">
-              <CheckCircle size={13} className="text-emerald-500" /> {o.status}
-            </span>
-            <span className="font-semibold text-ink text-sm">
-              {money(o.total.grand_total.value, o.total.grand_total.currency)}
-            </span>
-          </div>
-        </div>
-      ))}
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+        <thead>
+          <tr className="bg-[#f8f9fa] border-b border-gray-200">
+            {["Order #", "Date", "Ship To", "Order Total", "Status", "Action"].map((h) => (
+              <th key={h} className="text-left text-[11px] font-black uppercase tracking-wider text-gray-700 px-4 py-3 whitespace-nowrap">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {itemsToShow.map((o, idx) => (
+            <tr key={o.number} className={idx % 2 === 0 ? "bg-white" : "bg-[#fafafa]"}>
+              <td className="px-4 py-3.5 text-gray-900 font-bold">{o.number}</td>
+              <td className="px-4 py-3.5 text-gray-600">{o.order_date}</td>
+              <td className="px-4 py-3.5 text-gray-800">{customerName}</td>
+              <td className="px-4 py-3.5 text-gray-900 font-extrabold">
+                {money(o.total.grand_total.value, o.total.grand_total.currency)}
+              </td>
+              <td className="px-4 py-3.5 text-gray-700 font-semibold">{o.status}</td>
+              <td className="px-4 py-3.5 whitespace-nowrap">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onViewOrder?.(o.number)}
+                    className="border border-gray-300 hover:bg-gray-50 text-gray-800 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                  >
+                    View Order
+                  </button>
+                  {token && (
+                    <button
+                      onClick={() => handleReorder(o.number)}
+                      disabled={reordering === o.number}
+                      className="border border-gray-300 hover:bg-gray-50 text-gray-800 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                    >
+                      Reorder
+                    </button>
+                  )}
+                </div>
+                {reorderMsg?.number === o.number && (
+                  <p className={`text-xs mt-1.5 font-medium ${reorderMsg.ok ? "text-emerald-600" : "text-[#ed1c24]"}`}>
+                    {reorderMsg.msg}
+                  </p>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -296,11 +1513,61 @@ function OrdersList({
 /* ─────────────────────────────────────────────────────────────────
    PAGE
 ───────────────────────────────────────────────────────────────── */
+function AccountPageSkeleton() {
+  return (
+    <div className="bg-white min-h-screen py-10 lg:py-16">
+      <div className="container max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-8 items-start">
+          {/* Sidebar Skeleton */}
+          <div className="bg-[#f8f9fa] border border-gray-200 rounded-lg p-6 flex flex-col gap-6 animate-pulse">
+            <div className="flex flex-col gap-4">
+              <div className="h-4 bg-gray-200 rounded w-2/3" />
+              <div className="h-4 bg-gray-200 rounded w-1/2" />
+            </div>
+            <div className="flex flex-col gap-4 pt-6 border-t border-gray-200">
+              <div className="h-4 bg-gray-200 rounded w-3/4" />
+              <div className="h-4 bg-gray-200 rounded w-2/3" />
+            </div>
+            <div className="pt-6 border-t border-gray-200">
+              <div className="h-4 bg-gray-200 rounded w-1/3" />
+            </div>
+          </div>
+
+          {/* Content Skeleton */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 lg:p-8 min-h-[480px] animate-pulse">
+            <div className="h-7 bg-gray-200 rounded w-1/4 mb-6" />
+            <div className="space-y-6">
+              <div className="h-4 bg-gray-200 rounded w-3/4" />
+              <div className="h-4 bg-gray-200 rounded w-1/2" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                <div className="border border-gray-100 rounded-lg p-5 space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  <div className="h-3 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-2/3" />
+                </div>
+                <div className="border border-gray-100 rounded-lg p-5 space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  <div className="h-3 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-2/3" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AccountPage() {
   const { ready, isLoggedIn } = useAuth();
 
   if (!ready) {
-    return <div className="container py-24 text-center text-ink/40">Loading your account…</div>;
+    return <AccountPageSkeleton />;
   }
-  return isLoggedIn ? <AccountDashboard /> : <AuthPanel />;
+  return (
+    <Suspense fallback={<AccountPageSkeleton />}>
+      {isLoggedIn ? <AccountDashboard /> : <AuthPanel />}
+    </Suspense>
+  );
 }

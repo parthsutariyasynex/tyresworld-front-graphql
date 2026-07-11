@@ -150,7 +150,7 @@ export default function AboutPage() {
                 </p>
               </div>
 
-              <Link href="/shop" className="btn-primary text-sm px-8 py-3.5 mt-10 inline-flex">
+              <Link href="/" className="btn-primary text-sm px-8 py-3.5 mt-10 inline-flex">
                 Explore the collection
                 <ArrowRight size={15} />
               </Link>
@@ -223,7 +223,7 @@ export default function AboutPage() {
             love to hear from you.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/shop" className="btn-primary text-sm px-8 py-3.5">
+            <Link href="/" className="btn-primary text-sm px-8 py-3.5">
               Shop the collection <ArrowRight size={15} />
             </Link>
             <Link href="/contact" className="btn-secondary text-sm px-8 py-3.5">

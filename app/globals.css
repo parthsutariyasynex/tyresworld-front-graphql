@@ -2,9 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Saudi Riyal currency symbol ─────────────────────────────────
+   Icon font: saudi-riyal-symbol (MIT, github.com/mczainalabdeen/
+   saudi-riyal-symbol), vendored at /public/fonts/. It maps the
+   character "#" (U+0023) to the official Riyal symbol, so elements
+   with .currency-riyal contain "#" as their text (see
+   components/Price.tsx — all price rendering goes through it). */
+@font-face {
+  font-family: "saudi-riyal";
+  src: url("/fonts/saudi-riyal-symbol.woff") format("woff"),
+       url("/fonts/saudi-riyal-symbol.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+.currency-riyal {
+  font-family: "saudi-riyal" !important;
+  font-weight: normal;
+  font-style: normal;
+  position: relative;
+  top: 1px;
+}
+
 :root {
+  /* ── Typography ───────────────────────────────────────────────── */
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Fraunces", "Times New Roman", serif;
+
+  /* ── Brand colours ────────────────────────────────────────────── */
+  --brand-red: #ed1c24;
+  --brand-red-dark: #c6181d;
+  --brand-black: #111111;
+  --brand-dark-bg: #1a1a1a;
+
+  /* ── UI colours ───────────────────────────────────────────────── */
+  --color-gray-text: #6b7280;
+  --color-gray-border: #e5e7eb;
+  --color-gray-bg: #f9fafb;
+  --color-white: #ffffff;
+
+  /* ── Partner colours ──────────────────────────────────────────── */
+  --color-whatsapp: #25D366;
+  --color-tabby: #00B67A;
+  --color-tamara-from: #7B2FBE;
+  --color-tamara-to: #B44FE8;
+
+  /* ── Radius ───────────────────────────────────────────────────── */
+  --radius-card: 0.75rem;
+  --radius-pill: 9999px;
+  --radius-sm: 0.5rem;
+
+  /* ── Shadows ──────────────────────────────────────────────────── */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-hover: 0 4px 16px 0 rgb(0 0 0 / 0.12);
+
+  /* ── Container ────────────────────────────────────────────────── */
+  --container-max: 1280px;
+  --container-px: 1.25rem;
+}
+
+/* ── Arabic / RTL overrides ───────────────────────────────────── */
+[dir="rtl"] {
+  --font-sans: "Cairo", system-ui, -apple-system, sans-serif;
+  font-family: "Cairo", system-ui, sans-serif;
+}
+
+[dir="rtl"] body {
+  font-family: "Cairo", system-ui, sans-serif;
+}
+
+/* Flip flex-row so rows naturally reverse in RTL */
+[dir="rtl"] .flex-row-rtl {
+  flex-direction: row-reverse;
 }
 
 @layer base {
@@ -12,6 +82,7 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    scrollbar-gutter: stable;
   }
 
   body {
@@ -26,9 +97,7 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 font-medium rounded-full
-           transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2
-           focus-visible:ring-offset-2 focus-visible:ring-ink disabled:opacity-50 cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded-full transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ink disabled:opacity-50 cursor-pointer;
   }
 
   .btn-primary {
@@ -54,19 +123,42 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
 
   .input-field {
-    @apply w-full bg-cream border border-ink/10 rounded-xl px-4 py-3 text-sm text-ink
-           placeholder:text-ink/30 outline-none transition-all
-           focus:border-ink/30 focus:bg-white focus:ring-2 focus:ring-ink/5;
+    @apply w-full bg-cream border border-ink/10 rounded-xl px-4 py-3 text-sm text-ink placeholder:text-ink/30 outline-none transition-all focus:border-ink/30 focus:bg-white focus:ring-2 focus:ring-ink/5;
   }
 }
 
-/* Swiper Hero Customizations */
+/* ── Hero Swiper: force the full containment chain ──────────────────────────
+ * .banner-aspect (aspect-ratio sets height)
+ *   └─ .hero-swiper (absolute, fills banner-aspect)
+ *        └─ .swiper-wrapper (height: 100%)
+ *             └─ .swiper-slide (height: 100%)
+ *                  └─ .slide-img-wrap (position: relative, height: 100%)
+ *                       └─ next/image fill (object-cover)
+ * Without the !important rules Swiper's fade effect overwrites height to 0.
+ */
+.hero-swiper {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.hero-swiper .swiper-wrapper {
+  height: 100% !important;
+}
+
+.hero-swiper .swiper-slide {
+  height: 100% !important;
+  overflow: hidden;
+}
+
 .hero-swiper .swiper-pagination {
   bottom: 2rem !important;
   display: flex;
@@ -89,4 +181,635 @@
 .hero-swiper .swiper-pagination-bullet-active {
   width: 28px;
   background: #ff6b35;
+}
+
+/* Hero section wrapper */
+.hero-section {
+  position: relative;
+}
+
+/*
+ * Banner aspect container.
+ * aspect-ratio: 1905/644 matches the reference site exactly.
+ * This eliminates CLS because the browser can calculate the height
+ * from the width before any image loads — no vh units needed.
+ * min-height ensures the banner is never too short on narrow screens.
+ */
+.banner-aspect {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 1905 / 644;
+  min-height: 220px;
+}
+
+/* Wrapper is position:relative by default (listing pages, non-homepage) */
+.tyre-search-sticky-wrapper {
+  position: relative;
+  z-index: 9;
+}
+
+/*
+ * Homepage only: stick the WRAPPER (not the inner section) so its containing
+ * block is .cms-home (full-page height), giving it the full scroll range.
+ * Applying sticky to the inner section would give it a 0px range because the
+ * wrapper is only as tall as the section itself.
+ */
+.cms-home .tyre-search-sticky-wrapper {
+  position: sticky;
+  top: 70px;
+  z-index: 40;
+}
+
+/* Inner centering shell */
+.search-wrap.tyreform {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+/*
+ * .tyreform — base for all pages.
+ * Listing pages (no .cms-home parent): fixed at viewport bottom.
+ * Homepage: overridden below to stay in normal flow.
+ */
+.tyreform {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  z-index: 9;
+  height: max-content;
+  transition: top 0.2s ease, bottom 0.2s ease;
+}
+
+/* StickyTyreSearch scroll-up state: pin below header */
+.tyreform.sticky,
+.tyreform--sticky {
+  position: fixed;
+  top: 70px;
+  bottom: auto;
+  z-index: 40;
+}
+
+/* Homepage inner section: stays in normal flow inside the sticky wrapper on mobile/tablet, overlaps hero banner on desktop */
+.cms-home .tyreform {
+  position: relative;
+  left: auto;
+  transform: none;
+  bottom: auto;
+}
+
+@media (min-width: 1024px) {
+  .cms-home .tyre-search-sticky-wrapper {
+    height: 32px;
+  }
+
+  .cms-home .tyreform {
+    position: absolute;
+    top: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: auto;
+    z-index: 20;
+  }
+
+  .cms-home .tyreform.sticky {
+    position: fixed;
+    top: 70px;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+  }
+}
+
+/* Mobile: always pin at viewport bottom */
+@media screen and (max-width: 767px) {
+
+  .tyreform,
+  .tyreform.sticky,
+  .tyreform--sticky,
+  .cms-home .tyre-search-sticky-wrapper {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+  }
+
+  .cms-home .tyreform {
+    position: relative !important;
+    transform: none !important;
+  }
+}
+
+
+
+/* Main search box outer wrapper */
+.main-search {
+  background: #111111;
+  border-radius: 22px;
+  padding: 5px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .main-search {
+    border-radius: 999px;
+    padding: 0;
+    display: flex;
+    align-items: stretch;
+    border: 5px solid #000000;
+    overflow: hidden;
+    height: 64px;
+  }
+}
+
+/* Search tabs wrapper */
+.search-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .search-tabs {
+    flex-direction: row;
+    align-items: stretch;
+    border-radius: 999px;
+    overflow: visible;
+    gap: 0;
+  }
+}
+
+/* Left tab buttons container */
+.nav-tabs {
+  display: flex;
+  background: #1a1a1a;
+  border-radius: 16px;
+  overflow: hidden;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .nav-tabs {
+    background: #1f2229;
+    border-radius: 999px 0 0 999px;
+    padding: 6px;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
+    transform: skewX(-15deg);
+    margin-left: -20px;
+    padding-left: 30px;
+    display: flex;
+    height: 100%;
+  }
+}
+
+.nav-tabs .button {
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  cursor: pointer;
+  flex: 1;
+  display: block;
+}
+
+.nav-tabs .button a {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
+  text-transform: uppercase;
+  border: none;
+  margin-right: 0;
+  border-radius: 50px;
+  font-weight: 700;
+  padding: 12px 24px;
+  line-height: 1;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  display: block;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nav-tabs .button:hover a {
+  color: #ffffff;
+}
+
+.nav-tabs .button.active a {
+  background: #ed1c24;
+  color: #ffffff;
+  border-radius: 999px;
+}
+
+@media (min-width: 1024px) {
+  .nav-tabs .button {
+    flex: none;
+  }
+
+  .nav-tabs .button a {
+    padding: 12px 30px;
+    transform: skewX(15deg);
+    /* un-skew text */
+  }
+}
+
+/* Right inputs tab content — white pill with red border */
+.tab-content {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 2.5px solid #ed1c24;
+  overflow: hidden;
+  padding: 6px 8px;
+}
+
+@media (min-width: 1024px) {
+  .tab-content {
+    border-radius: 0 999px 999px 0;
+    border: none;
+    background: #ed1c24;
+    padding: 4px 20px 4px 35px;
+    /* left padding creates the red slanted block */
+    display: flex;
+    align-items: center;
+    height: 100%;
+    transform: skewX(-15deg);
+    margin-right: -25px;
+    padding-right: 35px;
+  }
+}
+
+.tab-inner {
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .tab-inner {
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+}
+
+/* Divider between dropdowns inside tab-content */
+.search-divider {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .search-divider {
+    display: block;
+    width: 1px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.12);
+    flex-shrink: 0;
+    transform: skewX(15deg);
+  }
+}
+
+/* Dropdown wrapper inside tab-content */
+.search-field-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+@media (min-width: 1024px) {
+  .search-field-wrap {
+    padding: 0 24px;
+    height: 100%;
+    transform: skewX(15deg);
+  }
+
+  .search-field-wrap button,
+  .search-field-wrap select,
+  .search-field-wrap span.text-black,
+  .search-field-wrap span.text-black\/45 {
+    font-size: 15px !important;
+    font-weight: 400 !important;
+    color: #000000 !important;
+  }
+}
+
+/* ── Offers carousel pagination ──────────────────────────────── */
+.offers-pagination .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 50%;
+  opacity: 1;
+  margin: 0 !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.offers-pagination .swiper-pagination-bullet-active {
+  width: 24px;
+  background: #ed1c24;
+  border-radius: 4px;
+}
+
+.custom-scrollbar {
+  -webkit-overflow-scrolling: touch;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #000000;
+  border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #333333;
+}
+
+/* ── Fast Selling carousel: equal-height cards + pagination ─── */
+.fast-selling-swiper .swiper-wrapper {
+  align-items: stretch;
+}
+
+.fast-selling-swiper .swiper-slide {
+  height: auto !important;
+}
+
+.fs-pagination .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 50%;
+  opacity: 1;
+  margin: 0 !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.fs-pagination .swiper-pagination-bullet-active {
+  width: 24px;
+  background: #ed1c24;
+  border-radius: 4px;
+}
+
+
+/* ── Delivery Banner Cards ──────────────────────────────────────── */
+.image-box {
+  display: block;
+}
+
+.image-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.aspect-custom {
+  aspect-ratio: 3 / 2;
+}
+
+.inner-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 24px 26px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.80) 0%, rgba(0, 0, 0, 0.30) 60%, transparent 100%);
+}
+
+
+/* ── Tyre Listing Card — Vehicle Info Row ───────────────────────── */
+.vehicle-info-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: 44px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.vehicle-info-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #111;
+  border-right: 1px solid #e5e7eb;
+}
+
+.vehicle-info-cell:last-child {
+  border-right: 0;
+}
+
+/* ── CMS Rich-Text Content ──────────────────────────────────────── */
+.cms-content h1,
+.cms-content h2,
+.cms-content h3 {
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #111;
+  margin-bottom: 0.75rem;
+  margin-top: 1.5rem;
+  line-height: 1.2;
+}
+
+.cms-content h1 {
+  font-size: 1.5rem;
+}
+
+.cms-content h2 {
+  font-size: 1.25rem;
+}
+
+.cms-content h3 {
+  font-size: 1.1rem;
+}
+
+.cms-content p {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.75;
+  margin-bottom: 0.75rem;
+}
+
+.cms-content a {
+  color: #ed1c24;
+  text-decoration: underline;
+}
+
+.cms-content a:hover {
+  color: #c6181d;
+}
+
+.cms-content ul,
+.cms-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.cms-content li {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.75;
+  margin-bottom: 0.25rem;
+}
+
+.cms-content ul li {
+  list-style-type: disc;
+}
+
+.cms-content ol li {
+  list-style-type: decimal;
+}
+
+.cms-content strong {
+  font-weight: 700;
+  color: #111;
+}
+
+/* ── Product Single Price Modal Inclusions ── */
+.popup-overlay.product-single-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  padding: 1rem;
+}
+
+.popup-overlay.product-single-modal .popup-content {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  background-color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 24px;
+  border: 1px solid #f3f4f6;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.popup-overlay.product-single-modal .popup-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.popup-overlay.product-single-modal .popup-close:hover {
+  color: #111827;
+}
+
+.popup-overlay.product-single-modal .popup-close::before {
+  content: "✕";
+  font-size: 20px;
+  font-weight: 300;
+}
+
+.popup-overlay.product-single-modal h4 {
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #111827;
+  margin-bottom: 20px;
+  padding-right: 32px;
+  line-height: 1.4;
+}
+
+.popup-overlay.product-single-modal .list-none {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.popup-overlay.product-single-modal .list-none li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+
+.popup-overlay.product-single-modal .list-none li::before {
+  content: "" !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid #049b43 !important;
+  color: #049b43;
+  flex-shrink: 0;
+  margin-top: 2px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23049b43' stroke-width='4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M5 13l4 4L19 7'/%3E%3C/svg%3E");
+  background-size: 10px 10px;
+  background-position: center;
+  background-repeat: no-repeat;
 }
