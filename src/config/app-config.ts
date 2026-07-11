@@ -26,7 +26,8 @@ export const APP_CONFIG = {
   wheel: {
     /** Wheel API endpoint — user_key is appended as a URL query param, never a header */
     graphqlUrl: process.env.WHEEL_API_URL  ?? "https://wheel-api.klever.ae/graphql.php",
-    userKey:    process.env.WHEEL_USER_KEY ?? "f9030340bff3fbffd0208256549f9984940fe536fec8ae7d8c2f1681b8ed3da2",
+    // No hardcoded key in source — set WHEEL_USER_KEY in .env (see .env.local.example).
+    userKey:    process.env.WHEEL_USER_KEY ?? "",
   },
 
   magento: {
