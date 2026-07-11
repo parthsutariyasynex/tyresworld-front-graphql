@@ -5,6 +5,7 @@ import CategoryPageInner from "@/components/category/CategoryPageInner";
 import { resolveRoute } from "@/lib/services/route.service";
 import { getCmsPage } from "@/lib/services/cms.service";
 import { getCategoryMeta } from "@/lib/services/category.service";
+import { CATEGORY_HERO } from "@/src/config/routes";
 import { storeCode, t, type Locale } from "@/lib/i18n";
 
 export const revalidate = 300;
@@ -98,6 +99,8 @@ export default async function DynamicSlugPage({ params }: PageProps) {
 
   // Categories render the client listing component (filters / sort / paging).
   if (route.type === "CATEGORY") {
+    const urlKey = route.url_key ?? slug;
+    const hero = CATEGORY_HERO[urlKey] ?? {};
     return (
       <Suspense
         fallback={
@@ -106,7 +109,13 @@ export default async function DynamicSlugPage({ params }: PageProps) {
           </div>
         }
       >
-        <CategoryPageInner urlKey={route.url_key ?? slug} locale={locale} />
+        <CategoryPageInner
+          urlKey={urlKey}
+          locale={locale}
+          heroTitle={hero.heroTitle}
+          heroTitleAr={hero.heroTitleAr}
+          showTyreFinder={hero.showTyreFinder}
+        />
       </Suspense>
     );
   }

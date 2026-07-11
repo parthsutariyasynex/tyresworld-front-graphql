@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react";
 import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
 import StickyTyreSearch from "@/components/StickyTyreSearch";
+import TyreFinder from "@/components/TyreFinder";
 import CategorySeoSection from "@/components/CategorySeoSection";
 import CategoryFaqSection, { type FaqItem } from "@/components/CategoryFaqSection";
 import { storeCode, type Locale } from "@/lib/i18n";
@@ -115,12 +116,14 @@ export interface CategoryPageInnerProps {
   heroTitle?: string;
   /** Hero title in Arabic — falls back to heroTitle */
   heroTitleAr?: string;
+  /** Render the TyreFinder widget under the hero (tyre categories). */
+  showTyreFinder?: boolean;
 }
 
 /* ════════════════════════════════════════════════════════════════
    COMPONENT
 ════════════════════════════════════════════════════════════════ */
-export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitleAr }: CategoryPageInnerProps) {
+export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitleAr, showTyreFinder }: CategoryPageInnerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dir = locale === "ar" ? "rtl" : "ltr";
@@ -276,6 +279,9 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
           )}
         </div>
       </div>
+
+      {/* ── Tyre finder (tyre categories) ──────────────────────────── */}
+      {showTyreFinder && category?.uid && <TyreFinder categoryUid={category.uid} />}
 
       {/* ── Breadcrumb ─────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-100">

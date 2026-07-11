@@ -17,13 +17,42 @@ export const ROUTES = {
   contact:   () => "/contact",
 } as const;
 
-/** Category URL keys that have dedicated PageInner components */
-export const KNOWN_CATEGORY_KEYS = [
-  "tyres",
-  "on-road-tires",
-  "off-road-tires-4x4",
-  "ev-tires",
-  "run-flat-tires",
-] as const;
+/**
+ * Presentation overrides for specific category url_keys, applied by the
+ * dynamic [locale]/[slug] route. This is curated copy only — routing and
+ * product/SEO data are resolved dynamically from Magento. Any category not
+ * listed here still renders via the same dynamic route with its Magento name.
+ */
+export interface CategoryHero {
+  heroTitle?: string;
+  heroTitleAr?: string;
+  showTyreFinder?: boolean;
+}
 
-export type KnownCategoryKey = (typeof KNOWN_CATEGORY_KEYS)[number];
+export const CATEGORY_HERO: Record<string, CategoryHero> = {
+  "tyres": {
+    heroTitle: "SHOP ALL TYPES OF TYRES ONLINE ACROSS KSA",
+    heroTitleAr: "تسوق جميع أنواع الإطارات عبر الإنترنت في المملكة العربية السعودية",
+    showTyreFinder: true,
+  },
+  "on-road-tires": {
+    heroTitle: "SHOP ON-ROAD TYRES ONLINE ACROSS KSA",
+    heroTitleAr: "تسوق إطارات الطريق عبر الإنترنت في المملكة العربية السعودية",
+    showTyreFinder: true,
+  },
+  "off-road-tires-4x4": {
+    heroTitle: "SHOP OFF-ROAD & 4X4 TYRES ACROSS KSA",
+    heroTitleAr: "تسوق إطارات الطرق الوعرة و4×4 في المملكة العربية السعودية",
+    showTyreFinder: true,
+  },
+  "ev-tires": {
+    heroTitle: "SHOP EV TYRES ONLINE ACROSS KSA",
+    heroTitleAr: "تسوق إطارات السيارات الكهربائية عبر الإنترنت في المملكة العربية السعودية",
+    showTyreFinder: true,
+  },
+  "run-flat-tires": {
+    heroTitle: "SHOP RUN-FLAT TYRES ONLINE ACROSS KSA",
+    heroTitleAr: "تسوق إطارات رن فلات عبر الإنترنت في المملكة العربية السعودية",
+    showTyreFinder: true,
+  },
+};
