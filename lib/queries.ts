@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────
    All Magento GraphQL queries (read-only operations).
 ───────────────────────────────────────────────────────────────── */
+import { PRODUCT_CARD_FRAGMENT, PRODUCT_DETAIL_FRAGMENT } from "./graphql/fragments";
 
 // ── Shared field fragments ────────────────────────────────────────
 
@@ -156,88 +157,33 @@ export const PRODUCTS_QUERY = /* GraphQL */ `
       }
 
       items {
-        uid
-        sku
-        name
-        stock_status
-        url_key
-        url_suffix
-
-        brand: mgs_brand
-        offers
-
-        image {
-          url
-          label
-        }
-
-        price_range {
-          minimum_price {
-            final_price {
-              value
-              currency
-            }
-          }
-        }
+        ...ProductCardFields
       }
     }
   }
+  ${PRODUCT_CARD_FRAGMENT}
 `;
 
 export const PRODUCT_DETAIL_QUERY = /* GraphQL */ `
   query ProductDetail($sku: String!) {
     products(filter: { sku: { eq: $sku } }) {
       items {
-        uid sku name url_key url_suffix
-        stock_status
-        review_count
-        rating_summary
-        country_of_manufacture
-        brand: mgs_brand
-        offers
-        description       { html }
-        short_description { html }
-        image         { url label }
-        media_gallery { url label }
-        categories { id name url_key }
-        price_range {
-          minimum_price {
-            regular_price { value currency }
-            final_price   { value currency }
-            discount      { amount_off percent_off }
-          }
-        }
+        ...ProductDetailFields
       }
     }
   }
+  ${PRODUCT_DETAIL_FRAGMENT}
 `;
 
 export const PRODUCT_DETAIL_BY_URLKEY_QUERY = /* GraphQL */ `
   query ProductDetailByUrlKey($urlKey: String!) {
     products(filter: { url_key: { eq: $urlKey } }) {
       items {
-        uid sku name url_key url_suffix
-        stock_status
-        review_count
-        rating_summary
-        country_of_manufacture
-        brand: mgs_brand
-        offers
-        description       { html }
-        short_description { html }
-        image         { url label }
-        media_gallery { url label }
-        categories { id name url_key }
-        price_range {
-          minimum_price {
-            regular_price { value currency }
-            final_price   { value currency }
-            discount      { amount_off percent_off }
-          }
-        }
+        ...ProductDetailFields
       }
     }
   }
+  ${PRODUCT_DETAIL_FRAGMENT}
 `;
 
 export const FILTERS_QUERY = /* GraphQL */ `

@@ -1,0 +1,107 @@
+/* ─────────────────────────────────────────────────────────────────
+   PRODUCT SERVICE
+   Domain layer between route handlers / Server Components and the
+   GraphQL client. Returns UI-ready domain objects + a uniform
+   ok/status/error envelope so callers map to HTTP without duplicating
+   fetch or error-handling logic.
+───────────────────────────────────────────────────────────────── */
+import { magentoFetch, firstError } from "@/lib/graphql/client";
+import {
+  PRODUCTS_QUERY,
+  PRODUCT_DETAIL_QUERY,
+  PRODUCT_DETAIL_BY_URLKEY_QUERY,
+} from "@/lib/queries";
+import {
+  parseGraphqlResponse,
+  parseProductDetail,
+  type GqlProductsResponse,
+  type GqlProductDetailResponse,
+  type ProductDetail,
+} from "@/lib/magento";
+import { APP_CONFIG } from "@/src/config/app-config";
+import type { Product } from "@/lib/data";
+
+export interface ProductListResult {
+  ok: boolean;
+  status: number;
+  products: Product[];
+  total: number;
+  totalPages: number;
+  currentPage: number;
+  error?: string;
+}
+
+export interface ProductDetailResult {
+  ok: boolean;
+  status: number;
+  product: ProductDetail | null;
+  error?: string;
+}
+
+/** Product listing / search (grids, carousels, category-less search). */
+export async function getProducts(params: {
+  search?: string;
+  pageSize?: number;
+  currentPage?: number;
+  categoryUid?: string;
+  store?: string;
+}): Promise<ProductListResult> {
+  const search = params.search ?? "tyre";
+  const pageSize = params.pageSize ?? 24;
+  const currentPage = params.currentPage ?? 1;
+
+  const r = await magentoFetch<GqlProductsResponse["data"]>(
+    PRODUCTS_QUERY,
+    { search, pageSize, currentPage, categoryUid: params.categoryUid },
+    { store: params.store, revalidate: APP_CONFIG.cache.products },
+  );
+
+  // HTTP / network failure → propagate status.
+  if (!r.ok) {
+    return { ok: false, status: r.status, products: [], total: 0, totalPages: 1, currentPage, error: firstError(r) };
+  }
+  // GraphQL error alongside 200 → empty result (matches prior behaviour).
+  if (r.errors?.length) {
+    return { ok: true, status: 200, products: [], total: 0, totalPages: 1, currentPage, error: r.errors[0].message };
+  }
+
+  const wrapper = { data: r.data } as GqlProductsResponse;
+  const products = parseGraphqlResponse(wrapper);
+  const pd = r.data?.products;
+
+  return {
+    ok: true,
+    status: 200,
+    products,
+    total: pd?.total_count ?? products.length,
+    totalPages: pd?.page_info?.total_pages ?? 1,
+    currentPage: pd?.page_info?.current_page ?? currentPage,
+  };
+}
+
+/** Single product detail by SKU or url_key (PDP). */
+export async function getProductDetail(params: {
+  sku?: string;
+  urlKey?: string;
+  store?: string;
+}): Promise<ProductDetailResult> {
+  const query = params.urlKey ? PRODUCT_DETAIL_BY_URLKEY_QUERY : PRODUCT_DETAIL_QUERY;
+  const variables = params.urlKey ? { urlKey: params.urlKey } : { sku: params.sku };
+
+  const r = await magentoFetch<GqlProductDetailResponse["data"]>(
+    query,
+    variables,
+    { store: params.store, revalidate: APP_CONFIG.cache.products },
+  );
+
+  if (!r.ok || r.errors?.length) {
+    return { ok: r.ok, status: r.ok ? 200 : r.status, product: null, error: firstError(r) };
+  }
+
+  const product = parseProductDetail({ data: r.data } as GqlProductDetailResponse);
+  if (!product) {
+    return { ok: true, status: 404, product: null, error: "Product not found" };
+  }
+
+  return { ok: true, status: 200, product };
+}

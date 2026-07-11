@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, ArrowRight, Loader2, AlertCircle } from "lucide-react";
@@ -22,7 +22,7 @@ type State =
   | { phase: "success"; order: OrderV2 }
   | { phase: "error";   message: string };
 
-export default function CheckoutCompletePage() {
+function CheckoutCompleteInner() {
   const params = useSearchParams();
   const [state, setState] = useState<State>({ phase: "loading" });
 
@@ -183,5 +183,22 @@ export default function CheckoutCompletePage() {
         </Link>
       </div>
     </>
+  );
+}
+
+/* useSearchParams() must be wrapped in a Suspense boundary for the
+   static prerender / CSR bailout to succeed (Next.js App Router). */
+export default function CheckoutCompletePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container py-24 text-center max-w-sm mx-auto">
+          <Loader2 size={40} className="animate-spin text-gray-300 mx-auto mb-6" />
+          <p className="text-gray-500 text-sm font-medium">Loading…</p>
+        </div>
+      }
+    >
+      <CheckoutCompleteInner />
+    </Suspense>
   );
 }
