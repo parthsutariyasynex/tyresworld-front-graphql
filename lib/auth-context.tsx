@@ -1,9 +1,11 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { Customer } from "./types";
 
-const STORAGE_KEY = "customer_token";
+/* The session token lives in an httpOnly cookie set by /api/account (see
+   lib/auth-cookie.ts). It is never stored in or read from JS — login state
+   is derived from whether the server returns a customer. */
 
 type AuthContextValue = {
   customer: Customer | null;
@@ -39,30 +41,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
-  const tokenRef = useRef<string | null>(null);
 
-  const setToken = useCallback((t: string | null) => {
-    tokenRef.current = t;
-    try {
-      if (t) localStorage.setItem(STORAGE_KEY, t);
-      else localStorage.removeItem(STORAGE_KEY);
-    } catch {/* ignore */}
+  /* Ask the server who we are — it reads the httpOnly cookie. */
+  const fetchCustomer = useCallback(async () => {
+    const { customer: c, error } = await api({ op: "customer" });
+    if (c) setCustomer(c);
+    else {
+      setCustomer(null);
+      if (error && error !== "Not authenticated") console.warn("[auth] session check:", error);
+    }
   }, []);
 
-  const fetchCustomer = useCallback(async () => {
-    if (!tokenRef.current) { setCustomer(null); return; }
-    const { customer: c, error } = await api({ op: "customer", token: tokenRef.current });
-    if (c) setCustomer(c);
-    else { setToken(null); setCustomer(null); if (error) console.warn("[auth] session expired:", error); }
-  }, [setToken]);
-
-  /* Hydrate from stored token. */
+  /* On load, resolve session from the cookie. */
   useEffect(() => {
     let active = true;
     (async () => {
-      let t: string | null = null;
-      try { t = localStorage.getItem(STORAGE_KEY); } catch {/* ignore */}
-      if (t) { tokenRef.current = t; await fetchCustomer(); }
+      await fetchCustomer();
       if (active) setReady(true);
     })();
     return () => { active = false; };
@@ -71,13 +65,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string): Promise<string | null> => {
     setBusy(true);
     try {
-      const { token, error } = await api({ op: "login", email, password });
-      if (!token) return error ?? "Invalid email or password.";
-      setToken(token);
+      const { ok, error } = await api({ op: "login", email, password });   // sets httpOnly cookie
+      if (!ok) return error ?? "Invalid email or password.";
       await fetchCustomer();
       return null;
     } finally { setBusy(false); }
-  }, [setToken, fetchCustomer]);
+  }, [fetchCustomer]);
 
   const register = useCallback(async (input: RegisterInput): Promise<string | null> => {
     setBusy(true);
@@ -92,11 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     setBusy(true);
     try {
-      await api({ op: "logout", token: tokenRef.current });
-      setToken(null);
+      await api({ op: "logout" });   // clears the httpOnly cookie
       setCustomer(null);
     } finally { setBusy(false); }
-  }, [setToken]);
+  }, []);
 
   return (
     <AuthContext.Provider

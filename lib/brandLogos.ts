@@ -20,22 +20,23 @@ export const BRAND_LOGOS: Record<number, string> = {
   848:  "https://powertire.klever.ae/media/mgs_brand/f/a/falken_1.png",            // Falken
   894:  "https://powertire.klever.ae/media/mgs_brand/n/e/nexen_1__3.png",          // Nexen
   906:  "https://powertire.klever.ae/media/mgs_brand/r/o/roadstone_1.png",         // Roadstone
+  843:  "https://powertire.klever.ae/media/mgs_brand/c/o/coperatie_1.png",         // CooperTires (media file is named "coperatie")
   1900: "https://powertire.klever.ae/media/mgs_brand/s/a/sailun-logo_1.jpg",       // Sailun
 
   // ── Mid-tier brands ─────────────────────────────────────────────
   826:  "https://powertire.klever.ae/media/mgs_brand/a/c/accelera_1__1.png",       // Accelera
-  4800: "https://powertire.klever.ae/media/mgs_brand/a/n/anchee.jpg",              // Anchee
+  4800: "https://powertire.klever.ae/media/mgs_brand/a/n/anchee_1.jpg",            // Anchee
   4512: "https://powertire.klever.ae/media/mgs_brand/b/l/black-bear_1.jpg",          // Black Bear
-  4511: "https://powertire.klever.ae/media/mgs_brand/c/o/comforser.jpg",            // Comforser
+  4511: "https://powertire.klever.ae/media/mgs_brand/c/o/comforser_1.jpg",          // Comforser
   1530: "https://powertire.klever.ae/media/mgs_brand/d/o/double-coin_1.jpg",       // Double Coin
-  4877: "https://powertire.klever.ae/media/mgs_brand/f/r/friezza.png",             // Friezza
+  4877: "https://powertire.klever.ae/media/mgs_brand/f/r/friezza_2.jpg",           // Friezza
   872:  "https://powertire.klever.ae/media/mgs_brand/l/a/land-spider_1.jpg",       // Landspider
   874:  "https://powertire.klever.ae/media/mgs_brand/l/a/laufenn-logo.png",        // Laufenn
   882:  "https://powertire.klever.ae/media/mgs_brand/m/a/matrax.png",              // Matrax
-  4806: "https://powertire.klever.ae/media/mgs_brand/s/o/sonar.jpg",               // Sonar
-  913:  "https://powertire.klever.ae/media/mgs_brand/s/u/sunny.jpg",               // Sunny
-  921:  "https://powertire.klever.ae/media/mgs_brand/v/r/vredestein.jpg",           // Vredestein
-  4809: "https://powertire.klever.ae/media/mgs_brand/w/i/wideway.jpg",             // WIDEWAY
+  4806: "https://powertire.klever.ae/media/mgs_brand/s/o/sonar_1.jpg",             // Sonar
+  913:  "https://powertire.klever.ae/media/mgs_brand/s/u/sunny_1.jpg",             // Sunny
+  921:  "https://powertire.klever.ae/media/mgs_brand/v/r/vredestein-tyres-logo_1__1.jpg", // Vredestein
+  4809: "https://powertire.klever.ae/media/mgs_brand/w/i/wideway_1.jpg",             // WIDEWAY
   3997: "https://powertire.klever.ae/media/mgs_brand/g/i/giti_1.jpg",              // Giti
   884:  "https://powertire.klever.ae/media/mgs_brand/m/a/maxxis-tyres-logo_1.png", // Maxxis
   4510: "https://powertire.klever.ae/media/mgs_brand/k/e/kenda_1.jpg",             // Kenda
@@ -49,6 +50,26 @@ export const BRAND_LOGOS: Record<number, string> = {
   3525: "https://powertire.klever.ae/media/mgs_brand/a/r/arivo_1__1.jpg",          // Arivo
   4509: "https://powertire.klever.ae/media/mgs_brand/a/r/arivo_1__1.jpg",          // Arivo (alt id)
   927:  "https://powertire.klever.ae/media/mgs_brand/z/e/zeetax_1.png",            // Zeetex
+
+  // ── Newly added / corrected brands from production website ──────────────────
+  4799: "https://powertire.klever.ae/media/mgs_brand/a/l/alphatires_1.jpg",          // Alpha
+  4804: "https://powertire.klever.ae/media/mgs_brand/b/0/b09-logo-341713159122_1__1.png", // Roadboss
+  4803: "https://powertire.klever.ae/media/mgs_brand/i/m/images_1__17.png",          // Greentrack
+  184:  "https://powertire.klever.ae/media/mgs_brand/i/m/images_1__17.png",          // Greentrac
+  858:  "https://powertire.klever.ae/media/mgs_brand/i/m/images_1__17.png",          // Greentrac (alt)
+  4805: "https://powertire.klever.ae/media/mgs_brand/s/a/sava_1.jpg",              // Sava
+  125:  "https://powertire.klever.ae/media/mgs_brand/s/a/sava_1.jpg",              // Sava (alt)
+  907:  "https://powertire.klever.ae/media/mgs_brand/r/o/roadx-logo_1.png",          // Roadx
+  4802: "https://powertire.klever.ae/media/mgs_brand/f/a/farroad_1.jpg",             // Farroad
+  88:   "https://powertire.klever.ae/media/mgs_brand/f/a/farroad_1.jpg",             // Farroad (alt)
+  4801: "https://powertire.klever.ae/media/mgs_brand/d/i/didar-1_1.jpg",             // Didar
+  84:   "https://powertire.klever.ae/media/mgs_brand/d/i/didar-1_1.jpg",             // Didar (alt)
+  4808: "https://powertire.klever.ae/media/mgs_brand/v/-/v-rich_1.jpg",              // V-RICH
+  4807: "https://powertire.klever.ae/media/mgs_brand/s/p/sportrak_1.jpg",            // Sportrak
+  911:  "https://powertire.klever.ae/media/mgs_brand/s/p/sportrak_1.jpg",            // Sportrak (alt)
+  166:  "https://powertire.klever.ae/media/mgs_brand/d/o/doublestar-tyres_1.jpg",    // Double Star
+  1531: "https://powertire.klever.ae/media/mgs_brand/d/o/doublestar-tyres_1.jpg",    // Double Star (alt)
+  855:  "https://powertire.klever.ae/media/mgs_brand/g/o/goodride-tyres-nz_1.jpg",   // Goodride
 };
 
 /**

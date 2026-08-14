@@ -319,6 +319,8 @@ function AccountDashboard() {
   const { addItem } = useCart();
   const { wishlistItems, removeFromWishlist, moveToCart } = useWishlist();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     const t = searchParams.get("tab") as Tab;
     if (t && ["dashboard", "orders", "wishlist", "addresses", "profile"].includes(t)) {
@@ -740,7 +742,7 @@ function AccountDashboard() {
                           >
                             <X size={14} />
                           </button>
-                          <Link href={p.urlKey ? `/product/${p.urlKey}` : "/"} className="block aspect-square relative bg-white border-b border-gray-100">
+                          <Link href={p.urlKey ? `/${locale}/product/${p.urlKey}` : "/"} className="block aspect-square relative bg-white border-b border-gray-100">
                             <ProductImage src={p.image} alt={p.name} fill className="object-contain p-2" sizes="200px" />
                           </Link>
                           <div className="p-3.5 flex-1 flex flex-col justify-between">

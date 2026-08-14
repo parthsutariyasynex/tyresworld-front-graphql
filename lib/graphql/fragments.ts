@@ -22,6 +22,10 @@ export const PRODUCT_CARD_FRAGMENT = /* GraphQL */ `
         final_price { value currency }
       }
     }
+    country
+    origin
+    warranty_period
+    driver_reviews { is_tyre manufacturer model tyre_size vehicle_type }
   }
 `;
 
@@ -39,6 +43,9 @@ export const PRODUCT_DETAIL_FRAGMENT = /* GraphQL */ `
     country_of_manufacture
     brand: mgs_brand
     offers
+    country
+    origin
+    warranty_period
     description       { html }
     short_description { html }
     image         { url label }
@@ -51,5 +58,6 @@ export const PRODUCT_DETAIL_FRAGMENT = /* GraphQL */ `
         discount      { amount_off percent_off }
       }
     }
+    driver_reviews { is_tyre manufacturer model tyre_size vehicle_type }
   }
 `;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -115,39 +115,15 @@ function BannerCard({ banner }: { banner: DeliveryBanner }) {
   );
 }
 
-function GoogleReviewsBadge() {
-  return (
-    <div className="absolute bottom-4 left-8 bg-white text-black px-4 py-2.5 rounded-2xl flex flex-col shadow-lg border border-gray-100/80 z-10 scale-90 sm:scale-100 origin-bottom-left select-none">
-      {/* Top Part: G Logo + Text */}
-      <div className="flex items-center gap-2">
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
-          alt="Google Logo"
-          className="w-5 h-5 shrink-0"
-        />
-        <span className="text-black font-semibold text-[13px] tracking-tight">Google Reviews</span>
-      </div>
-      
-      {/* Bottom Part: Rating + Stars */}
-      <div className="flex items-center gap-2 mt-1.5">
-        <span className="text-black font-black text-[22px] leading-none tracking-tight">4.9</span>
-        <div className="flex text-amber-400 gap-0.5">
-          {[...Array(5)].map((_, i) => (
-            <svg key={i} className="w-4.5 h-4.5 fill-current" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function MobileDeliverySection() {
   const cards = DELIVERY_BANNERS;
+  // Keep the section loader up until the main technician/map visual has
+  // painted (its onLoad/onError), so the section doesn't flash in half-loaded.
+  const [imageReady, setImageReady] = useState(false);
 
   return (
-    <section className="bg-white py-12 lg:py-16">
+    <section className="relative bg-white py-12 lg:py-16">
 
       {/* ── Text block ───────────────────────────────────────────── */}
       <div className="container text-center">
@@ -185,12 +161,15 @@ export default function MobileDeliverySection() {
       <div className="relative mt-6 mx-auto max-w-5xl px-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
+          ref={(el) => { if (el && el.complete && el.naturalWidth > 0) setImageReady(true); }}
           src="/tire-van-map.jpg"
           alt="PowerTyre technician and delivery van across Saudi Arabia"
           className="w-full h-auto object-contain"
           loading="lazy"
+          onLoad={() => setImageReady(true)}
+          onError={() => setImageReady(true)}
         />
-        <GoogleReviewsBadge />
+        {/* <GoogleReviewsBadge /> */}
       </div>
 
       {/* ── Three banner image cards ─────────────────────────────── */}
@@ -203,6 +182,31 @@ export default function MobileDeliverySection() {
           )}
         </div>
       </div>
+
+      {/* Section loader — same overlay as the hero / Tyre Finder. Covers the
+          section until the main visual has loaded, then reveals the content. */}
+      {!imageReady && (
+        <div
+          className="section-loader searchloader"
+          style={{ display: "flex" }}
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="inner d-flex align-items-center justify-content-center text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="spinner mx-auto"
+              src="/images/loader-style1.svg"
+              alt=""
+              aria-hidden="true"
+              width={50}
+              height={50}
+            />
+          </div>
+          <span className="sr-only">Loading…</span>
+        </div>
+      )}
 
     </section>
   );

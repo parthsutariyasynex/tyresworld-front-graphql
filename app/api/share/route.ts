@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readAuthToken } from "@/lib/auth-cookie";
 import { SHARE_MUTATIONS } from "@/lib/mutations";
 import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
 
@@ -21,7 +22,7 @@ const err = (j: Gql) => j?.errors?.[0]?.message;
 */
 export async function POST(req: NextRequest) {
   const body  = await req.json().catch(() => ({} as Record<string, unknown>));
-  const token = body.token as string | undefined;
+  const token = readAuthToken(req) ?? (body.token as string | undefined);
 
   try {
     const j = await gql(SHARE_MUTATIONS.sendEmail, {

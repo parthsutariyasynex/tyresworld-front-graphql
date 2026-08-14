@@ -53,15 +53,25 @@ export default function ProductDetailPage() {
     setLoading(true);
     setError(null);
 
-    fetch(`/api/product?urlKey=${encodeURIComponent(urlKey)}&store=${storeCode(locale as Locale)}`)
-      .then(r => r.json())
-      .then(j => {
+    const store = storeCode(locale as Locale);
+    (async () => {
+      try {
+        // Resolve by url_key first. Fall back to SKU so legacy links for
+        // products that lack a url_key (previously served by /product/[sku])
+        // keep working after the non-locale route was removed.
+        let j = await fetch(`/api/product?urlKey=${encodeURIComponent(urlKey)}&store=${store}`).then(r => r.json());
+        if (!j.product) {
+          j = await fetch(`/api/product?sku=${encodeURIComponent(urlKey)}&store=${store}`).then(r => r.json());
+        }
         if (!active) return;
         if (j.product) setProduct(j.product);
         else setError(j.error ?? "Product not found.");
-      })
-      .catch(() => active && setError("Failed to load product."))
-      .finally(() => active && setLoading(false));
+      } catch {
+        if (active) setError("Failed to load product.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
 
     return () => { active = false; };
   }, [urlKey, locale]);

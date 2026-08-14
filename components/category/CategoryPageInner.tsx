@@ -6,7 +6,6 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
-import StickyTyreSearch from "@/components/StickyTyreSearch";
 import TyreFinder from "@/components/TyreFinder";
 import CategorySeoSection from "@/components/CategorySeoSection";
 import CategoryFaqSection, { type FaqItem } from "@/components/CategoryFaqSection";
@@ -147,6 +146,37 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
   const [filtersLoading, setFiltersLoading] = useState(false);
   const [selected, setSelected] = useState<Record<string, string[]>>({});
 
+  // Sync URL searchParams to selected state on mount and when query changes
+  useEffect(() => {
+    const FILTERABLE = ["width", "height", "rim", "mgs_brand", "vehicle", "model", "year", "price", "offers", "category_uid"];
+    const initial: Record<string, string[]> = {};
+    let hasFilter = false;
+    for (const key of FILTERABLE) {
+      const val = searchParams.get(key);
+      if (val) {
+        initial[key] = val.split(",").filter(Boolean);
+        hasFilter = true;
+      }
+    }
+    
+    setSelected(prev => {
+      const prevKeys = Object.keys(prev).filter(k => prev[k]?.length > 0).sort();
+      const newKeys = Object.keys(initial).filter(k => initial[k]?.length > 0).sort();
+      let same = prevKeys.length === newKeys.length;
+      if (same) {
+        for (let i = 0; i < prevKeys.length; i++) {
+          const k = prevKeys[i];
+          if (k !== newKeys[i]) { same = false; break; }
+          const prevVals = [...prev[k]].sort();
+          const newVals = [...initial[k]].sort();
+          if (prevVals.join(",") !== newVals.join(",")) { same = false; break; }
+        }
+      }
+      if (same) return prev;
+      return initial;
+    });
+  }, [searchParams]);
+
   const [cmsContent, setCmsContent] = useState<string | null>(null);
   const [cmsLoading, setCmsLoading] = useState(true);
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
@@ -192,13 +222,16 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
   }, [urlKey, sort, page, store, selected, searchParams]);
 
   /* ── Filters ─────────────────────────────────────────────────── */
+  // Fetch layered-nav filters by category UID (works for top-level AND
+  // nested categories, unlike url_path). Waits for the category to resolve.
   useEffect(() => {
+    if (!category?.uid) return;
     setFiltersLoading(true);
-    fetch(`/api/category-filters?urlKey=${urlKey}&store=${store}`)
+    fetch(`/api/category-filters?categoryUid=${encodeURIComponent(category.uid)}&store=${store}`)
       .then(r => r.json())
       .then(d => { setFilterGroups(d.filters ?? []); setFiltersLoading(false); })
       .catch(() => setFiltersLoading(false));
-  }, [urlKey, store]);
+  }, [category?.uid, store]);
 
   /* ── Apply category meta to document head ────────────────────── */
   useEffect(() => {
@@ -249,8 +282,14 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
   }, [router, searchParams, basePath]);
 
   const handleFilterChange = (code: string, values: string[]) => {
-    setSelected(prev => ({ ...prev, [code]: values }));
-    setPage(1);
+    const p = new URLSearchParams(searchParams.toString());
+    if (values.length) {
+      p.set(code, values.join(","));
+    } else {
+      p.delete(code);
+    }
+    p.delete("page");
+    router.replace(`${basePath}?${p}`, { scroll: false });
   };
 
   const activeFilterCount = Object.values(selected).reduce((s, v) => s + v.length, 0);
@@ -280,8 +319,6 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
         </div>
       </div>
 
-      {/* ── Tyre finder (tyre categories) ──────────────────────────── */}
-      {showTyreFinder && category?.uid && <TyreFinder categoryUid={category.uid} />}
 
       {/* ── Breadcrumb ─────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-100">
@@ -376,7 +413,7 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
       <CategoryFaqSection faqs={faqs} loading={faqLoading} dir={dir} />
 
       {/* ── Sticky bottom search bar ────────────────────────────────── */}
-      <StickyTyreSearch locale={locale} basePath={basePath} dir={dir} />
+      <TyreFinder locale={locale} categoryUid={category?.uid} basePath={basePath} />
     </div>
   );
 }

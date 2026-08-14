@@ -3,6 +3,7 @@ import { AUTH_QUERIES, CUSTOMER_ORDER_DETAIL_QUERY, IS_EMAIL_AVAILABLE_QUERY, WI
 import { AUTH_MUTATIONS, ACCOUNT_MUTATIONS, ADDRESS_MUTATIONS, PAYMENT_TOKEN_MUTATIONS, CUSTOMER_PAYMENT_TOKENS_QUERY, WISHLIST_MUTATIONS } from "@/lib/mutations";
 import { hasOperation, featureUnavailable } from "@/lib/magento-capabilities";
 import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
+import { readAuthToken, setAuthCookie, clearAuthCookie } from "@/lib/auth-cookie";
 
 
 const Q = { ...AUTH_QUERIES, ...AUTH_MUTATIONS };
@@ -30,7 +31,8 @@ const err = (j: Gql) => j?.errors?.[0]?.message;
 export async function POST(req: NextRequest) {
   const body  = await req.json().catch(() => ({} as Record<string, unknown>));
   const op    = body.op as string;
-  const token = body.token as string | undefined;
+  // Cookie is authoritative; body.token kept only as a transitional fallback.
+  const token = readAuthToken(req) ?? (body.token as string | undefined);
 
   try {
     switch (op) {
@@ -47,7 +49,10 @@ export async function POST(req: NextRequest) {
       case "login": {
         const j = await gql(Q.login, { email: body.email, password: body.password });
         const t = (j.data?.generateCustomerToken as { token?: string })?.token;
-        return NextResponse.json({ token: t ?? null, error: err(j) });
+        // Set the token in an httpOnly cookie; never return it to JS.
+        const res = NextResponse.json({ ok: !!t, error: err(j) });
+        if (t) setAuthCookie(res, t);
+        return res;
       }
 
       case "customer": {
@@ -58,7 +63,9 @@ export async function POST(req: NextRequest) {
 
       case "logout": {
         if (token) await gql(Q.logout, {}, token);
-        return NextResponse.json({ ok: true });
+        const res = NextResponse.json({ ok: true });
+        clearAuthCookie(res);
+        return res;
       }
 
       case "orderDetail": {
@@ -146,7 +153,10 @@ export async function POST(req: NextRequest) {
       case "confirmEmail": {
         const j = await gql(ACCOUNT_MUTATIONS.confirmEmail, { email: body.email, confirmationKey: body.confirmationKey });
         const result = j.data?.confirmEmail as { customer?: unknown; token?: string } | undefined;
-        return NextResponse.json({ ok: !err(j), token: result?.token ?? null, error: err(j) });
+        // Auto-login on confirmation: set the cookie, don't expose the token.
+        const res = NextResponse.json({ ok: !err(j), error: err(j) });
+        if (result?.token) setAuthCookie(res, result.token);
+        return res;
       }
 
       case "resendConfirmationEmail": {

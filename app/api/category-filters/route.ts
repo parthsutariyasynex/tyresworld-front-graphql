@@ -6,10 +6,10 @@ const EXCLUDED = new Set(["category_id", "category_uid", "price", "stock_status"
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const urlKey = searchParams.get("urlKey") ?? "";
-  const store  = searchParams.get("store") ?? "default";
+  const categoryUid = searchParams.get("categoryUid") ?? "";
+  const store       = searchParams.get("store") ?? "default";
 
-  if (!urlKey) {
+  if (!categoryUid) {
     return NextResponse.json({ filters: [] }, { status: 400 });
   }
 
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const res = await fetch(APP_CONFIG.magento.graphqlUrl, {
       method: "POST",
       headers: magentoHeaders(store),
-      body: JSON.stringify({ query: CATEGORY_FILTERS_QUERY, variables: { urlKey } }),
+      body: JSON.stringify({ query: CATEGORY_FILTERS_QUERY, variables: { categoryUid } }),
       next: { revalidate: 600 },
     });
 

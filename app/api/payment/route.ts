@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readAuthToken } from "@/lib/auth-cookie";
 import {
   PAYMENT_CONFIG_QUERY,
   PAYMENT_SDK_QUERY,
@@ -53,7 +54,7 @@ const ok  = (data: unknown, error: string | null = null) =>
 export async function POST(req: NextRequest) {
   const body  = await req.json().catch(() => ({} as Record<string, unknown>));
   const op    = body.op as string;
-  const token = body.token as string | undefined;
+  const token = readAuthToken(req) ?? (body.token as string | undefined);
 
   try {
     switch (op) {

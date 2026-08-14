@@ -12,6 +12,7 @@ import { WishlistProvider } from "@/lib/wishlist-context";
 import CartAuthSync from "@/components/CartAuthSync";
 import LocaleDirectionSetter from "@/components/LocaleDirectionSetter";
 import { StoreConfigProvider } from "@/lib/store-config-context";
+import { DriverReviewsProvider } from "@/lib/driver-reviews-context";
 import { getStoreConfig } from "@/lib/services/store.service";
 import { APP_CONFIG } from "@/src/config/app-config";
 import JsonLd from "@/components/JsonLd";
@@ -90,14 +91,16 @@ export default async function RootLayout({
             <CartProvider>
               <CompareProvider>
                 <WishlistProvider>
-                  <CartAuthSync />
-                  <Suspense fallback={null}>
-                    <Header />
-                  </Suspense>
-                  <main>{children}</main>
-                  <Footer />
-                  <FloatingContact />
-                  <FloatingGoogleReviews />
+                  <DriverReviewsProvider>
+                    <CartAuthSync />
+                    <Suspense fallback={null}>
+                      <Header />
+                    </Suspense>
+                    <main>{children}</main>
+                    <Footer />
+                    <FloatingContact />
+                    <FloatingGoogleReviews />
+                  </DriverReviewsProvider>
                 </WishlistProvider>
               </CompareProvider>
             </CartProvider>

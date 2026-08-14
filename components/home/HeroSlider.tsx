@@ -6,7 +6,6 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, EffectFade } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { HeroSliderSkeleton } from "@/components/HomeSkeletons";
 
 import "swiper/css";
 import "swiper/css/effect-fade";
@@ -28,6 +27,10 @@ export default function HeroSlider() {
   const swiperRef = useRef<SwiperType | null>(null);
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loading, setLoading] = useState(true);
+  // The loader stays up past the API response until the first banner image
+  // has actually painted (its onLoad/onError), so there's no blank gap
+  // between the API completing and the image appearing.
+  const [imageReady, setImageReady] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -46,7 +49,46 @@ export default function HeroSlider() {
     return () => { active = false; };
   }, []);
 
-  if (loading) return <HeroSliderSkeleton />;
+  // If the first slide has no image (gradient fallback), there's nothing to
+  // wait for — mark ready so the loader doesn't stay up forever.
+  useEffect(() => {
+    if (!loading && slides.length > 0 && !slides[0].image) setImageReady(true);
+  }, [loading, slides]);
+
+  // Same section loader as the Tyre Finder. Reused for both phases (API
+  // fetch, then first-image load) so it stays visible continuously.
+  const loaderOverlay = (
+    <div
+      className="section-loader searchloader"
+      style={{ display: "flex" }}
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="inner d-flex align-items-center justify-content-center text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="spinner mx-auto"
+          src="/images/loader-style1.svg"
+          alt=""
+          aria-hidden="true"
+          width={50}
+          height={50}
+        />
+      </div>
+      <span className="sr-only">Loading…</span>
+    </div>
+  );
+
+  // API phase — banners not fetched yet. Keep the hero box sized via
+  // .banner-aspect so there's no layout shift when the slider mounts.
+  if (loading) {
+    return (
+      <section className="hero-section">
+        <div className="banner-aspect">{loaderOverlay}</div>
+      </section>
+    );
+  }
   if (slides.length === 0) return null;
 
   return (
@@ -91,6 +133,12 @@ export default function HeroSlider() {
                       priority={index === 0}
                       sizes="100vw"
                       className="object-cover object-center"
+                      {...(index === 0
+                        ? {
+                            onLoad: () => setImageReady(true),
+                            onError: () => setImageReady(true),
+                          }
+                        : {})}
                     />
                     {/* No overlay, image is displayed with full brightness */}
                   </>
@@ -129,6 +177,11 @@ export default function HeroSlider() {
             <ChevronRight size={18} />
           </button>
         </div>
+
+        {/* Keep the loader on top of the mounted slider until the first
+            banner image has painted (onLoad/onError) — prevents the
+            white/blank gap between the API response and the image. */}
+        {!imageReady && loaderOverlay}
 
       </div>
     </section>

@@ -53,6 +53,18 @@ export type Product = {
   reviewCount: number;
   inStock?: boolean;
   quantity?: number;
+
+  // DriverReviews (Klever) per-product widget data
+  driverReviews?: DriverReviewsData;
+};
+
+/** Per-product DriverReviews data (from `driver_reviews` on ProductInterface). */
+export type DriverReviewsData = {
+  isTyre: boolean;
+  manufacturer: string;
+  model: string;
+  tyreSize: string;
+  vehicleType: string;
 };
 
 export type Category = {

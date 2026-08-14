@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readAuthToken } from "@/lib/auth-cookie";
 import { CART_QUERIES } from "@/lib/queries";
 import { CART_MUTATIONS, PRODUCT_TYPE_CART_MUTATIONS, LEGACY_CART_MUTATIONS } from "@/lib/mutations";
 import { hasOperation, supportedProductTypes, featureUnavailable } from "@/lib/magento-capabilities";
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
   const body   = await req.json().catch(() => ({} as Record<string, unknown>));
   const op     = body.op as string;
   const cartId = body.cartId as string | undefined;
-  const token  = body.token as string | undefined;
+  const token  = readAuthToken(req) ?? (body.token as string | undefined);
 
   try {
     switch (op) {

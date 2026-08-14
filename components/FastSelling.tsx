@@ -8,6 +8,7 @@ import type { Swiper as SwiperType } from "swiper";
 import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
 import type { Product } from "@/lib/data";
+import { APP_CONFIG } from "@/src/config/app-config";
 
 import "swiper/css";
 import "swiper/css/pagination";
@@ -20,7 +21,14 @@ export default function FastSelling() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/bestsellers?pageSize=12")
+    // Temporary source: the MagePlaza bestsellers extension (mpSmtpBestsellers)
+    // requires app_id/secret_key credentials that aren't configured, so we back
+    // this carousel with a normal Tyres-category products query for now.
+    //
+    // FUTURE: restore the real bestsellers source once the mpSmtpBestsellers
+    // query + credentials are fixed (see /api/bestsellers). Original call:
+    //   fetch("/api/bestsellers?pageSize=12")
+    fetch(`/api/products?categoryUid=${APP_CONFIG.magento.tyresCategoryUid}&pageSize=12`)
       .then((r) => r.json())
       .then((json: { products?: Product[] }) => {
         if (!active) return;

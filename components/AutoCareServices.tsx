@@ -48,7 +48,7 @@ function ServiceCardSkeleton() {
 function ServiceCard({ item }: { item: ServiceItem }) {
   return (
     <div
-      className="relative transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_14px_36px_rgba(0,0,0,0.38)]"
+      className="service-box relative transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_14px_36px_rgba(0,0,0,0.38)]"
       style={{ minHeight: "150px", paddingLeft: "132px" }}
     >
       {/* ── Image — absolutely positioned, overflows top & bottom ── */}
@@ -69,14 +69,22 @@ function ServiceCard({ item }: { item: ServiceItem }) {
           <div className="absolute inset-0 bg-gray-600" />
         )}
 
-        {/* Dark overlay + icon */}
+        {/* Dark overlay + rotating round shape + fixed centered icon */}
         <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+          {/* Rotating background shape (spins continuously behind the icon) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/round-shape.webp"
+            alt=""
+            aria-hidden
+            className="service-shape"
+          />
           {item.iconImage && (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={item.iconImage}
               alt={item.title}
-              className="w-14 h-14 object-contain"
+              className="service-icon w-14 h-14 object-contain"
               style={{ filter: "brightness(0) invert(1)" }}
               loading="lazy"
             />
@@ -105,14 +113,14 @@ function ServiceCard({ item }: { item: ServiceItem }) {
 ────────────────────────────────────────────────────────────────── */
 export default function AutoCareServices() {
   const [services, setServices] = useState<ServiceItem[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
     fetch("/api/homepage")
       .then((r) => r.json())
       .then((data) => { if (active) setServices(data.services ?? []); })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);

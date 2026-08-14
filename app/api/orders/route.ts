@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readAuthToken } from "@/lib/auth-cookie";
 import { GUEST_ORDER_QUERY, GUEST_ORDER_BY_TOKEN_QUERY } from "@/lib/queries";
 import { ORDER_MUTATIONS } from "@/lib/mutations";
 import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({} as Record<string, unknown>));
   const op = body.op as string;
-  const token = body.token as string | undefined;
+  const token = readAuthToken(req) ?? (body.token as string | undefined);
 
   try {
     switch (op) {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import ProductImage from "./ProductImage";
 import { ShoppingBag, Heart, Check, Loader2, AlertCircle } from "lucide-react";
 import type { Product } from "@/lib/data";
@@ -89,7 +90,13 @@ export default function ProductCard({ product }: { product: Product }) {
   }
 
   const isOutOfStock = product.inStock === false;
-  const href = product.urlKey ? `/en/product/${product.urlKey}` : product.sku ? `/product/${product.sku}` : "/";
+  const pathname = usePathname();
+  const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
+  const href = product.urlKey
+    ? `/${locale}/product/${product.urlKey}`
+    : product.sku
+    ? `/${locale}/product/${product.sku}`
+    : "/";
   const waUrl = `https://wa.me/966500000000?text=${encodeURIComponent(`Hi, I'm interested in: ${product.name}`)}`;
   const brandLogo = getBrandLogo(product.brand);
   const offerLabels = useOfferLabels();
@@ -237,12 +244,18 @@ export default function ProductCard({ product }: { product: Product }) {
           {product.name}
         </Link>
 
-        {/* Rating */}
+        {/* Rating — backend-driven; empty state when there are no reviews */}
         <div className="flex items-center gap-1.5 mt-0.5">
-          <Stars rating={product.rating} />
-          <span className="text-[11px] text-ink/35">
-            ({product.reviewCount})
-          </span>
+          {product.reviewCount > 0 || product.rating > 0 ? (
+            <>
+              <Stars rating={product.rating} />
+              <span className="text-[11px] text-ink/35">
+                ({product.reviewCount})
+              </span>
+            </>
+          ) : (
+            <span className="text-[11px] italic text-ink/35">Not rated yet</span>
+          )}
         </div>
 
         {/* Price row */}

@@ -15,6 +15,7 @@ import { useCart } from "@/lib/cart-context";
 import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
 import TyreFinder from "@/components/TyreFinder";
+import DriverReviewsWidget from "@/components/DriverReviews/DriverReviewsWidget";
 import { APP_CONFIG } from "@/src/config/app-config";
 import JsonLd from "@/components/JsonLd";
 import { useCurrencyCode } from "@/lib/store-config-context";
@@ -28,13 +29,13 @@ import "swiper/css";
    into structured spec fields.
 ══════════════════════════════════════════════════════════════════ */
 interface TyreSpecs {
-  size:       string | null;   // "275/40 R22"
-  loadIndex:  string | null;   // "107Y"
-  pattern:    string | null;   // "ContiPremiumContact 6"
+  size: string | null;   // "275/40 R22"
+  loadIndex: string | null;   // "107Y"
+  pattern: string | null;   // "ContiPremiumContact 6"
   oemMarking: string | null;   // "SSR *"
-  year:       string | null;   // "2025"
-  isRunFlat:  boolean;
-  hasXL:      boolean;
+  year: string | null;   // "2025"
+  isRunFlat: boolean;
+  hasXL: boolean;
 }
 
 const OEM_TOKENS = [
@@ -45,25 +46,25 @@ const OEM_TOKENS = [
 
 function parseTyreProductName(name: string): TyreSpecs {
   const yearMatch = name.match(/\b(20\d{2})\b/);
-  const year      = yearMatch?.[1] ?? null;
+  const year = yearMatch?.[1] ?? null;
 
   const sizeMatch = name.match(/(\d{3}\/\d{2,3}\s*[Rr]\d{2})/);
   if (!sizeMatch || sizeMatch.index === undefined) {
     return { size: null, loadIndex: null, pattern: null, oemMarking: null, year, isRunFlat: false, hasXL: false };
   }
 
-  const size      = sizeMatch[1].trim();
-  const brand     = name.slice(0, sizeMatch.index).trim();      // unused but kept for clarity
+  const size = sizeMatch[1].trim();
+  const brand = name.slice(0, sizeMatch.index).trim();      // unused but kept for clarity
   void brand;
   const afterSize = name.slice(sizeMatch.index + size.length).trim();
 
   // Load index: first token like 107Y, 101V, 91W
   const loadMatch = afterSize.match(/^(\d{2,3}[A-Za-z]{1,2}(?:\/\d{2,3}[A-Za-z]{1,2})?)\b/);
   const loadIndex = loadMatch?.[1]?.toUpperCase() ?? null;
-  const rest      = (loadMatch ? afterSize.slice(loadMatch[0].length) : afterSize).trim();
+  const rest = (loadMatch ? afterSize.slice(loadMatch[0].length) : afterSize).trim();
 
   const isRunFlat = /\b(run.?flat|runflat|rft|rsc|zp)\b/i.test(name);
-  const hasXL     = /\bXL\b/.test(rest);
+  const hasXL = /\bXL\b/.test(rest);
 
   // Strip year from end of rest
   const restNoYear = year ? rest.replace(new RegExp(`\\s*\\b${year}\\b\\s*$`), "").trim() : rest;
@@ -111,7 +112,7 @@ function SpecsRating({ rating, reviewCount }: { rating: number; reviewCount: num
   const stars = [];
   const activeColor = "#b02a8a"; // Magenta/purple rating color from screenshot
   const inactiveColor = "#e5e7eb"; // Light gray
-  
+
   for (let i = 1; i <= 5; i++) {
     if (i <= rating) {
       stars.push(
@@ -141,6 +142,11 @@ function SpecsRating({ rating, reviewCount }: { rating: number; reviewCount: num
     }
   }
 
+  // No reviews from the backend → show empty state, not a fake 0.0/5 score.
+  if (!reviewCount && !rating) {
+    return <span className="text-[12px] italic text-gray-400">Not rated yet</span>;
+  }
+
   return (
     <div className="flex items-center gap-1">
       <div className="flex items-center gap-0.5">{stars}</div>
@@ -162,8 +168,8 @@ function SpecsTable({
   product: ProductDetail;
 }) {
   const brandName = product.brandName ?? product.brand ?? null;
-  const origin    = product.country ?? product.origin ?? null;
-  const warranty  = product.warrantyPeriod ?? "5 Years Warranty";
+  const origin = product.country ?? product.origin ?? null;
+  const warranty = product.warrantyPeriod ?? "5 Years Warranty";
 
   const rows = [
     {
@@ -351,21 +357,13 @@ function PricingCard({
 
       {/* Installments Card Wrapper */}
       <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col gap-2 mt-1">
-        <p className="text-[11px] text-gray-500 font-medium">Split in 4 Payment with</p>
-        <div className="flex items-center gap-2.5">
-          {/* Tabby */}
-          <div className="inline-flex items-center justify-center bg-[#05FFD2] text-black px-3.5 py-1.5 rounded-lg font-black text-[11px] tracking-wide select-none">
-            tabby
-          </div>
-          {/* Tamara */}
-          <div className="inline-flex items-center justify-center bg-gradient-to-r from-[#FFB399] via-[#FF7D82] to-[#C095FF] text-black px-3.5 py-1.5 rounded-lg font-black text-[11px] tracking-wide select-none">
-            tamara
-          </div>
-          {/* EMKAN */}
-          <div className="text-[#2e3162] font-black text-[14px] tracking-widest uppercase select-none font-sans">
-            EMKΛN
-          </div>
-        </div>
+        <p className="text-[11px] text-gray-500 font-medium">Pay In Installments</p>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/tabby-tamara-icon.webp"
+          alt="Tabby Tamara Payment"
+          className="h-6 w-auto object-contain self-start"
+        />
       </div>
     </div>
   );
@@ -383,12 +381,12 @@ function RatingsSection({
   product: ProductDetail;
   onWriteReviewClick: () => void;
 }) {
-  const count  = product.reviewCount ?? 0;
+  const count = product.reviewCount ?? 0;
   const rating = product.rating ?? 0;
 
   // Build heading title: "BRAND PATTERN" e.g. "PIRELLI P ZERO PZ4"
-  const specs       = parseTyreProductName(product.name);
-  const brandName   = String(product.brandName ?? product.brand ?? "").toUpperCase();
+  const specs = parseTyreProductName(product.name);
+  const brandName = String(product.brandName ?? product.brand ?? "").toUpperCase();
   const patternName = (specs.pattern ?? "").toUpperCase();
   const displayTitle = [brandName, patternName].filter(Boolean).join(" ") || product.name.toUpperCase();
 
@@ -521,7 +519,7 @@ function RelatedProductsSection({
 }) {
   const swiperRef = useRef<SwiperType | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading,  setLoading]  = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!size) return;
@@ -535,7 +533,7 @@ function RelatedProductsSection({
             .slice(0, 10)
         );
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, [size, currentSku]);
 
@@ -575,7 +573,7 @@ function RelatedProductsSection({
                 speed={600}
                 autoplay={{ delay: 3000, disableOnInteraction: false, pauseOnMouseEnter: true }}
                 breakpoints={{
-                  640:  { slidesPerView: 2, spaceBetween: 16 },
+                  640: { slidesPerView: 2, spaceBetween: 16 },
                   1024: { slidesPerView: 4, spaceBetween: 20 },
                 }}
               >
@@ -635,9 +633,9 @@ export default function ProductDetailInner({
   locale?: string;
 }) {
   const offerLabels = useOfferLabels();
-  const offerLabel  = product.offersId ? offerLabels[product.offersId] : undefined;
+  const offerLabel = product.offersId ? offerLabels[product.offersId] : undefined;
 
-  const specs       = parseTyreProductName(product.name);
+  const specs = parseTyreProductName(product.name);
   const [activeImg, setActiveImg] = useState(0);
   const [isPriceInfoOpen, setIsPriceInfoOpen] = useState(false);
   const [isAddedToCartOpen, setIsAddedToCartOpen] = useState(false);
@@ -681,12 +679,12 @@ export default function ProductDetailInner({
     },
     ...(product.rating && product.reviewCount
       ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: product.rating,
-            reviewCount: product.reviewCount,
-          },
-        }
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: product.rating,
+          reviewCount: product.reviewCount,
+        },
+      }
       : {}),
   };
 
@@ -737,9 +735,9 @@ export default function ProductDetailInner({
                 <div className="flex items-center justify-center p-6 bg-white" style={{ minHeight: 340 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                     src={currentImg}
-                     alt={product.name}
-                     className="max-h-[340px] w-full object-contain"
+                    src={currentImg}
+                    alt={product.name}
+                    className="max-h-[340px] w-full object-contain"
                   />
                 </div>
 
@@ -749,9 +747,8 @@ export default function ProductDetailInner({
                       <button
                         key={i}
                         onClick={() => setActiveImg(i)}
-                        className={`w-12 h-12 border rounded-md flex-shrink-0 flex items-center justify-center p-1 transition-all ${
-                          i === activeImg ? "border-[#ed1c24] ring-1 ring-[#ed1c24] bg-white" : "border-gray-200 hover:border-gray-400 bg-white"
-                        }`}
+                        className={`w-12 h-12 border rounded-md flex-shrink-0 flex items-center justify-center p-1 transition-all ${i === activeImg ? "border-[#ed1c24] ring-1 ring-[#ed1c24] bg-white" : "border-gray-200 hover:border-gray-400 bg-white"
+                          }`}
                         aria-label={`Image ${i + 1}`}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -858,6 +855,12 @@ export default function ProductDetailInner({
         </div>
       )}
 
+      {/* ── DriverReviews (Klever) combined-review widget ──────────── */}
+      {/* Renders only for tyre products the SDK can match; the SDK fills it. */}
+      <div className="container">
+        <DriverReviewsWidget dr={product.driverReviews} variant="product" />
+      </div>
+
       {/* ── Ratings & Reviews ──────────────────────────────────────── */}
       <RatingsSection product={product} onWriteReviewClick={() => setIsWriteReviewOpen(true)} />
 
@@ -917,7 +920,7 @@ function ShareModal({
             setSenderEmail(parsed.email);
           }
         }
-      } catch {}
+      } catch { }
     }
   }, [isOpen]);
 
@@ -1125,7 +1128,7 @@ function ReviewModal({
             setRatings(defaults);
           }
         })
-        .catch(() => {})
+        .catch(() => { })
         .finally(() => setLoadingMetadata(false));
 
       // Prefill nickname if logged in
@@ -1137,7 +1140,7 @@ function ReviewModal({
             setNickname(parsed.firstname);
           }
         }
-      } catch {}
+      } catch { }
     }
   }, [isOpen]);
 
@@ -1230,11 +1233,10 @@ function ReviewModal({
                           key={v.value_id}
                           type="button"
                           onClick={() => setRatings((prev) => ({ ...prev, [s.id]: v.value_id }))}
-                          className={`w-8 h-8 rounded-full border text-[11px] font-bold flex items-center justify-center transition-colors ${
-                            ratings[s.id] === v.value_id
-                              ? "border-black bg-black text-white"
-                              : "border-gray-200 hover:border-gray-400 text-gray-600 bg-white"
-                          }`}
+                          className={`w-8 h-8 rounded-full border text-[11px] font-bold flex items-center justify-center transition-colors ${ratings[s.id] === v.value_id
+                            ? "border-black bg-black text-white"
+                            : "border-gray-200 hover:border-gray-400 text-gray-600 bg-white"
+                            }`}
                         >
                           {v.value}
                         </button>

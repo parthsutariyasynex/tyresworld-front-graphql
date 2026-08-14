@@ -21,17 +21,21 @@ type GqlResult = {
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const filterName = searchParams.get("filterName") ?? "";
-  const search     = searchParams.get("search")     ?? "";
-  const urlKey     = searchParams.get("urlKey")     ?? "";
-  const store      = searchParams.get("store")      ?? "default";
+  const filterName   = searchParams.get("filterName")  ?? "";
+  const search       = searchParams.get("search")      ?? "";
+  const urlKey       = searchParams.get("urlKey")      ?? "";
+  const categoryUid  = searchParams.get("categoryUid") ?? "";
+  const store        = searchParams.get("store")       ?? "default";
 
   if (!filterName) {
     return NextResponse.json({ options: [], error: "filterName is required" }, { status: 400 });
   }
 
   try {
-    const filter = urlKey
+    // category_uid takes precedence over category_url_path when both are supplied.
+    const filter = categoryUid
+      ? { category_uid: { eq: categoryUid } }
+      : urlKey
       ? { category_url_path: { eq: urlKey } }
       : undefined;
 

@@ -251,6 +251,9 @@ export const CATEGORY_PAGE_QUERY = /* GraphQL */ `
         url_suffix
         brand: mgs_brand
         offers
+        country
+        origin
+        warranty_period
         image { url label }
         categories { id name url_key }
         price_range {
@@ -259,6 +262,7 @@ export const CATEGORY_PAGE_QUERY = /* GraphQL */ `
             final_price   { value currency }
           }
         }
+        driver_reviews { is_tyre manufacturer model tyre_size vehicle_type }
       }
     }
   }
@@ -305,6 +309,9 @@ export const CATEGORY_PRODUCTS_BY_UID_QUERY = /* GraphQL */ `
         url_suffix
         brand: mgs_brand
         offers
+        country
+        origin
+        warranty_period
         image { url label }
         categories { id name url_key }
         price_range {
@@ -313,6 +320,7 @@ export const CATEGORY_PRODUCTS_BY_UID_QUERY = /* GraphQL */ `
             final_price   { value currency }
           }
         }
+        driver_reviews { is_tyre manufacturer model tyre_size vehicle_type }
       }
     }
   }
@@ -349,9 +357,9 @@ export const MENU_QUERY = /* GraphQL */ `
 `;
 
 export const CATEGORY_FILTERS_QUERY = /* GraphQL */ `
-  query CategoryFilters($urlKey: String!) {
+  query CategoryFilters($categoryUid: String!) {
     products(
-      filter: { category_url_path: { eq: $urlKey } }
+      filter: { category_uid: { eq: $categoryUid } }
       pageSize: 1
       currentPage: 1
     ) {
@@ -359,22 +367,6 @@ export const CATEGORY_FILTERS_QUERY = /* GraphQL */ `
         attribute_code
         label
         count
-        options {
-          label
-          value
-          count
-        }
-      }
-    }
-  }
-`;
-
-export const SEARCH_OPTIONS_QUERY = /* GraphQL */ `
-  query SearchOptions($categoryUid: String!) {
-    products(filter: { category_uid: { eq: $categoryUid } }, pageSize: 1, currentPage: 1) {
-      aggregations {
-        attribute_code
-        label
         options {
           label
           value
@@ -449,25 +441,6 @@ export const TYRE_FINDER_METADATA_QUERY = /* GraphQL */ `
   }
 `;
 
-// ── Category product sizes: read width/height/rim from real product data ──
-export const CATEGORY_PRODUCT_SIZES_QUERY = /* GraphQL */ `
-  query CategoryProductSizes(
-    $filter: ProductAttributeFilterInput!
-    $pageSize: Int!
-    $currentPage: Int!
-  ) {
-    products(filter: $filter, pageSize: $pageSize, currentPage: $currentPage) {
-      total_count
-      items {
-        custom_attributes {
-          attribute_code
-          value
-        }
-      }
-    }
-  }
-`;
-
 // ── Tyre Finder: dependent options via filtered aggregations ──────────
 export const TYRE_FINDER_OPTIONS_QUERY = /* GraphQL */ `
   query TyreFinderOptions($filter: ProductAttributeFilterInput!) {
@@ -511,6 +484,9 @@ export const OFFERS_PRODUCTS_QUERY = /* GraphQL */ `
         url_suffix
         brand: mgs_brand
         offers
+        country
+        origin
+        warranty_period
         image { url label }
         categories { id name url_key }
         price_range {
@@ -519,6 +495,7 @@ export const OFFERS_PRODUCTS_QUERY = /* GraphQL */ `
             final_price   { value currency }
           }
         }
+        driver_reviews { is_tyre manufacturer model tyre_size vehicle_type }
       }
     }
   }
@@ -547,6 +524,29 @@ export const STORE_CONFIG_QUERY = /* GraphQL */ `
       copyright
       catalog_default_sort_by
       root_category_uid
+    }
+  }
+`;
+
+// ── DriverReviews (Klever) widget SDK + config ────────────────────
+// Boots the DriverReviews JS SDK; per-product data comes via the
+// `driver_reviews` field on ProductInterface (see graphql/fragments).
+export const KLEVER_DRIVER_REVIEWS_QUERY = /* GraphQL */ `
+  query DriverReviewsConfig {
+    kleverDriverReviews {
+      enabled
+      widget_enabled
+      sdk_url
+      widget_pubkey
+      language
+      popup_style
+      slide_in_popup
+      product_widget_type
+      review_size
+      infinite_scroll
+      show_external_reviews
+      show_category_rating
+      show_jsonld
     }
   }
 `;

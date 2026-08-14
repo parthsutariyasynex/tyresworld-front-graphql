@@ -11,7 +11,7 @@
 @font-face {
   font-family: "saudi-riyal";
   src: url("/fonts/saudi-riyal-symbol.woff") format("woff"),
-       url("/fonts/saudi-riyal-symbol.ttf") format("truetype");
+    url("/fonts/saudi-riyal-symbol.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -227,6 +227,89 @@
   margin-left: auto;
   margin-right: auto;
   width: 100%;
+}
+
+/* ── DriverReviews widgets: reserve space to avoid layout shift ──── */
+.driverreviews-product-widget {
+  margin-top: 30px;
+  min-height: 120px;
+}
+.driverreviews-category-rating {
+  min-height: 20px;
+}
+
+/* ── Tyre Finder loading overlay ───────────────────────────────────
+   Scoped to the Tyre Finder <section> (its .tyreform ancestor is always
+   positioned). Covers only that section, blocks interaction with the
+   controls while loading. Uses the theme's image spinner
+   (loader-style1.svg) via .section-loader .inner .spinner, matching the
+   reference markup. Default hidden; TyreFinder toggles display when a
+   request is in flight. */
+.section-loader.searchloader {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  background: #fff;
+}
+
+.section-loader.searchloader .inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Rendered as an <img> (not a CSS background) so the SVG's SMIL
+   animation actually runs — background-image SVGs are painted static. */
+.section-loader.searchloader .spinner {
+  width: 50px;
+  height: 50px;
+  margin-left: auto;
+  margin-right: auto;
+  object-fit: contain;
+}
+
+/* ── Service section: rotating round-shape behind a fixed icon ──────
+   round-shape.webp spins continuously (360° linear infinite) behind the
+   service icon; the icon itself stays fixed and centered on top. The flex
+   container in the markup centers both; the shape is absolutely centered
+   so it rotates around its own middle, keeping the icon dead-centre. */
+.service-box .service-icon {
+  position: relative;
+  z-index: 2; /* stays above the rotating shape */
+}
+
+.service-box .service-shape {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1; /* behind the icon */
+  width: 110px;
+  height: 110px;
+  max-width: 110px;
+  transform: translate(-50%, -50%) rotate(0deg);
+  transform-origin: center center;
+  animation: service-shape-spin 10s linear infinite;
+  pointer-events: none;
+  /* The asset is a faint dark watermark (~6% alpha); our icon sits on a
+     dark overlay, so recolour it white to make the rotating shape read. */
+  filter: brightness(0) invert(1);
+}
+
+@keyframes service-shape-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-box .service-shape {
+    animation: none;
+  }
 }
 
 /*

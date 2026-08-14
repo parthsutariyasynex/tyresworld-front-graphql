@@ -41,6 +41,7 @@ export default function Header() {
   }
 
   const [categories, setCategories] = useState<MenuItem[]>([]);
+  const [menuLoading, setMenuLoading] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const { customer, isLoggedIn, logout } = useAuth();
@@ -111,6 +112,9 @@ export default function Header() {
   const fmtMoney = (v: number) => <Money value={v} currency={currency} digits={2} />;
 
   const localiseHref = (href: string) => {
+    if (href.endsWith("/tyres/brand") || href.endsWith("/brand")) {
+      return `/${locale}/brands`;
+    }
     if (href.startsWith("/en/")) {
       return href.replace("/en/", `/${locale}/`);
     }
@@ -130,6 +134,9 @@ export default function Header() {
       })
       .catch((err) => {
         console.error("Failed to load menu:", err);
+      })
+      .finally(() => {
+        if (active) setMenuLoading(false);
       });
     return () => {
       active = false;
@@ -180,7 +187,16 @@ export default function Header() {
               className="hidden lg:flex flex-1 items-center justify-center gap-0.5"
               aria-label="Main navigation"
             >
-              {categories.map((item) => {
+              {menuLoading && categories.length === 0 ? (
+                /* Menu skeleton — placeholder pills while /api/menu loads */
+                <div className="flex items-center gap-1" aria-hidden="true">
+                  {[64, 88, 72, 96, 68, 80].map((w, i) => (
+                    <div key={i} className="px-3 py-2">
+                      <div className="h-3.5 rounded bg-white/15 animate-pulse" style={{ width: w }} />
+                    </div>
+                  ))}
+                </div>
+              ) : categories.map((item) => {
                 const hasChildren = !!item.children?.length;
                 // item.href is always /en/… — strip locale prefix before comparing
                 const normItem = item.href.replace(/^\/[a-z]{2}\//, "/");
@@ -580,7 +596,18 @@ export default function Header() {
 
             {/* Nav links */}
             <nav className="flex-1 overflow-y-auto px-5 py-4">
-              {categories.map((item) => (
+              {menuLoading && categories.length === 0
+                ? /* Menu skeleton — placeholder rows while /api/menu loads */
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between py-3.5 border-b border-white/10"
+                      aria-hidden="true"
+                    >
+                      <div className="h-4 rounded bg-white/15 animate-pulse" style={{ width: `${55 + (i % 3) * 20}%` }} />
+                    </div>
+                  ))
+                : categories.map((item) => (
                 <Link
                   key={item.uid}
                   href={localiseHref(item.href)}

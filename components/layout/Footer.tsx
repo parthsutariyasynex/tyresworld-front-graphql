@@ -50,42 +50,7 @@ const XIcon = () => (
   </svg>
 );
 
-const EXPLORE_TIRES = [
-  { label: "Off Road Tires", href: `/shop?categoryUid=${TYRES_UID}&tyre_type=Off+Road` },
-  { label: "On Road Tires", href: `/shop?categoryUid=${TYRES_UID}&tyre_type=On+Road` },
-  { label: "Run Flat Tires", href: `/shop?categoryUid=${TYRES_UID}&runflat=RunFlat` },
-  { label: "EV Tires", href: `/shop?categoryUid=${TYRES_UID}&ev=EV` }
-];
 
-const PREMIUM_TIRE = [
-  { label: "Pirelli", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=pirelli` },
-  { label: "Michelin", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=michelin` },
-  { label: "Continental", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=continental` },
-  { label: "Bridgestone", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=bridgestone` },
-  { label: "BFGoodrich", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=bfgoodrich` },
-  { label: "Goodyear", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=goodyear` },
-  { label: "Kumho", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=kumho` },
-  { label: "Hankook", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=hankook` },
-  { label: "Yokohama", href: `/shop?categoryUid=${TYRES_UID}&mgs_brand=yokohama` }
-];
-
-const WHY_POWERTIRE = [
-  { label: "About Us", href: "/about" },
-  { label: "Blog", href: "/blog" },
-  { label: "Special Offers", href: "/#offers" },
-  { label: "Track Order", href: "/track-order" },
-  { label: "Tires", href: "/shop" },
-  { label: "Contact", href: "/contact" }
-];
-
-const OUR_POLICIES = [
-  { label: "Terms & Conditions", href: "/terms-and-conditions" },
-  { label: "Offers Terms and Conditions", href: "/offers-terms-and-conditions" },
-  { label: "Privacy Policy", href: "/privacy-policy" },
-  { label: "Warranty", href: "/warranty" },
-  { label: "Returns & Refund", href: "/returns-refund" },
-  { label: "VAT Certificate", href: "/vat-certificate" }
-];
 
 // Fallback social links used when mpSocialUrls backend is unavailable
 const SOCIAL_FALLBACK: SocialLink[] = [
@@ -129,6 +94,36 @@ export default function Footer() {
     { label: "On Road Tires", href: `/${locale}/on-road-tires` },
     { label: "Run Flat Tires", href: `/${locale}/run-flat-tires` },
     { label: "EV Tires", href: `/${locale}/ev-tires` }
+  ];
+
+  const premiumTires = [
+    { label: "Pirelli", href: `/${locale}/tyres?mgs_brand=899` },
+    { label: "Michelin", href: `/${locale}/tyres?mgs_brand=886` },
+    { label: "Continental", href: `/${locale}/tyres?mgs_brand=818` },
+    { label: "Bridgestone", href: `/${locale}/tyres?mgs_brand=934` },
+    { label: "BFGoodrich", href: `/${locale}/tyres?mgs_brand=837` },
+    { label: "Goodyear", href: `/${locale}/tyres?mgs_brand=817` },
+    { label: "Kumho", href: `/${locale}/tyres?mgs_brand=870` },
+    { label: "Hankook", href: `/${locale}/tyres?mgs_brand=861` },
+    { label: "Yokohama", href: `/${locale}/tyres?mgs_brand=926` }
+  ];
+
+  const whyPowerTire = [
+    { label: "About Us", href: `/${locale}/about` },
+    { label: "Blog", href: `/${locale}/blog` },
+    { label: "Special Offers", href: `/${locale}/#offers` },
+    { label: "Track Order", href: `/${locale}/track-order` },
+    { label: "Tires", href: `/${locale}/tyres` },
+    { label: "Contact", href: `/${locale}/contact` }
+  ];
+
+  const ourPolicies = [
+    { label: "Terms & Conditions", href: `/${locale}/terms-and-conditions` },
+    { label: "Offers Terms and Conditions", href: `/${locale}/offers-terms-and-conditions` },
+    { label: "Privacy Policy", href: `/${locale}/privacy-policy` },
+    { label: "Warranty", href: `/${locale}/warranty` },
+    { label: "Returns & Refund", href: `/${locale}/returns-refund` },
+    { label: "VAT Certificate", href: `/${locale}/vat-certificate` }
   ];
 
   return (
@@ -231,7 +226,7 @@ export default function Footer() {
               PREMIUM TIRE
             </h3>
             <ul className="flex flex-col gap-3 text-xs sm:text-[13px] text-white/70 font-semibold">
-              {PREMIUM_TIRE.map((link) => (
+              {premiumTires.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="hover:text-white transition-colors">
                     {link.label}
@@ -247,7 +242,7 @@ export default function Footer() {
               WHY POWERTIRE.SA
             </h3>
             <ul className="flex flex-col gap-3 text-xs sm:text-[13px] text-white/70 font-semibold">
-              {WHY_POWERTIRE.map((link) => (
+              {whyPowerTire.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="hover:text-white transition-colors">
                     {link.label}
@@ -264,7 +259,7 @@ export default function Footer() {
                 OUR POLICIES
               </h3>
               <ul className="flex flex-col gap-3 text-xs sm:text-[13px] text-white/70 font-semibold">
-                {OUR_POLICIES.map((link) => (
+                {ourPolicies.map((link) => (
                   <li key={link.label}>
                     <Link href={link.href} className="hover:text-white transition-colors">
                       {link.label}

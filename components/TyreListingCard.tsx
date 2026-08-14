@@ -36,6 +36,10 @@ function BrandDisplay({ product }: { product: Product }) {
 
 /* ── Stars (Orange/Yellow like the screenshot) ────────────────── */
 function Stars({ rating, count }: { rating: number; count: number }) {
+  // No reviews from the backend → don't fake a 0.0/5 score; show empty state.
+  if (!count && !rating) {
+    return <span className="text-[12px] italic text-gray-400">Not rated yet</span>;
+  }
   return (
     <span className="inline-flex items-center gap-1.5">
       <span className="flex gap-0.5">
@@ -46,7 +50,7 @@ function Stars({ rating, count }: { rating: number; count: number }) {
           </svg>
         ))}
       </span>
-      <span className="text-[12px] text-gray-900 font-bold">{rating ? rating.toFixed(1) : "0.0"}/5</span>
+      <span className="text-[12px] text-gray-900 font-bold">{rating.toFixed(1)}/5</span>
       <span className="text-[12px] text-gray-500 font-medium">({count} {count === 1 ? "review" : "reviews"})</span>
     </span>
   );

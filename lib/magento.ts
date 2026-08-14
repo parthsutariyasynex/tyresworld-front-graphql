@@ -77,6 +77,14 @@ export interface GqlProduct {
 
   rating_summary?: number | null;
   review_count?: number | null;
+
+  driver_reviews?: {
+    is_tyre?: boolean | null;
+    manufacturer?: string | null;
+    model?: string | null;
+    tyre_size?: string | null;
+    vehicle_type?: string | null;
+  } | null;
 }
 
 export interface GqlAggregationOption {
@@ -170,6 +178,7 @@ function resolvePrices(p: GqlProduct): [number, number | undefined, number | und
    PUBLIC ADAPTER — single GraphQL product → our Product type
 ───────────────────────────────────────────────────────────────── */
 import { getBrandName } from "./brandLogos";
+import { resolveCountry, resolveOrigin, resolveWarranty } from "./attributeMappings";
 
 export function adaptGqlProduct(p: GqlProduct): Product {
   const [price, originalPrice, maxPrice, currency] = resolvePrices(p);
@@ -209,7 +218,7 @@ export function adaptGqlProduct(p: GqlProduct): Product {
     brandPageUrl: p.brand_page_url ?? undefined,
 
     manufacturer: p.manufacturer ?? undefined,
-    country: p.country_of_manufacture ?? p.country ?? undefined,
+    country: p.country_of_manufacture ?? resolveCountry(p.country) ?? undefined,
     size: p.size ?? undefined,
     tyreSize: p.tyre_size ?? undefined,
     pattern: p.pattern ?? undefined,
@@ -217,8 +226,8 @@ export function adaptGqlProduct(p: GqlProduct): Product {
     height: p.height ?? undefined,
     rim: p.rim ?? undefined,
     year: p.year ?? undefined,
-    origin: p.origin ?? undefined,
-    warrantyPeriod: p.warranty_period ?? undefined,
+    origin: resolveOrigin(p.origin) ?? undefined,
+    warrantyPeriod: resolveWarranty(p.warranty_period) ?? undefined,
 
     category: resolveCategory(p),
     categories: (p.categories ?? [])
@@ -232,6 +241,16 @@ export function adaptGqlProduct(p: GqlProduct): Product {
     reviewCount: Number(p.review_count ?? 0),
     inStock: p.stock_status == null ? undefined : p.stock_status === "IN_STOCK",
     quantity: p.quantity != null ? Number(p.quantity) : undefined,
+
+    driverReviews: p.driver_reviews
+      ? {
+          isTyre: !!p.driver_reviews.is_tyre,
+          manufacturer: p.driver_reviews.manufacturer ?? "",
+          model: p.driver_reviews.model ?? "",
+          tyreSize: p.driver_reviews.tyre_size ?? "",
+          vehicleType: p.driver_reviews.vehicle_type ?? "",
+        }
+      : undefined,
   };
 }
 

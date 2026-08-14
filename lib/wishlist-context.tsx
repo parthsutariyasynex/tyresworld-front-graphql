@@ -33,8 +33,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   const fetchWishlist = useCallback(async () => {
-    const token = localStorage.getItem("customer_token");
-    if (!token) {
+    if (!isLoggedIn) {
       setWishlistItems([]);
       setWishlistId(null);
       return;
@@ -45,7 +44,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch("/api/account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ op: "wishlist", token }),
+        body: JSON.stringify({ op: "wishlist" }),
       });
       const data = await res.json();
       if (data.wishlist) {
@@ -64,7 +63,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isLoggedIn]);
 
   // Sync on login/logout
   useEffect(() => {
@@ -77,8 +76,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   }, [isLoggedIn, fetchWishlist]);
 
   const addToWishlist = async (product: Product): Promise<boolean> => {
-    const token = localStorage.getItem("customer_token");
-    if (!token) {
+    if (!isLoggedIn) {
       return false;
     }
 
@@ -97,7 +95,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           op: "addWishlist",
-          token,
           wishlistId: wishlistId || undefined,
           sku: product.sku,
         }),
@@ -130,8 +127,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   const removeFromWishlist = async (sku: string | undefined): Promise<boolean> => {
     if (!sku) return false;
-    const token = localStorage.getItem("customer_token");
-    if (!token) return false;
+    if (!isLoggedIn) return false;
 
     const itemToRemove = wishlistItems.find((item) => item.product.sku === sku);
     if (!itemToRemove) return false;
@@ -145,7 +141,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           op: "removeWishlist",
-          token,
           wishlistId: wishlistId || undefined,
           itemId: itemToRemove.id,
         }),
@@ -182,8 +177,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   };
 
   const moveToCart = async (wishlistItemId: string): Promise<boolean> => {
-    const token = localStorage.getItem("customer_token");
-    if (!token) return false;
+    if (!isLoggedIn) return false;
 
     setLoading(true);
     try {
@@ -192,7 +186,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           op: "moveWishlistToCart",
-          token,
           wishlistId: wishlistId || undefined,
           itemId: wishlistItemId,
         }),
@@ -226,8 +219,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateWishlistItem = async (itemId: string, quantity: number): Promise<boolean> => {
-    const token = localStorage.getItem("customer_token");
-    if (!token) return false;
+    if (!isLoggedIn) return false;
 
     setLoading(true);
     try {
@@ -236,7 +228,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           op: "updateWishlistItem",
-          token,
           wishlistId: wishlistId || undefined,
           itemId,
           quantity,
