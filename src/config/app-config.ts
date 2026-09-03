@@ -89,8 +89,10 @@ export function magentoHeaders(locale?: string): HeadersInit {
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
   };
   if (locale) h["Store"] = storeView(locale);
-  if (process.env.GRAPHQL_USERNAME && process.env.GRAPHQL_PASSWORD) {
-    const creds = Buffer.from(`${process.env.GRAPHQL_USERNAME}:${process.env.GRAPHQL_PASSWORD}`).toString("base64");
+  const user = process.env.GRAPHQL_USERNAME || "test";
+  const pass = process.env.GRAPHQL_PASSWORD || "test";
+  if (user && pass) {
+    const creds = Buffer.from(`${user.trim()}:${pass.trim()}`).toString("base64");
     h["Authorization"] = `Basic ${creds}`;
   }
   return h;
