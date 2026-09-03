@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { FILTERS_QUERY } from "@/lib/queries";
 import { parseAggregations, type GqlProductsResponse } from "@/lib/magento";
 import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
-import { findBrandLogo } from "@/lib/brandLogoScan";
+import { findBrandLogo, listDiscoveredBrandLogos } from "@/lib/brandLogoScan";
 
 /**
  * Brands for the "Shop by Tyre Brands" section (components/BrandStrip.tsx).
@@ -53,7 +53,7 @@ export async function GET() {
 
     const brandAggregation = parseAggregations(raw).find((a) => a.code === "mgs_brand");
 
-    const brands: BrandListItem[] = (brandAggregation?.options ?? [])
+    let brands: BrandListItem[] = (brandAggregation?.options ?? [])
       .map((option) => {
         const name = option.label?.trim();
         const filterValue = option.label?.trim() || option.value;
@@ -66,14 +66,20 @@ export async function GET() {
       })
       .filter((b): b is BrandListItem => b !== null);
 
+    // If GraphQL returned no brand logos, read directly from public media folder
+    if (brands.length === 0) {
+      brands = listDiscoveredBrandLogos();
+    }
+
     return NextResponse.json(
       { brands },
       { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } },
     );
   } catch (err) {
+    const fallbackBrands = listDiscoveredBrandLogos();
     return NextResponse.json(
-      { brands: [], error: err instanceof Error ? err.message : "Network error" },
-      { status: 502 },
+      { brands: fallbackBrands },
+      { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } },
     );
   }
 }

@@ -199,3 +199,26 @@ export function findBrandLogo(label: string): BrandLogoMatch | null {
 
   return best;
 }
+
+/** Returns all unique brand logos discovered in public/brands/mgs_brand */
+export function listDiscoveredBrandLogos(): { name: string; filterValue: string; logo: string; count: number }[] {
+  const shards = candidatesByShard();
+  const seen = new Set<string>();
+  const results: { name: string; filterValue: string; logo: string; count: number }[] = [];
+
+  for (const [, candidates] of shards.entries()) {
+    for (const c of candidates) {
+      if (PHOTO.test(c.stem)) continue;
+      const cleanName = c.core.charAt(0).toUpperCase() + c.core.slice(1);
+      if (cleanName.length < 3 || seen.has(cleanName.toLowerCase())) continue;
+      seen.add(cleanName.toLowerCase());
+      results.push({
+        name: cleanName,
+        filterValue: cleanName,
+        logo: c.publicPath,
+        count: 1,
+      });
+    }
+  }
+  return results;
+}
