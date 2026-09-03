@@ -15,15 +15,21 @@ import { useCurrencyCode } from "@/lib/store-config-context";
    'saudi-riyal' icon font, which maps "#" to the official symbol.
 ───────────────────────────────────────────────────────────────── */
 
+/** Currency codes/glyphs that represent the UAE Dirham */
+const AED_CODES = new Set(["AED", "د.إ", "Dhs", "DH"]);
+
 /** Currency codes/glyphs that represent the Saudi Riyal */
 const SAR_CODES = new Set(["SAR", "ر.س", "﷼"]);
 
-export function isRiyal(code?: string | null): boolean {
-  return !code || SAR_CODES.has(code);
+export function isAed(code?: string | null): boolean {
+  return !code || AED_CODES.has(code);
 }
 
-/** Currency label — Saudi Riyal gets the riyal-symbol glyph; other currencies render as plain text.
- *  The vendored 'saudi-riyal' icon font maps "#" (U+0023) to the official Riyal symbol. */
+export function isRiyal(code?: string | null): boolean {
+  return code ? SAR_CODES.has(code) : false;
+}
+
+/** Currency label — UAE Dirham gets the UAEDirham font; Saudi Riyal gets saudi-riyal glyph. */
 export function Currency({ code }: { code?: string }) {
   const storeCurrency = useCurrencyCode();
   const resolved = code || storeCurrency;
@@ -31,6 +37,13 @@ export function Currency({ code }: { code?: string }) {
     return (
       <span className="currency-riyal" aria-label="SAR">
         {"#"}
+      </span>
+    );
+  }
+  if (isAed(resolved)) {
+    return (
+      <span className="currency-dirham" aria-label="AED" role="img">
+        {"\uE900"}
       </span>
     );
   }

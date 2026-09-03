@@ -4,26 +4,8 @@
    in sync with the catalog automatically.
 ───────────────────────────────────────────────────────────────── */
 import { magentoFetch } from "@/lib/graphql/client";
+import { SITEMAP_CATEGORIES_QUERY, SITEMAP_PRODUCTS_QUERY } from "@/lib/queries";
 import { APP_CONFIG } from "@/src/config/app-config";
-
-/** Top-level, single-segment categories (the ones the [slug] route serves). */
-const SITEMAP_CATEGORIES_QUERY = /* GraphQL */ `
-  query SitemapCategories {
-    categories(filters: { parent_id: { eq: "2" } }) {
-      items { url_path include_in_menu }
-    }
-  }
-`;
-
-/** Product url_keys under the root category (whole catalog), paginated. */
-const SITEMAP_PRODUCTS_QUERY = /* GraphQL */ `
-  query SitemapProducts($uid: String!, $pageSize: Int!, $currentPage: Int!) {
-    products(filter: { category_uid: { eq: $uid } }, pageSize: $pageSize, currentPage: $currentPage) {
-      total_count
-      items { url_key }
-    }
-  }
-`;
 
 export const PRODUCT_CHUNK_SIZE = 5000;
 

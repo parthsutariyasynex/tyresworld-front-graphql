@@ -1,111 +1,195 @@
 import React from "react";
 
+/**
+ * 1. Hero Banner + Tyre Finder Skeleton
+ */
 export function HeroSliderSkeleton() {
   return (
-    <div className="banner-aspect relative w-full overflow-hidden bg-gray-900 animate-pulse">
-      {/* shimmer sweep */}
-      <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-700/40 to-gray-900 animate-[shimmer_1.8s_infinite]" />
-      {/* dots row at bottom — matches Swiper pagination position */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className={`rounded-full bg-white/20 ${i === 0 ? "w-6 h-2" : "w-2 h-2"}`} />
-        ))}
+    <section className="relative w-full bg-black/90 pb-12 animate-pulse">
+      {/* Hero Banner Area */}
+      <div className="w-full aspect-[16/6] min-h-[360px] bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-white/5" />
       </div>
-      {/* arrow placeholders bottom-right */}
-      <div className="absolute bottom-6 right-6 lg:right-10 flex gap-2">
-        <div className="w-10 h-10 rounded-full bg-white/10" />
-        <div className="w-10 h-10 rounded-full bg-white/10" />
+
+      {/* Tyre Finder Overlay Skeleton */}
+      <div className="container max-w-6xl mx-auto px-4 -mt-16 sm:-mt-24 relative z-10">
+        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl border border-gray-100">
+          {/* Tabs */}
+          <div className="flex gap-4 mb-6 border-b border-gray-100 pb-4">
+            <div className="w-32 h-9 rounded-lg bg-gray-200" />
+            <div className="w-32 h-9 rounded-lg bg-gray-100" />
+          </div>
+          {/* Form Selects Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="h-12 rounded-xl bg-gray-100" />
+            <div className="h-12 rounded-xl bg-gray-100" />
+            <div className="h-12 rounded-xl bg-gray-100" />
+            <div className="h-12 rounded-xl bg-red-100" />
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
+/**
+ * 2. Special Offers Skeleton (3 rounded cards)
+ */
+export function OffersSkeleton() {
+  return (
+    <section className="py-12 md:py-16 bg-white animate-pulse">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="text-center mb-8">
+          <div className="h-8 w-56 bg-gray-200 rounded-lg mx-auto mb-2" />
+          <div className="h-4 w-72 bg-gray-100 rounded mx-auto" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="aspect-[3/2] rounded-2xl bg-gray-200" />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * 3. Fast Selling Tyres Skeleton (4 product cards)
+ */
+export function FastSellingSkeleton() {
+  return (
+    <section className="py-12 lg:py-16 bg-[#f8f8f8] animate-pulse">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="text-center mb-8">
+          <div className="h-8 w-60 bg-gray-200 rounded-lg mx-auto" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-3">
+              <div className="w-full aspect-square bg-gray-100 rounded-lg" />
+              <div className="h-4 w-20 bg-gray-200 rounded" />
+              <div className="h-4 w-full bg-gray-100 rounded" />
+              <div className="h-6 w-24 bg-gray-200 rounded mt-auto" />
+              <div className="h-10 w-full bg-red-100 rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * 4. Wide Range Services Skeleton (9 service cards)
+ */
+export function WideRangeServicesSkeleton() {
+  return (
+    <section className="py-12 lg:py-16 bg-white animate-pulse">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="text-center mb-8">
+          <div className="h-8 w-64 bg-gray-200 rounded-lg mx-auto mb-2" />
+          <div className="h-4 w-80 bg-gray-100 rounded mx-auto" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="h-28 rounded-xl bg-gray-100 border border-gray-100 p-4 flex items-center gap-4">
+              <div className="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-3/4 bg-gray-200 rounded" />
+                <div className="h-3 w-1/2 bg-gray-100 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * 5. Brand Strip Skeleton (Grid of brand logos)
+ */
 export function BrandStripSkeleton() {
   return (
-    <div className="py-16 border-y border-ink/5 animate-pulse bg-white">
-      <div className="container">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex flex-col items-center gap-3">
-              <div className="h-10 w-24 rounded-lg bg-ink/8" />
-              <div className="h-3 w-16 rounded bg-ink/6" />
+    <section className="py-12 lg:py-16 bg-white border-t border-gray-100 animate-pulse">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="text-center mb-8">
+          <div className="h-8 w-56 bg-gray-200 rounded-lg mx-auto mb-2" />
+          <div className="h-4 w-96 bg-gray-100 rounded mx-auto" />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          {Array.from({ length: 15 }, (_, i) => (
+            <div key={i} className="h-20 rounded-xl bg-gray-100 border border-gray-100 flex items-center justify-center p-3">
+              <div className="w-20 h-8 bg-gray-200 rounded" />
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
+/**
+ * 6. FAQ Skeleton
+ */
 export function FaqSkeleton() {
   return (
-    <div className="py-20 lg:py-28 bg-cream animate-pulse">
-      <div className="container max-w-3xl">
-        <div className="text-center mb-14">
-          <div className="h-4 w-32 rounded bg-ink/8 mx-auto mb-4" />
-          <div className="h-8 w-64 rounded bg-ink/10 mx-auto" />
+    <section className="py-12 lg:py-16 bg-[#f8f8f8] animate-pulse">
+      <div className="container mx-auto px-4 max-w-5xl">
+        <div className="text-center mb-10">
+          <div className="h-8 w-72 bg-gray-200 rounded-lg mx-auto" />
         </div>
-        <div className="flex flex-col gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl p-6 border border-ink/5">
-              <div className="flex justify-between items-center">
-                <div className="h-4 w-2/3 rounded bg-ink/8" />
-                <div className="h-4 w-4 rounded bg-ink/6" />
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-5 border border-gray-100 flex justify-between items-center">
+              <div className="h-4 w-3/4 bg-gray-200 rounded" />
+              <div className="h-4 w-4 bg-gray-200 rounded-full" />
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-export function FooterSkeleton() {
+/**
+ * 7. Automotive Blog Skeleton (4 cards)
+ */
+export function AutomotiveBlogSkeleton() {
   return (
-    <div className="bg-ink text-white/10 py-16 lg:py-20 animate-pulse">
-      <div className="container">
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-10">
-          <div className="col-span-2">
-            <div className="h-8 w-24 rounded bg-white/10 mb-5" />
-            <div className="h-4 w-48 rounded bg-white/5 mb-3" />
-            <div className="h-4 w-36 rounded bg-white/5" />
-          </div>
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="col-span-1">
-              <div className="h-4 w-16 rounded bg-white/10 mb-5" />
-              <div className="flex flex-col gap-3">
-                <div className="h-3.5 w-16 rounded bg-white/5" />
-                <div className="h-3.5 w-20 rounded bg-white/5" />
-                <div className="h-3.5 w-12 rounded bg-white/5" />
+    <section className="py-12 lg:py-16 bg-white animate-pulse">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="text-center mb-8">
+          <div className="h-8 w-56 bg-gray-200 rounded-lg mx-auto mb-2" />
+          <div className="h-4 w-40 bg-gray-100 rounded mx-auto" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl overflow-hidden border border-gray-100 bg-white flex flex-col gap-3 pb-4">
+              <div className="w-full aspect-[16/10] bg-gray-200" />
+              <div className="px-4 space-y-2">
+                <div className="h-3 w-20 bg-gray-100 rounded" />
+                <div className="h-4 w-full bg-gray-200 rounded" />
+                <div className="h-3 w-4/5 bg-gray-100 rounded" />
               </div>
             </div>
           ))}
-          <div className="col-span-2">
-            <div className="h-4 w-24 rounded bg-white/10 mb-5" />
-            <div className="h-10 w-full rounded-full bg-white/5" />
-          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
+/**
+ * Full Complete Homepage Skeleton (Exactly matches the active sections)
+ */
 export default function HomepageSkeleton() {
   return (
     <div className="w-full">
       <HeroSliderSkeleton />
-      <div className="py-20 bg-cream">
-        <div className="container">
-          <div className="h-8 w-48 rounded bg-ink/10 mb-8" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-80 rounded-2xl bg-ink/5 animate-pulse" />
-            ))}
-          </div>
-        </div>
-      </div>
+      <OffersSkeleton />
       <BrandStripSkeleton />
-      <FaqSkeleton />
+      <AutomotiveBlogSkeleton />
     </div>
   );
 }

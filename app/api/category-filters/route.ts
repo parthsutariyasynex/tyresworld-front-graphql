@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CATEGORY_FILTERS_QUERY } from "@/lib/queries";
 import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
-// stock_status / quantity_and_stock_status: Use in Layered Navigation = No on this store
-const EXCLUDED = new Set(["category_id", "category_uid", "price", "stock_status", "quantity_and_stock_status"]);
+
+// Exclude internal category UIDs, unfilterable stock fields, and dimensions (height/width/rim) from layered nav
+const EXCLUDED = new Set([
+  "category_id",
+  "category_uid",
+  "price",
+  "stock_status",
+  "quantity_and_stock_status",
+  "height",
+  "width",
+  "rim",
+  "tyre_height",
+  "tyre_width",
+  "tyre_rim",
+  "rim_size",
+]);
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -24,6 +38,7 @@ export async function GET(req: NextRequest) {
     const json = await res.json().catch(() => null);
     const aggs = json?.data?.products?.aggregations ?? [];
 
+    // Pure dynamic mapping directly from Magento GraphQL aggregations
     const filters = aggs
       .filter((a: { attribute_code?: string }) =>
         a.attribute_code && !EXCLUDED.has(a.attribute_code)

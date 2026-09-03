@@ -153,7 +153,7 @@ export default function CmsInfoSection() {
       });
   }, []);
 
-  const subtitle = info?.description || "PowerTyre is the UAE's premier online store for tyres, alloy wheels, and car batteries. Supported by a fleet of mobile tyre fitting workshops and local centers, we deliver safety, quality, and convenience directly to your driveway.";
+  const subtitle = info?.description || "TyresWorld is the UAE's premier online store for tyres, alloy wheels, and car batteries. Supported by a fleet of mobile tyre fitting workshops and local centers, we deliver safety, quality, and convenience directly to your driveway.";
 
   if (loading) {
     return (

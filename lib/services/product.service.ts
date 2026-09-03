@@ -46,13 +46,30 @@ export async function getProducts(params: {
   categoryUid?: string;
   store?: string;
 }): Promise<ProductListResult> {
-  const search = params.search ?? "tyre";
+  /* An empty search means "no keyword", not "search for the word tyre".
+     Defaulting to "tyre" silently excluded everything whose indexed text
+     doesn't contain it — 7,404 hits instead of 8,522 across the catalogue. */
+  const search = params.search ?? "";
   const pageSize = params.pageSize ?? 24;
   const currentPage = params.currentPage ?? 1;
 
+  /* PRODUCTS_QUERY always spells out `filter: { category_uid: { eq: $categoryUid } }`.
+     If $categoryUid arrives as null that becomes `category_uid: { eq: null }`,
+     which crashes Magento's Elasticsuite virtual-category plugin
+     (RequestMapperPlugin → "Internal server error", with the real cause only
+     in extensions.debugMessage). Omitting the variable entirely is what makes
+     Magento ignore the filter, so only include it when it has a real value. */
+  const categoryUid =
+    typeof params.categoryUid === "string" && params.categoryUid.trim() !== ""
+      ? params.categoryUid
+      : undefined;
+
+  const variables: Record<string, unknown> = { search, pageSize, currentPage };
+  if (categoryUid) variables.categoryUid = categoryUid;
+
   const r = await magentoFetch<GqlProductsResponse["data"]>(
     PRODUCTS_QUERY,
-    { search, pageSize, currentPage, categoryUid: params.categoryUid },
+    variables,
     { store: params.store, revalidate: APP_CONFIG.cache.products },
   );
 

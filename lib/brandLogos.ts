@@ -1,75 +1,51 @@
 /**
- * Maps Magento mgs_brand IDs → brand logo URLs.
+ * Maps Magento mgs_brand IDs → brand logo paths.
  *
- * IDs come from the `mgs_brand` attribute on ProductInterface.
- * When/if Magento exposes a `mgs_brand_logo` field on GraphQL,
- * remove this file and update ProductCard to use that field directly.
+ * Every path points into the local mirror of the Magento media tree at
+ * /public/brands/mgs_brand/<x>/<y>/<file>, so brand artwork lives in exactly
+ * one place and nothing is hotlinked to a remote domain.
+ *
+ * When a product carries `brand_logo_url` from GraphQL, prefer that — the
+ * card components already do (`product.brandLogoUrl ?? getBrandLogo(...)`).
  */
 export const BRAND_LOGOS: Record<number, string> = {
   // ── Top brands ──────────────────────────────────────────────────
-  934:  "https://powertire.klever.ae/media/mgs_brand/b/r/bride_1.png",            // Bridgestone
-  886:  "https://powertire.klever.ae/media/mgs_brand/m/i/michelin_1.png",          // Michelin
-  818:  "https://powertire.klever.ae/media/mgs_brand/c/o/continental_1_1_.png",    // Continental
-  817:  "https://powertire.klever.ae/media/mgs_brand/g/o/goodyear_1_1_.png",       // Goodyear
-  899:  "https://powertire.klever.ae/media/mgs_brand/p/i/pirelli_1.png",           // Pirelli
-  845:  "https://powertire.klever.ae/media/mgs_brand/d/u/dunlop_1.png",            // Dunlop
-  861:  "https://powertire.klever.ae/media/mgs_brand/h/a/hankok_1_1.png",          // Hankook
-  870:  "https://powertire.klever.ae/media/mgs_brand/k/u/kumho-logo_1.png",        // Kumho
-  926:  "https://powertire.klever.ae/media/mgs_brand/y/o/yokoma_1.png",            // Yokohama
-  916:  "https://powertire.klever.ae/media/mgs_brand/t/o/toyo_1.png",              // Toyo
-  848:  "https://powertire.klever.ae/media/mgs_brand/f/a/falken_1.png",            // Falken
-  894:  "https://powertire.klever.ae/media/mgs_brand/n/e/nexen_1__3.png",          // Nexen
-  906:  "https://powertire.klever.ae/media/mgs_brand/r/o/roadstone_1.png",         // Roadstone
-  843:  "https://powertire.klever.ae/media/mgs_brand/c/o/coperatie_1.png",         // CooperTires (media file is named "coperatie")
-  1900: "https://powertire.klever.ae/media/mgs_brand/s/a/sailun-logo_1.jpg",       // Sailun
+  934: "/brands/mgs_brand/b/r/bride_1.png",                                 // Bridgestone
+  886: "/brands/mgs_brand/m/i/michelin_1.png",                              // Michelin
+  818: "/brands/mgs_brand/c/o/continental.png",                             // Continental
+  817: "/brands/mgs_brand/g/o/goodyear_1_1_.png",                           // Goodyear
+  899: "/brands/mgs_brand/p/i/pirelli_1.png",                               // Pirelli
+  845: "/brands/mgs_brand/d/u/dunlop_1.png",                                // Dunlop
+  861: "/brands/mgs_brand/h/a/hankok_1_1.png",                              // Hankook
+  870: "/brands/mgs_brand/k/u/kumho-logo_1.png",                            // Kumho
+  926: "/brands/mgs_brand/y/o/yokoma_1.png",                                // Yokohama
+  916: "/brands/mgs_brand/t/o/toyo_1.png",                                  // Toyo
+  848: "/brands/mgs_brand/f/a/falken_1.png",                                // Falken
+  894: "/brands/mgs_brand/n/e/nexen_1_1.png",                               // Nexen
+  906: "/brands/mgs_brand/r/o/roadstone_1.png",                             // Roadstone
+  843: "/brands/mgs_brand/c/o/coperatie_1.png",                             // CooperTires (media file is named "coperatie")
+  1900: "/brands/mgs_brand/s/a/sailun-logo_1.jpg",                          // Sailun
 
   // ── Mid-tier brands ─────────────────────────────────────────────
-  826:  "https://powertire.klever.ae/media/mgs_brand/a/c/accelera_1__1.png",       // Accelera
-  4800: "https://powertire.klever.ae/media/mgs_brand/a/n/anchee_1.jpg",            // Anchee
-  4512: "https://powertire.klever.ae/media/mgs_brand/b/l/black-bear_1.jpg",          // Black Bear
-  4511: "https://powertire.klever.ae/media/mgs_brand/c/o/comforser_1.jpg",          // Comforser
-  1530: "https://powertire.klever.ae/media/mgs_brand/d/o/double-coin_1.jpg",       // Double Coin
-  4877: "https://powertire.klever.ae/media/mgs_brand/f/r/friezza_2.jpg",           // Friezza
-  872:  "https://powertire.klever.ae/media/mgs_brand/l/a/land-spider_1.jpg",       // Landspider
-  874:  "https://powertire.klever.ae/media/mgs_brand/l/a/laufenn-logo.png",        // Laufenn
-  882:  "https://powertire.klever.ae/media/mgs_brand/m/a/matrax.png",              // Matrax
-  4806: "https://powertire.klever.ae/media/mgs_brand/s/o/sonar_1.jpg",             // Sonar
-  913:  "https://powertire.klever.ae/media/mgs_brand/s/u/sunny_1.jpg",             // Sunny
-  921:  "https://powertire.klever.ae/media/mgs_brand/v/r/vredestein-tyres-logo_1__1.jpg", // Vredestein
-  4809: "https://powertire.klever.ae/media/mgs_brand/w/i/wideway_1.jpg",             // WIDEWAY
-  3997: "https://powertire.klever.ae/media/mgs_brand/g/i/giti_1.jpg",              // Giti
-  884:  "https://powertire.klever.ae/media/mgs_brand/m/a/maxxis-tyres-logo_1.png", // Maxxis
-  4510: "https://powertire.klever.ae/media/mgs_brand/k/e/kenda_1.jpg",             // Kenda
-  4513: "https://powertire.klever.ae/media/mgs_brand/f/i/firestone_2.jpg",         // Firestone
-  849:  "https://powertire.klever.ae/media/mgs_brand/f/i/firestone_2.jpg",         // Firestone (alt id)
-  837:  "https://powertire.klever.ae/media/mgs_brand/b/f/bfgoodrich_1.png",        // BFGoodrich
-  871:  "https://powertire.klever.ae/media/mgs_brand/l/a/landsail-logo_1.jpg",     // Landsail
-  4508: "https://powertire.klever.ae/media/mgs_brand/d/y/dynamo_1.jpg",            // Dynamo
-  4518: "https://powertire.klever.ae/media/mgs_brand/n/a/nama_1.jpg",              // Nama
-  4514: "https://powertire.klever.ae/media/mgs_brand/a/r/arisun_3.jpg",            // Arisun
-  3525: "https://powertire.klever.ae/media/mgs_brand/a/r/arivo_1__1.jpg",          // Arivo
-  4509: "https://powertire.klever.ae/media/mgs_brand/a/r/arivo_1__1.jpg",          // Arivo (alt id)
-  927:  "https://powertire.klever.ae/media/mgs_brand/z/e/zeetax_1.png",            // Zeetex
+  826: "/brands/mgs_brand/a/c/accelera.png",                                // Accelera
+  1530: "/brands/mgs_brand/d/o/double-coin_1.jpg",                          // Double Coin
+  872: "/brands/mgs_brand/l/a/land-spider_1.jpg",                           // Landspider
+  874: "/brands/mgs_brand/l/a/laufenn-logo.png",                            // Laufenn
+  882: "/brands/mgs_brand/m/a/matrax-tyres-uae.png",                        // Matrax
+  913: "/brands/mgs_brand/s/u/sunny_1.jpg",                                 // Sunny
+  921: "/brands/mgs_brand/v/r/vredestein.jpg",                              // Vredestein
+  3997: "/brands/mgs_brand/g/i/giti_1.jpg",                                 // Giti
+  884: "/brands/mgs_brand/m/a/maxxis.png",                                  // Maxxis
+  837: "/brands/mgs_brand/b/f/bfgoodrich_1.png",                            // BFGoodrich
+  871: "/brands/mgs_brand/l/a/landsail-logo_1.jpg",                         // Landsail
+  3525: "/brands/mgs_brand/a/r/arivo_1.jpg",                                // Arivo
+  4509: "/brands/mgs_brand/a/r/arivo_1.jpg",                                // Arivo (alt id)
+  927: "/brands/mgs_brand/z/e/zeetax_1.png",                                // Zeetex
 
   // ── Newly added / corrected brands from production website ──────────────────
-  4799: "https://powertire.klever.ae/media/mgs_brand/a/l/alphatires_1.jpg",          // Alpha
-  4804: "https://powertire.klever.ae/media/mgs_brand/b/0/b09-logo-341713159122_1__1.png", // Roadboss
-  4803: "https://powertire.klever.ae/media/mgs_brand/i/m/images_1__17.png",          // Greentrack
-  184:  "https://powertire.klever.ae/media/mgs_brand/i/m/images_1__17.png",          // Greentrac
-  858:  "https://powertire.klever.ae/media/mgs_brand/i/m/images_1__17.png",          // Greentrac (alt)
-  4805: "https://powertire.klever.ae/media/mgs_brand/s/a/sava_1.jpg",              // Sava
-  125:  "https://powertire.klever.ae/media/mgs_brand/s/a/sava_1.jpg",              // Sava (alt)
-  907:  "https://powertire.klever.ae/media/mgs_brand/r/o/roadx-logo_1.png",          // Roadx
-  4802: "https://powertire.klever.ae/media/mgs_brand/f/a/farroad_1.jpg",             // Farroad
-  88:   "https://powertire.klever.ae/media/mgs_brand/f/a/farroad_1.jpg",             // Farroad (alt)
-  4801: "https://powertire.klever.ae/media/mgs_brand/d/i/didar-1_1.jpg",             // Didar
-  84:   "https://powertire.klever.ae/media/mgs_brand/d/i/didar-1_1.jpg",             // Didar (alt)
-  4808: "https://powertire.klever.ae/media/mgs_brand/v/-/v-rich_1.jpg",              // V-RICH
-  4807: "https://powertire.klever.ae/media/mgs_brand/s/p/sportrak_1.jpg",            // Sportrak
-  911:  "https://powertire.klever.ae/media/mgs_brand/s/p/sportrak_1.jpg",            // Sportrak (alt)
-  166:  "https://powertire.klever.ae/media/mgs_brand/d/o/doublestar-tyres_1.jpg",    // Double Star
-  1531: "https://powertire.klever.ae/media/mgs_brand/d/o/doublestar-tyres_1.jpg",    // Double Star (alt)
-  855:  "https://powertire.klever.ae/media/mgs_brand/g/o/goodride-tyres-nz_1.jpg",   // Goodride
+  907: "/brands/mgs_brand/r/o/roadx-logo_1.png",                            // Roadx
+  166: "/brands/mgs_brand/d/o/doublestar-tyres_1.jpg",                      // Double Star
+  1531: "/brands/mgs_brand/d/o/doublestar-tyres_1.jpg",                     // Double Star (alt)
 };
 
 /**
@@ -293,9 +269,37 @@ export const BRAND_NAMES: Record<number, string> = {
  * Returns the logo URL for a given mgs_brand ID, or null if not mapped.
  * Accepts string or number — Magento returns numbers, Product type stores as string.
  */
+/**
+ * Brand name (normalised) → logo path.
+ *
+ * This store's `mgs_brand` attribute returns the brand NAME, not a numeric
+ * option id, so a numeric-only lookup resolved to null for every product.
+ * Built from BRAND_NAMES so the two maps can't drift apart.
+ */
+const LOGOS_BY_NAME: Record<string, string> = (() => {
+  const index: Record<string, string> = {};
+  for (const [id, name] of Object.entries(BRAND_NAMES)) {
+    const logo = BRAND_LOGOS[Number(id)];
+    if (logo) index[normaliseBrand(name)] ??= logo;
+  }
+  return index;
+})();
+
+function normaliseBrand(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Logo path for an mgs_brand value — accepts either a numeric option id or
+ * a brand name, since which one Magento returns varies by store setup.
+ */
 export function getBrandLogo(brandId?: string | number | null): string | null {
   if (brandId == null || brandId === "") return null;
-  return BRAND_LOGOS[Number(brandId)] ?? null;
+
+  const asNumber = Number(brandId);
+  if (Number.isFinite(asNumber)) return BRAND_LOGOS[asNumber] ?? null;
+
+  return LOGOS_BY_NAME[normaliseBrand(String(brandId))] ?? null;
 }
 
 /**

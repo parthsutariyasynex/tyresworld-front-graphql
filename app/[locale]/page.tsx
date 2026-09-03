@@ -1,13 +1,10 @@
-import HeroSlider from "@/components/home/HeroSlider";
-import TyreFinder from "@/components/TyreFinder";
+import MainBanner from "@/components/home/MainBanner";
 import OffersSection from "@/components/OffersSection";
-import FastSelling from "@/components/FastSelling";
 import HowItWorks from "@/components/HowItWorks";
-import MobileDeliverySection from "@/components/MobileDeliverySection";
 import AutoCareServices from "@/components/AutoCareServices";
 import WhyChooseUs from "@/components/WhyChooseUs";
-import FaqSection from "@/components/FaqSection";
 import BrandStrip from "@/components/BrandStrip";
+import AboutUs from "@/components/AboutUs";
 import AutomotiveBlog from "@/components/AutomotiveBlog";
 import { notFound } from "next/navigation";
 
@@ -26,38 +23,29 @@ export default function LocaleHomePage({
 
   return (
     <>
-      {/* Hero banner slider */}
-      <HeroSlider />
-
-      {/* Tyre / vehicle / brand search */}
-      <TyreFinder locale={params.locale} />
+      {/* Hero banner slider with the tyre finder overlaid on it */}
+      <MainBanner locale={params.locale} />
 
       {/* Dynamic offers from Magento */}
       <OffersSection />
 
-      {/* Fast-selling product carousel */}
-      <FastSelling />
+      {/* How TyresWorld works 3-step section */}
+      <HowItWorks locale={params.locale} />
 
-      {/* How it works */}
-      <HowItWorks />
+      {/* Your Trusted One-Stop Shop for Auto Care (6 Services) */}
+      <AutoCareServices locale={params.locale} />
 
-      {/* Auto care service categories */}
-      <AutoCareServices />
+      {/* Top Reasons to Buy Online Tyres (Why Choose Us) */}
+      <WhyChooseUs locale={params.locale} />
 
-      {/* Why choose us */}
-      <WhyChooseUs />
-
-      {/* Mobile delivery coverage — technician + map + service van */}
-      <MobileDeliverySection />
+      {/* About us — showroom photo with the company copy */}
+      <AboutUs />
 
       {/* Shop by tyre brands */}
       <BrandStrip />
 
-      {/* Frequently Asked Questions */}
-      <FaqSection />
-
       {/* Latest automotive blog posts */}
-      <AutomotiveBlog />
+      <AutomotiveBlog locale={params.locale} />
     </>
   );
 }

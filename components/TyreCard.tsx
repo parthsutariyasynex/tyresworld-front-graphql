@@ -128,7 +128,7 @@ function WaIcon() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   TyreCard — matches reference PowerTyre product card design
+   TyreCard — matches the reference TyresWorld product card design
 ═══════════════════════════════════════════════════════════════════ */
 export default function TyreCard({ product }: { product: Product }) {
   const { brand, size, loadIndex, pattern, year, isRunFlat } = parseTyreName(product.name);
@@ -312,10 +312,9 @@ export default function TyreCard({ product }: { product: Product }) {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-auto flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5c] text-white text-[13px] font-bold rounded-full py-2.5 transition-colors"
+            className="btn-enquiry mt-auto"
           >
-            <WaIcon />
-            Contact Us
+            <span>MAKE ENQUIRY</span>
           </a>
         ) : (
           <div className="mt-auto flex flex-col gap-1.5">

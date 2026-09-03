@@ -4,7 +4,6 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import FloatingContact from "@/components/FloatingContact";
-import FloatingGoogleReviews from "@/components/FloatingGoogleReviews";
 import { CartProvider } from "@/lib/cart-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { CompareProvider } from "@/lib/compare-context";
@@ -19,13 +18,21 @@ import JsonLd from "@/components/JsonLd";
 
 const SITE_URL = `https://${APP_CONFIG.brand.domain}`;
 
+/* Built from APP_CONFIG.brand so the store name lives in exactly one place —
+   it used to be spelled out here separately and drifted out of date. */
+const BRAND = APP_CONFIG.brand.name;
+const SITE_TITLE = `${BRAND} — Premium Tyres & Fitting Across the UAE`;
+const SITE_DESCRIPTION =
+  "Premium car, SUV, and performance tyres at the best prices online in the UAE, " +
+  "fitted by our partner installers. Shop Michelin, Continental, Bridgestone, " +
+  "Pirelli and more.";
+
 export const metadata: Metadata = {
   title: {
-    default: "PowerTyre — Premium Tyres & Doorstep Fitting",
-    template: "%s | PowerTyre",
+    default: SITE_TITLE,
+    template: `%s | ${BRAND}`,
   },
-  description:
-    "Premium car, SUV, and performance tyres delivered and fitted at your doorstep. Shop Michelin, Continental, Bridgestone and more.",
+  description: SITE_DESCRIPTION,
   icons: {
     icon: [
       { url: "/img/favicon.png", type: "image/png" },
@@ -35,10 +42,10 @@ export const metadata: Metadata = {
     apple: "/img/favicon.png",
   },
   openGraph: {
-    title: "PowerTyre — Premium Tyres & Doorstep Fitting",
-    description:
-      "Premium car, SUV, and performance tyres delivered and fitted at your doorstep. Shop Michelin, Continental, Bridgestone and more.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     type: "website",
+    siteName: BRAND,
   },
 };
 
@@ -79,7 +86,8 @@ export default async function RootLayout({
           crossOrigin=""
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Cairo:wght@400;500;600;700;800&display=swap"
+          /* Latin faces are local Kanit (see globals.css @font-face). Cairo carries Arabic. */
+          href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         />
         <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
@@ -99,7 +107,6 @@ export default async function RootLayout({
                     <main>{children}</main>
                     <Footer />
                     <FloatingContact />
-                    <FloatingGoogleReviews />
                   </DriverReviewsProvider>
                 </WishlistProvider>
               </CompareProvider>

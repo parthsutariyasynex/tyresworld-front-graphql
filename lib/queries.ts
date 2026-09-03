@@ -210,6 +210,34 @@ export const FILTERS_QUERY = /* GraphQL */ `
 
 // ── Combined Category Page Query (category info + products in one request) ──
 
+// ── Category UID lookup ───────────────────────────────────────────
+// `category_url_path` is absent from this Magento's search mapping, so a
+// products filter must use `category_uid`. This resolves url key -> uid.
+export const CATEGORY_UID_BY_URL_KEY_QUERY = /* GraphQL */ `
+  query CategoryUidByUrlKey($urlKey: String!) {
+    categories(filters: { url_key: { eq: $urlKey } }) {
+      items {
+        uid
+      }
+    }
+  }
+`;
+  
+export const CATEGORY_META_BY_URL_KEY_QUERY = /* GraphQL */ `
+  query CategoryMetaByUrlKey($urlKey: String!) {
+    categories(filters: { url_key: { eq: $urlKey } }) {
+      items {
+        uid
+        name
+        url_key
+        description
+        meta_title
+        meta_description
+      }
+    }
+  }
+`;
+
 export const CATEGORY_PAGE_QUERY = /* GraphQL */ `
   query CategoryPage(
     $urlKey: String!
@@ -256,13 +284,20 @@ export const CATEGORY_PAGE_QUERY = /* GraphQL */ `
         warranty_period
         image { url label }
         categories { id name url_key }
+        small_image { url label }
         price_range {
           minimum_price {
             regular_price { value currency }
             final_price   { value currency }
+            discount      { amount_off percent_off }
           }
         }
-        driver_reviews { is_tyre manufacturer model tyre_size vehicle_type }
+      }
+      aggregations {
+        attribute_code
+        label
+        count
+        options { label value count }
       }
     }
   }
@@ -320,7 +355,6 @@ export const CATEGORY_PRODUCTS_BY_UID_QUERY = /* GraphQL */ `
             final_price   { value currency }
           }
         }
-        driver_reviews { is_tyre manufacturer model tyre_size vehicle_type }
       }
     }
   }
@@ -425,6 +459,9 @@ export const TYRE_FINDER_METADATA_QUERY = /* GraphQL */ `
         { entity_type: "catalog_product", attribute_code: "model" }
         { entity_type: "catalog_product", attribute_code: "year" }
         { entity_type: "catalog_product", attribute_code: "mgs_brand" }
+        { entity_type: "catalog_product", attribute_code: "width" }
+        { entity_type: "catalog_product", attribute_code: "height" }
+        { entity_type: "catalog_product", attribute_code: "rim" }
       ]
     ) {
       items {
@@ -495,7 +532,6 @@ export const OFFERS_PRODUCTS_QUERY = /* GraphQL */ `
             final_price   { value currency }
           }
         }
-        driver_reviews { is_tyre manufacturer model tyre_size vehicle_type }
       }
     }
   }
@@ -1271,3 +1307,23 @@ export const ATTRIBUTES_LIST_QUERY = /* GraphQL */ `
     }
   }
 `;
+
+// ── Sitemap queries ───────────────────────────────────────────────
+
+export const SITEMAP_CATEGORIES_QUERY = /* GraphQL */ `
+  query SitemapCategories {
+    categories(filters: { parent_id: { eq: "2" } }) {
+      items { url_path include_in_menu }
+    }
+  }
+`;
+
+export const SITEMAP_PRODUCTS_QUERY = /* GraphQL */ `
+  query SitemapProducts($uid: String!, $pageSize: Int!, $currentPage: Int!) {
+    products(filter: { category_uid: { eq: $uid } }, pageSize: $pageSize, currentPage: $currentPage) {
+      total_count
+      items { url_key }
+    }
+  }
+`;
+

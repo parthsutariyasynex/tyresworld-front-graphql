@@ -263,8 +263,18 @@ export function parseGraphqlResponse(data: unknown): Product[] {
   return items.map(adaptGqlProduct);
 }
 
-/* Category facets are navigation, not filters — they belong in the header menu. */
-const EXCLUDED_AGGREGATIONS = new Set(["category_id", "category_uid"]);
+/* Category facets and dimensions handled by top finder (height/width/rim) are excluded from sidebar */
+const EXCLUDED_AGGREGATIONS = new Set([
+  "category_id",
+  "category_uid",
+  "height",
+  "width",
+  "rim",
+  "tyre_height",
+  "tyre_width",
+  "tyre_rim",
+  "rim_size",
+]);
 
 /**
  * Normalize Magento `aggregations` into UI-ready filter groups.

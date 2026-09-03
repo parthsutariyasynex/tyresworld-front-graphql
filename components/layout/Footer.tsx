@@ -3,328 +3,411 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Phone, Mail, Clock, MapPin } from "lucide-react";
-import { APP_CONFIG } from "@/src/config/app-config";
-
-type SocialLink = { social_type: string; url: string };
-
-/** Tyres category UID — centralized, not hardcoded per link. */
-const TYRES_UID = APP_CONFIG.magento.tyresCategoryUid;
-
-// Custom SVG Icons for WhatsApp, Snapchat, TikTok, Facebook, Instagram, X
-const WhatsAppIcon = () => (
-  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.5-5.729-1.452L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.864.002-2.637-1.023-5.115-2.89-6.984C16.279 1.89 13.802 1.865 11.2 1.865c-5.437 0-9.863 4.421-9.868 9.868-.001 1.714.452 3.39 1.31 4.877L1.625 21.82l5.022-1.317zm11.393-5.263c-.3-.149-1.772-.875-2.046-.975-.274-.1-.474-.149-.674.15-.2.299-.774.974-.949 1.173-.175.2-.35.224-.65.075-.3-.15-1.263-.465-2.403-1.485-.888-.793-1.488-1.77-1.663-2.07-.175-.3-.019-.461.13-.61.135-.133.3-.349.45-.523.15-.174.2-.299.3-.499.1-.2.05-.375-.025-.524-.075-.15-.675-1.625-.925-2.225-.244-.589-.491-.51-.674-.519-.174-.009-.374-.01-.574-.01-.2 0-.525.075-.8.374-.275.299-1.05 1.024-1.05 2.5 0 1.475 1.075 2.9 1.225 3.1.15.2 2.11 3.22 5.116 4.52.716.31 1.274.496 1.71.636.72.228 1.376.196 1.894.118.578-.087 1.772-.724 2.022-1.424.25-.699.25-1.299.175-1.424-.075-.125-.275-.199-.575-.349z" />
-  </svg>
-);
-
-const FacebookIcon = () => (
-  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-  </svg>
-);
-
-const InstagramIcon = () => (
-  <svg className="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-  </svg>
-);
-
-const SnapchatIcon = () => (
-  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-    <path d="M12 .05c-3.15 0-5.8 2-6.52 4.88-.13.5-.04 1.13.25 1.48.56.66 1.36.95 2.21.93.18 0 .36-.04.53-.1.14-.06.24-.18.25-.33.02-.27.1-.64.29-.82.68-.68 1.77-.96 2.72-.96 1.04 0 2.06.32 2.76 1.07.16.17.26.47.28.73.02.16.12.3.28.36.17.06.36.1.54.1.84.02 1.63-.26 2.2-.9.31-.35.4-.98.27-1.48-.73-2.88-3.37-4.88-6.52-4.88zm-.01 10.95c-.32 0-.64-.04-.94-.12-.35-.1-.7-.35-.8-.7-.1-.36-.03-.84.21-1.13.43-.51 1.04-.73 1.69-.72.63 0 1.25.21 1.68.72.24.29.31.77.21 1.13-.1.35-.45.6-.8.7-.3.08-.62.12-.94.12zm.01 2c-2.32 0-4.48-.48-6.07-1.34a1.86 1.86 0 01-.89-1.28c-.12-.66.13-1.46.68-1.92.5-.42 1.18-.53 1.81-.55.22 0 .42.06.58.2.14.12.2.3.17.48a3.17 3.17 0 00-.06.74c.03.62.29 1.17.76 1.5.8.56 1.88.75 2.84.75.95 0 2.03-.19 2.83-.75.47-.33.73-.88.76-1.5.01-.24-.01-.49-.06-.74-.03-.18.03-.36.17-.48.16-.14.36-.2.58-.2.63.02 1.31.13 1.81.55.55.46.8 1.26.68 1.92-.1.54-.42 1.03-.89 1.28-1.59.86-3.75 1.34-6.07 1.34zm0 2c-3.11 0-6.14-.8-8.21-2.26a1.9 1.9 0 01-.79-1.48c-.06-.88.42-1.89 1.26-2.43a4.7 4.7 0 012.35-.76c.26 0 .5.09.68.27.17.18.23.44.18.68-.08.41-.12.87-.1 1.28.05 1.16.63 2.12 1.55 2.68 1.34.82 3.17 1.08 4.78 1.08 1.6 0 3.44-.26 4.78-1.08.92-.56 1.5-1.52 1.55-2.68.02-.41-.02-.87-.1-1.28-.05-.24.01-.5.18-.68.18-.18.42-.27.68-.27a4.7 4.7 0 012.35.76c.84.54 1.32 1.55 1.26 2.43a1.9 1.9 0 01-.79 1.48c-2.07 1.46-5.1 2.26-8.21 2.26zm0 1.92c.6 0 1.2-.03 1.79-.09.31-.03.62-.17.82-.41.34-.41.35-1.01.27-1.52-.07-.44-.2-.88-.4-1.28a1 1 0 01.12-1.09c.47-.56.9-.9 1.32-1.32a6.4 6.4 0 001.32-1.79c.2-.38.27-.83.18-1.26a1.9 1.9 0 00-1.26-1.42c-.52-.18-1.09-.23-1.64-.13-.26.05-.53 0-.74-.15a1.86 1.86 0 01-.68-1.12c-.22-.73-.78-1.32-1.5-1.58-.78-.28-1.64-.28-2.42 0a2.2 2.2 0 00-1.5 1.58 1.86 1.86 0 01-.68 1.12c-.21.15-.48.2-.74.15-.55-.1-1.12-.05-1.64.13A1.9 1.9 0 003.5 5.51c-.09.43-.02.88.18 1.26a6.4 6.4 0 001.32 1.79c.42.42.85.76 1.32 1.32.22.26.27.62.12 1.09-.2.4-.33.84-.4 1.28-.08.51-.07 1.11.27 1.52.2.24.51.38.82.41.59.06 1.19.09 1.79.09z" />
-  </svg>
-);
-
-const TikTokIcon = () => (
-  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.06-2.89-.5-4.09-1.36-.32-.23-.62-.5-.9-.79v6.2c.01 2.03-.54 4.14-2.02 5.55-1.52 1.49-3.79 2.19-5.88 1.84-2.12-.32-4.07-1.67-5.06-3.59-1.22-2.3-.94-5.31.76-7.31 1.53-1.85 4.09-2.6 6.38-1.92v4.09c-1.36-.45-2.97-.13-3.99.87-.94.9-.11 2.82.68 3.19.82.41 1.88.35 2.58-.29.62-.57.69-1.52.68-2.33-.02-3.64-.01-7.29-.02-10.93.01-.15.01-.3.01-.45z" />
-  </svg>
-);
-
-const XIcon = () => (
-  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
-  </svg>
-);
-
-
-
-// Fallback social links used when mpSocialUrls backend is unavailable
-const SOCIAL_FALLBACK: SocialLink[] = [
-  { social_type: "facebook",  url: "https://facebook.com" },
-  { social_type: "instagram", url: "https://instagram.com" },
-  { social_type: "snapchat",  url: "https://snapchat.com" },
-  { social_type: "tiktok",    url: "https://tiktok.com" },
-  { social_type: "twitter",   url: "https://x.com/PowerTireksa" },
-];
-
-function SocialIcon({ type }: { type: string }) {
-  switch (type.toLowerCase()) {
-    case "facebook":  return <FacebookIcon />;
-    case "instagram": return <InstagramIcon />;
-    case "snapchat":  return <SnapchatIcon />;
-    case "tiktok":    return <TikTokIcon />;
-    case "twitter":   return <XIcon />;
-    case "youtube":   return <XIcon />;  // placeholder until YouTube icon is added
-    case "whatsapp":  return <WhatsAppIcon />;
-    default:          return null;
-  }
-}
+import { Mail, Clock, ArrowUp } from "lucide-react";
 
 export default function Footer() {
   const pathname = usePathname();
   const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(SOCIAL_FALLBACK);
+  const isAr = locale === "ar";
 
+  const [showTop, setShowTop] = useState(false);
+
+  /* Reveal the back-to-top control once the user has scrolled a screenful. */
   useEffect(() => {
-    fetch("/api/social")
-      .then(r => r.json())
-      .then((d: { links?: SocialLink[] }) => {
-        if (d.links && d.links.length > 0) setSocialLinks(d.links);
-        // if empty (backend bug), keep SOCIAL_FALLBACK
-      })
-      .catch(() => {/* keep fallback */});
+    const onScroll = () => setShowTop(window.scrollY > 600);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const exploreTires = [
-    { label: "Off Road Tires", href: `/${locale}/off-road-tires-4x4` },
-    { label: "On Road Tires", href: `/${locale}/on-road-tires` },
-    { label: "Run Flat Tires", href: `/${locale}/run-flat-tires` },
-    { label: "EV Tires", href: `/${locale}/ev-tires` }
-  ];
-
-  const premiumTires = [
-    { label: "Pirelli", href: `/${locale}/tyres?mgs_brand=899` },
-    { label: "Michelin", href: `/${locale}/tyres?mgs_brand=886` },
-    { label: "Continental", href: `/${locale}/tyres?mgs_brand=818` },
-    { label: "Bridgestone", href: `/${locale}/tyres?mgs_brand=934` },
-    { label: "BFGoodrich", href: `/${locale}/tyres?mgs_brand=837` },
-    { label: "Goodyear", href: `/${locale}/tyres?mgs_brand=817` },
-    { label: "Kumho", href: `/${locale}/tyres?mgs_brand=870` },
-    { label: "Hankook", href: `/${locale}/tyres?mgs_brand=861` },
-    { label: "Yokohama", href: `/${locale}/tyres?mgs_brand=926` }
-  ];
-
-  const whyPowerTire = [
-    { label: "About Us", href: `/${locale}/about` },
-    { label: "Blog", href: `/${locale}/blog` },
-    { label: "Special Offers", href: `/${locale}/#offers` },
-    { label: "Track Order", href: `/${locale}/track-order` },
-    { label: "Tires", href: `/${locale}/tyres` },
-    { label: "Contact", href: `/${locale}/contact` }
-  ];
-
-  const ourPolicies = [
-    { label: "Terms & Conditions", href: `/${locale}/terms-and-conditions` },
-    { label: "Offers Terms and Conditions", href: `/${locale}/offers-terms-and-conditions` },
-    { label: "Privacy Policy", href: `/${locale}/privacy-policy` },
-    { label: "Warranty", href: `/${locale}/warranty` },
-    { label: "Returns & Refund", href: `/${locale}/returns-refund` },
-    { label: "VAT Certificate", href: `/${locale}/vat-certificate` }
-  ];
-
   return (
-    <footer className="bg-[#0a0a0a] text-white/80 font-sans border-t border-neutral-900">
-      <div className="container max-w-[1380px] mx-auto px-4 py-16 lg:py-20">
-
-        {/* Main Columns Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-16">
-
-          {/* Column 1: Brand Logo + Contact + Follow Us */}
-          <div className="lg:col-span-1 flex flex-col gap-6">
-            <Link href="/" className="inline-block w-fit">
-              <img
-                src="/logo/power tire-12.webp"
-                alt="PowerTire.sa Logo"
-                className="h-11 w-auto object-contain brightness-0 invert"
-              />
-            </Link>
-
-            {/* Get In Touch */}
-            <div>
-              <h3 className="text-[#ed1c24] font-black uppercase text-sm mb-4 tracking-wider">
-                GET IN TOUCH
-              </h3>
-              <ul className="flex flex-col gap-3.5 text-xs text-white/80 font-medium">
-                <li className="flex items-center gap-3">
-                  <Phone size={16} className="text-gray-400 shrink-0" />
-                  <a href="tel:920017534" className="hover:text-[#ed1c24] transition-colors">920017534</a>
-                </li>
-                <li className="flex items-center gap-3">
-                  <WhatsAppIcon />
-                  <a href="https://wa.me/920017534" target="_blank" rel="noopener noreferrer" className="hover:text-[#ed1c24] transition-colors">920017534</a>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Mail size={16} className="text-gray-400 shrink-0" />
-                  <a href="mailto:customercare@powertire.sa" className="hover:text-[#ed1c24] transition-colors">customercare@powertire.sa</a>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Clock size={16} className="text-gray-400 mt-0.5 shrink-0" />
-                  <div className="leading-relaxed">
-                    <p>Sat to Thu: 9:00 am - 6:00 pm</p>
-                    <p>Friday: 2:00 pm - 11:00 pm</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <MapPin size={16} className="text-gray-400 mt-0.5 shrink-0" />
-                  <span className="leading-relaxed">
-                    Building Number 7240, King Fahd Branch Road, 4443 , Al Malqa District, Postal Code: 13524, Riyadh, Saudi Arabia
+    <footer className="section site-footer page-footer bg-[#121011] text-[#a0a0a0] pt-14 pb-0 relative">
+      <div className="container custom-width max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 pb-12">
+          
+          {/* Column 1: PRODUCT INFORMATION */}
+          <div className="widget-col footer-links">
+            <div className="widget">
+              <div className="widget-title mb-5">
+                <h3 className="text-white text-base sm:text-[17px] font-black uppercase tracking-wider m-0">
+                  {isAr ? "معلومات " : "PRODUCT "}
+                  <span className="text-[#ed1c24] theme_color">
+                    {isAr ? "المنتجات" : "INFORMATION"}
                   </span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Follow Us */}
-            <div>
-              <h3 className="text-[#ed1c24] font-black uppercase text-sm mb-4 tracking-wider">
-                FOLLOW US
-              </h3>
-              <div className="flex gap-3 text-white/70">
-                {socialLinks.map((link) => {
-                  const icon = <SocialIcon type={link.social_type} />;
-                  if (!icon) return null;
-                  return (
-                    <a
-                      key={link.social_type}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-[#ed1c24] transition-colors"
-                      aria-label={link.social_type}
-                    >
-                      {icon}
-                    </a>
-                  );
-                })}
+                </h3>
               </div>
-            </div>
-
-          </div>
-
-          {/* Column 2: Explore Tires */}
-          <div>
-            <h3 className="text-[#ed1c24] font-black uppercase text-sm mb-5 tracking-wider">
-              EXPLORE TIRES
-            </h3>
-            <ul className="flex flex-col gap-3 text-xs sm:text-[13px] text-white/70 font-semibold">
-              {exploreTires.map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href} className="hover:text-white transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 3: Premium Tire */}
-          <div>
-            <h3 className="text-[#ed1c24] font-black uppercase text-sm mb-5 tracking-wider">
-              PREMIUM TIRE
-            </h3>
-            <ul className="flex flex-col gap-3 text-xs sm:text-[13px] text-white/70 font-semibold">
-              {premiumTires.map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href} className="hover:text-white transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 4: Why PowerTire.sa */}
-          <div>
-            <h3 className="text-[#ed1c24] font-black uppercase text-sm mb-5 tracking-wider">
-              WHY POWERTIRE.SA
-            </h3>
-            <ul className="flex flex-col gap-3 text-xs sm:text-[13px] text-white/70 font-semibold">
-              {whyPowerTire.map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href} className="hover:text-white transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 5: Our Policies + SBC Verified */}
-          <div className="flex flex-col justify-between h-full">
-            <div>
-              <h3 className="text-[#ed1c24] font-black uppercase text-sm mb-5 tracking-wider">
-                OUR POLICIES
-              </h3>
-              <ul className="flex flex-col gap-3 text-xs sm:text-[13px] text-white/70 font-semibold">
-                {ourPolicies.map((link) => (
-                  <li key={link.label}>
-                    <Link href={link.href} className="hover:text-white transition-colors">
-                      {link.label}
+              <div className="menu-footer-nav1-container">
+                <ul className="menu list-none p-0 m-0 flex flex-col gap-2.5 text-sm">
+                  <li>
+                    <Link href={`/${locale}/special-offers`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "عروض الإطارات المميزة" : "Special Tyre Offers"}
                     </Link>
                   </li>
-                ))}
+                  <li>
+                    <Link href={`/${locale}/tyres/cars`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "البحث حسب المركبة" : "Search by Vehicle"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/tyres/size`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "البحث حسب المقاس" : "Search by Tyre size"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/brands`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "ماركات الإطارات" : "Tyre Brands"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/electric-vehicle-tyres-uae`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "إطارات السيارات الكهربائية" : "EV Tyres Online"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/car-battery-replacement`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "استبدال بطارية السيارة" : "Car Battery Replacement"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/rim-protectors`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "حماة الجنوط Alloygator" : "Alloygator Rim Protectors"}
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 2: PREMIUM TYRE */}
+          <div className="widget-col footer-links">
+            <div className="widget">
+              <div className="widget-title mb-5">
+                <h3 className="text-white text-base sm:text-[17px] font-black uppercase tracking-wider m-0">
+                  {isAr ? "إطارات " : "PREMIUM "}
+                  <span className="text-[#ed1c24] theme_color">
+                    {isAr ? "فاخرة" : "TYRE"}
+                  </span>
+                </h3>
+              </div>
+              <div className="menu-footer-nav1-container">
+                <ul className="menu list-none p-0 m-0 flex flex-col gap-2.5 text-sm">
+                  <li>
+                    <Link href={`/${locale}/tyres/brand/pirelli`} className="hover:text-[#ed1c24] transition-colors">
+                      Pirelli
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/tyres/brand/continental`} className="hover:text-[#ed1c24] transition-colors">
+                      Continental
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/tyres/brand/michelin`} className="hover:text-[#ed1c24] transition-colors">
+                      Michelin
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/tyres/brand/goodyear`} className="hover:text-[#ed1c24] transition-colors">
+                      Goodyear
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/tyres/brand/bridgestone`} className="hover:text-[#ed1c24] transition-colors">
+                      Bridgestone
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/tyres/brand/hankook`} className="hover:text-[#ed1c24] transition-colors">
+                      Hankook
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/tyres/brand/kumho`} className="hover:text-[#ed1c24] transition-colors">
+                      Kumho
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 3: Why tyresworld.ae? */}
+          <div className="widget-col footer-links">
+            <div className="widget">
+              <div className="widget-title mb-5">
+                <h3 className="text-white text-base sm:text-[17px] font-black uppercase tracking-wider m-0">
+                  {isAr ? "لماذا " : "Why "}
+                  <span className="text-[#ed1c24] theme_color">
+                    tyresworld.ae?
+                  </span>
+                </h3>
+              </div>
+              <div className="menu-footer-nav1-container">
+                <ul className="menu list-none p-0 m-0 flex flex-col gap-2.5 text-sm">
+                  <li>
+                    <Link href={`/${locale}/about-us`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "من نحن" : "About Us"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/car-service`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "خدمة السيارات" : "Car Service"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/contact`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "اتصل بنا" : "Contact Us"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/fitting-installation-partner`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "شركاء التركيب والتركيب" : "Fitting & Installation Partner"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/blog`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "المدونة" : "Blog"}
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 4: Website Information */}
+          <div className="widget-col footer-links">
+            <div className="widget">
+              <div className="widget-title mb-5">
+                <h3 className="text-white text-base sm:text-[17px] font-black uppercase tracking-wider m-0">
+                  {isAr ? "معلومات " : "Website "}
+                  <span className="text-[#ed1c24] theme_color">
+                    {isAr ? "الموقع" : "Information"}
+                  </span>
+                </h3>
+              </div>
+              <div className="menu-footer-nav1-container">
+                <ul className="menu list-none p-0 m-0 flex flex-col gap-2.5 text-sm">
+                  <li>
+                    <Link href={`/${locale}/terms-conditions`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "الشروط والأحكام" : "Terms & Conditions"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/returns-exchanges`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "الإرجاع والاسترداد" : "Returns & Refund"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/warranty`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "الضمان" : "Warranty"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/privacy-policy`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "سياسة الخصوصية" : "Privacy Policy"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={`/${locale}/shipping-and-delivery-policy`} className="hover:text-[#ed1c24] transition-colors">
+                      {isAr ? "سياسة الشحن والتوصيل" : "Shipping Policy"}
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 5: Get In Touch */}
+          <div className="widget-col footer-contact">
+            <div className="widget_text widget">
+              <div className="widget-title mb-5">
+                <h3 className="text-white text-base sm:text-[17px] font-black uppercase tracking-wider m-0">
+                  {isAr ? "تواصل " : "Get In "}
+                  <span className="text-[#ed1c24] theme_color">
+                    {isAr ? "معنا" : "Touch"}
+                  </span>
+                </h3>
+              </div>
+              <div className="textwidget custom-html-widget text-xs leading-relaxed">
+                <ul className="list-none p-0 m-0 flex flex-col gap-3">
+                  <li className="text-white/70">
+                    <b className="text-white block text-sm mb-1">DSP Trade Hub FZ-LLC</b>
+                    Compass Building, Al Shohada Road,
+                    AL Hamra Industrial Zone-FZ, 
+                    Ras Al Khaimah,
+                    United Arab Emirates
+                    <br />
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://maps.app.goo.gl/tcDkQJXipiVixvZj8"
+                      className="text-[#ed1c24] hover:underline font-semibold block mt-1 text-sm"
+                    >
+                      {isAr ? "عرض على الخريطة" : "View on Map"}
+                    </a>
+                    <span className="block mt-1">License: 5033149</span>
+                    <span className="block">TRN: 105036835400003</span>
+                  </li>
+
+                  <li>
+                    <a href="mailto:info@tyresworld.ae" className="flex items-center gap-2 hover:text-[#ed1c24] transition-colors text-sm">
+                      <Mail size={15} className="text-[#ed1c24] flex-shrink-0" />
+                      info@tyresworld.ae
+                    </a>
+                  </li>
+
+                  <li>
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href="https://api.whatsapp.com/send/?phone=971505069575&text=Hi%20tyresworld.ae"
+                      className="flex items-center gap-2 hover:text-[#ed1c24] transition-colors text-sm font-semibold"
+                    >
+                      <svg className="w-4 h-4 fill-[#25D366] flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.5-5.729-1.452L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.864.002-2.637-1.023-5.115-2.89-6.984C16.279 1.89 13.802 1.865 11.2 1.865c-5.437 0-9.863 4.421-9.868 9.868-.001 1.714.452 3.39 1.31 4.877L1.625 21.82l5.022-1.317zm11.393-5.263c-.3-.149-1.772-.875-2.046-.975-.274-.1-.474-.149-.674.15-.2.299-.774.974-.949 1.173-.175.2-.35.224-.65.075-.3-.15-1.263-.465-2.403-1.485-.888-.793-1.488-1.77-1.663-2.07-.175-.3-.019-.461.13-.61.135-.133.3-.349.45-.523.15-.174.2-.299.3-.499.1-.2.05-.375-.025-.524-.075-.15-.675-1.625-.925-2.225-.244-.589-.491-.51-.674-.519-.174-.009-.374-.01-.574-.01-.2 0-.525.075-.8.374-.275.299-1.05 1.024-1.05 2.5 0 1.475 1.075 2.9 1.225 3.1.15.2 2.11 3.22 5.116 4.52.716.31 1.274.496 1.71.636.72.228 1.376.196 1.894.118.578-.087 1.772-.724 2.022-1.424.25-.699.25-1.299.175-1.424-.075-.125-.275-.199-.575-.349z" />
+                      </svg>
+                      +971 50 506 9575
+                    </a>
+                  </li>
+
+                  <li className="flex items-start gap-2 text-white/70">
+                    <Clock size={15} className="text-[#ed1c24] flex-shrink-0 mt-0.5" />
+                    <span>
+                      Mon to Sat: 8:30 am - 6:00 pm
+                      <br />
+                      Sunday: Closed
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Social links */}
+              <div className="social-links hover-circle mt-5">
+                <div className="icon-lists list-custom flex items-center gap-3">
+                  <a
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-[#ed1c24] flex items-center justify-center transition-colors"
+                    href="https://www.facebook.com/tyresworld.ae/"
+                    aria-label="Facebook"
+                  >
+                    <svg fill="#fff" className="w-4 h-4" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21.95 5.005l-3.306-.004c-3.206 0-5.277 2.124-5.277 5.415v2.495H10.05v4.515h3.317l-.004 9.575h4.641l.004-9.575h3.806l-.003-4.514h-3.803v-2.117c0-1.018.241-1.533 1.566-1.533l2.366-.001.01-4.256z"></path>
+                    </svg>
+                  </a>
+                  <a
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-[#ed1c24] flex items-center justify-center transition-colors"
+                    href="https://www.instagram.com/tyresworld.ae/"
+                    aria-label="Instagram"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z" fill="#fff"></path>
+                      <path d="M18 5C17.4477 5 17 5.44772 17 6C17 6.55228 17.4477 7 18 7C18.5523 7 19 6.55228 19 6C19 5.44772 18.5523 5 18 5Z" fill="#fff"></path>
+                      <path fillRule="evenodd" clipRule="evenodd" d="M1.65396 4.27606C1 5.55953 1 7.23969 1 10.6V13.4C1 16.7603 1 18.4405 1.65396 19.7239C2.2292 20.8529 3.14708 21.7708 4.27606 22.346C5.55953 23 7.23969 23 10.6 23H13.4C16.7603 23 18.4405 23 19.7239 22.346C20.8529 21.7708 21.7708 20.8529 22.346 19.7239C23 18.4405 23 16.7603 23 13.4V10.6C23 7.23969 23 5.55953 22.346 4.27606C21.7708 3.14708 20.8529 2.2292 19.7239 1.65396C18.4405 1 16.7603 1 13.4 1H10.6C7.23969 1 5.55953 1 4.27606 1.65396C3.14708 2.2292 2.2292 3.14708 1.65396 4.27606ZM13.4 3H10.6C8.88684 3 7.72225 3.00156 6.82208 3.0751C5.94524 3.14674 5.49684 3.27659 5.18404 3.43597C4.43139 3.81947 3.81947 4.43139 3.43597 5.18404C3.27659 5.49684 3.14674 5.94524 3.0751 6.82208C3.00156 7.72225 3 8.88684 3 10.6V13.4C3 15.1132 3.00156 16.2777 3.0751 17.1779C3.14674 18.0548 3.27659 18.5032 3.43597 18.816C3.81947 19.5686 4.43139 20.1805 5.18404 20.564C5.49684 20.7234 5.94524 20.8533 6.82208 20.9249C7.72225 20.9984 8.88684 21 10.6 21H13.4C15.1132 21 16.2777 20.9984 17.1779 20.9249C18.0548 20.8533 18.5032 20.7234 18.816 20.564C19.5686 20.1805 20.1805 19.5686 20.564 18.816C20.7234 18.5032 20.8533 18.0548 20.9249 17.1779C20.9984 16.2777 21 15.1132 21 13.4V10.6C21 8.88684 20.9984 7.72225 20.9249 6.82208C20.8533 5.94524 20.7234 5.49684 20.564 5.18404C20.1805 4.43139 19.5686 3.81947 18.816 3.43597C18.5032 3.27659 18.0548 3.14674 17.1779 3.0751C16.2777 3.00156 15.1132 3 13.4 3Z" fill="#fff"></path>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Copyright strip — three columns (copyright · links · payment), mirroring
+          the theme's .footer-copyright. Extra bottom padding keeps it above the
+          sticky TyreFinder. */}
+      <div className="footer-copyright bg-[#1e1e20] pt-5 pb-20 sm:pb-24 border-t border-white/5">
+        <div className="container custom-width max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col xl:flex-row items-center justify-between gap-4 xl:gap-6 text-center xl:text-left">
+
+            {/* Copyright */}
+            <div className="copyright">
+              <span className="text-xs text-white/50 leading-relaxed">
+                Copyright © {new Date().getFullYear()} tyresworld.ae (DSP Trade Hub FZ LLC). All rights reserved.
+              </span>
+            </div>
+
+            {/* Quick links */}
+            <ul className="copyright-links list-none flex flex-wrap items-center justify-center gap-x-5 gap-y-1 m-0 p-0">
+              <li>
+                <Link href={`/${locale}/tyres`} className="text-xs text-white/60 hover:text-[#ed1c24] transition-colors">
+                  Car Tyres
+                </Link>
+              </li>
+              <li>
+                <Link href={`/${locale}/contact`} className="text-xs text-white/60 hover:text-[#ed1c24] transition-colors">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href={`/${locale}/faq`} className="text-xs text-white/60 hover:text-[#ed1c24] transition-colors">
+                  FAQs
+                </Link>
+              </li>
+              <li>
+                <Link href={`/${locale}/sitemap`} className="text-xs text-white/60 hover:text-[#ed1c24] transition-colors">
+                  Sitemap
+                </Link>
+              </li>
+            </ul>
+
+            {/* Accepted payment methods */}
+            <div className="payment-method">
+              <ul className="list-none flex items-center justify-center xl:justify-end gap-2 m-0 p-0">
+                {/* Visa */}
+                <li aria-label="Visa" title="Visa">
+                  <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-hidden="true">
+                    <rect width="48" height="32" rx="4" fill="#ffffff" />
+                    <text x="24" y="21" textAnchor="middle" fontFamily="Kanit, Arial, sans-serif" fontWeight="700" fontStyle="italic" fontSize="13" letterSpacing="0.5" fill="#1A1F71">VISA</text>
+                  </svg>
+                </li>
+                {/* Mastercard */}
+                <li aria-label="Mastercard" title="Mastercard">
+                  <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-hidden="true">
+                    <rect width="48" height="32" rx="4" fill="#ffffff" />
+                    <circle cx="20" cy="16" r="8.5" fill="#EB001B" />
+                    <circle cx="28" cy="16" r="8.5" fill="#F79E1B" />
+                    <path d="M24 9.6a8.5 8.5 0 0 0 0 12.8 8.5 8.5 0 0 0 0-12.8Z" fill="#FF5F00" />
+                  </svg>
+                </li>
+                {/* Amazon Pay */}
+                <li aria-label="Amazon Pay" title="Amazon Pay">
+                  <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-hidden="true">
+                    <rect width="48" height="32" rx="4" fill="#ffffff" />
+                    <text x="24" y="15" textAnchor="middle" fontFamily="Kanit, Arial, sans-serif" fontWeight="700" fontSize="8" fill="#232F3E">amazon</text>
+                    <text x="24" y="25" textAnchor="middle" fontFamily="Kanit, Arial, sans-serif" fontWeight="700" fontSize="9" fill="#FF9900">pay</text>
+                  </svg>
+                </li>
+                {/* Apple Pay */}
+                <li aria-label="Apple Pay" title="Apple Pay">
+                  <svg viewBox="0 0 48 32" width="40" height="26" role="img" aria-hidden="true">
+                    <rect width="48" height="32" rx="4" fill="#ffffff" />
+                    <path d="M13.6 11.9c.5-.6.8-1.4.7-2.2-.7 0-1.5.5-2 1.1-.4.5-.8 1.3-.7 2.1.8 0 1.5-.4 2-1Zm.7 1.1c-1.1-.1-2 .6-2.5.6-.5 0-1.3-.6-2.2-.6-1.1 0-2.2.7-2.7 1.7-1.2 2-.3 5 .8 6.6.6.8 1.2 1.7 2.1 1.7.8 0 1.1-.5 2.1-.5s1.3.5 2.2.5c.9 0 1.5-.8 2.1-1.6.6-.9.9-1.8.9-1.9 0 0-1.7-.7-1.7-2.6 0-1.6 1.3-2.4 1.4-2.4-.8-1.1-2-1.2-2.4-1.2Z" fill="#000000" />
+                    <text x="30" y="21" textAnchor="middle" fontFamily="Kanit, Arial, sans-serif" fontWeight="600" fontSize="11" fill="#000000">Pay</text>
+                  </svg>
+                </li>
               </ul>
             </div>
 
-            {/* Verified on SBC */}
-            <div className="mt-8 pt-4">
-              <a
-                href="https://eauthenticate.saudibusiness.gov.sa/certificate-details/0000202551"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 hover:opacity-90 transition-opacity bg-neutral-900/40 p-2.5 rounded-lg border border-neutral-800/60"
-              >
-                <span className="text-[11px] font-bold text-white/80 tracking-wide">Verified on SBC</span>
-                <img
-                  src="https://powertire.klever.ae/media/images/sbc.webp"
-                  alt="SBC Verified Logo"
-                  className="h-6 w-auto object-contain"
-                />
-              </a>
-            </div>
           </div>
-
-        </div>
-
-      </div>
-
-      {/* Copyright Bar */}
-      <div className="bg-black py-5 border-t border-neutral-900 text-white/50 text-[11px] sm:text-xs">
-        <div className="container max-w-[1380px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-5">
-
-          {/* Copyright text */}
-          <div className="font-medium text-center md:text-left">
-            <span>Copyright © 2026 All rights reserved by PowerTire.sa.</span>
-          </div>
-
-          {/* Bottom links */}
-          <div className="flex flex-wrap items-center justify-center gap-3.5 font-bold text-white/70">
-            <Link href="/terms-and-conditions" className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
-            <span>/</span>
-            <Link href="/track-order" className="hover:text-white transition-colors">Track Order</Link>
-            <span>/</span>
-            <Link href="/sitemap" className="hover:text-white transition-colors">Sitemap</Link>
-            <span>/</span>
-            <Link href="/frequently-asked-questions" className="hover:text-white transition-colors">FAQs</Link>
-            <span>/</span>
-            <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
-          </div>
-
-          {/* Payment gateway icons */}
-          <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
-            <img src="https://powertire.klever.ae/media/images/mada_mini.webp" alt="Mada" className="h-4 sm:h-5 w-auto object-contain" />
-            <img src="https://powertire.klever.ae/media/images/credit_card_mini.webp" alt="Visa / Mastercard" className="h-4 sm:h-5 w-auto object-contain" />
-            <img src="https://powertire.klever.ae/media/images/stc_pay_mini.webp" alt="STC Pay" className="h-4 sm:h-5 w-auto object-contain" />
-            <img src="https://powertire.klever.ae/media/images/apple_pay_mini.webp" alt="Apple Pay" className="h-4 sm:h-5 w-auto object-contain" />
-            <img src="https://powertire.klever.ae/media/images/footer-tabby.webp" alt="Tabby" className="h-4 sm:h-5 w-auto object-contain" />
-            <img src="https://powertire.klever.ae/media/images/card-icon.webp" alt="Tamara" className="h-4 sm:h-5 w-auto object-contain" />
-          </div>
-
         </div>
       </div>
+
+      {/* Back to top */}
+      <button
+        type="button"
+        className={`fixed bottom-20 right-6 z-40 w-10 h-10 rounded-full bg-[#ed1c24] text-white flex items-center justify-center shadow-lg transition-all duration-300 hover:bg-[#c6181d] hover:scale-110 ${
+          showTop ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        }`}
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        aria-label="Back to top"
+      >
+        <ArrowUp size={18} />
+      </button>
     </footer>
   );
 }

@@ -33,7 +33,7 @@ const query = `
 `;
 
 async function main() {
-  const res = await fetch("https://powertire.klever.ae/graphql", {
+  const res = await fetch("https://www1.tyresworld.ae/graphql", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

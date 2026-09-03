@@ -1,30 +1,39 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, EffectFade } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
-import "swiper/css";
-import "swiper/css/effect-fade";
-import "swiper/css/pagination";
 
+/**
+ * A hero slide is artwork + a link — all the messaging is baked into the
+ * image, as it is in the Magento theme. The text fields are optional
+ * leftovers from the old overlay treatment and are no longer rendered.
+ */
 type Slide = {
   id: string;
-  badge: string;
-  eyebrow: string;
-  heading: string;
-  sub: string;
-  cta: { label: string; href: string };
-  secondary: { label: string; href: string };
-  gradient?: string;
+  /** Desktop artwork (≥768px). */
   image?: string;
+  /** Art-directed crop for <768px; falls back to `image`. */
+  imageMobile?: string;
+  /** Click target for the whole slide, locale prefix added at render. */
+  href?: string;
+  /** Accessible description of the artwork. */
+  alt?: string;
+  gradient?: string;
+  heading?: string;
 };
 
 export default function HeroSlider() {
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] === "ar" ? "ar" : "en";
   const swiperRef = useRef<SwiperType | null>(null);
+  const reducedMotion = usePrefersReducedMotion();
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loading, setLoading] = useState(true);
   // The loader stays up past the API response until the first banner image
@@ -94,15 +103,15 @@ export default function HeroSlider() {
   return (
     <section className="hero-section">
       {/*
-       * .banner-aspect: aspect-ratio: 1905/644 gives the container its height
-       * without any vh units, eliminating CLS.
-       * All image dimensions are 1920×590 which maps perfectly to this ratio.
+       * .banner-aspect gives the container its height from an aspect-ratio
+       * rather than vh units, so there's no CLS. It tracks the artwork:
+       * 1920/605 above 768px, 425/450 below (the portrait mobile crops).
        *
        * Layout chain (each layer fills its parent):
        *   .banner-aspect  →  .hero-swiper (CSS: absolute, inset:0, h:100%)
        *   .hero-swiper    →  .swiper-slide (CSS: h:100%)
        *   .swiper-slide   →  .slide-img-wrap (relative, w-full, h-full)
-       *   .slide-img-wrap →  next/image fill (object-cover)
+       *   .slide-img-wrap →  <picture> (absolute inset-0, object-cover)
        */}
       <div className="banner-aspect">
 
@@ -112,53 +121,88 @@ export default function HeroSlider() {
           modules={[Autoplay, Pagination, EffectFade]}
           effect="fade"
           fadeEffect={{ crossFade: true }}
-          autoplay={{ delay: 4500, disableOnInteraction: false, pauseOnMouseEnter: true }}
+          /* pauseOnMouseEnter is off on purpose — the hero sits under the
+             cursor whenever someone lands on the page, so pausing there
+             stops the banner from ever advancing. Reduced-motion users
+             get no autoplay at all instead. */
+          autoplay={
+            reducedMotion
+              ? false
+              : {
+                  delay: 4500,
+                  disableOnInteraction: false,
+                  pauseOnMouseEnter: false,
+                  stopOnLastSlide: false,
+                  waitForTransition: true,
+                }
+          }
+          speed={800}
           pagination={{ clickable: true, el: ".hero-pagination" }}
-          loop
+          loop={slides.length > 1}
           className="hero-swiper"
         >
-          {slides.map((slide, index) => (
-            <SwiperSlide key={slide.id}>
-              {/*
-               * .slide-img-wrap must be position:relative for next/image fill.
-               * w-full h-full ensures it fills the slide (which Swiper sizes to 100% via CSS).
-               */}
-              <div className="slide-img-wrap relative w-full h-full">
-                {slide.image ? (
-                  <>
-                    <Image
-                      src={slide.image}
-                      alt={slide.heading}
-                      fill
-                      priority={index === 0}
-                      sizes="100vw"
-                      className="object-cover object-center"
-                      {...(index === 0
-                        ? {
-                            onLoad: () => setImageReady(true),
-                            onError: () => setImageReady(true),
-                          }
-                        : {})}
-                    />
-                    {/* No overlay, image is displayed with full brightness */}
-                  </>
-                ) : (
-                  /* Fallback gradient when no image URL is provided */
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${
-                      slide.gradient || "from-gray-900 to-gray-700"
-                    }`}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
-                  </div>
-                )}
+          {slides.map((slide, index) => {
+            const alt = (slide.alt ?? slide.heading ?? "").replace(/\n/g, " ");
+
+            /*
+             * <picture> rather than next/image: these slides are art-directed
+             * (a different crop below 768px, not just a smaller one), which
+             * next/image can't express — rendering both and hiding one would
+             * download both. The .banner-aspect ratio already prevents CLS,
+             * and the first slide is eager + high-priority for LCP.
+             */
+            const artwork = slide.image ? (
+              <picture>
+                <source media="(min-width: 768px)" srcSet={slide.image} />
+                <img
+                  src={slide.imageMobile || slide.image}
+                  alt={alt}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  loading={index === 0 ? "eager" : "lazy"}
+                  fetchPriority={index === 0 ? "high" : "auto"}
+                  decoding={index === 0 ? "sync" : "async"}
+                  {...(index === 0
+                    ? {
+                        onLoad: () => setImageReady(true),
+                        onError: () => setImageReady(true),
+                      }
+                    : {})}
+                />
+              </picture>
+            ) : (
+              /* Fallback gradient when no image URL is provided */
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${
+                  slide.gradient || "from-gray-900 to-gray-700"
+                }`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
               </div>
-            </SwiperSlide>
-          ))}
+            );
+
+            return (
+              <SwiperSlide key={slide.id}>
+                {/* .slide-img-wrap is the positioning context for the artwork. */}
+                <div className="slide-img-wrap relative w-full h-full">
+                  {slide.href ? (
+                    <Link
+                      href={`/${locale}${slide.href}`}
+                      className="block absolute inset-0"
+                      aria-label={alt}
+                    >
+                      {artwork}
+                    </Link>
+                  ) : (
+                    artwork
+                  )}
+                </div>
+              </SwiperSlide>
+            );
+          })}
         </Swiper>
 
-        {/* Pagination dots — z-10 so they sit above the Swiper */}
-        <div className="hero-pagination absolute bottom-8 z-10 flex items-center pointer-events-none" />
+        {/* Pagination dots — centered and clickable, above the slide link */}
+        <div className="hero-pagination" />
 
         {/* Prev / Next arrows */}
         <div className="absolute bottom-6 right-6 lg:right-10 z-10 flex gap-2">

@@ -2,16 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Saudi Riyal currency symbol ─────────────────────────────────
-   Icon font: saudi-riyal-symbol (MIT, github.com/mczainalabdeen/
-   saudi-riyal-symbol), vendored at /public/fonts/. It maps the
-   character "#" (U+0023) to the official Riyal symbol, so elements
-   with .currency-riyal contain "#" as their text (see
-   components/Price.tsx — all price rendering goes through it). */
+/* ── Vendor: Swiper ────────────────────────────────────────────────
+   Imported here rather than from each carousel component so every
+   stylesheet in the app still enters through this one file. Covers
+   HeroSlider, OffersSection, FastSelling and ProductDetailInner. */
+@import "swiper/css";
+@import "swiper/css/effect-fade";
+@import "swiper/css/pagination";
+
+/* ── Kanit Font Family (from /public/fonts/) ───────────────────── */
+@font-face {
+  font-family: 'Kanit';
+  src: url('/fonts/Kanit-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kanit';
+  src: url('/fonts/Kanit-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kanit';
+  src: url('/fonts/Kanit-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kanit';
+  src: url('/fonts/Kanit-Bold.woff2') format('woff2');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── UAE Dirham currency symbol ─────────────────────────────────── */
+@font-face {
+  font-family: 'UAEDirham';
+  src: url('/fonts/UAE-dirham.woff') format('woff'),
+       url('/fonts/UAE-dirham.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+.currency-dirham {
+  font-family: 'UAEDirham', sans-serif !important;
+  top: 1.5px;
+  position: relative;
+}
+
+/* ── Saudi Riyal currency symbol ───────────────────────────────── */
 @font-face {
   font-family: "saudi-riyal";
   src: url("/fonts/saudi-riyal-symbol.woff") format("woff"),
-    url("/fonts/saudi-riyal-symbol.ttf") format("truetype");
+       url("/fonts/saudi-riyal-symbol.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -25,21 +77,60 @@
   top: 1px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   BRAND TOKENS — the single source of truth for the whole storefront.
+   Values come from the TyresWorld brand guidelines
+   (www1.tyresworld.ae/docs/brand-guidelines.html, v1.0, 26 Aug 2026),
+   which mirror the Magento theme's _variables.scss.
+   tailwind.config.ts reads these via var() — change a colour HERE and
+   it changes everywhere. Never hardcode a hex in a component.
+   ═══════════════════════════════════════════════════════════════════ */
 :root {
-  /* ── Typography ───────────────────────────────────────────────── */
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Fraunces", "Times New Roman", serif;
+  /* ── Typography ───────────────────────────────────────────────────
+     Kanit = primary font family for storefront (Light, Regular, Medium, Bold) */
+  --font-sans: "Kanit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Kanit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  /* ── Brand colours ────────────────────────────────────────────── */
-  --brand-red: #ed1c24;
-  --brand-red-dark: #c6181d;
-  --brand-black: #111111;
-  --brand-dark-bg: #1a1a1a;
+  /* ── Brand colours ($tc-primary / $tc-secondary) ──────────────────
+     Racing Red is the CTA accent, not a body colour — target ~7% of a
+     page. Pit Amber sits under it for hover/secondary, ~3%.
+
+     Declared as space-separated RGB channels so Tailwind can inject an
+     alpha (`text-ink/70`, `border-brand-line/60`). Edit the channels;
+     the --brand-* aliases below follow automatically. */
+  --c-red: 237 28 36;       /* Brand Red   · $tc-primary   #ED1C24 */
+  --c-amber: 255 192 0;     /* Pit Amber   · $tc-secondary #FFC000 */
+  --c-ink: 0 0 0;           /* Ink         · $black        #000000 */
+  --c-asphalt: 18 16 17;    /* Asphalt     · $footer-bg-color #121011 */
+  --c-asphalt-2: 30 30 32;  /* Copyright strip · #1E1E20 */
+  --c-paper: 252 252 252;   /* Paper       · $grey-100     #FCFCFC */
+  --c-gravel: 116 116 116;  /* Gravel      · $footer-font-color #747474 */
+  --c-line: 204 204 204;    /* Borders     · $grey-200     #CCCCCC */
+  --c-fill: 238 238 238;    /* Fill grey                   #EEEEEE */
+  --c-surface: 255 255 255;
+  --c-surface-2: 244 243 242;
+
+  /* Ready-to-use colour values for hand-written CSS below. */
+  --brand-red: rgb(var(--c-red));
+  --brand-amber: rgb(var(--c-amber));
+  --brand-ink: rgb(var(--c-ink));
+  --brand-asphalt: rgb(var(--c-asphalt));
+  --brand-asphalt-2: rgb(var(--c-asphalt-2));
+  --brand-paper: rgb(var(--c-paper));
+  --brand-gravel: rgb(var(--c-gravel));
+
+  /* Legacy aliases — kept so existing markup keeps resolving.
+     Prefer the tokens above in new code. */
+  --brand-red-dark: var(--brand-amber);
+  --brand-black: var(--brand-ink);
+  --brand-dark-bg: var(--brand-asphalt);
 
   /* ── UI colours ───────────────────────────────────────────────── */
-  --color-gray-text: #6b7280;
-  --color-gray-border: #e5e7eb;
-  --color-gray-bg: #f9fafb;
+  --color-gray-text: var(--brand-gravel);
+  --color-gray-border: rgb(var(--c-line));
+  --color-gray-bg: rgb(var(--c-fill));
+  --color-surface: rgb(var(--c-surface));
+  --color-surface-2: rgb(var(--c-surface-2));
   --color-white: #ffffff;
 
   /* ── Partner colours ──────────────────────────────────────────── */
@@ -48,10 +139,19 @@
   --color-tamara-from: #7B2FBE;
   --color-tamara-to: #B44FE8;
 
-  /* ── Radius ───────────────────────────────────────────────────── */
+  /* ── Radius ───────────────────────────────────────────────────────
+     The theme sets border-radius to 0 across the board — square is the
+     default, pill is a deliberate variant (.button-rounded), not a habit. */
+  --radius-none: 0;
   --radius-card: 0.75rem;
   --radius-pill: 9999px;
   --radius-sm: 0.5rem;
+
+  /* ── Header ───────────────────────────────────────────────────────
+     Logo is deployed at 232×70 in the header per the guidelines; don't
+     run the wordmark smaller — drop to the icon-only mark instead. */
+  --header-height: 70px;
+  --header-logo-width: 232px;
 
   /* ── Shadows ──────────────────────────────────────────────────── */
   --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
@@ -83,16 +183,22 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     scrollbar-gutter: stable;
+    font-family: 'Kanit', sans-serif;
   }
 
   body {
     @apply bg-white text-ink font-sans;
+    font-family: 'Kanit', sans-serif;
   }
 
   ::selection {
     background: #ff6b35;
     color: #fff;
   }
+}
+
+.font-kanit {
+  font-family: 'Kanit', sans-serif !important;
 }
 
 @layer components {
@@ -131,6 +237,1369 @@
 
   .input-field {
     @apply w-full bg-cream border border-ink/10 rounded-xl px-4 py-3 text-sm text-ink placeholder:text-ink/30 outline-none transition-all focus:border-ink/30 focus:bg-white focus:ring-2 focus:ring-ink/5;
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     SITE HEADER
+     Red utility strip over a white main bar. Nav is Montserrat (the
+     reading face) — Teko is reserved for headings and button labels.
+     ═════════════════════════════════════════════════════════════════ */
+
+  /* ── Top utility strip ──────────────────────────────────────────── */
+  .topbar {
+    background-color: rgb(var(--c-red));
+    color: #ffffff;
+  }
+
+  .topbar-inner {
+    @apply max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 py-1.5 text-xs;
+  }
+
+  .topbar-feature {
+    @apply flex items-center gap-2 leading-tight;
+  }
+
+  .topbar-feature-title {
+    @apply font-bold text-[13px] tracking-tight;
+  }
+
+  .topbar-feature-sub {
+    @apply text-[11px] text-white/90;
+  }
+
+  /* Black contact pill on the red strip — square, per the theme default */
+  .topbar-contact {
+    @apply hidden sm:flex items-center gap-4 text-white px-3.5 py-1.5;
+    background-color: rgb(var(--c-asphalt));
+  }
+
+  .topbar-contact a {
+    @apply flex items-center gap-1.5 font-semibold text-[12px] transition-colors;
+  }
+
+  .topbar-contact a:hover {
+    color: rgb(var(--c-amber));
+  }
+
+  /* ── Main bar ───────────────────────────────────────────────────── */
+  .site-header {
+    @apply relative top-0 z-50 bg-white;
+    border-bottom: 1px solid rgb(var(--c-line) / 0.6);
+  }
+
+  .site-header-inner {
+    @apply max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-2 xl:gap-4;
+    height: var(--header-height);
+  }
+
+  .site-header-logo img {
+    @apply w-auto object-contain h-[42px] sm:h-[48px];
+  }
+
+  /* ── Primary nav ────────────────────────────────────────────────── */
+  .site-nav {
+    @apply hidden lg:flex flex-1 items-center justify-center gap-0.5 xl:gap-1.5 2xl:gap-3;
+  }
+
+  .site-nav-link {
+    @apply flex items-center gap-1 px-1.5 xl:px-2.5 2xl:px-3 py-2 text-[12.5px] xl:text-[13.5px] 2xl:text-[14.5px] font-bold whitespace-nowrap text-black transition-colors;
+  }
+
+  .site-nav-link:hover,
+  .site-nav-link[data-active="true"] {
+    color: #ed1c24;
+  }
+
+  /* Dropdown panel — clean vertical list with top red accent line and dividers */
+  .site-nav-panel {
+    @apply absolute top-full pt-0 z-50 transition-all duration-150 min-w-[210px] w-max max-w-[280px];
+  }
+
+  .site-nav-panel[data-open="false"] {
+    @apply opacity-0 invisible -translate-y-1 pointer-events-none;
+  }
+
+  .site-nav-panel[data-open="true"] {
+    @apply opacity-100 visible translate-y-0;
+  }
+
+  .site-nav-panel-body {
+    @apply bg-white shadow-xl border border-gray-300 border-t-2 border-t-[#ed1c24] divide-y divide-gray-200 py-0 text-left;
+  }
+
+  .site-nav-sublink {
+    @apply block px-4 py-2.5 text-[13px] font-normal text-gray-800 transition-colors whitespace-nowrap;
+  }
+
+  .site-nav-sublink:hover {
+    @apply bg-gray-50;
+    color: #ed1c24;
+  }
+
+  /* ── Right-hand icon actions ────────────────────────────────────── */
+  .header-icon {
+    @apply w-[36px] h-[36px] rounded-full flex items-center justify-center
+           transition-colors flex-shrink-0 hover:bg-black/5;
+  }
+
+  .header-icon-dark {
+    @apply header-icon text-black;
+  }
+
+  .header-icon-dark:hover {
+    color: #ed1c24;
+  }
+
+  .header-icon-red {
+    @apply header-icon;
+    color: #ed1c24;
+  }
+
+  .header-icon-red:hover {
+    color: #c6181d;
+  }
+
+  .header-cart-badge {
+    @apply absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-0.5 text-white
+           text-[9px] font-black rounded-full flex items-center justify-center leading-none;
+    background: var(--brand-red);
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     SECTIONS — shared shells
+     ═════════════════════════════════════════════════════════════════ */
+  .section-padding {
+    @apply py-12 lg:py-16;
+  }
+
+  /* Centered section heading: Teko display face, red accent word.
+     Named .section-heading so it doesn't collide with the existing
+     .section-title utility. */
+  .section-heading {
+    @apply text-center mb-8 lg:mb-12;
+  }
+
+  .section-heading h2 {
+    @apply font-display uppercase leading-none text-ink;
+    font-size: clamp(30px, 4vw, 48px);
+    font-weight: 600;
+  }
+
+  .section-heading h2 .theme_color {
+    color: var(--brand-red);
+  }
+
+  .section-heading p {
+    @apply mt-2 text-sm;
+    color: var(--brand-gravel);
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     BUTTONS — theme variants
+     Square by default per the brand guidelines (the theme sets
+     border-radius: 0 across the board); Teko 600 at 18px, 8px 25px
+     padding. `.filled-slide-right` wipes the fill in from the right.
+     ═════════════════════════════════════════════════════════════════ */
+  .button-primary {
+    @apply relative inline-flex items-center justify-center overflow-hidden
+           font-display uppercase text-white transition-colors;
+    /* Guidelines specify 8px 25px for the square button; the pill needs a
+       little more room at the rounded ends to avoid looking cramped. */
+    padding: 10px 34px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: var(--brand-red);
+    /* Pill. The guidelines make square the default and rounded an
+       explicit variant (.button-rounded) — this is that variant, chosen
+       deliberately for the section CTAs. */
+    border-radius: var(--radius-pill);
+  }
+
+  .button-primary::before {
+    content: "";
+    @apply absolute inset-0;
+    background: var(--brand-ink);
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .button-primary:hover::before {
+    transform: scaleX(1);
+  }
+
+  .button-primary > span {
+    @apply relative z-10;
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     WIDE RANGE OF SERVICES
+     Icon grid, 2 / 3 / 4 columns. The icons are line art on
+     transparency, so the card surface stays light.
+     ═════════════════════════════════════════════════════════════════ */
+  .service-grid {
+    @apply grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5 list-none p-0 m-0;
+  }
+
+  /* Borderless — the icons carry the shape, so the cards read as one
+     open grid. Hover is the only chrome: a lift plus a soft shadow. */
+  .service-card {
+    @apply flex flex-col items-center justify-start gap-4 h-full text-center
+           bg-white px-4 py-7 transition-all duration-300;
+    border: 0;
+    border-radius: var(--radius-none);
+  }
+
+  .service-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-4px);
+  }
+
+  .service-card-icon {
+    @apply flex items-center justify-center flex-shrink-0;
+    width: 72px;
+    height: 72px;
+  }
+
+  .service-card-icon img {
+    @apply w-full h-full object-contain;
+    transition: transform 0.3s ease;
+  }
+
+  .service-card:hover .service-card-icon img {
+    transform: scale(1.08);
+  }
+
+  /* Teko is a display face — 16px here is at its floor, so keep it
+     tight and uppercase rather than shrinking further. */
+  .service-card-title {
+    @apply font-display uppercase leading-tight text-ink m-0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .service-card:hover .service-card-title {
+    color: var(--brand-red);
+  }
+
+  /* Centred call-to-action under a section's content */
+  .section-cta {
+    @apply flex justify-center mt-10 lg:mt-12;
+  }
+
+  /* ── Secondary button — Pit Amber, per the brand guidelines ─────── */
+  /* ── Card "Add to Cart" (theme's button-primary + filled-slide-up) ──
+     Racing Red base; on hover an Ink fill wipes UP from the bottom.
+     Small size for the product-card action row. */
+  .btn-tocart {
+    @apply relative inline-flex items-center justify-center gap-1.5 flex-1 h-9 overflow-hidden
+           text-[11.5px] font-black uppercase tracking-wider text-white transition-colors;
+    background: var(--brand-red);
+    border-radius: var(--radius-sm);
+  }
+
+  .btn-tocart::before {
+    content: "";
+    @apply absolute inset-0 z-0;
+    background: var(--brand-ink);
+    transform: scaleY(0);
+    transform-origin: bottom center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-tocart:hover::before {
+    transform: scaleY(1);
+  }
+
+  .btn-tocart > * {
+    @apply relative z-10;
+  }
+
+  .btn-tocart:disabled {
+    @apply opacity-70 cursor-not-allowed;
+  }
+
+  .btn-tocart:disabled::before {
+    transform: scaleY(0);
+  }
+
+  /* Full-width red enquiry button for out-of-stock items (exact slide-up wipe like btn-tocart) */
+  .btn-enquiry {
+    @apply relative flex w-full h-9 items-center justify-center overflow-hidden
+           text-[12px] font-black uppercase tracking-wider text-white transition-colors cursor-pointer;
+    background: var(--brand-red);
+    border-radius: var(--radius-sm);
+  }
+
+  .btn-enquiry::before {
+    content: "";
+    @apply absolute inset-0 z-0;
+    background: var(--brand-ink);
+    transform: scaleY(0);
+    transform-origin: bottom center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-enquiry:hover::before {
+    transform: scaleY(1);
+  }
+
+  .btn-enquiry > * {
+    @apply relative z-10;
+  }
+
+  /* Added-to-cart confirmation state overrides the red base. */
+  .btn-tocart.is-added {
+    background: #16a34a;
+  }
+
+  .btn-tocart.is-added::before {
+    transform: scaleY(0);
+  }
+
+  .button-secondary {
+    @apply relative inline-flex items-center justify-center overflow-hidden
+           font-display uppercase text-ink transition-colors;
+    padding: 10px 34px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: var(--brand-amber);
+    border-radius: var(--radius-pill);
+  }
+
+  .button-secondary::before {
+    content: "";
+    @apply absolute inset-0;
+    background: var(--brand-ink);
+    transform: scaleY(0);
+    transform-origin: bottom center;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .button-secondary:hover::before {
+    transform: scaleY(1);
+  }
+
+  .button-secondary:hover {
+    color: #fff;
+  }
+
+  .button-secondary > span {
+    @apply relative z-10;
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     REQUEST A CALLBACK
+     Light pastel-pattern band; copy left, button right.
+     ═════════════════════════════════════════════════════════════════ */
+  .request-call {
+    background-image: url("/bg/pattern-bg1-new.webp");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: var(--color-surface-2);
+  }
+
+  .request-call-row {
+    @apply flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left;
+  }
+
+  .request-call .text-wrap h2 {
+    @apply font-display uppercase leading-none text-ink m-0;
+    font-size: clamp(26px, 3vw, 40px);
+    font-weight: 600;
+  }
+
+  .request-call .text-wrap p {
+    @apply mt-1 mb-0 text-sm;
+    color: var(--brand-gravel);
+  }
+
+  .request-call .right {
+    @apply flex-shrink-0;
+  }
+
+  /* ── Callback modal ─────────────────────────────────────────────── */
+  .callback-modal {
+    @apply fixed inset-0 z-[9999] flex items-center justify-center p-4;
+  }
+
+  .callback-modal-backdrop {
+    @apply absolute inset-0;
+    background: rgb(0 0 0 / 0.6);
+    backdrop-filter: blur(2px);
+  }
+
+  .callback-modal-panel {
+    @apply relative w-full max-w-[440px] bg-white p-6 sm:p-8;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .callback-modal-close {
+    @apply absolute top-3 right-3 w-9 h-9 flex items-center justify-center
+           text-ink/50 transition-colors;
+    border-radius: var(--radius-pill);
+  }
+
+  .callback-modal-close:hover {
+    @apply bg-black/5;
+    color: var(--brand-red);
+  }
+
+  .callback-modal-title {
+    @apply font-display uppercase leading-none text-ink mt-0 mb-5;
+    font-size: 28px;
+    font-weight: 600;
+  }
+
+  .callback-field {
+    @apply block mb-4;
+  }
+
+  .callback-field > span {
+    @apply block mb-1.5 text-xs font-semibold uppercase tracking-wider;
+    color: var(--brand-gravel);
+  }
+
+  .callback-submit {
+    @apply w-full mt-1;
+  }
+
+  .callback-submit:disabled {
+    @apply opacity-60 cursor-not-allowed;
+  }
+
+  .callback-modal-error {
+    @apply text-sm mb-3 mt-0;
+    color: var(--brand-red);
+  }
+
+  .callback-modal-msg {
+    @apply text-sm leading-relaxed m-0 py-2;
+    color: var(--brand-gravel);
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     PAGE TITLE BANNER
+     Category / CMS page heading over the asphalt texture. A scrim keeps
+     the white type legible wherever the texture happens to be lighter.
+     ═════════════════════════════════════════════════════════════════ */
+  .page-title-wrapper {
+    @apply relative py-12 lg:py-16 text-center;
+    background-color: var(--brand-asphalt);
+  }
+
+  .page-title-wrapper.bg-cover-image {
+    background-image:
+      linear-gradient(rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.65)),
+      url("/bg/brand-banner-new.webp");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .page-title-wrapper .title {
+    @apply relative z-10;
+  }
+
+  /* Casing comes from the authored title, so it isn't forced to uppercase. */
+  .page-title-wrapper h1 {
+    @apply font-display leading-tight text-white m-0;
+    font-size: clamp(24px, 3.4vw, 40px);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .page-title-skeleton {
+    @apply inline-block rounded animate-pulse;
+    width: min(24rem, 80%);
+    height: 2.5rem;
+    background: rgb(255 255 255 / 0.12);
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     PRODUCT CARD (listing)
+     Mirrors the Magento theme's product-item: offer bar, centred brand,
+     portrait 240×300 photo with warranty / year / stock overlays, then
+     name, size, origin, fitment note, price, set price and actions.
+     ═════════════════════════════════════════════════════════════════ */
+  .product-item {
+    @apply list-none h-full;
+  }
+
+  .product-item .box {
+    @apply flex flex-col h-full overflow-hidden bg-white transition-all duration-200;
+    border: 1px solid rgb(var(--c-line) / 0.7);
+    border-radius: var(--radius-card);
+  }
+
+  .product-item .box:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  /* ── Offer bar ──────────────────────────────────────────────────── */
+  .product-offer {
+    @apply w-full text-center py-1.5 px-2;
+    background: var(--brand-red);
+  }
+
+  .product-offer span {
+    @apply text-[11px] font-bold uppercase tracking-wide text-white;
+  }
+
+  .product-item-info {
+    @apply flex flex-col flex-1 p-3;
+  }
+
+  /* ── Brand ──────────────────────────────────────────────────────── */
+  .top-brand {
+    @apply flex items-center justify-center h-8 mb-1;
+  }
+
+  .top-brand img {
+    @apply max-h-7 w-auto max-w-[110px] object-contain;
+  }
+
+  .top-brand-name {
+    @apply text-[13px] font-bold uppercase tracking-wide text-ink;
+  }
+
+  .custom-red-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #ed1c24 #f3f4f6;
+  }
+  .custom-red-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-red-scrollbar::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 4px;
+  }
+  .custom-red-scrollbar::-webkit-scrollbar-thumb {
+    background: #ed1c24;
+    border-radius: 4px;
+  }
+  .custom-red-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #c6181d;
+  }
+
+  /* ── Image + overlays ───────────────────────────────────────────── */
+  .product-image-wrap {
+    @apply relative w-full;
+  }
+
+  .product-item-photo {
+    @apply block w-full;
+  }
+
+  /* 240×300 is the theme's render size. */
+  .product-image-container {
+    @apply relative block w-full mx-auto;
+    max-width: 240px;
+    aspect-ratio: 240 / 300;
+  }
+
+  .add-to-links {
+    @apply absolute right-0 top-0 z-10 flex flex-col gap-1.5;
+  }
+
+  .add-to-links .action {
+    @apply w-7 h-7 flex items-center justify-center bg-white text-ink/45 transition-colors;
+    border: 1px solid rgb(var(--c-line) / 0.8);
+    border-radius: var(--radius-pill);
+  }
+
+  .add-to-links .action:hover {
+    color: var(--brand-red);
+    border-color: var(--brand-red);
+  }
+
+  .add-to-links .action.is-active {
+    background: var(--brand-red);
+    border-color: var(--brand-red);
+    @apply text-white;
+  }
+
+  .warranty {
+    @apply absolute left-0 top-1/2 -translate-y-1/2 z-10 px-1.5 py-1 bg-white/95 text-center;
+    max-width: 70px;
+    border: 1px solid rgb(var(--c-line) / 0.8);
+    border-radius: var(--radius-sm);
+  }
+
+  .warranty span {
+    @apply block text-[9px] font-black uppercase leading-tight text-ink/70;
+  }
+
+  .product-year {
+    @apply absolute left-0 bottom-0 z-10 px-2 py-0.5 text-[10px] font-black text-white;
+    background: var(--brand-ink);
+    border-radius: var(--radius-sm);
+  }
+
+  .stoke-info {
+    @apply absolute right-0 bottom-0 z-10;
+  }
+
+  .stoke-info span {
+    @apply block w-2.5 h-2.5;
+    border-radius: var(--radius-pill);
+  }
+
+  .stoke-info .success { background: #16a34a; }
+  .stoke-info .error   { background: var(--brand-red); }
+
+  /* ── Details ────────────────────────────────────────────────────── */
+  .product-item-details {
+    @apply flex flex-col flex-1 text-center mt-2;
+  }
+
+  .product-item-name .product-item-link {
+    @apply block text-[15px] font-bold leading-tight text-ink transition-colors;
+  }
+
+  .product-item-name .product-item-link:hover {
+    color: var(--brand-red);
+  }
+
+  /* ── Magento Vehicle Sprite Icons ────────────────────────────────── */
+  .vehicle {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .vehicle.car {
+    background-image: url("/icons/vehicle-car.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    width: 31px;
+    height: 11px;
+  }
+
+  .vehicle.suv {
+    background-position: 15.1% 2.2%;
+  }
+
+  .vehicle.bike {
+    background-position: 44.6% 2.1%;
+  }
+
+  .product-item-mfyear-vehicle {
+    @apply flex items-center justify-between gap-2 my-2;
+    color: var(--brand-ink);
+  }
+
+  .product-item-mfyear-vehicle .mfyear {
+    @apply text-[11px] font-semibold;
+    color: var(--brand-gravel);
+  }
+
+  .fitment-info span {
+    @apply block text-[11px] font-medium;
+    color: var(--brand-gravel);
+  }
+
+  .price-box {
+    @apply flex items-baseline justify-center gap-1 mt-1;
+  }
+
+  .price-box .currency {
+    @apply text-[12px] font-bold text-ink/70;
+  }
+
+  .price-box .price {
+    @apply text-[19px] font-black leading-none text-ink;
+  }
+
+  .set-price-box {
+    @apply flex items-baseline justify-center gap-1 mt-1 mb-3 text-[12.5px] font-bold text-ink;
+  }
+
+  .set-price-box .set4 {
+    color: var(--brand-gravel);
+    @apply font-semibold;
+  }
+
+  /* ── Actions ────────────────────────────────────────────────────── */
+  .addtocart {
+    @apply flex items-center gap-2 mt-auto pt-2;
+    border-top: 1px solid rgb(var(--c-line) / 0.5);
+  }
+
+  .addtocart .select-qty {
+    @apply h-10 px-2 text-[13px] font-bold text-ink bg-white cursor-pointer;
+    border: 1px solid rgb(var(--c-line) / 0.8);
+    border-radius: var(--radius-sm);
+  }
+
+  .addtocart .tocart,
+  .addtocart .whatsapp-button {
+    @apply flex-1 h-10 flex items-center justify-center gap-1.5
+           text-[12px] font-bold uppercase tracking-wide text-white transition-colors;
+    background: var(--brand-red);
+    border-radius: var(--radius-sm);
+  }
+
+  .addtocart .tocart:hover,
+  .addtocart .whatsapp-button:hover {
+    background: var(--brand-ink);
+  }
+
+  .addtocart .tocart.is-added {
+    background: #16a34a;
+  }
+
+  .addtocart .tocart:disabled {
+    @apply opacity-70 cursor-not-allowed;
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     QUANTITY DROPDOWN (product card)
+     Replaces the native <select>, whose option list renders the OS menu
+     and can't be themed. Opens upward so it never clips at the card foot.
+     ═════════════════════════════════════════════════════════════════ */
+  .qty-select {
+    @apply relative flex-shrink-0;
+  }
+
+  .qty-trigger {
+    @apply flex items-center justify-center gap-1 w-12 h-9 px-1
+           bg-[#f3f4f6] hover:bg-[#e8e9eb] text-ink font-bold text-[13px]
+           cursor-pointer transition-colors;
+    border: 1px solid rgb(var(--c-line) / 0.8);
+    border-radius: var(--radius-sm);
+  }
+
+  .qty-trigger .qty-caret {
+    @apply text-ink/45 transition-transform duration-200;
+  }
+
+  /* The popup — white, rounded, opens above the trigger. */
+  .qty-menu {
+    @apply absolute left-0 bottom-full mb-1.5 z-30 w-14 max-h-56 overflow-y-auto
+           list-none p-1 m-0 bg-white;
+    border: 1px solid rgb(var(--c-line) / 0.9);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .qty-option {
+    @apply flex items-center justify-center gap-1 w-full h-8 text-[13px] font-bold
+           text-ink cursor-pointer transition-colors;
+    border-radius: calc(var(--radius-sm) - 2px);
+  }
+
+  .qty-option:hover {
+    background: var(--color-surface-2);
+  }
+
+  .qty-option.is-selected {
+    background: var(--brand-red);
+    @apply text-white;
+  }
+
+  .qty-option .qty-check {
+    @apply -mr-1;
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     VEHICLE FITMENT MODAL (which cars fit this tyre size)
+     Mirrors the theme's #buy-tyre-search-modal.
+     ═════════════════════════════════════════════════════════════════ */
+  .fitment-modal {
+    @apply fixed inset-0 z-[9999] flex items-start justify-center p-4 overflow-y-auto;
+  }
+
+  .fitment-modal-backdrop {
+    @apply fixed inset-0;
+    background: rgb(0 0 0 / 0.6);
+    backdrop-filter: blur(2px);
+  }
+
+  .fitment-modal-panel {
+    @apply relative w-full max-w-[720px] my-8 bg-white;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .fitment-modal-head {
+    @apply flex items-center justify-between gap-3 px-5 py-4 border-b border-brand-line/60;
+  }
+
+  .fitment-modal-head .product-name {
+    @apply font-display uppercase leading-tight text-ink m-0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .fitment-modal-head .close-modal {
+    @apply flex-shrink-0 w-8 h-8 flex items-center justify-center text-ink/50 transition-colors;
+    border-radius: var(--radius-pill);
+  }
+
+  .fitment-modal-head .close-modal:hover {
+    color: var(--brand-red);
+    background: rgb(0 0 0 / 0.05);
+  }
+
+  .ajax-response {
+    @apply p-4;
+  }
+
+  .fitment-status {
+    @apply text-center text-sm py-8 m-0;
+    color: var(--brand-gravel);
+  }
+
+  /* One make: logo/name column + its models column. */
+  .fitment-row {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-3 py-3 items-center border-b border-brand-line/40;
+  }
+
+  .fitment-row:last-child { border-bottom: 0; }
+
+  .fitment-row .brand-image {
+    @apply flex items-center gap-3 md:flex-col md:gap-1 md:text-center;
+  }
+
+  .fitment-row .brand-image img {
+    @apply h-9 w-auto max-w-[80px] object-contain;
+  }
+
+  .fitment-row .brand-image p {
+    @apply text-sm font-bold text-ink m-0;
+  }
+
+  .fitment-row .brand-info-content {
+    @apply md:col-span-2 flex flex-col gap-1.5;
+  }
+
+  .fitment-row .brand-info {
+    @apply flex items-center justify-between gap-3 px-3 py-2 transition-colors;
+    background: var(--color-surface-2);
+    border-radius: var(--radius-sm);
+  }
+
+  .fitment-row .brand-info:hover {
+    background: rgb(var(--c-red) / 0.08);
+  }
+
+  .fitment-row .brand-info .model {
+    @apply text-sm font-semibold text-ink;
+  }
+
+  .fitment-row .brand-info .year {
+    @apply text-xs;
+    color: var(--brand-gravel);
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     SITE FOOTER
+     Asphalt ground with Gravel body copy, per the brand guidelines
+     ($footer-bg-color / $footer-font-color); the copyright strip uses
+     the darker $footer-copyright-bg-color.
+     ═════════════════════════════════════════════════════════════════ */
+  .page-footer {
+    @apply relative pt-14 lg:pt-16;
+    background: var(--brand-asphalt);
+    color: var(--brand-gravel);
+  }
+
+  .footer-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 pb-12;
+  }
+
+  .footer-logo {
+    @apply inline-block mb-4;
+  }
+
+  .footer-logo img {
+    @apply w-auto object-contain;
+    height: 46px;
+  }
+
+  .footer-about p {
+    @apply text-sm leading-relaxed m-0;
+  }
+
+  .page-footer .widget-title {
+    @apply font-display uppercase leading-none text-white mt-0 mb-5;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .page-footer .menu {
+    @apply list-none p-0 m-0 flex flex-col gap-3;
+  }
+
+  .page-footer .menu a {
+    @apply flex items-start gap-2.5 text-sm leading-relaxed transition-colors;
+    color: var(--brand-gravel);
+  }
+
+  .page-footer .menu a:hover {
+    color: var(--brand-red);
+  }
+
+  .footer-contact .menu a {
+    @apply items-start;
+  }
+
+  /* ── Copyright strip ────────────────────────────────────────────── */
+  .footer-copyright {
+    background: var(--brand-asphalt-2);
+    @apply py-5;
+  }
+
+  .footer-copyright-row {
+    @apply flex flex-col xl:flex-row items-center justify-between gap-4 text-center xl:text-left;
+  }
+
+  .footer-copyright .copyright {
+    @apply text-xs m-0;
+  }
+
+  .copyright-links {
+    @apply list-none p-0 m-0 flex flex-wrap items-center justify-center gap-x-5 gap-y-2;
+  }
+
+  .copyright-links a {
+    @apply text-xs transition-colors;
+    color: var(--brand-gravel);
+  }
+
+  .copyright-links a:hover {
+    color: var(--brand-red);
+  }
+
+  /* Text badges until real payment marks are supplied. */
+  .payment-method {
+    @apply list-none p-0 m-0 flex flex-wrap items-center justify-center gap-2;
+  }
+
+  .payment-method li {
+    @apply text-[10px] font-semibold uppercase tracking-wider px-2 py-1;
+    color: var(--brand-gravel);
+    background: rgb(255 255 255 / 0.06);
+    border-radius: var(--radius-sm);
+  }
+
+  /* ── Offline notice ─────────────────────────────────────────────── */
+  .internet-status {
+    @apply fixed inset-0 z-[10000] flex flex-col items-center justify-center text-center p-6;
+    background: var(--brand-asphalt);
+  }
+
+  .internet-status h2 {
+    @apply font-display uppercase text-white mt-0 mb-2;
+    font-size: 30px;
+    font-weight: 600;
+  }
+
+  .internet-status p {
+    @apply text-sm m-0 max-w-md;
+    color: var(--brand-gravel);
+  }
+
+  /* ── Back to top ────────────────────────────────────────────────── */
+  .progress-wrap {
+    @apply fixed left-6 bottom-6 z-40 flex flex-col items-center justify-center gap-0.5
+           w-12 h-12 text-white transition-all duration-300;
+    background: var(--brand-red);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-hover);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+  }
+
+  .progress-wrap.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .progress-wrap:hover {
+    background: var(--brand-ink);
+  }
+
+  .progress-wrap .text {
+    @apply text-[9px] font-bold uppercase leading-none;
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     BLOG
+     Three post cards, 1 / 2 / 3 columns. Artwork is 16:9 — the theme's
+     width="1250" height="350" attributes don't match the real files.
+     ═════════════════════════════════════════════════════════════════ */
+  .blogs {
+    background: var(--color-surface-2);
+  }
+
+  .blog-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 list-none p-0 m-0;
+  }
+
+  .blogs .box {
+    @apply flex flex-col h-full overflow-hidden bg-white transition-all duration-300;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .blogs .box:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-4px);
+  }
+
+  .blogs .image-wrap {
+    @apply block relative w-full overflow-hidden;
+    aspect-ratio: 16 / 9;
+  }
+
+  .blogs .image-wrap img {
+    @apply absolute inset-0 w-full h-full object-cover;
+    transition: transform 0.5s ease;
+  }
+
+  .blogs .box:hover .image-wrap img {
+    transform: scale(1.04);
+  }
+
+  .blogs .content {
+    @apply flex flex-col flex-1 gap-2 p-5 sm:p-6;
+  }
+
+  .blogs .post-info time {
+    @apply block text-xs font-semibold uppercase tracking-wider;
+    color: var(--brand-red);
+  }
+
+  .blogs .title {
+    @apply m-0 font-display uppercase leading-tight;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .blogs .title a {
+    @apply text-ink transition-colors;
+  }
+
+  .blogs .title a:hover {
+    color: var(--brand-red);
+  }
+
+  .blogs .content p {
+    @apply text-sm leading-relaxed m-0;
+    color: var(--brand-gravel);
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     TESTIMONIAL
+     Quote cards over a faint tyre-track pattern. The pattern is nearly
+     white, so normal ink-on-light type works — no scrim needed.
+     ═════════════════════════════════════════════════════════════════ */
+  .testimonial {
+    background-image: url("/bg/pattern-bg5.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: var(--color-surface-2);
+  }
+
+  .testimonial-slider {
+    @apply relative;
+  }
+
+  /* Equal-height cards regardless of quote length. */
+  .testimonial .swiper-slide {
+    @apply h-auto;
+  }
+
+  .testimonial .content-wrap {
+    @apply h-full m-0;
+  }
+
+  .testimonial .content-inner {
+    @apply flex flex-col h-full gap-4 bg-white p-6 sm:p-8;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .testimonial .icon {
+    @apply flex-shrink-0;
+    width: 40px;
+    height: 40px;
+    color: var(--brand-red);
+  }
+
+  .testimonial .icon svg {
+    @apply w-full h-full;
+    fill: currentColor;
+  }
+
+  .testimonial blockquote {
+    @apply m-0 flex-1;
+  }
+
+  .testimonial blockquote p {
+    @apply text-sm leading-relaxed m-0;
+    color: var(--brand-gravel);
+  }
+
+  /* Author row: avatar then name, centred on mobile, left on desktop. */
+  .testimonial .author {
+    @apply flex items-center justify-center md:justify-start gap-3 mt-auto pt-2;
+  }
+
+  .testimonial .avtar {
+    @apply flex-shrink-0 overflow-hidden;
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-pill);
+  }
+
+  .testimonial .avtar img {
+    @apply w-full h-full object-cover;
+  }
+
+  .testimonial .name h3 {
+    @apply font-display uppercase leading-none text-ink m-0;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  /* Bullets — same treatment as the offers slider. */
+  .testimonial-slider-pagination {
+    @apply flex items-center justify-center gap-2 mt-8;
+  }
+
+  .testimonial-slider-pagination .swiper-pagination-bullet {
+    @apply m-0 opacity-100;
+    width: 9px;
+    height: 9px;
+    border-radius: var(--radius-pill);
+    background: rgb(var(--c-line));
+    transition: background-color 0.2s ease, width 0.2s ease;
+  }
+
+  .testimonial-slider-pagination .swiper-pagination-bullet-active {
+    width: 26px;
+    background: rgb(var(--c-red));
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     ABOUT US
+     Showroom photograph with the copy on a translucent panel over its
+     right half. The panel is what makes the text readable — the photo's
+     subject (the wheel wall) sits exactly where the copy goes.
+     ═════════════════════════════════════════════════════════════════ */
+  .about-us {
+    background-image: url("/bg/car-tyre-new-1.webp");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .about-us-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-10 items-center;
+  }
+
+  /* Holds the photo open beside the copy on desktop; collapses on mobile,
+     where a full-width panel over the photo is the only readable option. */
+  .about-us-spacer {
+    @apply hidden md:block;
+    min-height: 420px;
+  }
+
+  .about-us-panel {
+    @apply p-6 sm:p-9;
+    background: rgb(255 255 255 / 0.94);
+    border-radius: var(--radius-card);
+    backdrop-filter: blur(6px);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* The shared section heading is centred; here it's left-aligned and
+     tighter to the title beneath it. */
+  .about-us-heading {
+    @apply text-left mb-3 lg:mb-3;
+  }
+
+  .about-us-title {
+    @apply font-display uppercase leading-tight text-ink mt-0 mb-4;
+    font-size: clamp(22px, 2.4vw, 32px);
+    font-weight: 600;
+  }
+
+  .about-us .text-wrap p {
+    @apply text-sm leading-relaxed mb-4;
+    color: var(--brand-gravel);
+  }
+
+  .about-us .text-wrap .button-read-more {
+    @apply mt-2;
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     SHOP BY TYRE BRANDS
+     Logo grid, 2 / 3 / 4 / 5 columns. Every logo is transparent or
+     white-backed, so the tiles are white with a hairline edge.
+     ═════════════════════════════════════════════════════════════════ */
+  /* Shown in place of the grid when the API returns no brand artwork. */
+  .brands-empty {
+    @apply text-center text-sm py-10 m-0;
+    color: var(--brand-gravel);
+  }
+
+  .brand-grid {
+    @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
+           gap-4 lg:gap-5 list-none p-0 m-0;
+  }
+
+  /* .box carries the tile surface; the <a> inside it centres the logo,
+     matching the theme's .box > a.d-flex > .image-wrap > img nesting. */
+  /* The section sits on a tinted ground so the white, borderless tiles
+     read as cards. Without it they'd be invisible against a white page. */
+  .section.brands {
+    background: var(--color-surface-2);
+  }
+
+  /* Borderless: a soft shadow separates the tile from the ground instead. */
+  .brands-list .box {
+    @apply h-full bg-white transition-all duration-300;
+    border: 0;
+    border-radius: var(--radius-card);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 1px 3px rgb(0 0 0 / 0.04);
+  }
+
+  .hover-transition {
+    transition: all 0.3s ease;
+  }
+
+  .brands-list .box:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-3px);
+  }
+
+  .brand-link {
+    @apply flex items-center justify-center h-full w-full px-6 py-5;
+    min-height: 96px;
+  }
+
+  .brand-link .image-wrap {
+    @apply flex items-center justify-center w-full;
+  }
+
+  /* Logos vary from 150×27 to 798×107. The width/height attributes give
+     each its true ratio; these caps normalise them to one optical size
+     without stretching any of them. */
+  .brand-link .image-wrap img {
+    @apply object-contain;
+    width: auto;
+    max-width: 100%;
+    max-height: 46px;
+    transition: transform 0.3s ease;
+  }
+
+  .brands-list .box:hover .image-wrap img {
+    transform: scale(1.05);
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     SPECIAL OFFERS SLIDER
+     Artwork-only slides (650×433, 3:2) with bullets below and arrows
+     centred on the outer edges.
+     ═════════════════════════════════════════════════════════════════ */
+  .offer-slider {
+    @apply relative;
+  }
+
+  .offer-slider .box {
+    @apply h-full;
+  }
+
+  .offer-slide {
+    @apply block relative w-full overflow-hidden border border-brand-line/60;
+    aspect-ratio: 3 / 2;
+  }
+
+  .offer-slide img {
+    @apply absolute inset-0 w-full h-full object-cover;
+    transition: transform 0.5s ease;
+  }
+
+  .offer-slide:hover img {
+    transform: scale(1.03);
+  }
+
+  /* Bullets */
+  .offer-slider-pagination {
+    @apply flex items-center justify-center gap-2 mt-6;
+  }
+
+  .offer-slider-pagination .swiper-pagination-bullet {
+    @apply m-0 opacity-100;
+    width: 9px;
+    height: 9px;
+    border-radius: var(--radius-pill);
+    background: rgb(var(--c-line));
+    transition: background-color 0.2s ease, width 0.2s ease;
+  }
+
+  .offer-slider-pagination .swiper-pagination-bullet-active {
+    width: 26px;
+    background: rgb(var(--c-red));
+  }
+
+  /* Arrows — hidden on small screens, where swiping is the affordance */
+  .offer-slider-button {
+    @apply hidden lg:flex absolute top-1/2 -translate-y-1/2 z-10
+           w-10 h-10 items-center justify-center
+           bg-white border border-brand-line text-ink transition-colors;
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-card);
+  }
+
+  .offer-slider-button:hover {
+    background: var(--brand-red);
+    border-color: var(--brand-red);
+    color: #fff;
+  }
+
+  .offer-slider-button-prev {
+    left: -20px;
+  }
+
+  .offer-slider-button-next {
+    right: -20px;
+  }
+
+  /* ── Mobile drawer (Asphalt surface) ────────────────────────────── */
+  .drawer-panel {
+    @apply absolute top-0 bottom-0 w-[320px] max-w-full flex flex-col;
+    background: var(--brand-asphalt);
+  }
+
+  .drawer-link {
+    @apply flex-1 py-3.5 text-[15px] font-semibold text-white/70 transition-colors;
+  }
+
+  .drawer-link:hover,
+  .drawer-link[data-active="true"] {
+    @apply text-white;
+  }
+
+  .drawer-sublink {
+    @apply block py-2.5 text-[14px] text-white/50 transition-colors;
+  }
+
+  .drawer-sublink:hover,
+  .drawer-sublink[data-active="true"] {
+    @apply text-white;
   }
 }
 
@@ -183,9 +1652,24 @@
   background: #ff6b35;
 }
 
+/* ── Main banner ───────────────────────────────────────────────────
+   Groups the hero slider and the tyre finder into one block, mirroring
+   the theme's `.main-banner > .row.position-relative`. It is the
+   positioned ancestor for anything the finder overlays.
+   The overlap rules themselves live with .tyreform further down. */
+.main-banner {
+  position: relative;
+}
+
 /* Hero section wrapper */
 .hero-section {
   position: relative;
+}
+
+/* ── Hero pagination bullets ───────────────────────────────────────
+   Hidden to match Magento theme and prevent overlapping over TyreFinder */
+.hero-pagination {
+  display: none !important;
 }
 
 /*
@@ -199,8 +1683,16 @@
   position: relative;
   overflow: hidden;
   width: 100%;
-  aspect-ratio: 1905 / 644;
+  /* Mobile: matches the portrait slider crops (425×450). */
+  aspect-ratio: 425 / 450;
   min-height: 220px;
+}
+
+/* Desktop: matches the wide slider artwork (1920×605). */
+@media (min-width: 768px) {
+  .banner-aspect {
+    aspect-ratio: 1920 / 605;
+  }
 }
 
 /* Wrapper is position:relative by default (listing pages, non-homepage) */
@@ -337,45 +1829,59 @@
   z-index: 40;
 }
 
-/* Homepage inner section: stays in normal flow inside the sticky wrapper on mobile/tablet, overlaps hero banner on desktop */
-.cms-home .tyreform {
+/* ── Homepage: tyre finder overlays the hero banner ──────────────────
+   Keyed on .main-banner (which wraps the hero + finder in MainBanner.tsx).
+   The finder sits over the banner's lower edge via a vw top, tuned per
+   breakpoint to track the 1920/605 banner. On scroll it pins below the
+   header (.sticky, added by TyreFinder's scroll handler). */
+.main-banner .tyreform {
   position: relative;
   left: auto;
   transform: none;
   bottom: auto;
 }
 
-@media (min-width: 1024px) {
-  .cms-home .tyre-search-sticky-wrapper {
-    height: 32px;
+@media (min-width: 768px) {
+  .main-banner .tyre-search-sticky-wrapper {
+    height: 0;
   }
 
-  .cms-home .tyreform {
+  .main-banner .tyreform {
     position: absolute;
-    top: -32px;
+    bottom: 0;
     left: 50%;
+        top: -1.6vw;
+       bottom: auto; 
+    transition: top 0.4s ease; 
     transform: translateX(-50%);
-    bottom: auto;
     z-index: 20;
+    transition: bottom 0.3s ease;
   }
 
-  .cms-home .tyreform.sticky {
-    position: fixed;
-    top: 70px;
+  .main-banner .tyreform.sticky {
+    position: fixed !important;
+    bottom: 0 !important;
+    top: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 50 !important;
+
+     /* position: fixed;
+    top: calc(100vh - 60px);
     bottom: auto;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 40;
+    z-index: 40; */
   }
 }
 
 /* Mobile: always pin at viewport bottom */
 @media screen and (max-width: 767px) {
 
+  /* Listing pages: pin the finder at the viewport bottom. */
   .tyreform,
   .tyreform.sticky,
-  .tyreform--sticky,
-  .cms-home .tyre-search-sticky-wrapper {
+  .tyreform--sticky {
     position: fixed !important;
     top: auto !important;
     bottom: 0 !important;
@@ -384,9 +1890,15 @@
     width: 100% !important;
   }
 
-  .cms-home .tyreform {
+  /* Homepage: finder flows in normal document order (no overlay, no pin). */
+  .main-banner .tyreform,
+  .main-banner .tyreform.sticky {
     position: relative !important;
+    top: 0 !important;
+    bottom: auto !important;
     transform: none !important;
+    margin: 14px 0 !important;
+    display: block;
   }
 }
 
@@ -394,68 +1906,71 @@
 
 /* Main search box outer wrapper */
 .main-search {
-  background: #111111;
-  border-radius: 22px;
-  padding: 5px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   width: 100%;
 }
 
-@media (min-width: 1024px) {
-  .main-search {
-    border-radius: 999px;
-    padding: 0;
-    display: flex;
-    align-items: stretch;
-    border: 5px solid #000000;
-    overflow: hidden;
-    height: 64px;
-  }
-}
-
-/* Search tabs wrapper */
+/* Search tabs wrapper — Exact match to screenshot: Red background with thick Black capsule border */
 .search-tabs {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  z-index: 15;
   width: 100%;
-}
-
-@media (min-width: 1024px) {
-  .search-tabs {
-    flex-direction: row;
-    align-items: stretch;
-    border-radius: 999px;
-    overflow: visible;
-    gap: 0;
-  }
-}
-
-/* Left tab buttons container */
-.nav-tabs {
+  max-width: 1281px;
+  background-color: #ed1c24;
   display: flex;
-  background: #1a1a1a;
-  border-radius: 16px;
-  overflow: hidden;
-  padding: 3px;
-  gap: 2px;
-  flex-shrink: 0;
+  align-items: center;
+  border-radius: 50px;
+  margin: auto;
+  justify-content: space-between;
+  border: 6px solid #000000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  padding: 0;
+  overflow: visible;
+  height: 64px;
+  position: relative;
 }
 
-@media (min-width: 1024px) {
-  .nav-tabs {
-    background: #1f2229;
-    border-radius: 999px 0 0 999px;
-    padding: 6px;
-    gap: 6px;
-    align-items: center;
-    flex-shrink: 0;
-    transform: skewX(-15deg);
-    margin-left: -20px;
-    padding-left: 30px;
-    display: flex;
-    height: 100%;
-  }
+/* Left tab buttons container — Dark Slate Grey #353d41 with angled skew separator */
+.nav-tabs {
+  width: auto;
+  min-width: 360px;
+  max-width: 440px;
+  display: flex;
+  align-items: center;
+  background-color: #353d41;
+  border-radius: 50px 0 0 50px;
+  border: none;
+  height: 52px;
+  column-gap: 6px;
+  position: relative;
+  padding-right: 18px;
+  padding-left: 6px;
+  flex-shrink: 0;
+  margin-left: 0;
+}
+
+html[lang="ar"] .nav-tabs {
+  border-radius: 0px 50px 50px 0;
+  padding-left: 18px;
+  padding-right: 6px;
+}
+
+.nav-tabs::before {
+  content: '';
+  display: inline-block;
+  background: #353d41;
+  position: absolute;
+  width: 22px;
+  height: 100%;
+  z-index: 5;
+  top: 0;
+  right: -11px;
+  transform: skew(18deg);
+  transform-origin: top;
+}
+
+html[lang="ar"] .nav-tabs::before {
+  left: -11px;
+  right: auto;
+  transform: skew(-18deg);
 }
 
 .nav-tabs .button {
@@ -464,19 +1979,20 @@
   outline: none;
   padding: 0;
   cursor: pointer;
-  flex: 1;
+  flex: 1 0 auto;
   display: block;
+  z-index: 6;
 }
 
 .nav-tabs .button a {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 15px;
+  color: #ffffff;
+  font-size: 14px;
   text-transform: uppercase;
   border: none;
   margin-right: 0;
   border-radius: 50px;
   font-weight: 700;
-  padding: 12px 24px;
+  padding: 10px 20px;
   line-height: 1;
   text-align: center;
   cursor: pointer;
@@ -484,74 +2000,48 @@
   display: block;
   transition: all 0.2s ease;
   white-space: nowrap;
-}
-
-.nav-tabs .button:hover a {
-  color: #ffffff;
+  background-color: transparent;
 }
 
 .nav-tabs .button.active a {
-  background: #ed1c24;
+  background-color: #ed1c24;
   color: #ffffff;
-  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-@media (min-width: 1024px) {
-  .nav-tabs .button {
-    flex: none;
-  }
-
-  .nav-tabs .button a {
-    padding: 12px 30px;
-    transform: skewX(15deg);
-    /* un-skew text */
-  }
+.nav-tabs .button:not(.active):hover a {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Right inputs tab content — white pill with red border */
+/* Right inputs tab content — White Pill with red surround and light grey divider between steps */
 .tab-content {
-  flex: 1;
-  background: #ffffff;
-  border-radius: 16px;
-  border: 2.5px solid #ed1c24;
+  background-color: #ffffff;
+  height: 45px;
+  width: 65%;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+  margin-left: 14px;
+  padding: 0;
   overflow: hidden;
-  padding: 6px 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 10;
 }
 
-@media (min-width: 1024px) {
-  .tab-content {
-    border-radius: 0 999px 999px 0;
-    border: none;
-    background: #ed1c24;
-    padding: 4px 20px 4px 35px;
-    /* left padding creates the red slanted block */
-    display: flex;
-    align-items: center;
-    height: 100%;
-    transform: skewX(-15deg);
-    margin-right: -25px;
-    padding-right: 35px;
-  }
+html[lang="ar"] .tab-content {
+  margin-left: 10px;
+  margin-right: 14px;
 }
 
 .tab-inner {
   width: 100%;
   height: 100%;
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 50px;
   display: flex;
   align-items: center;
-}
-
-@media (min-width: 1024px) {
-  .tab-inner {
-    border-radius: 999px;
-    display: flex;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-  }
 }
 
 /* Divider between dropdowns inside tab-content */
@@ -593,6 +2083,88 @@
     font-weight: 400 !important;
     color: #000000 !important;
   }
+}
+
+/* ── Tyre finder fields — theme's .selection-item row ────────────────
+   Width | Height | Rim (and Make | Model | Year) as inline pill triggers
+   with a right arrow; later steps dim until the previous one is chosen. */
+.search-wrap-inner {
+  width: 100%;
+}
+
+.selection-list {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.selection-list > li {
+  flex: 1;
+  display: flex;
+  position: relative;
+}
+
+/* Divider between fields (desktop only), matching .search-divider. */
+@media (min-width: 1024px) {
+  .selection-list > li + li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.12);
+  }
+}
+
+.selection-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 0 14px;
+  height: 100%;
+  min-height: 44px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #000;
+  transition: color 0.15s ease;
+}
+
+@media (min-width: 1024px) {
+  .selection-item { padding: 0 22px; font-size: 15px; }
+}
+
+.selection-item:hover { color: var(--brand-red); }
+
+/* A chosen field reads bold, in ink. */
+.selection-item.is-set { font-weight: 700; }
+
+.selection-item .sel-arrow {
+  color: rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.selection-item:hover .sel-arrow {
+  color: var(--brand-red);
+  transform: translateX(2px);
+}
+
+/* Locked until the previous step is picked. */
+.selection-item.disabled,
+.selection-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  color: #000;
 }
 
 /* ── Offers carousel pagination ──────────────────────────────── */
@@ -896,3 +2468,253 @@
   background-position: center;
   background-repeat: no-repeat;
 }
+/* ═══════════════════════════════════════════════════════════════════
+   TYRE FINDER — size picker modal (stepped: Width → Height → Rim)
+   ═══════════════════════════════════════════════════════════════════ */
+.finder-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.6);
+  backdrop-filter: blur(3px);
+}
+
+.finder-selection-modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  max-height: 88vh;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.35);
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.finder-modal-header {
+  padding: 20px 22px 0;
+  border-bottom: 1px solid rgb(var(--c-line) / 0.6);
+}
+
+.finder-modal-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.finder-header-h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--brand-ink);
+}
+
+.finder-header-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--brand-gravel);
+}
+
+.finder-current-selection {
+  flex-shrink: 0;
+  text-align: right;
+  padding: 6px 12px;
+  background: var(--color-surface-2);
+  border-radius: 10px;
+}
+
+.finder-current-selection-label {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--brand-gravel);
+}
+
+.finder-current-selection-value {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-red);
+}
+
+.finder-close-btn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-ink);
+  background: transparent;
+  border: 0;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.finder-close-btn:hover { background: rgb(0 0 0 / 0.06); color: var(--brand-red); }
+
+/* ── Step tabs ── */
+.steps { margin-top: 16px; }
+
+.finder-step-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0 0 14px;
+}
+
+.finder-step-tab { flex: 1; }
+
+.finder-step-tab > button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--color-surface-2);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.finder-step-tab.active > button { border-color: var(--brand-red); background: #fff; }
+.finder-step-tab.done > button { background: rgb(var(--c-red) / 0.06); }
+.finder-step-tab.locked > button { opacity: 0.45; cursor: not-allowed; }
+
+.finder-step-tab-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-gravel);
+}
+
+.finder-step-tab-value {
+  margin-top: 1px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brand-ink);
+}
+
+.finder-step-tab.active .finder-step-tab-value { color: var(--brand-red); }
+
+/* ── Body ── */
+.finder-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 22px;
+}
+
+.finder-loader { display: flex; justify-content: center; padding: 48px 0; }
+
+.finder-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 42px;
+  margin-bottom: 16px;
+  background: var(--color-surface-2);
+  border: 1px solid rgb(var(--c-line) / 0.7);
+  border-radius: 10px;
+  color: var(--brand-gravel);
+}
+
+.finder-search-box .finder-option-search {
+  flex: 1;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+  color: var(--brand-ink);
+  outline: none;
+}
+
+.finder-options-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .finder-options-grid { grid-template-columns: repeat(6, 1fr); }
+}
+
+.finder-option {
+  width: 100%;
+  padding: 11px 6px;
+  background: var(--color-surface-2);
+  border: 1px solid rgb(var(--c-line) / 0.6);
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand-ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.finder-option:hover { border-color: var(--brand-red); color: var(--brand-red); }
+
+.finder-option.active {
+  background: var(--brand-red);
+  border-color: var(--brand-red);
+  color: #fff;
+}
+
+.finder-empty {
+  grid-column: 1 / -1;
+  padding: 32px 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--brand-gravel);
+}
+
+/* ── Footer ── */
+.finder-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  border-top: 1px solid rgb(var(--c-line) / 0.6);
+}
+
+.finder-cancel-btn,
+.finder-next-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 0;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.finder-cancel-btn { background: var(--color-surface-2); color: var(--brand-ink); }
+.finder-cancel-btn:hover { background: rgb(var(--c-line) / 0.5); }
+
+.finder-next-btn { background: var(--brand-red); color: #fff; }
+.finder-next-btn:hover:not(:disabled) { background: var(--brand-ink); }
+.finder-next-btn:disabled { opacity: 0.4; cursor: not-allowed; }

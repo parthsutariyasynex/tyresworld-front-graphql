@@ -5,7 +5,14 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Search } from "lucide-react";
 import { t, type Locale } from "@/lib/i18n";
-import { BRAND_NAMES, BRAND_LOGOS } from "@/lib/brandLogos";
+
+/** One entry as /api/brands returns it. */
+type Brand = {
+  name: string;
+  /** Exact `mgs_brand` value to filter the listing by. */
+  filterValue: string;
+  logo: string;
+};
 
 export default function BrandsPage() {
   const router = useRouter();
@@ -15,44 +22,28 @@ export default function BrandsPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeLetter, setActiveLetter] = useState("ALL");
-  const [brands, setBrands] = useState<{ name: string; ids: number[]; logo: string | null }[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
 
-  // Initialize and group brands dynamically from lib/brandLogos
+  // The full brand list, from the same endpoint the homepage preview uses.
   useEffect(() => {
-    const uniqueBrandsMap = new Map<string, { name: string; ids: number[]; logo: string | null }>();
+    let active = true;
 
-    Object.entries(BRAND_NAMES).forEach(([idStr, rawName]) => {
-      const id = Number(idStr);
-      const logo = BRAND_LOGOS[id] || null;
+    fetch("/api/brands")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!active) return;
+        const list: Brand[] = (data?.brands ?? []).filter(
+          (b: Partial<Brand>) => b?.name && b?.filterValue && b?.logo,
+        );
+        setBrands([...list].sort((a, b) => a.name.localeCompare(b.name)));
+      })
+      .catch((err) => {
+        console.error("Failed to load brands", err);
+      });
 
-      if (!logo) return;
-
-      const normalizedKey = rawName.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-      const existing = uniqueBrandsMap.get(normalizedKey);
-      if (existing) {
-        existing.ids.push(id);
-        if (logo && !existing.logo) {
-          existing.logo = logo;
-        }
-        // Prefer name with better capitalization
-        if (rawName !== rawName.toLowerCase() && existing.name === existing.name.toLowerCase()) {
-          existing.name = rawName;
-        }
-      } else {
-        uniqueBrandsMap.set(normalizedKey, {
-          name: rawName,
-          ids: [id],
-          logo: logo,
-        });
-      }
-    });
-
-    const sortedBrands = Array.from(uniqueBrandsMap.values()).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-
-    setBrands(sortedBrands);
+    return () => {
+      active = false;
+    };
   }, []);
 
   const getT = (key: string) => {
@@ -75,16 +66,9 @@ export default function BrandsPage() {
   // Generate alphabet list
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-  const handleBrandClick = (name: string) => {
-    // Find all IDs in BRAND_NAMES that correspond to this brand name (case-insensitive)
-    const ids = Object.entries(BRAND_NAMES)
-      .filter(([_, val]) => val.toLowerCase() === name.toLowerCase())
-      .map(([key, _]) => key);
-
-    if (ids.length > 0) {
-      const brandParam = ids.join(",");
-      router.push(`/${locale}/tyres?mgs_brand=${brandParam}`);
-    }
+  const handleBrandClick = (brandName: string) => {
+    const brandSlug = brandName.toLowerCase().replace(/[^a-z0-9]+/g, "").replace(/(^-|-$)/g, "");
+    router.push(`/${locale}/tyres/brand/${brandSlug || encodeURIComponent(brandName)}`);
   };
 
   return (
@@ -93,7 +77,7 @@ export default function BrandsPage() {
       <div
         className="relative bg-black py-14 lg:py-20 text-center bg-cover bg-center"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.45)), url('https://powertire.klever.ae/static/frontend/Klever/automotive/en_US/images/brand-banner-new.jpg')`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.45)), url('/bg/brand-banner-new.webp')`,
         }}
       >
         <div className="container mx-auto px-4">
@@ -191,7 +175,7 @@ export default function BrandsPage() {
             {filteredBrands.map((brand) => (
               <div
                 key={brand.name}
-                onClick={() => handleBrandClick(brand.name)}
+                onClick={() => handleBrandClick(brand.filterValue)}
                 className="aspect-[3/2] flex items-center justify-center p-5 bg-white border border-gray-200 rounded-xl hover:shadow-md hover:border-gray-350 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer relative group"
               >
                 {brand.logo ? (

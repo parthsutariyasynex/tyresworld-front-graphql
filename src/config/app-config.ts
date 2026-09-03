@@ -11,27 +11,31 @@ if (typeof window === "undefined") {
 
 export const APP_CONFIG = {
   brand: {
-    name:     "PowerTyre",
-    tagline:  "Click • Fit • Drive",
-    domain:   "powertire.klever.ae",
-    logoPath: "/logo/power tire-12.webp",
+    name:     "TyresWorld",
+    tagline:  "Buy Tyres Online in UAE",
+    domain:   "www.tyresworld.ae",
+    logoPath: "/logo/tires-logo.png",
   },
 
   contact: {
-    whatsapp: "966500000000",
-    phone:    "+966 50 000 0000",
-    email:    "info@powertyre.sa",
+    whatsapp: "971505069575",
+    phone:    "+971 50 506 9575",
+    email:    "sales@tyresworld.ae",
+    /** Trading entity behind the storefront, as shown in the footer. */
+    company:  "Carolyn Auto Care - L.L.C - S.P.C",
+    address:  "Al Hzm - 51st St - Al Shawamekh - Abu Dhabi - United Arab Emirates",
+    mapsUrl:  "https://maps.app.goo.gl/2KZa38iBJD78JgdL9",
   },
 
   wheel: {
     /** Wheel API endpoint — user_key is appended as a URL query param, never a header */
     graphqlUrl: process.env.WHEEL_API_URL  ?? "https://wheel-api.klever.ae/graphql.php",
-    // No hardcoded key in source — set WHEEL_USER_KEY in .env (see .env.local.example).
+    // No key literal in source — set WHEEL_USER_KEY in .env.local (see .env.local.example).
     userKey:    process.env.WHEEL_USER_KEY ?? "",
   },
 
   magento: {
-    graphqlUrl: process.env.MAGENTO_GRAPHQL_URL ?? "https://powertire.klever.ae/graphql",
+    graphqlUrl: process.env.MAGENTO_GRAPHQL_URL ?? "https://www1.tyresworld.ae/graphql",
     /** Magento store view codes keyed by locale */
     storeViews: {
       en: "default",
@@ -83,5 +87,9 @@ export function magentoHeaders(locale?: string): HeadersInit {
     "Content-Type": "application/json",
   };
   if (locale) h["Store"] = storeView(locale);
+  if (process.env.GRAPHQL_USERNAME && process.env.GRAPHQL_PASSWORD) {
+    const creds = Buffer.from(`${process.env.GRAPHQL_USERNAME}:${process.env.GRAPHQL_PASSWORD}`).toString("base64");
+    h["Authorization"] = `Basic ${creds}`;
+  }
   return h;
 }

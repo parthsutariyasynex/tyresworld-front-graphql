@@ -1,6 +1,5 @@
-/* Deprecated — use /api/category-page instead */
 import { NextRequest, NextResponse } from "next/server";
-import { CATEGORY_PAGE_QUERY } from "@/lib/queries";
+import { CATEGORY_META_BY_URL_KEY_QUERY } from "@/lib/queries";
 import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -12,8 +11,8 @@ export async function GET(req: NextRequest) {
       method: "POST",
       headers: magentoHeaders(store),
       body: JSON.stringify({
-        query: CATEGORY_PAGE_QUERY,
-        variables: { urlKey, filters: { category_url_path: { eq: urlKey } }, pageSize: 1, currentPage: 1 },
+        query: CATEGORY_META_BY_URL_KEY_QUERY,
+        variables: { urlKey },
       }),
       next: { revalidate: 3600 },
     });

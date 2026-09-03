@@ -50,7 +50,7 @@ function AuthPanel() {
         <div className="absolute inset-0 bg-black/65" />
         <div className="relative z-10 container">
           <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-widest">
-            {mode === "login" ? "LOGIN TO YOUR ACCOUNT - POWERTYRE" : "CREATE AN ACCOUNT - POWERTYRE"}
+            {mode === "login" ? "LOGIN TO YOUR ACCOUNT - TYRESWORLD" : "CREATE AN ACCOUNT - TYRESWORLD"}
           </h1>
         </div>
       </div>

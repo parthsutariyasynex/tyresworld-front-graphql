@@ -1,82 +1,157 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// Logo URLs verified against the live Magento media store (all return HTTP 200).
-// Mapped to their actual Magento brand option IDs.
-const BRANDS_LIST = [
-  { name: "Pirelli", logo: "https://powertire.klever.ae/media/mgs_brand/p/i/pirelli_1.png", id: 899 },
-  { name: "Michelin", logo: "https://powertire.klever.ae/media/mgs_brand/m/i/michelin_1.png", id: 886 },
-  { name: "Continental", logo: "https://powertire.klever.ae/media/mgs_brand/c/o/continental_1_1_.png", id: 818 },
-  { name: "Bridgestone", logo: "https://powertire.klever.ae/media/mgs_brand/b/r/bride_1.png", id: 934 },
-  { name: "BFGoodrich", logo: "https://powertire.klever.ae/media/mgs_brand/b/f/bfgoodrich_1.png", id: 837 },
-  { name: "Goodyear", logo: "https://powertire.klever.ae/media/mgs_brand/g/o/goodyear_1_1_.png", id: 817 },
-  { name: "Dunlop", logo: "https://powertire.klever.ae/media/mgs_brand/d/u/dunlop_1.png", id: 845 },
-  { name: "Hankook", logo: "https://powertire.klever.ae/media/mgs_brand/h/a/hankok_1_1.png", id: 861 },
-  { name: "Nexen", logo: "https://powertire.klever.ae/media/mgs_brand/n/e/nexen_1__3.png", id: 894 },
-  { name: "Kumho", logo: "https://powertire.klever.ae/media/mgs_brand/k/u/kumho-logo_1.png", id: 870 },
-  { name: "Toyo Tires", logo: "https://powertire.klever.ae/media/mgs_brand/t/o/toyo_1.png", id: 916 },
-  { name: "Yokohama", logo: "https://powertire.klever.ae/media/mgs_brand/y/o/yokoma_1.png", id: 926 },
-  { name: "Cooper Tires", logo: "https://powertire.klever.ae/media/mgs_brand/c/o/coperatie_1.png", id: 843 },
-  { name: "Zeetex", logo: "https://powertire.klever.ae/media/mgs_brand/z/e/zeetax_1.png", id: 927 },
-  { name: "Vredestein", logo: "https://powertire.klever.ae/media/mgs_brand/v/r/vredestein.jpg", id: 921 },
-  { name: "Falken", logo: "https://powertire.klever.ae/media/mgs_brand/f/a/falken_1.png", id: 848 },
-  { name: "Roadstone", logo: "https://powertire.klever.ae/media/mgs_brand/r/o/roadstone_1.png", id: 906 },
-  { name: "Roadx", logo: "https://powertire.klever.ae/media/mgs_brand/r/o/roadx-logo.png", id: 907 },
-  { name: "Double Coin", logo: "https://powertire.klever.ae/media/mgs_brand/d/o/double-coin_1.jpg", id: 1530 },
-  { name: "Farroad", logo: "https://powertire.klever.ae/media/mgs_brand/f/a/farroad.jpg", id: 4802 },
-];
+/**
+ * "Shop by Tyre Brands".
+ *
+ * Everything is served by /api/brands: names and filter values come from the
+ * catalogue's `mgs_brand` aggregation, and logos are resolved there from
+ * public/brands/mgs_brand. Nothing about a brand is hardcoded in this file,
+ * and a brand the endpoint can't supply a logo for simply isn't returned.
+ *
+ * If the endpoint returns nothing, the section shows its empty state rather
+ * than any placeholder artwork.
+ */
+
+/**
+ * The homepage shows a preview only — 20 fills the 5-column grid exactly
+ * four rows deep. "All Brands" leads to the full list.
+ */
+const PREVIEW_COUNT = 20;
+
+/** One entry as /api/brands returns it. */
+type Brand = {
+  name: string;
+  filterValue: string;
+  logo: string;
+  /** Products carrying this brand — decides which brands make the preview. */
+  count: number;
+};
+
+function toBrand(entry: Partial<Brand> | null | undefined): Brand | null {
+  const name = entry?.name?.trim();
+  const filterValue = entry?.filterValue;
+  const logo = entry?.logo;
+
+  if (!name || !filterValue || !logo) return null;
+  return { name, filterValue, logo, count: entry?.count ?? 0 };
+}
 
 export default function BrandStrip() {
   const pathname = usePathname();
   const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
+  const isAr = locale === "ar";
+
+  const [brands, setBrands] = useState<Brand[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    fetch("/api/brands")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!active) return;
+        const list: Brand[] = (data?.brands ?? [])
+          .map(toBrand)
+          .filter((b: Brand | null): b is Brand => b !== null);
+
+        // Most-stocked brands first, then trim to the preview. Which brands
+        // appear is decided by the catalogue, not by a list kept here.
+        setBrands(
+          [...list].sort((a, b) => b.count - a.count).slice(0, PREVIEW_COUNT),
+        );
+      })
+      .catch((err) => {
+        console.error("Failed to load brands", err);
+        if (active) setBrands(null);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const hasBrands = !!brands && brands.length > 0;
 
   return (
-    <section className="relative py-16 lg:py-20 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://powertire.klever.ae/static/frontend/Klever/automotive/en_US/images/brand-banner-new.jpg')" }}>
-      {/* Dark overlay to match the textured styling */}
-      <div className="absolute inset-0 bg-black/45 pointer-events-none" />
+    <section className="section section-padding brands">
+      <div className="container">
 
-      <div className="container relative z-10 max-w-[1380px] mx-auto px-4">
-
-        {/* Header */}
-        <div className="text-center mb-10 max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl lg:text-[34px] font-black uppercase tracking-tight text-white mb-4">
-            SHOP BY <span className="text-[#ed1c24]">TYRE BRANDS</span>
+        {/* ── Section title ───────────────────────────────────── */}
+        <div className="section-heading">
+          <h2 className="!font-sans !font-black !text-2xl sm:!text-3xl lg:!text-[34px] !tracking-wide !leading-tight">
+            {isAr ? "تسوق حسب " : "Shop by "}
+            <span className="theme_color">
+              {isAr ? "ماركات الإطارات" : "Tyre Brands"}
+            </span>
           </h2>
-          <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-medium">
-            Shop top car tyre brands online with PowerTire at the best prices in KSA, supported by a nationwide network of trusted fitment partners.
+          <p>
+            {isAr
+              ? "تصفّح مجموعة واسعة من ماركات إطارات السيارات واشترِ الإطارات عبر الإنترنت بأفضل الأسعار. شركاء التركيب لدينا في جميع أنحاء الإمارات جاهزون لتقديم خدمة استثنائية لك."
+              : "Browse a wide selection of car tyre brands and purchase tyres online at the best prices. Our customer friendly fitment partners across the UAE are ready to provide you with exceptional service."}
           </p>
         </div>
 
-        {/* Brands Grid - 5 columns on desktop, responsive down to 2 */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4 justify-content-center">
-          {BRANDS_LIST.map((brand) => (
-            <div key={brand.id} className="w-full">
-              <Link
-                href={`/${locale}/tyres?mgs_brand=${brand.id}`}
-                className="flex items-center justify-center bg-white rounded-xl py-3 px-4 h-16 sm:h-20 shadow-md border border-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20 group"
-              >
-                <div className="relative w-full h-full max-h-[48px] sm:max-h-[58px] flex items-center justify-center">
-                  <img
-                    src={brand.logo}
-                    alt={brand.name}
-                    className="max-w-[85%] max-h-[85%] object-contain filter transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                </div>
-              </Link>
-            </div>
-          ))}
-        </div>
+        {/* ── Brand grid — 2 / 3 / 4 / 5 columns ────────────────
+             Nesting mirrors the theme: .box > a > .image-wrap > img */}
+        {loading ? (
+          <div className="brands-list animate-pulse">
+            <ul className="brand-grid">
+              {Array.from({ length: 15 }, (_, i) => (
+                <li key={i}>
+                  <div className="box h-[90px] bg-gray-100/80 rounded-lg flex items-center justify-center p-4">
+                    <div className="w-20 h-7 bg-gray-200/80 rounded" />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : hasBrands ? (
+          <div className="brands-list">
+            <ul className="brand-grid">
+              {brands!.map((brand) => {
+                const brandSlug = brand.name.toLowerCase().replace(/[^a-z0-9]+/g, "").replace(/(^-|-$)/g, "");
+                return (
+                  <li key={brand.filterValue}>
+                    <div className="box hover-transition">
+                      <Link
+                        href={`/${locale}/tyres/brand/${brandSlug || encodeURIComponent(brand.filterValue)}`}
+                        className="brand-link"
+                        aria-label={isAr ? `إطارات ${brand.name}` : `${brand.name} tyres`}
+                      >
+                        <div className="image-wrap no-position">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={brand.logo}
+                            alt={brand.name}
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
+                      </Link>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : (
+          <p className="brands-empty" role="status" aria-live="polite">
+            {isAr ? "لا تتوفر ماركات للعرض حالياً." : "No brands available to display right now."}
+          </p>
+        )}
 
-        {/* Read More / All Brands button */}
-        <div className="flex justify-center mt-10">
-          <Link
-            href={`/${locale}/brands`}
-            className="inline-flex items-center justify-center bg-black hover:bg-neutral-900 text-white font-bold text-xs uppercase tracking-wider rounded-full px-8 py-3.5 shadow-lg shadow-black/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer border border-neutral-800"
-          >
-            All Brands
+        {/* ── CTA ─────────────────────────────────────────────── */}
+        <div className="section-cta">
+          <Link href={`/${locale}/brands`} className="button-primary">
+            <span>{isAr ? "جميع الماركات" : "All Brands"}</span>
           </Link>
         </div>
 

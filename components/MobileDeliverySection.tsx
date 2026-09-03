@@ -163,7 +163,7 @@ export default function MobileDeliverySection() {
         <img
           ref={(el) => { if (el && el.complete && el.naturalWidth > 0) setImageReady(true); }}
           src="/tire-van-map.jpg"
-          alt="PowerTyre technician and delivery van across Saudi Arabia"
+          alt="TyresWorld technician and delivery van across the UAE"
           className="w-full h-auto object-contain"
           loading="lazy"
           onLoad={() => setImageReady(true)}

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
-import { X, Search, ArrowLeft } from "lucide-react";
+import { X, Search, ArrowLeft, ArrowRight } from "lucide-react";
 import { useScrollLock } from "@/lib/useScrollLock";
 import { buildFilterParams } from "@/lib/filterBuilder";
 
@@ -77,6 +77,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath }
   const [tab, setTab] = useState<Tab>("size");
   const [sizeOpen, setSizeOpen] = useState(false);
   const [sizeStep, setSizeStep] = useState<SizeStep>("width");
+  const [sizeQuery, setSizeQuery] = useState("");
   const [vehOpen, setVehOpen] = useState(false);
   const [vehStep, setVehStep] = useState<VehStep>("vehicle");
   const [vehQuery, setVehQuery] = useState("");
@@ -89,13 +90,8 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath }
 
   useEffect(() => {
     const handleScroll = () => {
-      const isHome = pathname === "/" || pathname === "/en" || pathname === "/ar" || pathname === "/en/" || pathname === "/ar/";
-      if (!isHome) {
-        setIsSticky(window.scrollY > 100);
-        return;
-      }
-      const threshold = Math.max(100, (window.innerWidth * 0.338) - 70);
-      setIsSticky(window.scrollY > threshold);
+      // Tyre Finder stays sticky throughout the page once scrolled
+      setIsSticky(window.scrollY > 100);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -134,10 +130,17 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath }
       .then((d) => {
         const map: Record<string, AttrOption[]> = {};
         for (const attr of d.attributes ?? []) {
-          if (attr.attribute_code === "width" || attr.attribute_code === "height" || attr.attribute_code === "rim") continue;
-          map[attr.attribute_code] = attr.attribute_options ?? [];
+          // Keep every attribute — width/height/rim are now full option
+          // lists from customAttributeMetadataV2 (not the capped aggregation).
+          // Drop junk labels like "None" / blank.
+          map[attr.attribute_code] = (attr.attribute_options ?? []).filter(
+            (o: AttrOption) => o.label && o.label.toLowerCase() !== "none"
+          );
         }
         setMeta(map);
+        // Widths come from the full metadata list now, so they are ready.
+        setWidths(sortSizeOpts(map.width ?? []));
+        setWidthLoad(false);
         setMetaLoad(false);
       })
       .catch(() => setMetaLoad(false));
@@ -171,44 +174,21 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath }
     []
   );
 
-  /* ── load initial widths on mount / when category changes ──────── */
-  useEffect(() => {
-    setWidthLoad(true);
-    const params: Record<string, string> = {};
-    if (categoryUid) params.category_uid = categoryUid;
-    fetchSizeAggs(params)
-      .then((aggs) => { setWidths(sortSizeOpts(aggs.width ?? [])); setWidthLoad(false); })
-      .catch((e) => { if (e.name !== "AbortError") setWidthLoad(false); });
-  }, [categoryUid, fetchSizeAggs]);
+  /* Widths come from the full customAttributeMetadataV2 list (loaded with the
+     other metadata on mount), NOT the 10-bucket product aggregation — the
+     aggregation only ever returns the 10 most common widths. */
 
-  /* ── width selected → fetch available heights ──────────────────── */
+  /* Heights/rims use the full metadata lists (see displayHeights/displayRims).
+     Clear stale child selections when width changes; do not narrow to the
+     capped aggregation. */
   useEffect(() => {
-    if (!selWidth) {
-      setChildHeights(null); setSelHeight("");
-      setChildRims(null); setSelRim("");
-      return;
-    }
-    setDepLoading(true);
-    const params: Record<string, string> = { width: selWidth };
-    if (categoryUid) params.category_uid = categoryUid;
-    fetchSizeAggs(params)
-      .then((aggs) => { const h = sortSizeOpts(aggs.height ?? []); setChildHeights(h.length ? h : null); setDepLoading(false); })
-      .catch((e) => { if (e.name !== "AbortError") setDepLoading(false); });
-  }, [selWidth, categoryUid, fetchSizeAggs]);
+    if (!selWidth) { setSelHeight(""); setSelRim(""); }
+  }, [selWidth]);
 
-  /* ── width + height selected → fetch available rims ───────────── */
+  /* Rims use the full metadata list; clear stale rim when height changes. */
   useEffect(() => {
-    if (!selWidth || !selHeight) {
-      setChildRims(null); setSelRim("");
-      return;
-    }
-    setDepLoading(true);
-    const params: Record<string, string> = { width: selWidth, height: selHeight };
-    if (categoryUid) params.category_uid = categoryUid;
-    fetchSizeAggs(params)
-      .then((aggs) => { const r = sortSizeOpts(aggs.rim ?? []); setChildRims(r.length ? r : null); setDepLoading(false); })
-      .catch((e) => { if (e.name !== "AbortError") setDepLoading(false); });
-  }, [selWidth, selHeight, categoryUid, fetchSizeAggs]);
+    if (!selWidth || !selHeight) setSelRim("");
+  }, [selWidth, selHeight]);
 
   /* ── vehicle selected → fetch available models via Wheel API ─────── */
   useEffect(() => {
@@ -264,8 +244,8 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath }
   }, [selVehicle, selModel, selYear, fetchVehDep, meta]);
 
   /* ── displayed lists ───────────────────────────────────────────── */
-  const displayHeights = childHeights ?? [];
-  const displayRims = childRims ?? [];
+  const displayHeights = meta.height ?? childHeights ?? [];
+  const displayRims = meta.rim ?? childRims ?? [];
   const displayModels = childModels ?? meta.model ?? [];
   const displayYears = childYears ?? meta.year ?? [];
   const displayEngines = childEngines ?? [];
@@ -273,9 +253,9 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath }
   /* ── label lookup ──────────────────────────────────────────────── */
   const labelFor = (code: string, value: string): string => {
     let source: AttrOption[];
-    if (code === "width") source = widths;
-    else if (code === "height") source = childHeights ?? [];
-    else if (code === "rim") source = childRims ?? [];
+    if (code === "width") source = meta.width ?? widths;
+    else if (code === "height") source = meta.height ?? childHeights ?? [];
+    else if (code === "rim") source = meta.rim ?? childRims ?? [];
     else if (code === "engine") source = childEngines ?? [];
     else source = meta[code] ?? [];
     return source.find((o) => o.value === value)?.label ?? value;
@@ -309,16 +289,11 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath }
   const openSize = (step: SizeStep) => {
     setSizeStep(step);
     setSizeOpen(true);
-    if (step === "width") {
-      // Re-fetch widths every time the Width popup opens so the loader is visible
-      setWidthLoad(true);
-      const params: Record<string, string> = {};
-      if (categoryUid) params.category_uid = categoryUid;
-      fetchSizeAggs(params)
-        .then((aggs) => { setWidths(sortSizeOpts(aggs.width ?? [])); setWidthLoad(false); })
-        .catch((e) => { if (e.name !== "AbortError") setWidthLoad(false); });
-    }
+    // Widths come from the full customAttributeMetadataV2 list loaded on mount
+    // (uncapped) — do NOT re-fetch from the 10-bucket aggregation here.
   };
+
+  useEffect(() => { setSizeQuery(""); }, [sizeStep]);
 
   const pickWidth = (v: string) => {
     if (selWidth === v) { setSelWidth(""); setSizeStep("width"); }
@@ -430,7 +405,9 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath }
   return (
     <div
       className="tyre-search-sticky-wrapper"
-      style={isSticky ? { height: 64 } : undefined}
+      style={isSticky ? {} : undefined}
+            // style={isSticky ? { height: 64 } : undefined}
+
     >
       <section
         id="search"
@@ -465,76 +442,82 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath }
 
                   {/* ── Size tab ──────────────────────────────── */}
                   {tab === "size" && (
-                    <div className="flex items-center w-full h-full">
-
-                      <div className="search-field-wrap">
-                        <button type="button" onClick={() => openSize("width")} className={fieldBtn}>
-                          <span className="text-black">
-                            {selWidth ? labelFor("width", selWidth) : "Width"}
-                          </span>
-                          <span className="text-black/35 text-xs ml-2">→</span>
-                        </button>
-                      </div>
-
-                      <div className="search-divider" />
-
-                      <div className="search-field-wrap">
-                        <button type="button" disabled={!selWidth} onClick={() => openSize("height")} className={`${fieldBtn} disabled:opacity-40`}>
-                          <span className="text-black">
-                            {selHeight ? labelFor("height", selHeight) : "Height"}
-                          </span>
-                          <span className="text-black/35 text-xs ml-2">→</span>
-                        </button>
-                      </div>
-
-                      <div className="search-divider" />
-
-                      <div className="search-field-wrap">
-                        <button type="button" disabled={!selHeight} onClick={() => openSize("rim")} className={`${fieldBtn} disabled:opacity-40`}>
-                          <span className="text-black">
-                            {selRim ? `R${labelFor("rim", selRim)}` : "Rim"}
-                          </span>
-                          <span className="text-black/35 text-xs ml-2">→</span>
-                        </button>
-                      </div>
-
+                    <div className="search-wrap-inner">
+                      <ul className="list-none selection-list">
+                        <li>
+                          <button
+                            type="button"
+                            onClick={() => openSize("width")}
+                            className={`selection-item ${selWidth ? "is-set" : ""}`}
+                          >
+                            <span>{selWidth ? labelFor("width", selWidth) : "Width"}</span>
+                            <ArrowRight size={16} className="sel-arrow" />
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            type="button"
+                            disabled={!selWidth}
+                            onClick={() => openSize("height")}
+                            className={`selection-item ${!selWidth ? "disabled" : ""} ${selHeight ? "is-set" : ""}`}
+                          >
+                            <span>{selHeight ? labelFor("height", selHeight) : "Height"}</span>
+                            <ArrowRight size={16} className="sel-arrow" />
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            type="button"
+                            disabled={!selHeight}
+                            onClick={() => openSize("rim")}
+                            className={`selection-item ${!selHeight ? "disabled" : ""} ${selRim ? "is-set" : ""}`}
+                          >
+                            <span>{selRim ? `R${labelFor("rim", selRim)}` : "Rim"}</span>
+                            <ArrowRight size={16} className="sel-arrow" />
+                          </button>
+                        </li>
+                      </ul>
                     </div>
                   )}
 
                   {/* ── Vehicle tab ────────────────────────────── */}
                   {tab === "vehicle" && (
-                    <div className="flex items-center w-full h-full">
-
-                      <div className="search-field-wrap">
-                        <button type="button" disabled={metaLoading} onClick={() => openVeh("vehicle")} className={fieldBtn}>
-                          <span className="text-black">
-                            {selVehicle ? labelFor("vehicle", selVehicle) : "Make"}
-                          </span>
-                          <span className="text-black/35 text-xs ml-2">→</span>
-                        </button>
-                      </div>
-
-                      <div className="search-divider" />
-
-                      <div className="search-field-wrap">
-                        <button type="button" disabled={!selVehicle || depLoading} onClick={() => openVeh("model")} className={`${fieldBtn} disabled:opacity-40`}>
-                          <span className="text-black">
-                            {selModel ? labelFor("model", selModel) : "Model"}
-                          </span>
-                          <span className="text-black/35 text-xs ml-2">→</span>
-                        </button>
-                      </div>
-
-                      <div className="search-divider" />
-
-                      <div className="search-field-wrap">
-                        <button type="button" disabled={!selModel || depLoading} onClick={() => openVeh("year")} className={`${fieldBtn} disabled:opacity-40`}>
-                          <span className="text-black">
-                            {selYear ? labelFor("year", selYear) : "Year"}
-                          </span>
-                          <span className="text-black/35 text-xs ml-2">→</span>
-                        </button>
-                      </div>
+                    <div className="search-wrap-inner">
+                      <ul className="list-none selection-list">
+                        <li>
+                          <button
+                            type="button"
+                            disabled={metaLoading}
+                            onClick={() => openVeh("vehicle")}
+                            className={`selection-item ${metaLoading ? "disabled" : ""} ${selVehicle ? "is-set" : ""}`}
+                          >
+                            <span>{selVehicle ? labelFor("vehicle", selVehicle) : "Make"}</span>
+                            <ArrowRight size={16} className="sel-arrow" />
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            type="button"
+                            disabled={!selVehicle || depLoading}
+                            onClick={() => openVeh("model")}
+                            className={`selection-item ${(!selVehicle || depLoading) ? "disabled" : ""} ${selModel ? "is-set" : ""}`}
+                          >
+                            <span>{selModel ? labelFor("model", selModel) : "Model"}</span>
+                            <ArrowRight size={16} className="sel-arrow" />
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            type="button"
+                            disabled={!selModel || depLoading}
+                            onClick={() => openVeh("year")}
+                            className={`selection-item ${(!selModel || depLoading) ? "disabled" : ""} ${selYear ? "is-set" : ""}`}
+                          >
+                            <span>{selYear ? labelFor("year", selYear) : "Year"}</span>
+                            <ArrowRight size={16} className="sel-arrow" />
+                          </button>
+                        </li>
+                      </ul>
 
                     </div>
                   )}
@@ -552,148 +535,156 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath }
       {mounted && typeof document !== "undefined" && createPortal(
         <>
           {sizeOpen && (
-            <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-              <div className="absolute inset-0" onClick={closeSize} />
-              <div className="relative w-full max-w-[760px] max-h-[85vh] bg-white rounded-[24px] shadow-2xl overflow-hidden flex flex-col border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="finder-modal-overlay" onClick={closeSize}>
+              <div
+                className="finder-selection-modal"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Find tyres by size"
+              >
+                {/* ── HEADER ── */}
+                <div className="finder-modal-header">
+                  <div className="finder-modal-header-top">
+                    <div className="finder-header-title">
+                      <h4 className="finder-header-h2">What size are your tyres?</h4>
+                      <p className="finder-header-subtitle">
+                        {sizeStep === "width"
+                          ? "Pick the width — the first number on your sidewall (e.g. 235)."
+                          : sizeStep === "height"
+                          ? "Now the aspect ratio (height) — the second number (e.g. 40)."
+                          : "Finally, the rim diameter in inches (e.g. R20)."}
+                      </p>
+                    </div>
 
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4">
-                  <h3 className="text-[17px] font-semibold text-ink">
-                    Current Selection:&nbsp;
-                    {selWidth || selHeight || selRim ? (
-                      <span className="text-[#ed1c24] font-extrabold font-mono ml-1">
-                        {selWidth ? labelFor("width", selWidth) : "—"} /{" "}
-                        {selHeight ? labelFor("height", selHeight) : "—"}&nbsp;
-                        {selRim ? `R${labelFor("rim", selRim)}` : "—"}
+                    <div className="finder-current-selection">
+                      <span className="finder-current-selection-label">Current Selection</span>
+                      <span className="finder-current-selection-value">
+                        {selWidth ? labelFor("width", selWidth) : "\u2014"} /{" "}
+                        {selHeight ? labelFor("height", selHeight) : "\u2014"} R
+                        {selRim ? labelFor("rim", selRim) : "\u2014"}
                       </span>
-                    ) : (
-                      <span className="text-ink/40 font-medium ml-1">—</span>
-                    )}
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    {sizeStep !== "width" && (
-                      <button
-                        type="button"
-                        onClick={handleBack}
-                        className="w-8 h-8 rounded-full bg-[#ed1c24] hover:bg-[#c6181d] flex items-center justify-center text-white transition-all hover:scale-105"
-                        aria-label="Back"
-                      >
-                        <ArrowLeft size={16} strokeWidth={2.5} />
-                      </button>
-                    )}
-                    {(selWidth || selHeight || selRim) && (
-                      <button
-                        type="button"
-                        onClick={() => { setSelWidth(""); setSelHeight(""); setSelRim(""); setSizeStep("width"); }}
-                        className="text-xs font-bold text-[#ed1c24] hover:underline"
-                      >
-                        Clear
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={closeSize}
-                      className="w-8 h-8 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center text-white transition-all hover:scale-105"
-                      aria-label="Close"
-                    >
-                      <X size={16} strokeWidth={2.5} />
+                    </div>
+
+                    <button type="button" className="finder-close-btn" onClick={closeSize} aria-label="Close">
+                      <X size={20} strokeWidth={2.5} />
                     </button>
+                  </div>
+
+                  {/* Step tabs */}
+                  <div className="steps">
+                    <ul className="finder-step-tabs list-none">
+                      {([
+                        { id: "width" as SizeStep,  label: "Width",  val: selWidth ? labelFor("width", selWidth) : "Select" },
+                        { id: "height" as SizeStep, label: "Height", val: selHeight ? labelFor("height", selHeight) : "Select" },
+                        { id: "rim" as SizeStep,    label: "Rim",    val: selRim ? `R${labelFor("rim", selRim)}` : "Select" },
+                      ]).map((t) => {
+                        const done =
+                          (t.id === "width" && selWidth && sizeStep !== "width") ||
+                          (t.id === "height" && selHeight && sizeStep === "rim") ||
+                          (t.id === "rim" && selRim);
+                        const locked =
+                          (t.id === "height" && !selWidth) || (t.id === "rim" && !selHeight);
+                        return (
+                          <li
+                            key={t.id}
+                            className={`finder-step-tab ${sizeStep === t.id ? "active" : ""} ${done ? "done" : ""} ${locked ? "locked" : ""}`}
+                          >
+                            <button
+                              type="button"
+                              disabled={locked}
+                              onClick={() => !locked && setSizeStep(t.id)}
+                            >
+                              <span className="finder-step-tab-label">{t.label}</span>
+                              <span className="finder-step-tab-value">{t.val}</span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </div>
                 </div>
 
-                {/* Step tabs */}
-                <div className="grid grid-cols-3 w-full border-b border-gray-100">
-                  {(["width", "height", "rim"] as SizeStep[]).map((s, i) => {
-                    return (
-                      <div
-                        key={s}
-                        className={`py-3 text-center font-bold text-sm text-white select-none ${sizeStep === s ? "bg-black" : "bg-[#ed1c24]"
-                          }`}
-                      >
-                        {s.charAt(0).toUpperCase() + s.slice(1)}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Options */}
-                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                {/* ── BODY ── */}
+                <div className="finder-modal-body">
                   {(depLoading || (sizeStep === "width" && widthLoading)) ? (
-                    <div className="flex flex-col items-center justify-center py-16">
+                    <div className="finder-loader">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/images/loader-style1.svg"
-                        alt="Loading"
-                        width={60}
-                        height={60}
-                        style={{ display: "block" }}
-                      />
-
+                      <img src="/images/loader-style1.svg" alt="Loading" width={56} height={56} />
                     </div>
                   ) : (
                     <>
-                      {sizeStep === "width" && (
-                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                          {widths.map((o) => (
-                            <button key={o.value} type="button" onClick={() => pickWidth(o.value)} className={optBtn(selWidth === o.value)}>
-                              {o.label}
-                            </button>
-                          ))}
-                          {widths.length === 0 && (
-                            <p className="col-span-full py-8 text-center text-ink/40 text-sm">No width options available.</p>
-                          )}
-                        </div>
-                      )}
-                      {sizeStep === "height" && (
-                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                          {displayHeights.map((o) => (
-                            <button key={o.value} type="button" onClick={() => pickHeight(o.value)} className={optBtn(selHeight === o.value)}>
-                              {o.label}
-                            </button>
-                          ))}
-                          {displayHeights.length === 0 && (
-                            <p className="col-span-full py-8 text-center text-ink/40 text-sm">No height options for this width.</p>
-                          )}
-                        </div>
-                      )}
-                      {sizeStep === "rim" && (
-                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                          {displayRims.map((o) => (
-                            <button key={o.value} type="button" onClick={() => pickRim(o.value)} className={optBtn(selRim === o.value)}>
-                              R{o.label}
-                            </button>
-                          ))}
-                          {displayRims.length === 0 && (
-                            <p className="col-span-full py-8 text-center text-ink/40 text-sm">No rim options for this size.</p>
-                          )}
-                        </div>
-                      )}
+                      <div className="finder-search-box">
+                        <Search size={16} />
+                        <input
+                          type="text"
+                          className="finder-option-search"
+                          placeholder={`Search ${sizeStep}...`}
+                          value={sizeQuery}
+                          onChange={(e) => setSizeQuery(e.target.value)}
+                        />
+                      </div>
+
+                      <ul className="finder-options-grid list-none">
+                        {(sizeStep === "width" ? widths : sizeStep === "height" ? displayHeights : displayRims)
+                          .filter((o) => o.label.toLowerCase().includes(sizeQuery.toLowerCase()))
+                          .map((o) => {
+                            const active =
+                              (sizeStep === "width" && selWidth === o.value) ||
+                              (sizeStep === "height" && selHeight === o.value) ||
+                              (sizeStep === "rim" && selRim === o.value);
+                            return (
+                              <li key={o.value}>
+                                <button
+                                  type="button"
+                                  className={`finder-option ${active ? "active" : ""}`}
+                                  onClick={() =>
+                                    sizeStep === "width" ? pickWidth(o.value)
+                                    : sizeStep === "height" ? pickHeight(o.value)
+                                    : pickRim(o.value)
+                                  }
+                                >
+                                  {sizeStep === "rim" ? `R${o.label}` : o.label}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        {(sizeStep === "width" ? widths : sizeStep === "height" ? displayHeights : displayRims).length === 0 && (
+                          <li className="finder-empty">No options available.</li>
+                        )}
+                      </ul>
                     </>
                   )}
                 </div>
 
-                {/* Footer */}
-                <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
+                {/* ── FOOTER ── */}
+                <div className="finder-modal-footer">
                   <button
                     type="button"
-                    disabled={!selWidth}
+                    className="finder-cancel-btn"
+                    onClick={sizeStep === "width" ? closeSize : handleBack}
+                  >
+                    <ArrowLeft size={16} />
+                    <span>{sizeStep === "width" ? "Cancel" : "Back"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="finder-next-btn"
+                    disabled={!(selWidth && selHeight && selRim)}
                     onClick={() => {
                       setSizeOpen(false);
-                      handleSizeSearch({ preventDefault: () => { } } as React.FormEvent);
+                      handleSizeSearch({ preventDefault: () => {} } as React.FormEvent);
                     }}
-                    className="bg-[#ed1c24] hover:bg-[#c6181d] text-white font-black text-xs uppercase tracking-widest py-3 px-8 rounded-xl transition-colors disabled:opacity-40"
                   >
-                    Find Tyres
+                    <span>Search</span>
+                    <Search size={15} />
                   </button>
                 </div>
-
               </div>
             </div>
           )}
 
-          {/* ════════════════════════════════════════════════════════════
-          VEHICLE MODAL
-      ════════════════════════════════════════════════════════════ */}
           {vehOpen && (
             <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="absolute inset-0" onClick={closeVeh} />

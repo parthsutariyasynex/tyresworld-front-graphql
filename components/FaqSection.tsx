@@ -23,8 +23,8 @@ const FAQ_DATA: FaqItem[] = [
   },
   {
     id: "faq-4",
-    question: "What are the benefits of buying tyres online from PowerTyre?",
-    answer: "PowerTyre offers a wide selection of genuine global brands at distributor-direct prices, free delivery to major cities, certified installation options (both mobile fitting and local service centers), and manufacturer-backed warranties."
+    question: "What are the benefits of buying tyres online from TyresWorld?",
+    answer: "TyresWorld offers a wide selection of genuine global brands at distributor-direct prices, free delivery to major cities, certified installation options (both mobile fitting and local service centers), and manufacturer-backed warranties."
   },
   {
     id: "faq-5",

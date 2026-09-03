@@ -11,7 +11,7 @@ import type { StoreConfig } from "@/lib/services/store.service";
 /** Mirror of DEFAULT_STORE_CONFIG (type-only import keeps this file client-safe). */
 const FALLBACK: StoreConfig = {
   storeCode: "default",
-  storeName: "PowerTyre",
+  storeName: "TyresWorld",
   locale: "en_SA",
   currencyCode: "SAR",
   baseCurrencyCode: "SAR",

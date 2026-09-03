@@ -18,21 +18,33 @@ const config: Config = {
       },
     },
     extend: {
+      /* Colours are NOT defined here — they resolve to the CSS custom
+         properties in app/globals.css, which is the single source of
+         truth for brand tokens. Edit the hex values there, never here. */
       colors: {
         ink: {
-          DEFAULT: "#0B0B0F",
-          soft: "#1a1a22",
-          muted: "#6b7280",
+          DEFAULT: "rgb(var(--c-ink) / <alpha-value>)",
+          soft: "rgb(var(--c-asphalt) / <alpha-value>)",
+          muted: "rgb(var(--c-gravel) / <alpha-value>)",
+        },
+        brand: {
+          red: "rgb(var(--c-red) / <alpha-value>)",
+          amber: "rgb(var(--c-amber) / <alpha-value>)",
+          asphalt: "rgb(var(--c-asphalt) / <alpha-value>)",
+          paper: "rgb(var(--c-paper) / <alpha-value>)",
+          gravel: "rgb(var(--c-gravel) / <alpha-value>)",
+          line: "rgb(var(--c-line) / <alpha-value>)",
         },
         accent: {
-          DEFAULT: "#FF6B35",
-          soft: "#FFF1EB",
+          DEFAULT: "rgb(var(--c-red) / <alpha-value>)",
+          soft: "rgb(var(--c-amber) / <alpha-value>)",
         },
-        cream: "#F7F4EF",
+        cream: "rgb(var(--c-surface-2) / <alpha-value>)",
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui"],
-        display: ["var(--font-display)", "ui-serif", "Georgia"],
+        kanit: ["Kanit", "sans-serif"],
+        sans: ["Kanit", "var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["Kanit", "var(--font-display)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       boxShadow: {
         card: "0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -8px rgba(16, 24, 40, 0.08)",

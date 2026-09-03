@@ -106,7 +106,25 @@ function GroupSection({
   );
 }
 
+const EXCLUDED_FILTER_CODES = new Set([
+  "height",
+  "width",
+  "rim",
+  "tyre_height",
+  "tyre_width",
+  "tyre_rim",
+  "rim_size",
+]);
+
 export default function FilterSidebar({ groups, selected, onToggle, onClear, loading }: Props) {
+  const visibleGroups = groups.filter(
+    (g) =>
+      !EXCLUDED_FILTER_CODES.has(g.code.toLowerCase()) &&
+      !["height", "width", "rim", "rim size", "aspect ratio", "section width"].includes(
+        g.label.toLowerCase().trim()
+      )
+  );
+
   const activeCount = Object.values(selected).reduce((n, vals) => n + vals.length, 0);
 
   return (
@@ -133,7 +151,7 @@ export default function FilterSidebar({ groups, selected, onToggle, onClear, loa
       </div>
 
       {/* Loading skeleton */}
-      {loading && groups.length === 0 ? (
+      {loading && visibleGroups.length === 0 ? (
         <div className="py-5 space-y-6">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="space-y-3">
@@ -144,10 +162,10 @@ export default function FilterSidebar({ groups, selected, onToggle, onClear, loa
             </div>
           ))}
         </div>
-      ) : groups.length === 0 ? (
+      ) : visibleGroups.length === 0 ? (
         <p className="py-6 text-sm text-ink/40">No filters available.</p>
       ) : (
-        groups.map((group, i) => (
+        visibleGroups.map((group, i) => (
           <GroupSection
             key={group.code}
             group={group}

@@ -21,7 +21,6 @@ import JsonLd from "@/components/JsonLd";
 import { useCurrencyCode } from "@/lib/store-config-context";
 import { Money } from "@/components/Price";
 
-import "swiper/css";
 
 /* ══════════════════════════════════════════════════════════════════
    TYRE NAME PARSER

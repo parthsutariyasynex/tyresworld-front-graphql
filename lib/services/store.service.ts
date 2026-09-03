@@ -25,7 +25,7 @@ export interface StoreConfig {
  */
 export const DEFAULT_STORE_CONFIG: StoreConfig = {
   storeCode: "default",
-  storeName: "PowerTyre",
+  storeName: "TyresWorld",
   locale: "en_SA",
   currencyCode: "SAR",
   baseCurrencyCode: "SAR",

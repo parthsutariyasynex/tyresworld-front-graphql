@@ -2,48 +2,6 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const homepageData = {
-    services: [
-      {
-        id: "car-tyres",
-        title: "CAR TYRES",
-        description:
-          "Premium car tires with expert installation, balancing, and alignment for safer, smoother, and long-lasting performance.",
-        image:     "/YourTrustedAutoCare/service-sample.jpg",
-        iconImage: "/car-tyres.png",
-      },
-      {
-        id: "rims-wheels",
-        title: "RIMS/WHEELS",
-        description:
-          "Stylish alloy wheels and durable rims professionally fitted for enhanced appearance, stability, and driving control.",
-        image:     "/YourTrustedAutoCare/car-rim.jpg",
-        iconImage: "/car-rim-icon.png",
-      },
-      {
-        id: "battery",
-        title: "BATTERY",
-        description:
-          "High-performance car batteries with fast testing and installation for dependable power and longer battery life.",
-        image:     "/YourTrustedAutoCare/car-battery.jpg",
-        iconImage: "/car-battery-icons.png",
-      },
-      {
-        id: "car-service",
-        title: "CAR SERVICE",
-        description:
-          "Complete car maintenance including oil change, brakes, diagnostics, and routine servicing for safe and efficient driving.",
-        image:     "/YourTrustedAutoCare/car-service-img.jpg",
-        iconImage: "/car-service-icon.png",
-      },
-      {
-        id: "motorbike-tyres",
-        title: "MOTORBIKE TYRES",
-        description:
-          "Durable motorbike tires with professional fitting for improved grip, stability, enhanced performance, and maximum road safety.",
-        image:     "/YourTrustedAutoCare/motorbike-tyre.jpg",
-        iconImage: "/motorbike-tyre-icon.png",
-      },
-    ],
     deliveryBanners: [
       {
         id: "db-1",
@@ -68,46 +26,24 @@ export async function GET() {
         image: "/heropage-banner/ev-tire.webp",
       },
     ],
+    /* Homepage hero slides. Art-directed: `image` is the 1920×605 desktop
+       crop, `imageMobile` the ~425×450 portrait crop served below 768px.
+       Assets are vendored under /public so nothing depends on the Magento
+       theme's versioned static path, which changes on every deploy. */
     banners: [
       {
-        id: "slide-1",
-        badge: "EV Tyres",
-        eyebrow: "High-Performance EV Tyres",
-        heading: "HIGH-PERFORMANCE\nEV TYRES",
-        sub: "Available with leading brands and sizes: Pirelli, Michelin, Continental, Goodyear, Hankook & more.",
-        cta: { label: "Search EV Tyres", href: "/#search" },
-        secondary: { label: "Browse All", href: "/" },
-        image: "/heropage-banner/ev-tire.webp",
+        id: "slide-tyres",
+        href: "/tyres",
+        image:       "/heropage-banner/slider/tyres-world-shop.webp",
+        imageMobile: "/heropage-banner/slider/tyres-world-shop-sm.webp",
+        alt: "TyresWorld tyre shop — clearance offers on car tyres",
       },
       {
-        id: "slide-2",
-        badge: "Continental",
-        eyebrow: "Premium German Engineering",
-        heading: "CONTINENTAL TYRES\nFOR EVERY ROAD",
-        sub: "Premium German engineering for your driving comfort. Get professional mounting and balancing included.",
-        cta: { label: "View Continental tyres", href: "/#search" },
-        secondary: { label: "Browse All", href: "/" },
-        image: "/heropage-banner/banner-continetal.jpg",
-      },
-      {
-        id: "slide-3",
-        badge: "Online Store 2026",
-        eyebrow: "Genuine Stock & Warranty",
-        heading: "2026 TYRES ONLINE\nDIRECT DISTRIBUTOR PRICES",
-        sub: "Guaranteed fresh stock (DOT) with 5 years manufacturer-backed warranty on all passenger, SUV & truck tyres.",
-        cta: { label: "Find your size", href: "/#search" },
-        secondary: { label: "Contact Sales", href: "/contact" },
-        image: "/heropage-banner/2026-tyres-online_1.webp",
-      },
-      {
-        id: "slide-4",
-        badge: "Online Store 2026",
-        eyebrow: "Genuine Stock & Warranty",
-        heading: "2026 TYRES ONLINE\nDIRECT DISTRIBUTOR PRICES",
-        sub: "Guaranteed fresh stock (DOT) with 5 years manufacturer-backed warranty on all passenger, SUV & truck tyres.",
-        cta: { label: "Find your size", href: "/#search" },
-        secondary: { label: "Contact Sales", href: "/contact" },
-        image: "/heropage-banner/banner1_3.jpg",
+        id: "slide-car-service",
+        href: "/car-service-abudhabi",
+        image:       "/heropage-banner/slider/best-car-services-shop-abu-dhabi-letest.webp",
+        imageMobile: "/heropage-banner/slider/best-car-service-shop-abu-dhabi-sm-new.webp",
+        alt: "Best car service shop in Abu Dhabi — TyresWorld UAE",
       },
     ],
     categories: [
@@ -168,7 +104,7 @@ export async function GET() {
       {
         id: "why-1",
         title: "Exceptional Value on Trusted Tyre Brands",
-        description: "At PowerTyre, we bring you competitive pricing on premium and reliable tyre brands, ensuring you get durability, performance, and value with every purchase across KSA.",
+        description: "At TyresWorld, we bring you competitive pricing on premium and reliable tyre brands, ensuring you get durability, performance, and value with every purchase across the UAE.",
       },
       {
         id: "why-2",
@@ -178,12 +114,12 @@ export async function GET() {
       {
         id: "why-3",
         title: "Safe & Confident Online Buying Experience",
-        description: "Shop with peace of mind. PowerTyre uses advanced security standards to protect your personal information and payment details at every step of your online journey.",
+        description: "Shop with peace of mind. TyresWorld uses advanced security standards to protect your personal information and payment details at every step of your online journey.",
       },
       {
         id: "why-4",
         title: "Tyres for Every Vehicle & Driving Style",
-        description: "Whether you drive a sedan, SUV, 4x4, or performance vehicle, PowerTyre offers a broad selection of tyre sizes and patterns to match Saudi road conditions perfectly.",
+        description: "Whether you drive a sedan, SUV, 4x4, or performance vehicle, TyresWorld offers a broad selection of tyre sizes and patterns to match UAE road conditions perfectly.",
       },
       {
         id: "why-5",
@@ -193,7 +129,7 @@ export async function GET() {
       {
         id: "why-6",
         title: "A Tyre Partner You Can Trust",
-        description: "PowerTyre is built on transparency, reliability, and customer-first service. Our dedicated team is always ready to guide you before and after your purchase, ensuring complete satisfaction.",
+        description: "TyresWorld is built on transparency, reliability, and customer-first service. Our dedicated team is always ready to guide you before and after your purchase, ensuring complete satisfaction.",
       },
     ],
     faq: [
@@ -220,12 +156,12 @@ export async function GET() {
     ],
     cmsInfo: {
       heading: "Your One-Stop Solution for Tyres in the UAE",
-      description: "PowerTyre is the UAE's premier online store for tyres, alloy wheels, and car batteries. We offer direct access to global top-tier brands including Michelin, Bridgestone, Continental, Pirelli, Hankook, Kumho, Nexen, Yokohama, and Dunlop at competitive prices. Supported by a fleet of mobile tyre fitting workshops and local centers, we deliver safety, quality, and convenience directly to your driveway.",
+      description: "TyresWorld is the UAE's premier online store for tyres, alloy wheels, and car batteries. We offer direct access to global top-tier brands including Michelin, Bridgestone, Continental, Pirelli, Hankook, Kumho, Nexen, Yokohama, and Dunlop at competitive prices. Supported by a fleet of mobile tyre fitting workshops and local centers, we deliver safety, quality, and convenience directly to your driveway.",
     },
     footer: {
-      copyright: "© 2026 PowerTyre. All rights reserved.",
+      copyright: "© 2026 TyresWorld. All rights reserved.",
       companyLinks: [
-        { label: "About PowerTyre", href: "/about" },
+        { label: "About TyresWorld", href: "/about-us" },
         { label: "Mobile Fitting", href: "/about" },
         { label: "Partner Centers", href: "/about" },
         { label: "Contact Us", href: "/contact" },

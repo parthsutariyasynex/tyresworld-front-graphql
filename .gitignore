@@ -65,3 +65,7 @@ Desktop.ini
 .turbo/
 .eslintcache
 .stylelintcache
+
+# Personal scratch / prompt notes (never commit — may hold creds)
+help.txt
+*-hi.txt

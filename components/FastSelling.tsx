@@ -10,8 +10,6 @@ import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
 import type { Product } from "@/lib/data";
 import { APP_CONFIG } from "@/src/config/app-config";
 
-import "swiper/css";
-import "swiper/css/pagination";
 
 export default function FastSelling() {
   const swiperRef = useRef<SwiperType | null>(null);

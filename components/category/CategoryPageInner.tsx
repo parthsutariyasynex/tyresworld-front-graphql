@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
@@ -44,7 +44,7 @@ function parseFaqsFromHtml(html: string): FaqItem[] {
     }
   }
   if (!items.length) {
-    for (const m of clean.matchAll(/<(h3|h4)[^>]*>([\s\S]*?)<\/\1>\s*<p[^>]*>([\s\S]*?)<\/p>/gi)) {
+    for (const m of clean.matchAll(/<(h3|h4)[^>]*>([\s\S]*?)<\/\1>\s*<p[^>]*>([\s\S]*?)<\/\1>/gi)) {
       const q = m[2].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
       const a = m[3].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
       if (q && a) items.push({ question: q, answer: a });
@@ -53,11 +53,11 @@ function parseFaqsFromHtml(html: string): FaqItem[] {
   return items;
 }
 
-/* ── Sort dropdown ──────────────────────────────────────────────── */
+/* ── Sort dropdown (Exact Magento toolbar-sorter options) ──────── */
 const SORT_OPTS = [
-  { en: "Default",            ar: "الافتراضي",                    value: "" },
-  { en: "Price: High to Low", ar: "السعر: من الأعلى إلى الأدنى", value: "high-to-low" },
-  { en: "Price: Low to High", ar: "السعر: من الأدنى إلى الأعلى", value: "low-to-high" },
+  { en: "PRICE: LOW TO HIGH", ar: "السعر: من الأدنى إلى الأعلى", value: "low-to-high" },
+  { en: "PRICE: HIGH TO LOW", ar: "السعر: من الأعلى إلى الأدنى", value: "high-to-low" },
+  { en: "Recommended",        ar: "موصى به",                     value: "recommended" },
 ];
 
 function SortBar({ value, onChange, isAr }: { value: string; onChange: (v: string) => void; isAr: boolean }) {
@@ -65,34 +65,27 @@ function SortBar({ value, onChange, isAr }: { value: string; onChange: (v: strin
   const cur = SORT_OPTS.find(o => o.value === value) ?? SORT_OPTS[0];
 
   return (
-    <div className="relative flex items-center gap-2">
-      {cur.value && (
-        <span className="hidden sm:inline-flex items-center text-xs font-bold text-gray-700 uppercase tracking-wide border border-gray-200 px-3 py-2 rounded-lg bg-white">
-          {isAr ? cur.ar : cur.en}
-        </span>
-      )}
+    <div className="relative">
       <button
+        type="button"
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1.5 bg-[#ed1c24] hover:bg-[#c6181d] text-white px-3 py-2 rounded-lg transition-colors"
+        className="h-10 px-5 bg-[#eeeeee] hover:bg-[#e2e2e2] text-gray-900 font-black text-[12px] uppercase tracking-wider rounded-xl transition-colors cursor-pointer flex items-center justify-center shadow-2xs"
         aria-label={isAr ? "ترتيب" : "Sort"}
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M3 4h18l-7 8.5V20l-4-2v-5.5L3 4z" />
-        </svg>
-        <span className="hidden sm:block text-xs font-bold uppercase tracking-wide">
-          {isAr ? "ترتيب" : "Sort"}
-        </span>
+        <span>{isAr ? cur.ar : cur.en}</span>
       </button>
+
       {open && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1.5 z-20 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 min-w-[200px]">
+          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-1.5 z-30 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 min-w-[210px] overflow-hidden">
             {SORT_OPTS.map(opt => (
               <button
                 key={opt.value}
                 onClick={() => { onChange(opt.value); setOpen(false); }}
-                className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${opt.value === value ? "text-[#ed1c24] font-semibold bg-red-50" : "text-gray-700 hover:bg-gray-50"
-                  }`}
+                className={`w-full text-left px-4 py-2.5 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer ${
+                  opt.value === value ? "text-[#ed1c24] bg-red-50" : "text-gray-800 hover:bg-gray-50"
+                }`}
               >
                 {isAr ? opt.ar : opt.en}
               </button>
@@ -148,14 +141,12 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
 
   // Sync URL searchParams to selected state on mount and when query changes
   useEffect(() => {
-    const FILTERABLE = ["width", "height", "rim", "mgs_brand", "vehicle", "model", "year", "price", "offers", "category_uid"];
+    const SYSTEM_PARAMS = new Set(["page", "sort", "product_list_order", "q"]);
     const initial: Record<string, string[]> = {};
-    let hasFilter = false;
-    for (const key of FILTERABLE) {
-      const val = searchParams.get(key);
+    for (const [key, val] of searchParams.entries()) {
+      if (SYSTEM_PARAMS.has(key)) continue;
       if (val) {
         initial[key] = val.split(",").filter(Boolean);
-        hasFilter = true;
       }
     }
     
@@ -183,10 +174,15 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
   const [faqLoading, setFaqLoading] = useState(true);
 
   /* ── Products + category ──────────────────────────────────────── */
-  useEffect(() => {
-    let active = true;
-    setLoading(true); setCatLoading(true); setApiError(null);
+  /* The URL of the request currently owned by this component.
+     Two things otherwise fire the same request twice: React StrictMode
+     double-invokes effects in dev, and this effect also depends on
+     `searchParams`, whose identity changes even when nothing it reads has.
+     Comparing the built URL collapses both, and doubles as stale-response
+     protection — a slower earlier response is ignored once the key moves on. */
+  const requestUrlRef = useRef<string | null>(null);
 
+  useEffect(() => {
     const p = new URLSearchParams();
     p.set("urlKey", urlKey);
     p.set("pageSize", String(PAGE_SIZE));
@@ -199,10 +195,18 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
       if (values.length) p.set(code, values.join(","));
     }
 
-    fetch(`/api/category-page?${p}`, { cache: "no-store" })
+    const url = `/api/category-page?${p}`;
+
+    // Same inputs as the request already in flight / just completed.
+    if (requestUrlRef.current === url) return;
+    requestUrlRef.current = url;
+
+    setLoading(true); setCatLoading(true); setApiError(null);
+
+    fetch(url, { cache: "no-store" })
       .then(r => r.json())
       .then(j => {
-        if (!active) return;
+        if (requestUrlRef.current !== url) return;
         if (j.error && !j.products?.length) { setApiError(j.error); }
         if (j.category) setCategory(j.category);
         let items: Product[] = j.products ?? [];
@@ -211,27 +215,26 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
         setProducts(items);
         setTotal(j.total ?? 0);
         setTotalPages(j.totalPages ?? 1);
+        /* Sidebar options ride along on this same response — the listing
+           makes exactly one products request, no second filters call. */
+        if (Array.isArray(j.filters)) {
+          setFilterGroups(j.filters);
+          setFiltersLoading(false);
+        }
         setLoading(false); setCatLoading(false);
       })
       .catch(err => {
-        if (!active) return;
+        if (requestUrlRef.current !== url) return;
+        // Clear the key so the same request can legitimately be retried.
+        requestUrlRef.current = null;
         setApiError(err.message); setLoading(false); setCatLoading(false);
       });
-
-    return () => { active = false; };
   }, [urlKey, sort, page, store, selected, searchParams]);
 
-  /* ── Filters ─────────────────────────────────────────────────── */
-  // Fetch layered-nav filters by category UID (works for top-level AND
-  // nested categories, unlike url_path). Waits for the category to resolve.
-  useEffect(() => {
-    if (!category?.uid) return;
-    setFiltersLoading(true);
-    fetch(`/api/category-filters?categoryUid=${encodeURIComponent(category.uid)}&store=${store}`)
-      .then(r => r.json())
-      .then(d => { setFilterGroups(d.filters ?? []); setFiltersLoading(false); })
-      .catch(() => setFiltersLoading(false));
-  }, [category?.uid, store]);
+  /* ── Filters ─────────────────────────────────────────────────────
+     No separate request: the layered-nav aggregations arrive with the
+     products on /api/category-page (handled in the effect above), which
+     keeps the option counts consistent with the result set being shown. */
 
   /* ── Apply category meta to document head ────────────────────── */
   useEffect(() => {
@@ -292,6 +295,19 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
     router.replace(`${basePath}?${p}`, { scroll: false });
   };
 
+  /* Remove every applied filter in a single navigation. Looping
+     handleFilterChange raced on the same stale searchParams snapshot, so
+     only the last code was dropped — this is why "Clear All" left filters
+     behind. Keep the system params (sort, search); drop page. */
+  const clearAllFilters = () => {
+    const p = new URLSearchParams();
+    const order = searchParams.get("product_list_order") ?? searchParams.get("sort");
+    const q = searchParams.get("q");
+    if (order) p.set("product_list_order", order);
+    if (q) p.set("q", q);
+    router.replace(p.toString() ? `${basePath}?${p}` : basePath, { scroll: false });
+  };
+
   const activeFilterCount = Object.values(selected).reduce((s, v) => s + v.length, 0);
   const isLoading = catLoading || (!!category?.uid && loading);
 
@@ -306,60 +322,77 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
   return (
     <div dir={dir} className="pb-[160px]">
 
-      {/* ── Hero ───────────────────────────────────────────────────── */}
-      <div className="bg-black py-14 lg:py-20 text-center">
+      {/* ── Page title ─────────────────────────────────────────────
+           Mirrors the theme's .page-title-wrapper > .title > h1 > span.base */}
+      <div className="page-title-wrapper bg-cover-image">
         <div className="container">
-          {catLoading ? (
-            <span className="inline-block bg-white/10 rounded animate-pulse w-96 h-10" />
-          ) : (
-            <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-black uppercase tracking-wide text-white leading-tight">
-              {displayTitle}
-            </h1>
-          )}
+          <div className="title">
+            {/* A configured heroTitle is known on the server, so render the
+                H1 straight away and only fall back to a skeleton when the
+                title has to come from the category name we're still loading. */}
+            {catLoading && !displayTitle ? (
+              <span className="page-title-skeleton" aria-hidden="true" />
+            ) : (
+              <h1 id="page-title-heading">
+                <span className="base" data-ui-id="page-title-wrapper">
+                  {displayTitle}
+                </span>
+              </h1>
+            )}
+          </div>
         </div>
       </div>
 
 
-      {/* ── Breadcrumb ─────────────────────────────────────────────── */}
+      {/* ── Breadcrumb (Home > Tyres > Brand > Sailun) ─────────────── */}
       <div className="bg-white border-b border-gray-100">
-        <div className="container py-3">
-          <nav className="flex items-center gap-1.5 text-xs text-gray-400">
+        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+          <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap font-medium">
             <Link href={`/${locale}`} className="hover:text-black transition-colors">
               {isAr ? "الرئيسية" : "Home"}
             </Link>
-            <ChevronRight size={12} className="shrink-0" />
-            <span className="text-black font-semibold">
-              {catLoading
-                ? <span className="inline-block bg-gray-200 rounded animate-pulse w-24 h-3 align-middle" />
-                : (category?.name ?? urlKey.replace(/-/g, " "))}
-            </span>
-          </nav>
-        </div>
-      </div>
+            {(() => {
+              const segments = urlKey.split("/").filter(Boolean);
+              let acc = "";
+              return segments.map((seg, idx) => {
+                const isLast = idx === segments.length - 1;
+                acc += (acc ? `/${seg}` : seg);
+                const segLower = seg.toLowerCase();
+                
+                let label = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
+                let href = `/${locale}/${acc}`;
 
-      {/* ── Toolbar ────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-100 sticky top-[70px] z-30">
-        <div className="container py-3 flex items-center justify-between gap-4">
-          <p className="text-sm text-gray-500 font-medium">
-            {isLoading ? (isAr ? "جارٍ التحميل…" : "Loading…") : productsLabel}
-          </p>
-          <div className="flex items-center gap-2">
-            <SortBar value={sort} onChange={setSort} isAr={isAr} />
-            <button
-              onClick={() => setFilterOpen(true)}
-              className="relative w-[42px] h-[42px] flex items-center justify-center bg-[#ed1c24] hover:bg-[#c6181d] text-white rounded-lg transition-colors shrink-0"
-              aria-label={isAr ? "تصفية" : "Filter"}
-            >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 4h18l-7 8.5V20l-4-2v-5.5L3 4z" />
-              </svg>
-              {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-          </div>
+                if (segLower === "tyres") {
+                  label = isAr ? "الإطارات" : "Tyres";
+                  href = `/${locale}/tyres`;
+                } else if (segLower === "brand" || segLower === "brands") {
+                  label = isAr ? "الماركة" : "Brand";
+                  href = `/${locale}/brands`;
+                } else if (isLast && category?.name) {
+                  label = category.name;
+                }
+
+                return (
+                  <React.Fragment key={acc}>
+                    <ChevronRight size={12} className="shrink-0 text-gray-400" />
+                    {isLast ? (
+                      <span className="text-black font-semibold">
+                        {catLoading && !category?.name ? (
+                          <span className="inline-block bg-gray-200 rounded animate-pulse w-16 h-3 align-middle" />
+                        ) : (
+                          label
+                        )}
+                      </span>
+                    ) : (
+                      <Link href={href} className="hover:text-black transition-colors">
+                        {label}
+                      </Link>
+                    )}
+                  </React.Fragment>
+                );
+              });
+            })()}
+          </nav>
         </div>
       </div>
 
@@ -371,15 +404,83 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
         loading={filtersLoading}
         selected={selected}
         onChange={handleFilterChange}
+        onClearAll={clearAllFilters}
         dir={dir}
         urlKey={urlKey}
       />
 
       {/* ── Product grid ───────────────────────────────────────────── */}
-      <div className="bg-gray-50">
-        <div className="container py-8">
+      <div className="bg-gray-50 min-h-[600px]">
+        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
+
+          {/* ── Active Filters Bar (Matches reference screenshot) ───── */}
+          {activeFilterCount > 0 && (
+            <div className="bg-white border border-gray-200 rounded-lg p-3 mb-4 flex items-center justify-between flex-wrap gap-2.5 shadow-2xs">
+              <div className="flex items-center flex-wrap gap-2">
+                {Object.entries(selected).map(([code, values]) => {
+                  const group = filterGroups.find((g) => g.code === code);
+                  return values.map((val) => {
+                    const opt = group?.options.find((o) => o.value === val || o.label.toLowerCase() === val.toLowerCase());
+                    const label = opt?.label ?? val;
+                    return (
+                      <button
+                        key={`${code}-${val}`}
+                        type="button"
+                        onClick={() => {
+                          const next = values.filter((v) => v !== val);
+                          handleFilterChange(code, next);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-gray-300 rounded-md text-[12px] font-semibold text-gray-800 transition-colors shadow-2xs group cursor-pointer"
+                        title={isAr ? "إزالة الفلتر" : `Remove ${label}`}
+                      >
+                        <span className="text-[#ed1c24] font-bold text-xs group-hover:scale-110 transition-transform">✕</span>
+                        <span>{label}</span>
+                      </button>
+                    );
+                  });
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-md text-[12px] font-bold text-gray-800 transition-colors shadow-2xs ml-auto cursor-pointer"
+              >
+                <span className="text-gray-500 font-bold text-xs">✕</span>
+                <span>{isAr ? "مسح الكل" : "Clear All"}</span>
+              </button>
+            </div>
+          )}
+
+          {/* ── Sort & Filter Controls (Matches reference screenshot) ─ */}
+          <div className="flex items-center justify-end gap-2.5 mb-5">
+            <SortBar value={sort} onChange={setSort} isAr={isAr} />
+            <button
+              onClick={() => setFilterOpen(true)}
+              className="relative w-10 h-10 flex items-center justify-center bg-[#ed1c24] hover:bg-[#c6181d] text-white rounded-xl transition-colors shrink-0 cursor-pointer shadow-2xs"
+              aria-label={isAr ? "تصفية" : "Filter"}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+              </svg>
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
+
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
               {Array.from({ length: PAGE_SIZE }).map((_, i) => <TyreListingCardSkeleton key={i} />)}
             </div>
           ) : apiError ? (
@@ -398,11 +499,11 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
+            <ul className="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5 list-none p-0 m-0">
               {products.map(product => (
                 <TyreListingCard key={product.id} product={product} locale={locale} />
               ))}
-            </div>
+            </ul>
           )}
           <Pagination current={page} total={totalPages} onChange={setPage} locale={locale} />
         </div>

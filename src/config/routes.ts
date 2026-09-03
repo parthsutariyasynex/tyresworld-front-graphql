@@ -31,28 +31,28 @@ export interface CategoryHero {
 
 export const CATEGORY_HERO: Record<string, CategoryHero> = {
   "tyres": {
-    heroTitle: "SHOP ALL TYPES OF TYRES ONLINE ACROSS KSA",
-    heroTitleAr: "تسوق جميع أنواع الإطارات عبر الإنترنت في المملكة العربية السعودية",
+    heroTitle: "Buy Car Tyres Online in UAE – Premium Quality, Great Prices",
+    heroTitleAr: "اشترِ إطارات السيارات عبر الإنترنت في الإمارات – جودة ممتازة وأسعار رائعة",
     showTyreFinder: true,
   },
   "on-road-tires": {
-    heroTitle: "SHOP ON-ROAD TYRES ONLINE ACROSS KSA",
-    heroTitleAr: "تسوق إطارات الطريق عبر الإنترنت في المملكة العربية السعودية",
+    heroTitle: "Buy On-Road Car Tyres Online in the UAE",
+    heroTitleAr: "اشترِ إطارات الطريق عبر الإنترنت في الإمارات",
     showTyreFinder: true,
   },
   "off-road-tires-4x4": {
-    heroTitle: "SHOP OFF-ROAD & 4X4 TYRES ACROSS KSA",
-    heroTitleAr: "تسوق إطارات الطرق الوعرة و4×4 في المملكة العربية السعودية",
+    heroTitle: "Buy Off-Road & 4x4 Tyres Online in the UAE",
+    heroTitleAr: "اشترِ إطارات الطرق الوعرة و4×4 عبر الإنترنت في الإمارات",
     showTyreFinder: true,
   },
   "ev-tires": {
-    heroTitle: "SHOP EV TYRES ONLINE ACROSS KSA",
-    heroTitleAr: "تسوق إطارات السيارات الكهربائية عبر الإنترنت في المملكة العربية السعودية",
+    heroTitle: "Buy EV Tyres Online in the UAE",
+    heroTitleAr: "اشترِ إطارات السيارات الكهربائية عبر الإنترنت في الإمارات",
     showTyreFinder: true,
   },
   "run-flat-tires": {
-    heroTitle: "SHOP RUN-FLAT TYRES ONLINE ACROSS KSA",
-    heroTitleAr: "تسوق إطارات رن فلات عبر الإنترنت في المملكة العربية السعودية",
+    heroTitle: "Buy Run-Flat Tyres Online in the UAE",
+    heroTitleAr: "اشترِ إطارات رن فلات عبر الإنترنت في الإمارات",
     showTyreFinder: true,
   },
 };

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import {
   Search,
+  ShoppingCart,
   ShoppingBag,
   User,
   Menu,
@@ -14,13 +15,12 @@ import {
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
-import type { MenuItem } from "@/lib/magento";
 import { Money } from "@/components/Price";
+import { MAIN_NAV, navHref, navLabel, isNavActive } from "@/src/config/navigation";
 
-/* ─── Red circular icon button ──────────────────────────────── */
-const ICON_BTN =
-  "w-[38px] h-[38px] rounded-full bg-[#ed1c24] hover:bg-[#c6181d] " +
-  "flex items-center justify-center text-white transition-colors flex-shrink-0";
+/* Icon-button styles live in app/globals.css (.header-icon-*) — the one
+   stylesheet is the single source of truth for brand colours. */
+const ICON_BTN = "header-icon-dark";
 
 export default function Header() {
   const pathname = usePathname();
@@ -40,9 +40,8 @@ export default function Header() {
     router.push(`${nextPath}${qs ? `?${qs}` : ""}`);
   }
 
-  const [categories, setCategories] = useState<MenuItem[]>([]);
-  const [menuLoading, setMenuLoading] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileSubOpen, setMobileSubOpen] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const { customer, isLoggedIn, logout } = useAuth();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -111,38 +110,6 @@ export default function Header() {
   const subtotalExclTax = totalItemSums / 1.15;
   const fmtMoney = (v: number) => <Money value={v} currency={currency} digits={2} />;
 
-  const localiseHref = (href: string) => {
-    if (href.endsWith("/tyres/brand") || href.endsWith("/brand")) {
-      return `/${locale}/brands`;
-    }
-    if (href.startsWith("/en/")) {
-      return href.replace("/en/", `/${locale}/`);
-    }
-    return href;
-  };
-
-  /* ── API: load menu from local Next.js API route to bypass CORS issues */
-  useEffect(() => {
-    let active = true;
-    fetch(`/api/menu?locale=${locale}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!active) return;
-        if (data?.menu) {
-          setCategories(data.menu);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load menu:", err);
-      })
-      .finally(() => {
-        if (active) setMenuLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [locale]);
-
   /* ── Focus search input when opened ─────────────────────────── */
   useEffect(() => {
     if (searchOpen) searchRef.current?.focus();
@@ -153,6 +120,7 @@ export default function Header() {
   /* ── Close everything on route change ───────────────────────── */
   useEffect(() => {
     setMobileOpen(false);
+    setMobileSubOpen(null);
     setSearchOpen(false);
     setOpenDropdown(null);
     setCartDropdownOpen(false);
@@ -164,81 +132,70 @@ export default function Header() {
       {/* ══════════════════════════════════════════════════════════
           DESKTOP HEADER
       ══════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-50 bg-black">
-        <div className="container">
-          <div className="flex items-center h-[70px] gap-4">
+      <header className="site-header">
+        <div className="site-header-inner">
 
-            {/* ── Logo ─────────────────────────────────────────── */}
-            <Link
-              href="/"
-              className="flex-shrink-0 flex items-center"
-              aria-label="PowerTyre home"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/logo/power tire-12.webp"
-                alt="PowerTyre"
-                className="h-[44px] w-auto object-contain"
-              />
-            </Link>
+          {/* ── Logo ─────────────────────────────────────────── */}
+          <Link
+            href={`/${locale}`}
+            className="site-header-logo flex-shrink-0 flex items-center"
+            aria-label="Tyresworld home"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo/tires-logo.png"
+              alt="Tyresworld"
+              width={232}
+              height={70}
+            />
+          </Link>
 
-            {/* ── Desktop nav (centered via flex-1) ───────────── */}
-            <nav
-              className="hidden lg:flex flex-1 items-center justify-center gap-0.5"
-              aria-label="Main navigation"
-            >
-              {menuLoading && categories.length === 0 ? (
-                /* Menu skeleton — placeholder pills while /api/menu loads */
-                <div className="flex items-center gap-1" aria-hidden="true">
-                  {[64, 88, 72, 96, 68, 80].map((w, i) => (
-                    <div key={i} className="px-3 py-2">
-                      <div className="h-3.5 rounded bg-white/15 animate-pulse" style={{ width: w }} />
-                    </div>
-                  ))}
-                </div>
-              ) : categories.map((item) => {
+          {/* ── Desktop nav (centered via flex-1) ───────────── */}
+          <nav className="site-nav h-full" aria-label="Main navigation">
+              {MAIN_NAV.map((item) => {
                 const hasChildren = !!item.children?.length;
-                // item.href is always /en/… — strip locale prefix before comparing
-                const normItem = item.href.replace(/^\/[a-z]{2}\//, "/");
-                const normPath = pathname.replace(/^\/[a-z]{2}\//, "/");
-                const isActive = normPath.startsWith(normItem);
+                const href = navHref(item, locale);
+                const isActive = isNavActive(item, pathname, locale);
+                const isOpen = openDropdown === item.id;
 
                 return hasChildren ? (
                   /* ── Dropdown item ─────────────────────────── */
                   <div
-                    key={item.uid}
-                    className="relative"
-                    onMouseEnter={() => setOpenDropdown(item.uid)}
+                    key={item.id}
+                    className="relative h-full flex items-center"
+                    onMouseEnter={() => setOpenDropdown(item.id)}
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
                     <Link
-                      href={localiseHref(item.href)}
-                      className={`flex items-center gap-0.5 px-3 py-2 text-[13px] font-medium whitespace-nowrap transition-colors ${isActive ? "text-white" : "text-white/75 hover:text-white"
-                        }`}
+                      href={href}
+                      aria-haspopup="true"
+                      aria-expanded={isOpen}
+                      className="site-nav-link"
+                      data-active={isActive || isOpen}
                     >
-                      {item.label}
+                      {navLabel(item, locale)}
                       <ChevronDown
-                        size={12}
-                        className={`mt-px opacity-60 transition-transform duration-200 ${openDropdown === item.uid ? "rotate-180" : ""
-                          }`}
+                        size={14}
+                        strokeWidth={2.5}
+                        className={`mt-0.5 transition-transform duration-200 ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
                       />
                     </Link>
 
                     {/* Dropdown panel */}
                     <div
-                      className={`absolute top-full ${locale === "ar" ? "right-0" : "left-0"} pt-1.5 min-w-[210px] z-50 transition-all duration-150 ${openDropdown === item.uid
-                        ? "opacity-100 visible translate-y-0"
-                        : "opacity-0 invisible -translate-y-1 pointer-events-none"
-                        }`}
+                      className={`site-nav-panel ${locale === "ar" ? "right-0" : "left-0"}`}
+                      data-open={isOpen}
                     >
-                      <div className="bg-white rounded-xl shadow-cardHover py-1.5 border border-ink/8">
+                      <div className="site-nav-panel-body">
                         {item.children!.map((child) => (
                           <Link
-                            key={child.uid}
-                            href={localiseHref(child.href)}
-                            className="block px-4 py-2.5 text-sm text-ink/65 hover:text-ink hover:bg-cream transition-colors"
+                            key={child.id}
+                            href={navHref(child, locale)}
+                            className="site-nav-sublink"
                           >
-                            {child.label}
+                            {navLabel(child, locale)}
                           </Link>
                         ))}
                       </div>
@@ -247,12 +204,12 @@ export default function Header() {
                 ) : (
                   /* ── Plain link ────────────────────────────── */
                   <Link
-                    key={item.uid}
-                    href={localiseHref(item.href)}
-                    className={`px-3 py-2 text-[13px] font-medium whitespace-nowrap transition-colors ${isActive ? "text-white" : "text-white/75 hover:text-white"
-                      }`}
+                    key={item.id}
+                    href={href}
+                    className="site-nav-link"
+                    data-active={isActive}
                   >
-                    {item.label}
+                    {navLabel(item, locale)}
                   </Link>
                 );
               })}
@@ -261,18 +218,18 @@ export default function Header() {
             {/* ── Right actions ─────────────────────────────── */}
             <div className="flex items-center gap-2 flex-shrink-0 ml-auto lg:ml-0 relative">
 
-              {/* Language / store switcher */}
+              {/* Language / store switcher (commented out - English only)
               <button
                 onClick={switchLocale}
-                className="hidden lg:flex items-center gap-1.5 text-white/70 hover:text-white text-[13px] font-medium transition-colors"
+                className="hidden lg:flex items-center gap-1.5 text-[#111111]/60 hover:text-[#ed1c24] text-[13px] font-semibold transition-colors"
                 aria-label={`Switch to ${nextLocale === "ar" ? "Arabic" : "English"}`}
               >
                 <span>{switchLabel}</span>
                 <span className="text-sm leading-none">{locale === "en" ? "🇸🇦" : "🇬🇧"}</span>
               </button>
 
-              {/* Thin separator */}
-              <span className="hidden lg:block w-px h-5 bg-white/15 mx-0.5" />
+              <span className="hidden lg:block w-px h-5 bg-black/15 mx-0.5" />
+              */}
 
               {/* Search Toggle Button */}
               <button
@@ -375,10 +332,10 @@ export default function Header() {
               >
                 <Link
                   href="/account"
-                  className={`${ICON_BTN}`}
+                  className="header-icon-dark"
                   aria-label="My account"
                 >
-                  <User size={17} />
+                  <User size={22} className="stroke-[2.2]" />
                 </Link>
 
                 {/* Dropdown panel */}
@@ -432,12 +389,12 @@ export default function Header() {
               >
                 <Link
                   href="/cart"
-                  className={`${ICON_BTN} relative`}
+                  className="header-icon-red relative"
                   aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
                 >
-                  <ShoppingBag size={17} />
+                  <ShoppingCart size={22} className="stroke-[2.2]" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-0.5 bg-white text-[#ed1c24] text-[9px] font-black rounded-full flex items-center justify-center leading-none">
+                    <span className="header-cart-badge">
                       {cartCount}
                     </span>
                   )}
@@ -538,14 +495,13 @@ export default function Header() {
               {/* Mobile hamburger */}
               <button
                 onClick={() => setMobileOpen(true)}
-                className="lg:hidden ml-1 p-1.5 text-white/70 hover:text-white transition-colors"
+                className="lg:hidden ml-1 p-1.5 text-ink hover:text-brand-red transition-colors"
                 aria-label="Open menu"
               >
                 <Menu size={22} />
               </button>
             </div>
 
-          </div>
         </div>
       </header>
 
@@ -561,15 +517,15 @@ export default function Header() {
           />
 
           {/* Slide-in panel */}
-          <div className={`absolute top-0 bottom-0 w-[320px] max-w-full bg-[#111111] flex flex-col ${locale === "ar" ? "left-0 animate-slide-in-left" : "right-0 animate-slide-in-right"}`}>
+          <div className={`drawer-panel ${locale === "ar" ? "left-0 animate-slide-in-left" : "right-0 animate-slide-in-right"}`}>
 
             {/* Panel header */}
             <div className="flex items-center justify-between px-5 h-[70px] border-b border-white/10 flex-shrink-0">
               <Link href="/" onClick={() => setMobileOpen(false)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/logo/power tire-12.webp"
-                  alt="PowerTyre"
+                  src="/logo/tires-logo-white.png"
+                  alt="Tyresworld"
                   className="h-9 w-auto object-contain"
                 />
               </Link>
@@ -596,37 +552,64 @@ export default function Header() {
 
             {/* Nav links */}
             <nav className="flex-1 overflow-y-auto px-5 py-4">
-              {menuLoading && categories.length === 0
-                ? /* Menu skeleton — placeholder rows while /api/menu loads */
-                  Array.from({ length: 6 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between py-3.5 border-b border-white/10"
-                      aria-hidden="true"
-                    >
-                      <div className="h-4 rounded bg-white/15 animate-pulse" style={{ width: `${55 + (i % 3) * 20}%` }} />
+              {MAIN_NAV.map((item) => {
+                const hasChildren = !!item.children?.length;
+                const isActive = isNavActive(item, pathname, locale);
+                const isExpanded = mobileSubOpen === item.id;
+
+                return (
+                  <div key={item.id} className="border-b border-white/10">
+                    <div className="flex items-center justify-between">
+                      <Link
+                        href={navHref(item, locale)}
+                        onClick={() => setMobileOpen(false)}
+                        className="drawer-link"
+                        data-active={isActive}
+                      >
+                        {navLabel(item, locale)}
+                      </Link>
+
+                      {hasChildren && (
+                        <button
+                          type="button"
+                          onClick={() => setMobileSubOpen(isExpanded ? null : item.id)}
+                          className="w-9 h-9 -mr-1.5 flex items-center justify-center text-white/45 hover:text-white transition-colors"
+                          aria-expanded={isExpanded}
+                          aria-label={`${isExpanded ? "Collapse" : "Expand"} ${item.label}`}
+                        >
+                          <ChevronDown
+                            size={16}
+                            className={`transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                      )}
                     </div>
-                  ))
-                : categories.map((item) => (
-                <Link
-                  key={item.uid}
-                  href={localiseHref(item.href)}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center justify-between py-3.5 border-b border-white/10 text-[15px] font-medium transition-colors ${pathname.replace(/^\/[a-z]{2}\//, "/").startsWith(item.href.replace(/^\/[a-z]{2}\//, "/"))
-                    ? "text-white"
-                    : "text-white/65 hover:text-white"
-                    }`}
-                >
-                  {item.label}
-                  {!!item.children?.length && (
-                    <ChevronDown size={16} className="text-white/35 flex-shrink-0" />
-                  )}
-                </Link>
-              ))}
+
+                    {/* Sub-menu accordion */}
+                    {hasChildren && isExpanded && (
+                      <ul className={`pb-2 ${locale === "ar" ? "pr-3 border-r-2" : "pl-3 border-l-2"} border-white/10`}>
+                        {item.children!.map((child) => (
+                          <li key={child.id}>
+                            <Link
+                              href={navHref(child, locale)}
+                              onClick={() => setMobileOpen(false)}
+                              className="drawer-sublink"
+                              data-active={isNavActive(child, pathname, locale)}
+                            >
+                              {navLabel(child, locale)}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
             </nav>
 
             {/* Panel footer */}
             <div className="px-5 py-5 border-t border-white/10 flex flex-col gap-2.5 flex-shrink-0">
+              {/* Language / store switcher (commented out - English only)
               <button
                 onClick={() => { switchLocale(); setMobileOpen(false); }}
                 className="flex items-center justify-center gap-2 py-3 text-sm font-medium text-white/60 hover:text-white bg-white/8 hover:bg-white/12 rounded-xl transition-colors border border-white/10"
@@ -634,6 +617,7 @@ export default function Header() {
                 <span>{switchLabel}</span>
                 <span className="text-sm leading-none">{locale === "en" ? "🇸🇦" : "🇬🇧"}</span>
               </button>
+              */}
               <Link
                 href="/account"
                 onClick={() => setMobileOpen(false)}

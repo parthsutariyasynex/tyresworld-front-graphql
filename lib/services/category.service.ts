@@ -4,7 +4,7 @@
    the category's own metadata (name, description, SEO fields).
 ───────────────────────────────────────────────────────────────── */
 import { magentoFetch } from "@/lib/graphql/client";
-import { CATEGORY_PRODUCTS_BY_UID_QUERY, CATEGORY_PAGE_QUERY } from "@/lib/queries";
+import { CATEGORY_PRODUCTS_BY_UID_QUERY, CATEGORY_PAGE_QUERY, CATEGORY_META_BY_URL_KEY_QUERY } from "@/lib/queries";
 import { parseGraphqlResponse, type GqlProductsResponse } from "@/lib/magento";
 import { APP_CONFIG } from "@/src/config/app-config";
 import type { Product } from "@/lib/data";
@@ -46,8 +46,8 @@ interface CategoryQueryData {
  */
 export async function getCategoryMeta(urlKey: string, store?: string): Promise<CategoryMeta | null> {
   const r = await magentoFetch<{ categories?: { items?: Array<Record<string, unknown>> } | null }>(
-    CATEGORY_PAGE_QUERY,
-    { urlKey, filters: { category_url_path: { eq: urlKey } }, pageSize: 1, currentPage: 1 },
+    CATEGORY_META_BY_URL_KEY_QUERY,
+    { urlKey },
     { store, revalidate: APP_CONFIG.cache.category },
   );
   const cat = r.data?.categories?.items?.[0];

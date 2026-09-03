@@ -1,92 +1,159 @@
 "use client";
 
-import { useRef } from "react";
+import React, { useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
 import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
 
 const OFFER_BANNERS = [
-  { id: "b1", image: "/offers/buy-2-get-2-free-bridgestone_1.webp", alt: "Buy 2 Get 2 Free – Bridgestone", href: "/shop?offers=buy2get2" },
-  { id: "b2", image: "/offers/power-tire-offers-banner-v3-webp.webp", alt: "Buy Now Pay Later – PowerTyre", href: "/shop" },
-  { id: "b3", image: "/offers/buy-3-get-1-free-continental.webp", alt: "Buy 3 Get 1 Free – Continental", href: "/shop?offers=buy3get1" },
-  { id: "b4", image: "/offers/image-en.jpg", alt: "Special Offer – PowerTyre", href: "/shop" },
+  {
+    id: "matrax-3plus1",
+    image: "/offers/buy3-get1-free-matrax-tyres-uae.webp",
+    alt: "Matrax 3+1 Free Tyre Offers in UAE",
+    title: "Matrax 3+1 Free Tyre Offers in UAE",
+    href: "/tyres?mgs_brand=Matrax&offers=Buy+3+Get+1+Free",
+  },
+  {
+    id: "installments",
+    image: "/offers/buy-tyres-pay-in-easy-installments-uae.webp",
+    alt: "Shop tyres online and pay in installments",
+    title: "Shop tyres online and pay in installments",
+    href: "/tyres",
+  },
+  {
+    id: "2026-tyres",
+    image: "/offers/2026-tyres-online-uae_1.webp",
+    alt: "2026 Tyres",
+    title: "2026 Tyres",
+    href: "/tyres?year=2026",
+  },
+  {
+    id: "free-wheel-alignment",
+    image: "/offers/free-wheel-alignment-offer-on-tyres-uae_1.webp",
+    alt: "Free Wheel Alignment",
+    title: "Free Wheel Alignment",
+    href: "/tyres?offers=Free+Wheel+Alignment",
+  },
+  {
+    id: "vredestein-3plus1",
+    image: "/offers/buy3-get1-free-vredestein-tyres-uae.webp",
+    alt: "Buy 3 Vredestein tyres online and get 1 free",
+    title: "Buy 3 Vredestein tyres online and get 1 free",
+    href: "/tyres?mgs_brand=Vredestein&offers=Buy+3+Get+1+Free",
+  },
 ];
 
-/* ─── Main section ─────────────────────────────────────────────── */
-export default function OffersSection({ store = "default" }: { store?: string }) {
+// Duplicate list for smooth infinite Swiper looping
+const SLIDE_TRACK = [...OFFER_BANNERS, ...OFFER_BANNERS];
+
+export default function OffersSection() {
+  const pathname = usePathname();
+  const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
+  const isAr = locale === "ar";
   const swiperRef = useRef<SwiperType | null>(null);
+  const reducedMotion = usePrefersReducedMotion();
 
   return (
-    <section className="py-12 lg:py-16 bg-white border-t border-gray-100">
-      <div className="container">
-
-        {/* ── Header ──────────────────────────────────────────── */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl lg:text-3xl font-black tracking-widest uppercase leading-tight">
-            <span className="text-gray-900">Special </span>
-            <span className="text-[#ed1c24]">Offers</span>
+    <section className="section section-padding offers py-12 md:py-16 bg-white overflow-hidden">
+      <div className="container custom-width max-w-[1440px] mx-auto px-4 sm:px-6">
+        {/* ── Section Title (Exact match to screenshot) ──────── */}
+        <div className="section-title mb-8 text-center">
+          <h2 className="text-2xl sm:text-3xl lg:text-[34px] font-black uppercase tracking-tight text-black mb-2">
+            {isAr ? "عروض " : "EXCLUSIVE "}
+            <span className="text-[#ed1c24] theme_color">
+              {isAr ? "حصرية" : "OFFERS"}
+            </span>
           </h2>
-          <p className="text-sm text-gray-400 mt-1 font-medium">
-            Limited-Time Deals on Top Tyre Brands
+          <p className="text-black text-xs sm:text-[14px] font-bold tracking-tight m-0">
+            {isAr
+              ? "تبحث عن أفضل عروض الإطارات عبر الإنترنت في الإمارات؟"
+              : "Searching for the Best Tyre Deals Online in the UAE?"}
           </p>
         </div>
 
-        {/* ── Banner Swiper ───────────────────────────────────── */}
-        <div className="relative px-10 sm:px-12 mb-8">
-          <button
-            type="button"
-            onClick={() => swiperRef.current?.slidePrev()}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-600 hover:bg-[#ed1c24] hover:text-white hover:border-[#ed1c24] transition-colors"
-            aria-label="Previous"
-          >
-            <ChevronLeft size={18} />
-          </button>
-
+        {/* ── Offer Slider with exact side navigation & aspect ratio ── */}
+        <div className="relative px-2 sm:px-12 md:px-14">
           <Swiper
-            onSwiper={(s) => { swiperRef.current = s; }}
-            modules={[Autoplay]}
-            autoplay={{ delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }}
-            spaceBetween={24}
-            loop={true}
-            breakpoints={{
-              320: { slidesPerView: 1 },
-              768: { slidesPerView: 1.5 },
-              1024: { slidesPerView: 2 },
+            onSwiper={(s) => {
+              swiperRef.current = s;
             }}
-            className="offers-swiper"
+            modules={[Autoplay, Navigation, Pagination]}
+            autoplay={
+              reducedMotion
+                ? false
+                : {
+                    delay: 4000,
+                    disableOnInteraction: false,
+                    pauseOnMouseEnter: true,
+                  }
+            }
+            speed={700}
+            spaceBetween={15}
+            slidesPerView={1}
+            loop={true}
+            pagination={{
+              clickable: true,
+              bulletClass: "swiper-pagination-bullet !w-4 !h-[3px] !rounded-sm !bg-gray-300 !opacity-100 transition-all cursor-pointer",
+              bulletActiveClass: "!bg-[#ed1c24] !w-7 !h-[3px]",
+            }}
+            breakpoints={{
+              540: { slidesPerView: 2, spaceBetween: 15 },
+              992: { slidesPerView: 3, spaceBetween: 15 },
+            }}
+            className="pb-5 [&_.swiper-pagination]:!bottom-0"
           >
-            {OFFER_BANNERS.map((banner) => (
-              <SwiperSlide key={banner.id}>
-                <Link
-                  href={banner.href}
-                  className="block relative aspect-[810/380] rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 group"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={banner.image}
-                    alt={banner.alt}
-                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                  />
-                </Link>
+            {SLIDE_TRACK.map((banner, idx) => (
+              <SwiperSlide key={`${banner.id}-${idx}`}>
+                <div className="box relative overflow-hidden rounded-[14px] bg-white transition-all duration-300 group">
+                  <Link
+                    href={`/${locale}${banner.href}`}
+                    className="link block relative w-full aspect-[559/391] overflow-hidden rounded-[14px] shadow-sm hover:shadow-md transition-shadow"
+                    title={banner.title}
+                    aria-label={banner.alt}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={banner.image}
+                      alt={banner.alt}
+                      width={559}
+                      height={391}
+                      className="w-full h-full object-cover rounded-[14px] transition-transform duration-500 group-hover:scale-[1.03]"
+                      loading="lazy"
+                    />
+                  </Link>
+                </div>
               </SwiperSlide>
             ))}
           </Swiper>
 
-          {/* Right Arrow Button: Solid red circular background */}
+          {/* Solid Red Circle Left Arrow — Positioned outside cards */}
           <button
-            onClick={() => swiperRef.current?.slideNext()}
-            className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#ed1c24] hover:bg-[#c6181d] text-white flex items-center justify-center transition-colors z-10 shadow-sm focus:outline-none"
-            aria-label="Next slide"
+            type="button"
+            onClick={() => swiperRef.current?.slidePrev()}
+            className="hidden sm:flex absolute left-0 sm:left-1 top-[44%] -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-[#ed1c24] hover:bg-[#c6181d] text-white items-center justify-center shadow-md transition-transform hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
+            aria-label="Previous Offer"
           >
-            <ChevronRight size={20} strokeWidth={2.5} />
+            <ChevronLeft size={22} strokeWidth={2.5} />
           </button>
 
+          {/* Solid Red Circle Right Arrow — Positioned outside cards */}
+          <button
+            type="button"
+            onClick={() => swiperRef.current?.slideNext()}
+            className="hidden sm:flex absolute right-0 sm:right-1 top-[44%] -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-[#ed1c24] hover:bg-[#c6181d] text-white items-center justify-center shadow-md transition-transform hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
+            aria-label="Next Offer"
+          >
+            <ChevronRight size={22} strokeWidth={2.5} />
+          </button>
         </div>
-
       </div>
     </section>
   );
