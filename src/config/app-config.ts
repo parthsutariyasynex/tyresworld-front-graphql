@@ -83,8 +83,10 @@ export function storeView(locale: string): string {
 /** Standard Magento GraphQL request headers */
 export function magentoHeaders(locale?: string): HeadersInit {
   const h: Record<string, string> = {
-    Accept:         "application/json",
+    Accept: "application/json",
     "Content-Type": "application/json",
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
   };
   if (locale) h["Store"] = storeView(locale);
   if (process.env.GRAPHQL_USERNAME && process.env.GRAPHQL_PASSWORD) {
