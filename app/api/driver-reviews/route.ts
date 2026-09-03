@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     if (!res.ok || json?.errors?.length) {
       return NextResponse.json(
         { config: null, error: json?.errors?.[0]?.message ?? `HTTP ${res.status}` },
-        { status: res.ok ? 200 : res.status },
+        { status: 200 },
       );
     }
 

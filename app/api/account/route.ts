@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       }
 
       case "customer": {
-        if (!token) return NextResponse.json({ customer: null, error: "Not authenticated" }, { status: 401 });
+        if (!token) return NextResponse.json({ customer: null }, { status: 200 });
         const j = await gql(Q.customer, {}, token);
         return NextResponse.json({ customer: j.data?.customer ?? null, error: err(j) });
       }

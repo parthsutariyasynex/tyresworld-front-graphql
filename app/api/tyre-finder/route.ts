@@ -31,7 +31,7 @@ export async function GET() {
     if (!res.ok || raw?.errors?.length) {
       return NextResponse.json(
         { attributes: [], error: raw?.errors?.[0]?.message ?? `HTTP ${res.status}` },
-        { status: res.ok ? 200 : res.status }
+        { status: 200 }
       );
     }
 

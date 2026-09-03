@@ -45,9 +45,10 @@ export async function GET() {
     const raw = (await res.json().catch(() => null)) as GqlProductsResponse | null;
 
     if (!res.ok || raw?.errors?.length) {
+      const fallbackBrands = listDiscoveredBrandLogos();
       return NextResponse.json(
-        { brands: [], error: raw?.errors?.[0]?.message ?? `HTTP ${res.status}` },
-        { status: res.ok ? 200 : res.status },
+        { brands: fallbackBrands, error: raw?.errors?.[0]?.message ?? `HTTP ${res.status}` },
+        { status: 200 },
       );
     }
 
