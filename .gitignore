@@ -16,6 +16,7 @@ build/
 .env.test.local
 .env.production.local
 .env*.local
+.env.local.example
 
 # ── Testing & coverage ────────────────────────────────────────────
 /coverage
