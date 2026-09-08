@@ -55,19 +55,4 @@ export const CATEGORY_HERO: Record<string, CategoryHero> = {
     heroTitleAr: "اشترِ إطارات رن فلات عبر الإنترنت في الإمارات",
     showTyreFinder: true,
   },
-  "car-battery": {
-    heroTitle: "Buy Car Batteries Online in the UAE",
-    heroTitleAr: "اشترِ بطاريات السيارات عبر الإنترنت في الإمارات",
-    showTyreFinder: false,
-  },
-  "car-wheels": {
-    heroTitle: "Buy Alloy Wheels & Rims Online in the UAE",
-    heroTitleAr: "اشترِ جنوط وعجلات السيارات عبر الإنترنت في الإمارات",
-    showTyreFinder: false,
-  },
-  "motorcycle-tyre": {
-    heroTitle: "Buy Motorcycle Tyres Online in the UAE",
-    heroTitleAr: "اشترِ إطارات الدراجات النارية عبر الإنترنت في الإمارات",
-    showTyreFinder: false,
-  },
 };
