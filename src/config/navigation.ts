@@ -37,7 +37,7 @@ export const MAIN_NAV: NavItem[] = [
     id: "car-battery",
     label: "Car Battery",
     labelAr: "بطارية السيارة",
-    slug: "car-battery-service-abu-dhabi",
+    slug: "car-battery",
   },
   {
     id: "car-insurance",
@@ -49,7 +49,7 @@ export const MAIN_NAV: NavItem[] = [
     id: "car-services",
     label: "Car Services",
     labelAr: "خدمات السيارات",
-    slug: "car-service-abudhabi",
+    slug: "car-service",
     children: [
       { id: "svc-tyre",      label: "Car Tyre Service",            labelAr: "خدمة إطارات السيارات",     slug: "car-tyre-service-abu-dhabi" },
       { id: "svc-battery",   label: "Car Battery Service",         labelAr: "خدمة بطاريات السيارات",    slug: "car-battery-service-abu-dhabi" },
@@ -66,13 +66,13 @@ export const MAIN_NAV: NavItem[] = [
     id: "rims-wheels",
     label: "Rims/Wheels",
     labelAr: "الجنوط والعجلات",
-    slug: "rims-wheels",
+    slug: "car-wheels",
   },
   {
     id: "motorbike-tyres",
     label: "Motorbike Tyres",
     labelAr: "إطارات الدراجات النارية",
-    slug: "motorbike-tyres",
+    slug: "motorcycle-tyre",
   },
   {
     id: "offers",

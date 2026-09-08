@@ -1,158 +1,212 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Navigation, Pagination } from "swiper/modules";
-import type { Swiper as SwiperType } from "swiper";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Autoplay, Pagination } from "swiper/modules";
 import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
-
-const OFFER_BANNERS = [
+const FLASH_SALE_SLIDES = [
   {
     id: "matrax-3plus1",
-    image: "/offers/buy3-get1-free-matrax-tyres-uae.webp",
-    alt: "Matrax 3+1 Free Tyre Offers in UAE",
     title: "Matrax 3+1 Free Tyre Offers in UAE",
+    titleAr: "عرض إطارات ماتراكس 3+1 مجاناً في الإمارات",
+    image: "/offers/buy3-get1-free-matrax-tyres-uae.webp",
     href: "/tyres?mgs_brand=Matrax&offers=Buy+3+Get+1+Free",
   },
   {
-    id: "installments",
-    image: "/offers/buy-tyres-pay-in-easy-installments-uae.webp",
-    alt: "Shop tyres online and pay in installments",
-    title: "Shop tyres online and pay in installments",
-    href: "/tyres",
-  },
-  {
-    id: "2026-tyres",
-    image: "/offers/2026-tyres-online-uae_1.webp",
-    alt: "2026 Tyres",
-    title: "2026 Tyres",
-    href: "/tyres?year=2026",
+    id: "vredestein-3plus1",
+    title: "Buy 3 Vredestein Tyres & Get 1 Free",
+    titleAr: "اشتري 3 إطارات فريدشتاين واحصل على 1 مجاناً",
+    image: "/offers/buy3-get1-free-vredestein-tyres-uae.webp",
+    href: "/tyres?mgs_brand=Vredestein&offers=Buy+3+Get+1+Free",
   },
   {
     id: "free-wheel-alignment",
+    title: "Free Wheel Alignment Offer on Tyres",
+    titleAr: "عرض ميزان وضبط العجلات مجاناً عند شراء الإطارات",
     image: "/offers/free-wheel-alignment-offer-on-tyres-uae_1.webp",
-    alt: "Free Wheel Alignment",
-    title: "Free Wheel Alignment",
     href: "/tyres?offers=Free+Wheel+Alignment",
   },
   {
-    id: "vredestein-3plus1",
-    image: "/offers/buy3-get1-free-vredestein-tyres-uae.webp",
-    alt: "Buy 3 Vredestein tyres online and get 1 free",
-    title: "Buy 3 Vredestein tyres online and get 1 free",
-    href: "/tyres?mgs_brand=Vredestein&offers=Buy+3+Get+1+Free",
+    id: "installments",
+    title: "Shop Tyres Online & Pay in Easy Installments",
+    titleAr: "تسوق الإطارات أونلاين وادفع بأقساط ميسرة",
+    image: "/offers/buy-tyres-pay-in-easy-installments-uae.webp",
+    href: "/tyres",
+  },
+  {
+    id: "continental-3plus1",
+    title: "Continental 3+1 Free Special Offers",
+    titleAr: "عروض كونتيننتال الخاصة 3+1 مجاناً",
+    image: "/offers/buy-3-get-1-free-continental.webp",
+    href: "/tyres?mgs_brand=Continental&offers=Buy+3+Get+1+Free",
+  },
+  {
+    id: "2026-tyres",
+    title: "Latest 2026 Fresh Dot Tyres in UAE",
+    titleAr: "أحدث إطارات إنتاج 2026 في الإمارات",
+    image: "/offers/2026-tyres-online-uae_1.webp",
+    href: "/tyres?year=2026",
   },
 ];
-
-// Duplicate list for smooth infinite Swiper looping
-const SLIDE_TRACK = [...OFFER_BANNERS, ...OFFER_BANNERS];
 
 export default function OffersSection() {
   const pathname = usePathname();
   const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
   const isAr = locale === "ar";
-  const swiperRef = useRef<SwiperType | null>(null);
   const reducedMotion = usePrefersReducedMotion();
 
   return (
-    <section className="section section-padding offers py-12 md:py-16 bg-white overflow-hidden">
-      <div className="container custom-width max-w-[1440px] mx-auto px-4 sm:px-6">
-        {/* ── Section Title (Exact match to screenshot) ──────── */}
-        <div className="section-title mb-8 text-center">
-          <h2 className="text-2xl sm:text-3xl lg:text-[34px] font-black uppercase tracking-tight text-black mb-2">
-            {isAr ? "عروض " : "EXCLUSIVE "}
-            <span className="text-[#ed1c24] theme_color">
-              {isAr ? "حصرية" : "OFFERS"}
-            </span>
+    <section className="ptr-section py-12 lg:py-16 bg-white">
+      <div className="ptr-container">
+        {/* ── Section Header ── */}
+        <div className="mb-8">
+          <div className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] text-[#ed1c24] mb-1.5 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#ed1c24]" />
+            {isAr ? "عروض حصرية" : "FLASH SALE"}
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black tracking-tight text-gray-950 font-sans">
+            {isAr ? "عروض لفترة محدودة" : "Limited Time Offers"}
           </h2>
-          <p className="text-black text-xs sm:text-[14px] font-bold tracking-tight m-0">
-            {isAr
-              ? "تبحث عن أفضل عروض الإطارات عبر الإنترنت في الإمارات؟"
-              : "Searching for the Best Tyre Deals Online in the UAE?"}
-          </p>
         </div>
 
-        {/* ── Offer Slider with exact side navigation & aspect ratio ── */}
-        <div className="relative px-2 sm:px-12 md:px-14">
-          <Swiper
-            onSwiper={(s) => {
-              swiperRef.current = s;
-            }}
-            modules={[Autoplay, Navigation, Pagination]}
-            autoplay={
-              reducedMotion
-                ? false
-                : {
-                    delay: 4000,
-                    disableOnInteraction: false,
-                    pauseOnMouseEnter: true,
+        {/* ── 3-Column Grid ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+          {/* ── Card 1: Flash Sale Card with Full-Fit Image Slider ── */}
+          <div className="bg-white rounded-2xl border-2 border-gray-200/90 hover:border-[#ed1c24]/50 shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-lg transition-all duration-300 p-5 sm:p-6 flex flex-col justify-between">
+            <div>
+              {/* Header Badge */}
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ed1c24]/10 text-[#ed1c24] text-xs font-bold uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#ed1c24] animate-ping" />
+                  {isAr ? "عروض حصرية مميزة" : "Exclusive Promotions"}
+                </span>
+                <span className="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                  {isAr ? "تخفيضات خاصة" : "Special Discounts"}
+                </span>
+              </div>
+
+              {/* Slider for Project Offer Banners - Uncropped and clean spacing */}
+              <div className="relative">
+                <Swiper
+                  modules={[Autoplay, Pagination]}
+                  slidesPerView={1}
+                  loop={FLASH_SALE_SLIDES.length > 1}
+                  speed={600}
+                  autoplay={
+                    reducedMotion
+                      ? false
+                      : { delay: 3800, disableOnInteraction: false, pauseOnMouseEnter: true }
                   }
-            }
-            speed={700}
-            spaceBetween={15}
-            slidesPerView={1}
-            loop={true}
-            pagination={{
-              clickable: true,
-              bulletClass: "swiper-pagination-bullet !w-4 !h-[3px] !rounded-sm !bg-gray-300 !opacity-100 transition-all cursor-pointer",
-              bulletActiveClass: "!bg-[#ed1c24] !w-7 !h-[3px]",
-            }}
-            breakpoints={{
-              540: { slidesPerView: 2, spaceBetween: 15 },
-              992: { slidesPerView: 3, spaceBetween: 15 },
-            }}
-            className="pb-5 [&_.swiper-pagination]:!bottom-0"
-          >
-            {SLIDE_TRACK.map((banner, idx) => (
-              <SwiperSlide key={`${banner.id}-${idx}`}>
-                <div className="box relative overflow-hidden rounded-[14px] bg-white transition-all duration-300 group">
-                  <Link
-                    href={`/${locale}${banner.href}`}
-                    className="link block relative w-full aspect-[559/391] overflow-hidden rounded-[14px] shadow-sm hover:shadow-md transition-shadow"
-                    title={banner.title}
-                    aria-label={banner.alt}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={banner.image}
-                      alt={banner.alt}
-                      width={559}
-                      height={391}
-                      className="w-full h-full object-cover rounded-[14px] transition-transform duration-500 group-hover:scale-[1.03]"
-                      loading="lazy"
-                    />
-                  </Link>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                  pagination={{
+                    clickable: true,
+                    bulletClass: "swiper-custom-bullet",
+                    bulletActiveClass: "swiper-custom-bullet-active",
+                  }}
+                  className="flash-sale-swiper !pb-8"
+                >
+                  {FLASH_SALE_SLIDES.map((slide) => (
+                    <SwiperSlide key={slide.id}>
+                      <Link href={`/${locale}${slide.href}`} className="block group/item">
+                        {/* Aspect-ratio container with full image fit */}
+                        <div className="relative w-full aspect-[559/380] rounded-xl overflow-hidden bg-[#fafafa] border border-gray-100 shadow-sm flex items-center justify-center p-1">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={slide.image}
+                            alt={slide.title}
+                            className="w-full h-full object-contain object-center group-hover/item:scale-[1.02] transition-transform duration-500"
+                            loading="lazy"
+                          />
+                        </div>
 
-          {/* Solid Red Circle Left Arrow — Positioned outside cards */}
-          <button
-            type="button"
-            onClick={() => swiperRef.current?.slidePrev()}
-            className="hidden sm:flex absolute left-0 sm:left-1 top-[44%] -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-[#ed1c24] hover:bg-[#c6181d] text-white items-center justify-center shadow-md transition-transform hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
-            aria-label="Previous Offer"
-          >
-            <ChevronLeft size={22} strokeWidth={2.5} />
-          </button>
+                        {/* Title positioned with clean bottom margin so bullets don't overlap */}
+                        <h3 className="text-sm sm:text-base font-bold text-gray-900 text-center mt-3.5 mb-2 group-hover/item:text-[#ed1c24] transition-colors leading-snug px-1 line-clamp-1">
+                          {isAr ? slide.titleAr : slide.title}
+                        </h3>
+                      </Link>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              </div>
+            </div>
+          </div>
 
-          {/* Solid Red Circle Right Arrow — Positioned outside cards */}
-          <button
-            type="button"
-            onClick={() => swiperRef.current?.slideNext()}
-            className="hidden sm:flex absolute right-0 sm:right-1 top-[44%] -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-[#ed1c24] hover:bg-[#c6181d] text-white items-center justify-center shadow-md transition-transform hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
-            aria-label="Next Offer"
-          >
-            <ChevronRight size={22} strokeWidth={2.5} />
-          </button>
+          {/* ── Card 2: Professional Car Care Services Banner ── */}
+          <div className="relative min-h-[380px] lg:min-h-[440px] rounded-2xl overflow-hidden bg-zinc-950 shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-xl transition-all duration-300 flex flex-col justify-end p-6 sm:p-8 group">
+            {/* Background Image from project offers */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/offers/tyresworld/professional-car-service-abu-dhabi.webp"
+              alt="Professional Car Service"
+              className="absolute inset-0 w-full h-full object-cover object-center opacity-45 group-hover:scale-105 transition-transform duration-700"
+              loading="lazy"
+            />
+
+            {/* Dark Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/25" />
+
+            {/* Content */}
+            <div className="relative z-10">
+              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+                {isAr ? "خدمات صيانة السيارات الاحترافية" : "Professional Car Service"}
+              </h3>
+
+              <p className="text-xs sm:text-[13.5px] text-white/80 mt-2.5 leading-relaxed max-w-sm drop-shadow">
+                {isAr
+                  ? "احصل على خدمات صيانة وفحص وتغيير زيت احترافية لسيارتك في أبوظبي والإمارات من أمهر الفنيين."
+                  : "Get expert car maintenance, diagnostics, and oil change services in Abu Dhabi and across the UAE."}
+              </p>
+
+              <div className="mt-6">
+                <Link
+                  href={`/${locale}/car-service-abudhabi`}
+                  className="inline-flex items-center justify-center bg-white text-gray-950 font-bold text-xs sm:text-sm px-6 py-2.5 rounded-full hover:bg-[#ed1c24] hover:text-white transition-all duration-300 shadow-md group-hover:scale-105"
+                >
+                  {isAr ? "اعرف المزيد" : "Learn More"}
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Card 3: Free Wheel Alignment & Tyres Offer Banner ── */}
+          <div className="relative min-h-[380px] lg:min-h-[440px] rounded-2xl overflow-hidden bg-zinc-950 shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-xl transition-all duration-300 flex flex-col justify-end p-6 sm:p-8 group">
+            {/* Background Image from project offers */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/offers/free-wheel-alignment-offer-on-tyres-uae_1.webp"
+              alt="Free Wheel Alignment Offer"
+              className="absolute inset-0 w-full h-full object-cover object-center opacity-45 group-hover:scale-105 transition-transform duration-700"
+              loading="lazy"
+            />
+
+            {/* Dark Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/25" />
+
+            {/* Content */}
+            <div className="relative z-10">
+              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+                {isAr ? "ميزان عجلات مجاني مع كل طلب" : "Free Wheel Alignment"}
+              </h3>
+
+              <p className="text-xs sm:text-[13.5px] text-white/80 mt-2.5 leading-relaxed max-w-sm drop-shadow">
+                {isAr
+                  ? "استفد من فحص ومحاذاة زوايا العجلات بالليزر مجاناً عند طلب وتركيب إطارات سيارتك أونلاين."
+                  : "Enjoy free 3D computerized laser wheel alignment and expert fitment when you order your tyres online."}
+              </p>
+
+              <div className="mt-6">
+                <Link
+                  href={`/${locale}/tyres?offers=Free+Wheel+Alignment`}
+                  className="inline-flex items-center justify-center bg-white text-gray-950 font-bold text-xs sm:text-sm px-6 py-2.5 rounded-full hover:bg-[#ed1c24] hover:text-white transition-all duration-300 shadow-md group-hover:scale-105"
+                >
+                  {isAr ? "اعرف المزيد" : "Learn More"}
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

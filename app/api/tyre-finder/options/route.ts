@@ -19,7 +19,7 @@
  *   { aggregations: { model?: [...], year?: [...], height?: [...], rim?: [...] } }
  */
 import { NextRequest, NextResponse } from "next/server";
-import { TYRE_FINDER_OPTIONS_QUERY } from "@/lib/queries";
+import { VIEW_MORE_FILTER_QUERY } from "@/lib/queries";
 import { buildGqlFilter } from "@/lib/filterBuilder";
 import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
 import { getModels, getYears, getModifications } from "@/lib/wheel-service";
@@ -125,11 +125,20 @@ export async function GET(req: NextRequest) {
     filter.category_uid = { eq: APP_CONFIG.magento.tyresCategoryUid };
   }
 
+  /* Next step in the cascade: a chosen width narrows the heights, a chosen
+     width+height narrows the rims. Sourced from viewMoreFilter rather than
+     products.aggregations — the latter caps every attribute at 10 options, so
+     width 225 would lose one of its 11 real heights. */
+  const target = selected.height ? "rim" : "height";
+
   try {
     const res = await fetch(APP_CONFIG.magento.graphqlUrl, {
       method:  "POST",
       headers: magentoHeaders(),
-      body:    JSON.stringify({ query: TYRE_FINDER_OPTIONS_QUERY, variables: { filter } }),
+      body:    JSON.stringify({
+        query: VIEW_MORE_FILTER_QUERY,
+        variables: { filterName: target, search: "", filter },
+      }),
       cache:   "no-store",
     });
 
@@ -141,19 +150,14 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const aggs: { attribute_code: string; options: AggOption[] }[] =
-      raw?.data?.products?.aggregations ?? [];
+    const aggs: { attribute_code: string; options?: AggOption[] }[] =
+      raw?.data?.viewMoreFilter?.aggregations ?? [];
 
-    const aggregations: Record<string, AggOption[]> = {};
-    for (const agg of aggs) {
-      if (ALLOWED.includes(agg.attribute_code)) {
-        aggregations[agg.attribute_code] = (agg.options ?? []).filter(
-          (o) => o.label && o.value
-        );
-      }
-    }
+    const options = aggs
+      .flatMap((a) => a.options ?? [])
+      .filter((o) => o.label && o.value);
 
-    return NextResponse.json({ aggregations });
+    return NextResponse.json({ aggregations: { [target]: options } });
   } catch (err) {
     return NextResponse.json(
       { aggregations: {}, error: err instanceof Error ? err.message : "Network error" },

@@ -1,4 +1,6 @@
-import MainBanner from "@/components/home/MainBanner";
+import PartoraHero from "@/components/home/partora/PartoraHero";
+import FinderShell from "@/components/home/partora/FinderShell";
+import StickyBottomFinder from "@/components/home/partora/StickyBottomFinder";
 import OffersSection from "@/components/OffersSection";
 import HowItWorks from "@/components/HowItWorks";
 import AutoCareServices from "@/components/AutoCareServices";
@@ -6,46 +8,55 @@ import WhyChooseUs from "@/components/WhyChooseUs";
 import BrandStrip from "@/components/BrandStrip";
 import AboutUs from "@/components/AboutUs";
 import AutomotiveBlog from "@/components/AutomotiveBlog";
-import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 // Pre-generate the home page for supported locales
 export function generateStaticParams() {
   return [{ locale: "en" }, { locale: "ar" }];
 }
 
+/**
+ * Home page — Partora-style layout.
+ */
 export default function LocaleHomePage({
   params,
 }: {
-  params: { locale: string };
+  params?: { locale?: string };
 }) {
-  // Return 404 for unsupported locales
-  if (params.locale !== "en" && params.locale !== "ar") notFound();
+  const locale = params?.locale === "ar" ? "ar" : "en";
 
   return (
-    <>
-      {/* Hero banner slider with the tyre finder overlaid on it */}
-      <MainBanner locale={params.locale} />
+    <div className="ptr-home">
+      {/* ── Hero: toolbar + category rail + banner slider ── */}
+      <PartoraHero locale={locale} />
 
-      {/* Dynamic offers from Magento */}
+      {/* ── Search / Finder (Hero Box) ───────────────────────────── */}
+      <FinderShell locale={locale} />
+
+      {/* ── Sticky Bottom Floating Search (Appears on scroll) ─────── */}
+      <StickyBottomFinder locale={locale} />
+
+      {/* ── Offers from Magento ─────────────────────────────────── */}
       <OffersSection />
 
-      {/* How TyresWorld works 3-step section */}
-      <HowItWorks locale={params.locale} />
+      {/* ── How It Works (Immediately after Offers) ──────────────── */}
+      <HowItWorks locale={locale} />
 
-      {/* Your Trusted One-Stop Shop for Auto Care (6 Services) */}
-      <AutoCareServices locale={params.locale} />
+      {/* ── Services: Auto Care Categories Carousel ──────────────── */}
+      <AutoCareServices locale={locale} />
 
-      {/* Top Reasons to Buy Online Tyres (Why Choose Us) */}
-      <WhyChooseUs locale={params.locale} />
+      {/* ── Top Reasons To Buy Online Tyres (Why Choose Us) ──────── */}
+      <WhyChooseUs locale={locale} />
 
-      {/* About us — showroom photo with the company copy */}
+      {/* ── About Us (Immediately after Why Choose Us) ───────────── */}
       <AboutUs />
 
-      {/* Shop by tyre brands */}
+      {/* ── Brands ──────────────────────────────────────────────── */}
       <BrandStrip />
 
-      {/* Latest automotive blog posts */}
-      <AutomotiveBlog locale={params.locale} />
-    </>
+      {/* ── Automotive Blog ─────────────────────────────────────── */}
+      <AutomotiveBlog locale={locale} />
+    </div>
   );
 }

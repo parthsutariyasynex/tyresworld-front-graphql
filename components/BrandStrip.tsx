@@ -73,7 +73,7 @@ export default function BrandStrip() {
               {isAr ? "ماركات الإطارات" : "Tyre Brands"}
             </span>
           </h2>
-          <p className="text-black text-xs sm:text-[13.5px] leading-relaxed font-semibold max-w-2xl mx-auto m-0">
+          <p className="text-gray-700 text-xs sm:text-[13.5px] leading-relaxed font-normal max-w-2xl mx-auto m-0 tracking-normal">
             {isAr
               ? "تصفّح مجموعة واسعة من ماركات إطارات السيارات واشترِ الإطارات عبر الإنترنت بأفضل الأسعار. شركاء التركيب لدينا في جميع أنحاء الإمارات جاهزون لتقديم خدمة استثنائية لك."
               : "Browse a wide selection of car tyre brands and purchase tyres online at the best prices. Our customer friendly fitment partners across the UAE are ready to provide you with exceptional service."}
@@ -86,8 +86,8 @@ export default function BrandStrip() {
             <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 list-none p-0 m-0">
               {Array.from({ length: 15 }, (_, i) => (
                 <li key={i}>
-                  <div className="box h-[85px] bg-[#f5f5f5] rounded-xl flex items-center justify-center p-3">
-                    <div className="w-24 h-8 bg-gray-200/80 rounded" />
+                  <div className="box h-[76px] bg-[#f5f5f5] rounded-xl flex items-center justify-center p-2.5">
+                    <div className="w-20 h-6 bg-gray-200/80 rounded" />
                   </div>
                 </li>
               ))}
@@ -95,12 +95,12 @@ export default function BrandStrip() {
           </div>
         ) : hasBrands ? (
           <div className="brands-list">
-            <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 list-none p-0 m-0">
+            <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4 list-none p-0 m-0">
               {brands!.map((brand) => {
                 const brandSlug = brand.name.toLowerCase().replace(/[^a-z0-9]+/g, "").replace(/(^-|-$)/g, "");
                 return (
                   <li key={brand.filterValue}>
-                    <div className="box h-[85px] bg-[#f9f9f9] hover:bg-white rounded-xl border border-gray-200 hover:border-[#ed1c24] hover:shadow-md flex items-center justify-center p-3 transition-all duration-300 group">
+                    <div className="box h-[76px] bg-white rounded-xl border border-gray-200/80 hover:border-[#ed1c24] hover:shadow-md flex items-center justify-center p-2.5 transition-all duration-300 group">
                       <Link
                         href={`/${locale}/tyres/brand/${brandSlug || encodeURIComponent(brand.filterValue)}`}
                         className="brand-link w-full h-full flex items-center justify-center"
@@ -111,7 +111,7 @@ export default function BrandStrip() {
                           <img
                             src={brand.logo}
                             alt={brand.name}
-                            className="max-h-[50px] max-w-[85%] object-contain transition-transform duration-300 group-hover:scale-105"
+                            className="max-h-[36px] max-w-[80%] object-contain transition-transform duration-300 group-hover:scale-105"
                             loading="lazy"
                           />
                         </div>

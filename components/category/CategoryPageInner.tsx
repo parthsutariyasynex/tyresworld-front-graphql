@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react";
 import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
 import TyreFinder from "@/components/TyreFinder";
+import StickyBottomFinder from "@/components/home/partora/StickyBottomFinder";
 import CategorySeoSection from "@/components/CategorySeoSection";
 import CategoryFaqSection, { type FaqItem } from "@/components/CategoryFaqSection";
 import { storeCode, type Locale } from "@/lib/i18n";
@@ -414,42 +415,98 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
         <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
 
           {/* ── Active Filters Bar (Matches reference screenshot) ───── */}
-          {activeFilterCount > 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg p-3 mb-4 flex items-center justify-between flex-wrap gap-2.5 shadow-2xs">
-              <div className="flex items-center flex-wrap gap-2">
-                {Object.entries(selected).map(([code, values]) => {
-                  const group = filterGroups.find((g) => g.code === code);
-                  return values.map((val) => {
-                    const opt = group?.options.find((o) => o.value === val || o.label.toLowerCase() === val.toLowerCase());
-                    const label = opt?.label ?? val;
-                    return (
-                      <button
-                        key={`${code}-${val}`}
-                        type="button"
-                        onClick={() => {
-                          const next = values.filter((v) => v !== val);
-                          handleFilterChange(code, next);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-gray-300 rounded-md text-[12px] font-semibold text-gray-800 transition-colors shadow-2xs group cursor-pointer"
-                        title={isAr ? "إزالة الفلتر" : `Remove ${label}`}
-                      >
-                        <span className="text-[#ed1c24] font-bold text-xs group-hover:scale-110 transition-transform">✕</span>
-                        <span>{label}</span>
-                      </button>
-                    );
-                  });
-                })}
+          {activeFilterCount > 0 && (() => {
+            const hasSize = Boolean(selected.width?.length || selected.height?.length || selected.rim?.length);
+            const otherFilters = Object.entries(selected).filter(([code]) => code !== "width" && code !== "height" && code !== "rim");
+
+            const widthVal = selected.width?.[0];
+            const heightVal = selected.height?.[0];
+            const rimVal = selected.rim?.[0];
+
+            const widthOpt = filterGroups.find((g) => g.code === "width")?.options.find((o) => o.value === widthVal || o.label === widthVal)?.label ?? widthVal;
+            const heightOpt = filterGroups.find((g) => g.code === "height")?.options.find((o) => o.value === heightVal || o.label === heightVal)?.label ?? heightVal;
+            const rimOpt = filterGroups.find((g) => g.code === "rim")?.options.find((o) => o.value === rimVal || o.label === rimVal)?.label ?? rimVal;
+
+            let sizeFormatted = "";
+            if (widthOpt && heightOpt && rimOpt) {
+              const cleanRim = rimOpt.replace(/^R/i, "");
+              sizeFormatted = `${widthOpt}/${heightOpt} R${cleanRim}`;
+            } else if (widthOpt && heightOpt) {
+              sizeFormatted = `${widthOpt}/${heightOpt}`;
+            } else if (widthOpt && rimOpt) {
+              const cleanRim = rimOpt.replace(/^R/i, "");
+              sizeFormatted = `${widthOpt} R${cleanRim}`;
+            } else if (widthOpt) {
+              sizeFormatted = `${widthOpt}`;
+            } else if (heightOpt) {
+              sizeFormatted = `/${heightOpt}`;
+            } else if (rimOpt) {
+              const cleanRim = rimOpt.replace(/^R/i, "");
+              sizeFormatted = `R${cleanRim}`;
+            }
+
+            const handleRemoveSizeFilter = () => {
+              const p = new URLSearchParams(searchParams.toString());
+              p.delete("width");
+              p.delete("height");
+              p.delete("rim");
+              p.delete("page");
+              router.replace(p.toString() ? `${basePath}?${p}` : basePath, { scroll: false });
+            };
+
+            return (
+              <div className="bg-white border border-gray-200 rounded-lg p-2.5 sm:p-3 mb-4 flex items-center justify-between flex-wrap gap-2.5 shadow-2xs">
+                <div className="flex items-center flex-wrap gap-2">
+                  {/* Single Combined Size Pill: "✕ 255/50 R20" */}
+                  {hasSize && sizeFormatted && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveSizeFilter}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-gray-300 rounded-md text-[13px] font-bold text-gray-900 transition-colors shadow-2xs group cursor-pointer"
+                      title={isAr ? "إزالة مقاس الإطار" : `Remove ${sizeFormatted}`}
+                    >
+                      <span className="text-[#ed1c24] font-black text-xs group-hover:scale-110 transition-transform">✕</span>
+                      <span>{sizeFormatted}</span>
+                    </button>
+                  )}
+
+                  {/* Other Selected Filters (Brand, Season, etc.) */}
+                  {otherFilters.map(([code, values]) => {
+                    const group = filterGroups.find((g) => g.code === code);
+                    return values.map((val) => {
+                      const opt = group?.options.find((o) => o.value === val || o.label.toLowerCase() === val.toLowerCase());
+                      const label = opt?.label ?? val;
+                      return (
+                        <button
+                          key={`${code}-${val}`}
+                          type="button"
+                          onClick={() => {
+                            const next = values.filter((v) => v !== val);
+                            handleFilterChange(code, next);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-gray-300 rounded-md text-[13px] font-bold text-gray-900 transition-colors shadow-2xs group cursor-pointer"
+                          title={isAr ? "إزالة الفلتر" : `Remove ${label}`}
+                        >
+                          <span className="text-[#ed1c24] font-black text-xs group-hover:scale-110 transition-transform">✕</span>
+                          <span>{label}</span>
+                        </button>
+                      );
+                    });
+                  })}
+                </div>
+
+                {/* Clear All Button */}
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-md text-[13px] font-bold text-gray-900 transition-colors shadow-2xs ml-auto cursor-pointer"
+                >
+                  <span className="text-[#ed1c24] font-black text-xs">✕</span>
+                  <span>{isAr ? "مسح الكل" : "Clear All"}</span>
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={clearAllFilters}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-md text-[12px] font-bold text-gray-800 transition-colors shadow-2xs ml-auto cursor-pointer"
-              >
-                <span className="text-gray-500 font-bold text-xs">✕</span>
-                <span>{isAr ? "مسح الكل" : "Clear All"}</span>
-              </button>
-            </div>
-          )}
+            );
+          })()}
 
           {/* ── Sort & Filter Controls (Matches reference screenshot) ─ */}
           <div className="flex items-center justify-end gap-2.5 mb-5">
@@ -513,8 +570,8 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
       <CategorySeoSection content={cmsContent} loading={cmsLoading} dir={dir} />
       <CategoryFaqSection faqs={faqs} loading={faqLoading} dir={dir} />
 
-      {/* ── Sticky bottom search bar ────────────────────────────────── */}
-      <TyreFinder locale={locale} categoryUid={category?.uid} basePath={basePath} />
+      {/* ── Sticky bottom search bar (Same as Homepage) ────────────── */}
+      <StickyBottomFinder locale={locale} categoryUid={category?.uid} basePath={basePath} />
     </div>
   );
 }

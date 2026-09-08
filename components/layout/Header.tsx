@@ -42,78 +42,15 @@ export default function Header() {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSubOpen, setMobileSubOpen] = useState<string | null>(null);
-  const [searchOpen, setSearchOpen] = useState(false);
   const { customer, isLoggedIn, logout } = useAuth();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [cartDropdownOpen, setCartDropdownOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
 
-  const searchRef = useRef<HTMLInputElement>(null);
-
-  const [searchVal, setSearchVal] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-
-  useEffect(() => {
-    if (searchVal.trim().length < 2) {
-      setSuggestions([]);
-      return;
-    }
-
-    const delayDebounce = setTimeout(() => {
-      setSuggestionsLoading(true);
-      fetch(`/api/products?search=${encodeURIComponent(searchVal)}&locale=${locale}&pageSize=35`)
-        .then(r => r.json())
-        .then(data => {
-          const products = data.products ?? [];
-          const extractedSizes = new Set<string>();
-          const trimmed = searchVal.trim();
-
-          products.forEach((p: any) => {
-            if (!p.name) return;
-            const stdMatch = p.name.match(/(\d{3})\/(\d{2})\s*(?:Z?R)?(\d{2})/i);
-            if (stdMatch) {
-              extractedSizes.add(`${stdMatch[1]}/${stdMatch[2]} R${stdMatch[3]}`);
-              return;
-            }
-            const commMatch = p.name.match(/(\d{3})\s*R(\d{2})C?/i);
-            if (commMatch) {
-              extractedSizes.add(`${commMatch[1]} R${commMatch[2]}`);
-            }
-          });
-
-          const result: string[] = [];
-          if (trimmed) {
-            result.push(trimmed);
-          }
-          Array.from(extractedSizes).forEach(size => {
-            if (size.toLowerCase() !== trimmed.toLowerCase()) {
-              result.push(size);
-            }
-          });
-
-          setSuggestions(result.slice(0, 6));
-          setSuggestionsLoading(false);
-        })
-        .catch(err => {
-          console.error("Failed to fetch suggestions:", err);
-          setSuggestionsLoading(false);
-        });
-    }, 250);
-
-    return () => clearTimeout(delayDebounce);
-  }, [searchVal, locale]);
-
   const totalItemSums = items.reduce((acc, item) => acc + item.prices.row_total.value, 0);
   const subtotalExclTax = totalItemSums / 1.15;
   const fmtMoney = (v: number) => <Money value={v} currency={currency} digits={2} />;
-
-  /* ── Focus search input when opened ─────────────────────────── */
-  useEffect(() => {
-    if (searchOpen) searchRef.current?.focus();
-  }, [searchOpen]);
 
   useScrollLock(mobileOpen);
 
@@ -121,7 +58,6 @@ export default function Header() {
   useEffect(() => {
     setMobileOpen(false);
     setMobileSubOpen(null);
-    setSearchOpen(false);
     setOpenDropdown(null);
     setCartDropdownOpen(false);
     setAccountDropdownOpen(false);
@@ -143,77 +79,15 @@ export default function Header() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo/tires-logo.png"
+              src="/logo/tires-logo-white.png"
               alt="Tyresworld"
               width={232}
               height={70}
+              className="h-[38px] sm:h-[44px] w-auto object-contain"
             />
           </Link>
 
-          {/* ── Desktop nav (centered via flex-1) ───────────── */}
-          <nav className="site-nav h-full" aria-label="Main navigation">
-              {MAIN_NAV.map((item) => {
-                const hasChildren = !!item.children?.length;
-                const href = navHref(item, locale);
-                const isActive = isNavActive(item, pathname, locale);
-                const isOpen = openDropdown === item.id;
 
-                return hasChildren ? (
-                  /* ── Dropdown item ─────────────────────────── */
-                  <div
-                    key={item.id}
-                    className="relative h-full flex items-center"
-                    onMouseEnter={() => setOpenDropdown(item.id)}
-                    onMouseLeave={() => setOpenDropdown(null)}
-                  >
-                    <Link
-                      href={href}
-                      aria-haspopup="true"
-                      aria-expanded={isOpen}
-                      className="site-nav-link"
-                      data-active={isActive || isOpen}
-                    >
-                      {navLabel(item, locale)}
-                      <ChevronDown
-                        size={14}
-                        strokeWidth={2.5}
-                        className={`mt-0.5 transition-transform duration-200 ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </Link>
-
-                    {/* Dropdown panel */}
-                    <div
-                      className={`site-nav-panel ${locale === "ar" ? "right-0" : "left-0"}`}
-                      data-open={isOpen}
-                    >
-                      <div className="site-nav-panel-body">
-                        {item.children!.map((child) => (
-                          <Link
-                            key={child.id}
-                            href={navHref(child, locale)}
-                            className="site-nav-sublink"
-                          >
-                            {navLabel(child, locale)}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  /* ── Plain link ────────────────────────────── */
-                  <Link
-                    key={item.id}
-                    href={href}
-                    className="site-nav-link"
-                    data-active={isActive}
-                  >
-                    {navLabel(item, locale)}
-                  </Link>
-                );
-              })}
-            </nav>
 
             {/* ── Right actions ─────────────────────────────── */}
             <div className="flex items-center gap-2 flex-shrink-0 ml-auto lg:ml-0 relative">
@@ -231,157 +105,7 @@ export default function Header() {
               <span className="hidden lg:block w-px h-5 bg-black/15 mx-0.5" />
               */}
 
-              {/* Search Toggle Button */}
-              <button
-                onClick={() => {
-                  if (searchOpen) {
-                    setSearchOpen(false);
-                    setSearchVal("");
-                    setSuggestions([]);
-                  } else {
-                    setSearchOpen(true);
-                  }
-                }}
-                className={ICON_BTN}
-                aria-label="Search"
-              >
-                <Search size={17} />
-              </button>
-
-              {/* Absolute Popover Search Bar */}
-              {searchOpen && (
-                <div className={`absolute top-[55px] ${locale === "ar" ? "left-0" : "right-0"} z-[99] w-[340px] sm:w-[480px] md:w-[600px] bg-white border border-gray-200 rounded-lg p-1 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200`}>
-                  {/* Close button with red circle and white X icon */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchOpen(false);
-                      setSearchVal("");
-                      setSuggestions([]);
-                    }}
-                    className={`absolute -top-2 ${locale === "ar" ? "-left-2" : "-right-2"} w-7 h-7 bg-[#ed1c24] hover:bg-[#d61820] text-white flex items-center justify-center rounded-full transition-colors shadow-md z-[100] focus:outline-none`}
-                    aria-label="Close search"
-                  >
-                    <X size={15} />
-                  </button>
-
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const query = searchVal.trim();
-                      if (query) {
-                        router.push(`/${locale}/tyres?q=${encodeURIComponent(query)}`);
-                        setSearchOpen(false);
-                        setSearchVal("");
-                        setSuggestions([]);
-                      }
-                    }}
-                    className="relative w-full"
-                  >
-                    <input
-                      ref={searchRef}
-                      type="text"
-                      value={searchVal}
-                      onChange={(e) => setSearchVal(e.target.value)}
-                      onFocus={() => setSearchFocused(true)}
-                      onBlur={() => {
-                        // Small timeout to allow clicking a suggestion
-                        setTimeout(() => setSearchFocused(false), 200);
-                      }}
-                      placeholder={locale === "ar" ? "ابحث عن مقاس الإطارات..." : "Search Tyre Size e.g 1956515 or 195/65 R15"}
-                      className="w-full bg-white border border-gray-200 rounded-lg py-2.5 px-4 pr-11 text-[13.5px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#ed1c24] focus:ring-1 focus:ring-[#ed1c24] transition-colors"
-                    />
-                    <button
-                      type="submit"
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#ed1c24] hover:text-[#d61820] transition-colors focus:outline-none"
-                      aria-label="Search submit"
-                    >
-                      <Search size={18} />
-                    </button>
-                  </form>
-
-                  {/* Suggestions Dropdown */}
-                  {searchFocused && suggestions.length > 0 && (
-                    <ul className="absolute left-1 right-1 mt-1.5 bg-white border border-gray-200 rounded-lg shadow-xl z-[101] max-h-[220px] overflow-y-auto divide-y divide-gray-50">
-                      {suggestions.map((suggestion, index) => (
-                        <li key={index}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              router.push(`/${locale}/tyres?q=${encodeURIComponent(suggestion)}`);
-                              setSearchOpen(false);
-                              setSearchVal("");
-                              setSuggestions([]);
-                            }}
-                            className={`w-full px-4 py-2.5 text-[13px] text-gray-700 hover:bg-red-50 hover:text-[#ed1c24] font-semibold transition-colors focus:outline-none ${locale === "ar" ? "text-right" : "text-left"}`}
-                          >
-                            {suggestion}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
-
-              {/* Account Dropdown Wrapper */}
-              <div
-                className="relative hidden sm:block"
-                onMouseEnter={() => setAccountDropdownOpen(true)}
-                onMouseLeave={() => setAccountDropdownOpen(false)}
-              >
-                <Link
-                  href="/account"
-                  className="header-icon-dark"
-                  aria-label="My account"
-                >
-                  <User size={22} className="stroke-[2.2]" />
-                </Link>
-
-                {/* Dropdown panel */}
-                {accountDropdownOpen && isLoggedIn && (
-                  <div className="absolute right-0 top-full pt-1.5 w-[220px] z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <div className="bg-white rounded-md shadow-2xl border border-gray-100 p-4 text-left">
-                      <div className="flex flex-col gap-2.5">
-                        <div className="border-b border-gray-100 pb-2">
-                          <p className="text-[10px] uppercase font-bold text-gray-400">
-                            {locale === "ar" ? "مرحباً" : "Welcome"}
-                          </p>
-                          <p className="text-[13px] font-bold text-gray-900 truncate">
-                            {customer?.firstname} {customer?.lastname}
-                          </p>
-                        </div>
-                        <Link
-                          href="/account?tab=dashboard"
-                          onClick={() => setAccountDropdownOpen(false)}
-                          className="text-[12px] font-bold text-gray-700 hover:text-[#ed1c24] transition-colors"
-                        >
-                          {locale === "ar" ? "حسابي" : "MY ACCOUNT"}
-                        </Link>
-                        <Link
-                          href="/account?tab=wishlist"
-                          onClick={() => setAccountDropdownOpen(false)}
-                          className="text-[12px] font-bold text-gray-700 hover:text-[#ed1c24] transition-colors"
-                        >
-                          {locale === "ar" ? "قائمة أمنياتي" : "MY WISHLIST"}
-                        </Link>
-                        <button
-                          onClick={async () => {
-                            setAccountDropdownOpen(false);
-                            await logout();
-                            router.push(`/${locale}`);
-                          }}
-                          className="w-full text-left text-[12px] font-bold text-gray-500 hover:text-[#ed1c24] transition-colors pt-2 border-t border-gray-100"
-                        >
-                          {locale === "ar" ? "تسجيل الخروج" : "SIGN OUT"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Cart Dropdown wrapper */}
+              {/* Cart Dropdown wrapper (First) */}
               <div
                 className="relative"
                 onMouseEnter={() => setCartDropdownOpen(true)}
@@ -389,7 +113,7 @@ export default function Header() {
               >
                 <Link
                   href="/cart"
-                  className="header-icon-red relative"
+                  className="header-icon-dark relative"
                   aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
                 >
                   <ShoppingCart size={22} className="stroke-[2.2]" />
@@ -487,6 +211,63 @@ export default function Header() {
                           </p>
                         </div>
                       )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Account Dropdown Wrapper (Second) */}
+              <div
+                className="relative hidden sm:block"
+                onMouseEnter={() => setAccountDropdownOpen(true)}
+                onMouseLeave={() => setAccountDropdownOpen(false)}
+              >
+                <Link
+                  href="/account"
+                  className="header-icon-dark"
+                  aria-label="My account"
+                >
+                  <User size={22} className="stroke-[2.2]" />
+                </Link>
+
+                {/* Dropdown panel */}
+                {accountDropdownOpen && isLoggedIn && (
+                  <div className="absolute right-0 top-full pt-1.5 w-[220px] z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="bg-white rounded-md shadow-2xl border border-gray-100 p-4 text-left">
+                      <div className="flex flex-col gap-2.5">
+                        <div className="border-b border-gray-100 pb-2">
+                          <p className="text-[10px] uppercase font-bold text-gray-400">
+                            {locale === "ar" ? "مرحباً" : "Welcome"}
+                          </p>
+                          <p className="text-[13px] font-bold text-gray-900 truncate">
+                            {customer?.firstname} {customer?.lastname}
+                          </p>
+                        </div>
+                        <Link
+                          href="/account?tab=dashboard"
+                          onClick={() => setAccountDropdownOpen(false)}
+                          className="text-[12px] font-bold text-gray-700 hover:text-[#ed1c24] transition-colors"
+                        >
+                          {locale === "ar" ? "حسابي" : "MY ACCOUNT"}
+                        </Link>
+                        <Link
+                          href="/account?tab=wishlist"
+                          onClick={() => setAccountDropdownOpen(false)}
+                          className="text-[12px] font-bold text-gray-700 hover:text-[#ed1c24] transition-colors"
+                        >
+                          {locale === "ar" ? "قائمة أمنياتي" : "MY WISHLIST"}
+                        </Link>
+                        <button
+                          onClick={async () => {
+                            setAccountDropdownOpen(false);
+                            await logout();
+                            router.push(`/${locale}`);
+                          }}
+                          className="w-full text-left text-[12px] font-bold text-gray-500 hover:text-[#ed1c24] transition-colors pt-2 border-t border-gray-100"
+                        >
+                          {locale === "ar" ? "تسجيل الخروج" : "SIGN OUT"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

@@ -1,2 +1,5 @@
-import BrandsPage from "../../brands/page";
-export default BrandsPage;
+import BrandsPageInner from "@/components/brands/BrandsPageInner";
+
+export default function LocaleBrandsPage() {
+  return <BrandsPageInner />;
+}

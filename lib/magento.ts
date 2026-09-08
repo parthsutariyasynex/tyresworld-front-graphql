@@ -182,6 +182,14 @@ import { resolveCountry, resolveOrigin, resolveWarranty } from "./attributeMappi
 
 export function adaptGqlProduct(p: GqlProduct): Product {
   const [price, originalPrice, maxPrice, currency] = resolvePrices(p);
+
+  /* Brand display name. `p.brand` is the raw mgs_brand option id, which Magento
+     sends as a number, so when neither brand_name nor the local lookup resolves
+     it the chain would yield a number for a field typed — and consumed — as a
+     string (TyreListingCard calls .toLowerCase() on it). Coerce here, keeping
+     undefined as undefined so the `?? ` chains downstream still work. */
+  const resolvedBrandName =
+    p.brand_name ?? getBrandName(p.brand) ?? p.brand ?? (p.name ?? "").split(" ")[0];
   const id = String(p.uid ?? p.sku ?? p.url_key ?? Math.random().toString(36).slice(2));
   // url_suffix is typically ".html" — strip it for our internal route /product/[urlKey]
   const urlKey = p.url_key
@@ -213,7 +221,7 @@ export function adaptGqlProduct(p: GqlProduct): Product {
     brand: p.brand ?? undefined,
 
     // Brand display fields — use backend values when available, else derive locally.
-    brandName: p.brand_name ?? getBrandName(p.brand) ?? p.brand ?? (p.name ?? "").split(" ")[0] ?? undefined,
+    brandName: resolvedBrandName == null ? undefined : String(resolvedBrandName),
     brandLogoUrl: p.brand_logo_url ?? undefined,
     brandPageUrl: p.brand_page_url ?? undefined,
 

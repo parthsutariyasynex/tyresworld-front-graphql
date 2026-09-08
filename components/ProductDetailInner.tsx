@@ -15,6 +15,7 @@ import { useCart } from "@/lib/cart-context";
 import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
 import TyreFinder from "@/components/TyreFinder";
+import StickyBottomFinder from "@/components/home/partora/StickyBottomFinder";
 import DriverReviewsWidget from "@/components/DriverReviews/DriverReviewsWidget";
 import { APP_CONFIG } from "@/src/config/app-config";
 import JsonLd from "@/components/JsonLd";
@@ -691,9 +692,6 @@ export default function ProductDetailInner({
     <>
       <JsonLd data={productJsonLd} />
 
-      {/* ── Tyre Search ───────────────────────────────────────── */}
-      <TyreFinder categoryUid={APP_CONFIG.magento.tyresCategoryUid} />
-
       {/* ── Breadcrumb ─────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-100">
         <div className="container py-3">
@@ -879,6 +877,9 @@ export default function ProductDetailInner({
         isOpen={isWriteReviewOpen}
         onClose={() => setIsWriteReviewOpen(false)}
       />
+
+      {/* ── Sticky Bottom Floating Search (Appears on scroll) ─────── */}
+      <StickyBottomFinder locale={locale} categoryUid={APP_CONFIG.magento.tyresCategoryUid} />
     </>
   );
 }

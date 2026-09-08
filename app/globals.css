@@ -30,7 +30,7 @@
 @font-face {
   font-family: 'Kanit';
   src: url('/fonts/Kanit-Medium.woff2') format('woff2');
-  font-weight: 500;
+  font-weight: 500 600;
   font-style: normal;
   font-display: swap;
 }
@@ -38,7 +38,7 @@
 @font-face {
   font-family: 'Kanit';
   src: url('/fonts/Kanit-Bold.woff2') format('woff2');
-  font-weight: 600 900;
+  font-weight: 700 900;
   font-style: normal;
   font-display: swap;
 }
@@ -60,7 +60,7 @@
 }
 
 /* ── Saudi Riyal currency symbol ───────────────────────────────── */
-@font-face {
+/* @font-face {
   font-family: "saudi-riyal";
   src: url("/fonts/saudi-riyal-symbol.woff") format("woff"),
        url("/fonts/saudi-riyal-symbol.ttf") format("truetype");
@@ -74,8 +74,8 @@
   font-weight: normal;
   font-style: normal;
   position: relative;
-  top: 1px;
-}
+  top: 1px; */
+/* } */
 
 /* ═══════════════════════════════════════════════════════════════════
    BRAND TOKENS — the single source of truth for the whole storefront.
@@ -178,17 +178,25 @@
 }
 
 @layer base {
+  *, ::before, ::after {
+    font-family: inherit;
+  }
+
   html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     scrollbar-gutter: stable;
-    font-family: 'Kanit', sans-serif;
+    font-family: 'Kanit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
   body {
-    @apply bg-white text-ink font-sans;
-    font-family: 'Kanit', sans-serif;
+    @apply bg-white text-ink;
+    font-family: 'Kanit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  button, input, optgroup, select, textarea {
+    font-family: inherit;
   }
 
   ::selection {
@@ -223,7 +231,17 @@
   }
 
   .section-title {
+    letter-spacing: normal;
+  }
+
+  h1.section-title,
+  h2.section-title,
+  h3.section-title {
     @apply font-display text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.05];
+  }
+
+  .section-title p {
+    letter-spacing: normal;
   }
 
   .hide-scrollbar::-webkit-scrollbar {
@@ -283,8 +301,11 @@
 
   /* ── Main bar ───────────────────────────────────────────────────── */
   .site-header {
-    @apply relative top-0 z-50 bg-white;
-    border-bottom: 1px solid rgb(var(--c-line) / 0.6);
+    background: #121011;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    top: 0;
+    z-index: 50;
   }
 
   .site-header-inner {
@@ -293,7 +314,7 @@
   }
 
   .site-header-logo img {
-    @apply w-auto object-contain h-[42px] sm:h-[48px];
+    @apply w-auto object-contain h-[38px] sm:h-[44px];
   }
 
   /* ── Primary nav ────────────────────────────────────────────────── */
@@ -302,7 +323,7 @@
   }
 
   .site-nav-link {
-    @apply flex items-center gap-1 px-1.5 xl:px-2.5 2xl:px-3 py-2 text-[12.5px] xl:text-[13.5px] 2xl:text-[14.5px] font-bold whitespace-nowrap text-black transition-colors;
+    @apply flex items-center gap-1 px-1.5 xl:px-2.5 2xl:px-3 py-2 text-[12.5px] xl:text-[13.5px] 2xl:text-[14.5px] font-bold whitespace-nowrap text-white transition-colors;
   }
 
   .site-nav-link:hover,
@@ -339,11 +360,11 @@
   /* ── Right-hand icon actions ────────────────────────────────────── */
   .header-icon {
     @apply w-[36px] h-[36px] rounded-full flex items-center justify-center
-           transition-colors flex-shrink-0 hover:bg-black/5;
+           transition-colors flex-shrink-0 hover:bg-white/10;
   }
 
   .header-icon-dark {
-    @apply header-icon text-black;
+    @apply header-icon text-white;
   }
 
   .header-icon-dark:hover {
@@ -1809,7 +1830,7 @@
  * Listing pages (no .cms-home parent): fixed at viewport bottom.
  * Homepage: overridden below to stay in normal flow.
  */
-.tyreform {
+.tyreform:not(.disable-sticky):not(.static-finder) {
   position: fixed;
   bottom: 0;
   left: 50%;
@@ -1821,10 +1842,10 @@
 }
 
 /* StickyTyreSearch scroll-up state: pin below header */
-.tyreform.sticky,
-.tyreform--sticky {
+.tyreform.sticky:not(.disable-sticky):not(.static-finder),
+.tyreform--sticky:not(.disable-sticky):not(.static-finder) {
   position: fixed;
-  top: 70px;
+  top:  0px;
   bottom: auto;
   z-index: 40;
 }
@@ -1879,9 +1900,9 @@
 @media screen and (max-width: 767px) {
 
   /* Listing pages: pin the finder at the viewport bottom. */
-  .tyreform,
-  .tyreform.sticky,
-  .tyreform--sticky {
+  .tyreform:not(.disable-sticky):not(.static-finder),
+  .tyreform.sticky:not(.disable-sticky):not(.static-finder),
+  .tyreform--sticky:not(.disable-sticky):not(.static-finder) {
     position: fixed !important;
     top: auto !important;
     bottom: 0 !important;
@@ -1962,7 +1983,7 @@ html[lang="ar"] .nav-tabs {
   height: 100%;
   z-index: 5;
   top: 0;
-  right: -11px;
+  right: -5px;
   transform: skew(18deg);
   transform-origin: top;
 }
@@ -1991,7 +2012,7 @@ html[lang="ar"] .nav-tabs::before {
   border: none;
   margin-right: 0;
   border-radius: 50px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 10px 20px;
   line-height: 1;
   text-align: center;
@@ -2133,7 +2154,7 @@ html[lang="ar"] .tab-content {
   border: 0;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: #000;
   transition: color 0.15s ease;
 }
@@ -2144,8 +2165,8 @@ html[lang="ar"] .tab-content {
 
 .selection-item:hover { color: var(--brand-red); }
 
-/* A chosen field reads bold, in ink. */
-.selection-item.is-set { font-weight: 700; }
+/* A chosen field reads semibold, in ink. */
+.selection-item.is-set { font-weight: 600; }
 
 .selection-item .sel-arrow {
   color: rgba(0, 0, 0, 0.35);
@@ -2385,6 +2406,30 @@ html[lang="ar"] .tab-content {
   }
 }
 
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background-color: #f3f4f6;
+}
+
+.skeleton-shimmer::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.4) 20%,
+    rgba(255, 255, 255, 0.7) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  animation: shimmer 1.5s infinite;
+  content: '';
+}
+
 @keyframes modalFadeIn {
   from {
     opacity: 0;
@@ -2468,253 +2513,1995 @@ html[lang="ar"] .tab-content {
   background-position: center;
   background-repeat: no-repeat;
 }
-/* ═══════════════════════════════════════════════════════════════════
-   TYRE FINDER — size picker modal (stepped: Width → Height → Rim)
-   ═══════════════════════════════════════════════════════════════════ */
-.finder-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: rgb(0 0 0 / 0.6);
-  backdrop-filter: blur(3px);
+
+/* ── TyreFinder Modal Red Scrollbar (matching screenshot) ── */
+.finder-modal-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.finder-modal-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+.finder-modal-scroll::-webkit-scrollbar-thumb {
+  background: #d12729;
+  border-radius: 9999px;
+}
+.finder-modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #d12729 #f1f5f9;
 }
 
-.finder-selection-modal {
-  position: relative;
+
+/* ═══════════════════════════════════════════════════════════════════
+   PARTORA HOME SKIN
+   ───────────────────────────────────────────────────────────────────
+   Visual layer for the home page only. Everything here is presentation:
+   no component in this block changes an endpoint, a query, a route or a
+   piece of behaviour.
+
+   Geometry is taken from partora.com:
+     · 12-column grid, 16px gutters, 1280px container
+     · hero stage 240 / 320 / 380 / 420px by breakpoint
+     · radii 16px (cards) · 20px (hero) · 28px (section shells)
+     · Tailwind shadow-lg on cards, shadow-sm on outlines
+     · headings semibold sentence-case, muted xs/sm subcopy
+   Colour stays on the TyresWorld tokens declared at the top of this
+   file — no new hex values are introduced.
+
+   Scope note: rules that reach outside the page (header, footer) are
+   guarded by `body:has(.ptr-home)` so no other route is restyled.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Shared primitives ──────────────────────────────────────────── */
+.ptr-home {
+  background: rgb(var(--c-surface-2));
+}
+
+.ptr-container {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+.ptr-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.ptr-section {
+  padding-block: 2.25rem;
+}
+
+@media (min-width: 768px) {
+  .ptr-section {
+    padding-block: 3rem;
+  }
+}
+
+.ptr-section--tint {
+  background: rgb(var(--c-surface));
+}
+
+/* Section header: title left, "view all" right — Partora's md:flex-row. */
+.ptr-head {
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .ptr-head {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.ptr-h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: rgb(var(--c-ink));
+}
+
+@media (min-width: 768px) {
+  .ptr-h2 {
+    font-size: 1.875rem;
+  }
+}
+
+.ptr-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: rgb(var(--c-gravel));
+}
+
+@media (min-width: 640px) {
+  .ptr-sub {
+    font-size: 0.875rem;
+  }
+}
+
+.ptr-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgb(var(--c-red));
+  transition: gap 0.2s ease;
+}
+
+.ptr-link:hover {
+  gap: 0.625rem;
+}
+
+.ptr-empty {
+  padding-block: 2rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: rgb(var(--c-gravel));
+}
+
+/* White panel — the Partora card shell. */
+.ptr-panel {
+  background: rgb(var(--c-surface));
+  border-radius: 28px;
+  padding: 1.25rem 1rem 1.5rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+}
+
+@media (min-width: 768px) {
+  .ptr-panel {
+    padding: 1.75rem 1.75rem 2rem;
+  }
+}
+
+.ptr-panel-head {
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+/* Skeleton fill — matches Partora's react-loading-skeleton greys. */
+.ptr-skel {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    rgb(var(--c-fill)) 25%,
+    rgb(var(--c-line) / 0.45) 37%,
+    rgb(var(--c-fill)) 63%
+  );
+  background-size: 400% 100%;
+  animation: ptr-skel 1.4s ease infinite;
+}
+
+@keyframes ptr-skel {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ptr-skel {
+    animation: none;
+  }
+}
+
+/* Category chips */
+.ptr-chips {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  margin-bottom: 1.25rem;
+  scrollbar-width: none;
+}
+
+.ptr-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.ptr-chip {
+  flex-shrink: 0;
+  padding: 0.5rem 1.125rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--c-line) / 0.8);
+  background: rgb(var(--c-surface));
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgb(var(--c-gravel));
+  transition: all 0.2s ease;
+}
+
+.ptr-chip:hover {
+  border-color: rgb(var(--c-ink) / 0.4);
+  color: rgb(var(--c-ink));
+}
+
+.ptr-chip.is-active {
+  background: rgb(var(--c-asphalt));
+  border-color: rgb(var(--c-asphalt));
+  color: #ffffff;
+}
+
+/* ── Header — dark bar, home only ───────────────────────────────── */
+body:has(.ptr-home) {
+  --header-height: 64px;
+}
+
+body:has(.ptr-home) .site-header {
+  background: rgb(var(--c-asphalt));
+  border-bottom: 0;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+
+body:has(.ptr-home) .site-header-inner {
+  max-width: 1280px;
+  padding-inline: 1rem;
+}
+
+/* The default wordmark is black-on-white; on the dark home header the
+   white variant already sitting in /public/logo is painted on the link
+   and the original <img> is only kept for layout + alt text. Doing it in
+   CSS keeps Header.tsx (shared with every other route) untouched. */
+body:has(.ptr-home) .site-header-logo {
+  background-image: url("/logo/tires-logo-white.png");
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: contain;
+}
+
+html[lang="ar"] body:has(.ptr-home) .site-header-logo {
+  background-position: right center;
+}
+
+body:has(.ptr-home) .site-header-logo img {
+  height: 38px;
+  visibility: hidden;
+}
+
+body:has(.ptr-home) .site-header button[aria-label="Open menu"] {
+  color: #ffffff;
+}
+
+body:has(.ptr-home) .site-header button[aria-label="Open menu"]:hover {
+  color: rgb(var(--c-amber));
+}
+
+body:has(.ptr-home) .site-nav-link {
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+body:has(.ptr-home) .site-nav-link:hover,
+body:has(.ptr-home) .site-nav-link[data-active="true"] {
+  color: #ed1c24;
+}
+
+body:has(.ptr-home) .header-icon-dark {
+  color: #ffffff;
+}
+
+body:has(.ptr-home) .header-icon-dark:hover {
+  color: #ed1c24;
+  background: rgb(255 255 255 / 0.08);
+}
+
+body:has(.ptr-home) .header-icon-red {
+  color: #ed1c24;
+}
+
+body:has(.ptr-home) .header-icon:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+/* ── Hero ───────────────────────────────────────────────────────── */
+.ptr-hero {
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.ptr-hero-band {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 5rem;
+  background: rgb(var(--c-asphalt));
+}
+
+.ptr-hero-toolbar {
+  position: relative;
+  z-index: 30;
+  padding-top: 1.5rem;
+}
+
+.ptr-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #ffffff;
+  color: #111111;
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s ease;
+}
+
+.ptr-hero-cta:hover {
+  background: #ed1c24;
+  border-color: #ed1c24;
+  color: #ffffff;
+}
+
+/* Search field */
+.ptr-search-input {
   width: 100%;
-  max-width: 720px;
-  max-height: 88vh;
-  background: #fff;
+  padding: 0.75rem 3rem 0.75rem 1rem;
+  border-radius: 1rem;
+  border: 0;
+  background: rgb(var(--c-surface));
+  font-size: 0.875rem;
+  font-style: italic;
+  color: rgb(var(--c-ink));
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.ptr-search-input::placeholder {
+  color: rgb(var(--c-gravel));
+}
+
+.ptr-search-input:focus {
+  box-shadow: 0 0 0 2px rgb(var(--c-red));
+}
+
+html[lang="ar"] .ptr-search-input {
+  padding: 0.75rem 1rem 0.75rem 3rem;
+}
+
+.ptr-search-submit {
+  position: absolute;
+  inset-inline-end: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgb(var(--c-gravel));
+  transition: color 0.2s ease;
+}
+
+.ptr-search-submit:hover {
+  color: rgb(var(--c-red));
+}
+
+/* Category rail head + body — one stacked card across the two rows. */
+.ptr-cat-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9375rem 1rem;
+  border-radius: 1rem 1rem 0 0;
+  background: rgb(var(--c-surface));
+  border-bottom: 1px solid rgb(var(--c-line) / 0.7);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: rgb(var(--c-ink));
+}
+
+.ptr-cat-head-bars {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ptr-cat-head-bars span {
+  display: block;
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(var(--c-red));
+}
+
+/* The rail is taken out of flow at desktop so its ten rows can't stretch
+   the hero row past the banner's aspect-ratio height; the body scrolls
+   instead, the way Partora's `flex-1 overflow-y-auto` rail does. */
+.ptr-hero-col {
+  position: relative;
+}
+
+@media (min-width: 1024px) {
+  .ptr-hero-col > .ptr-cat-rail {
+    position: absolute;
+    inset: 0;
+  }
+}
+
+.ptr-cat-rail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: rgb(var(--c-surface));
+  border-radius: 0 0 1rem 1rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  padding-block: 0.5rem;
+  overflow: visible;
+  z-index: 40;
+}
+
+.ptr-cat-rail-body {
+  flex: 1;
+  overflow: visible;
+}
+
+/* Row height is tuned so MAIN_NAV's ten entries plus the head and foot
+   fill the 420px hero column exactly, the way Partora's rail does. */
+.ptr-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+}
+
+.ptr-cat-link {
+  transition: background-color 0.2s ease;
+}
+
+.ptr-cat-link:hover {
+  background: rgb(var(--c-surface-2));
+}
+
+.ptr-cat-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: rgb(var(--c-gravel));
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.ptr-cat-link:hover .ptr-cat-icon-wrap {
+  color: rgb(var(--c-red));
+  transform: scale(1.1);
+}
+
+.ptr-cat-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.ptr-cat-label {
+  flex: 1;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgb(var(--c-ink) / 0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ptr-cat-link:hover .ptr-cat-label {
+  color: rgb(var(--c-red));
+}
+
+.ptr-cat-chevron {
+  flex-shrink: 0;
+  color: rgb(var(--c-line));
+}
+
+.ptr-cat-empty {
+  padding: 1rem;
+  font-size: 0.8125rem;
+  color: rgb(var(--c-gravel));
+}
+
+/* Hero stage — Clean fixed height ramp, 240 / 320 / 380 / 440px.
+   Heights are declared rather than derived from the artwork so the box
+   never shifts while the banner loads. */
+.ptr-hero-stage {
+  position: relative;
+  width: 100%;
+  height: 240px;
   border-radius: 20px;
-  box-shadow: 0 24px 60px rgb(0 0 0 / 0.35);
   overflow: hidden;
 }
 
-/* ── Header ── */
-.finder-modal-header {
-  padding: 20px 22px 0;
-  border-bottom: 1px solid rgb(var(--c-line) / 0.6);
+@media (min-width: 640px) {
+  .ptr-hero-stage {
+    height: 320px;
+  }
 }
 
-.finder-modal-header-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+@media (min-width: 768px) {
+  .ptr-hero-stage {
+    height: 380px;
+  }
 }
 
-.finder-header-h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.1;
-  text-transform: uppercase;
-  color: var(--brand-ink);
+@media (min-width: 1024px) {
+  .ptr-hero-stage {
+    height: 440px;
+  }
 }
 
-.finder-header-subtitle {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--brand-gravel);
+.ptr-hero-swiper {
+  height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
 }
 
-.finder-current-selection {
-  flex-shrink: 0;
-  text-align: right;
-  padding: 6px 12px;
-  background: var(--color-surface-2);
-  border-radius: 10px;
+.ptr-hero-swiper .swiper-wrapper,
+.ptr-hero-swiper .swiper-slide {
+  height: 100%;
 }
 
-.finder-current-selection-label {
-  display: block;
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--brand-gravel);
+.ptr-hero-slide {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgb(var(--c-fill));
 }
 
-.finder-current-selection-value {
-  display: block;
-  margin-top: 2px;
-  font-size: 15px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  color: var(--brand-red);
+.ptr-hero-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
-.finder-close-btn {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+/* Pagination — Partora's bullets: 8px dark dots, the active one a wide
+   red pill. Their slider carries no prev/next arrows, so neither does
+   this one; the dots stay the only control. */
+.ptr-hero-swiper .swiper-pagination {
+  position: absolute;
+  bottom: 0.75rem !important;
+  inset-inline: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--brand-ink);
+  gap: 6px;
+}
+
+.ptr-hero-swiper .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  margin: 0 !important;
+  border-radius: 9999px;
+  background: rgb(var(--c-ink) / 0.4);
+  opacity: 1;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.ptr-hero-swiper .swiper-pagination-bullet-active {
+  width: 32px;
+  background: rgb(var(--c-red));
+}
+
+/* Flash Sale slider bullets */
+.flash-sale-swiper .swiper-pagination {
+  bottom: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.swiper-custom-bullet {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: rgb(var(--c-line));
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.swiper-custom-bullet-active {
+  width: 22px;
+  border-radius: 9999px;
+  background: rgb(var(--c-red));
+}
+
+/* ── Search / Finder (Homepage FinderShell) ─────────────────────────
+   TyreFinder inside FinderShell stays permanently in-flow inside the dark
+   hero card. It NEVER detaches or pins to the viewport bottom on scroll. */
+.ptr-finder .tyre-search-sticky-wrapper,
+.tyre-search-sticky-wrapper.disable-sticky,
+.tyre-search-sticky-wrapper.static-finder {
+  position: relative !important;
+  height: auto !important;
+  width: 100% !important;
+  display: block !important;
+}
+
+.ptr-finder .tyreform,
+.ptr-finder .tyreform.sticky,
+.ptr-finder .tyreform--sticky,
+.tyreform.disable-sticky,
+.tyreform.static-finder,
+.disable-sticky .tyreform,
+.static-finder .tyreform {
+  position: relative !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  z-index: 10 !important;
+  display: block !important;
+  inset: auto !important;
+}
+
+.ptr-finder .search-tabs,
+.disable-sticky .search-tabs {
+  max-width: 100%;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #222021 0%, #171516 100%);
+  border: 2px solid rgba(237, 28, 36, 0.5);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5), 0 0 25px rgba(237, 28, 36, 0.2);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ptr-finder .search-tabs:hover,
+.disable-sticky .search-tabs:hover {
+  border-color: rgba(237, 28, 36, 0.85);
+  box-shadow: 0 14px 45px rgba(0, 0, 0, 0.6), 0 0 35px rgba(237, 28, 36, 0.35);
+}
+
+.ptr-finder .nav-tabs,
+.disable-sticky .nav-tabs {
+  background-color: #0c0b0c;
+  border-radius: 50px 0 0 50px;
+}
+
+html[lang="ar"] .ptr-finder .nav-tabs,
+html[lang="ar"] .disable-sticky .nav-tabs {
+  border-radius: 0px 50px 50px 0;
+}
+
+.ptr-finder .nav-tabs::before,
+.disable-sticky .nav-tabs::before {
+  background: #0c0b0c;
+}
+
+.ptr-finder .selection-item,
+.disable-sticky .selection-item {
+  transition: all 0.2s ease;
+}
+
+.ptr-finder .selection-item:hover,
+.disable-sticky .selection-item:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.ptr-finder-slot {
+  position: relative;
+  min-height: 64px;
+}
+
+@media (max-width: 767px) {
+  .ptr-finder-slot {
+    min-height: 120px;
+  }
+}
+
+/* ── Sticky Bottom Floating Finder Card ── */
+.ptr-sticky-bottom-card .search-tabs {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+}
+
+.ptr-sticky-bottom-card .nav-tabs {
+  background-color: #0c0b0c !important;
+}
+
+.ptr-sticky-bottom-card .nav-tabs::before {
+  background: #0c0b0c !important;
+}
+
+@media (max-width: 767px) {
+  .ptr-sticky-bottom-card {
+    border-radius: 20px !important;
+  }
+}
+
+/* ── Products grid ──────────────────────────────────────────────── */
+.ptr-products {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .ptr-products {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .ptr-products {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LEGACY SECTIONS — Partora skin
+   The Offers / Brands / Services / How-it-works / Why-us / About / Blog
+   components keep their own markup and data. These rules only restate
+   their typography, spacing, radii and shadows in Partora's language.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Rhythm: Partora runs a tighter mt-7 / sm:mt-10 between sections. */
+.ptr-home .section.section-padding,
+.ptr-home section.brands,
+.ptr-home section.blogs {
+  padding-block: 2.25rem;
+}
+
+@media (min-width: 768px) {
+  .ptr-home .section.section-padding,
+  .ptr-home section.brands,
+  .ptr-home section.blogs {
+    padding-block: 3rem;
+  }
+}
+
+/* Headings: sentence case, semibold, no wide tracking. */
+.ptr-home .section-title h2 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+@media (min-width: 768px) {
+  .ptr-home .section-title h2 {
+    font-size: 1.875rem;
+  }
+}
+
+.ptr-home .section-title p {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: rgb(var(--c-gravel));
+}
+
+.ptr-home .section-title h4,
+.ptr-home .section-title h3 {
+  letter-spacing: normal;
+}
+
+/* Alternating grounds so the page reads as stacked cards, not stripes.
+   The page itself sits on surface-2, so only the white bands need
+   declaring; Offers keeps the page ground and Brands breaks it up. */
+.ptr-home section.brands {
+  background: rgb(var(--c-surface));
+}
+
+.ptr-home section.blogs {
+  background: rgb(var(--c-surface-2));
+}
+
+/* Brands — Partora's 6-up grid of tall, shadowed logo cards. */
+.ptr-home .brands-list ul {
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .ptr-home .brands-list ul {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.ptr-home .brands-list .box {
+  height: 4.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.875rem;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s ease;
+}
+
+.ptr-home .brands-list .box:hover {
+  transform: translateY(-2px);
+  border-color: #ed1c24;
+  box-shadow: 0 8px 20px rgba(237, 28, 36, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.ptr-home .brand-link {
+  min-height: 0 !important;
+  padding: 0.5rem 1rem !important;
+}
+
+/* Services — square Partora tiles instead of outlined circles. */
+.ptr-home .tyres-finder-box {
+  background: rgb(var(--c-surface));
+}
+
+.ptr-home .tyres-finder-inner .finder-box .box-image > a {
+  width: 100%;
+  height: 10rem;
+  border-radius: 1rem;
+  border: 0;
+  outline: 0;
+  padding: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.ptr-home .tyres-finder-inner .finder-box .box-image > a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.12), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.ptr-home .tyres-finder-inner .finder-box .box-image > a img {
+  border-radius: 0.75rem;
+}
+
+.ptr-home .tyres-finder-inner .finder-box h3 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Dark sections become inset rounded panels rather than full-bleed bands. */
+.ptr-home section.how-works,
+.ptr-home section.why-you-should,
+.ptr-home section.site-details {
   background: transparent;
   border: 0;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  padding-block: 1rem;
 }
 
-.finder-close-btn:hover { background: rgb(0 0 0 / 0.06); color: var(--brand-red); }
+.ptr-home section.how-works > .container,
+.ptr-home section.why-you-should > .container,
+.ptr-home section.site-details > .container {
+  border-radius: 28px;
+  padding: 2rem 1.25rem;
+}
 
-/* ── Step tabs ── */
-.steps { margin-top: 16px; }
+@media (min-width: 768px) {
+  .ptr-home section.how-works > .container,
+  .ptr-home section.why-you-should > .container,
+  .ptr-home section.site-details > .container {
+    padding: 2.75rem 2.5rem;
+  }
+}
 
-.finder-step-tabs {
+.ptr-home section.how-works > .container,
+.ptr-home section.why-you-should > .container {
+  background: rgb(var(--c-asphalt));
+}
+
+.ptr-home section.site-details > .container {
+  background: rgb(var(--c-surface));
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+}
+
+/* Blog cards */
+.ptr-home .blogs .box {
+  border: 0;
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+}
+
+.ptr-home .blogs .box:hover {
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.12), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Pill CTAs across sections: brand red hover */
+.ptr-home .button-primary:hover {
+  background: #c6181d !important;
+  color: #ffffff !important;
+}
+
+/* ── Footer — home only ─────────────────────────────────────────── */
+body:has(.ptr-home) .site-footer {
+  padding-top: 2.75rem;
+}
+
+body:has(.ptr-home) .site-footer .widget-col > h3,
+body:has(.ptr-home) .site-footer .widget-col > h4 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Exclusive Offers — three-up rail + two dark tiles ──────────────
+   Left rail is a bordered white card carrying the banner carousel; the
+   two tiles beside it are full-bleed artwork with a bottom-weighted
+   gradient, a heading, a line of live copy and a pill button. */
+.ptr-offers-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .ptr-offers-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .ptr-offers-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Left rail */
+.ptr-offers-eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgb(var(--c-red));
+}
+
+.ptr-offers-title {
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgb(var(--c-ink));
+}
+
+@media (min-width: 768px) {
+  .ptr-offers-title {
+    font-size: 1.875rem;
+  }
+}
+
+.ptr-offers-card {
+  border: 1px solid rgb(var(--c-red) / 0.35);
+  border-radius: 1rem;
+  background: rgb(var(--c-surface));
+  padding: 1rem;
+}
+
+.ptr-offers-swiper {
+  padding-bottom: 1.75rem;
+  /* Clip the neighbouring slide that Swiper parks beside the active one;
+     without this the loop's next frame peeks past the card's edge. */
+  overflow: hidden;
+}
+
+.ptr-offers-slide {
   display: flex;
-  gap: 8px;
-  margin: 0;
-  padding: 0 0 14px;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.finder-step-tab { flex: 1; }
+.ptr-offers-slide-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 559 / 391;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: rgb(var(--c-fill));
+}
 
-.finder-step-tab > button {
+.ptr-offers-slide-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.ptr-offers-slide:hover .ptr-offers-slide-img img {
+  transform: scale(1.03);
+}
+
+.ptr-offers-slide-title {
+  display: block;
+  text-align: center;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgb(var(--c-ink));
+}
+
+.ptr-offers-swiper .swiper-pagination {
+  bottom: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ptr-offers-swiper .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  margin: 0 !important;
+  border-radius: 9999px;
+  background: rgb(var(--c-ink) / 0.25);
+  opacity: 1;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.ptr-offers-swiper .swiper-pagination-bullet-active {
+  width: 26px;
+  background: rgb(var(--c-red));
+}
+
+/* Right tiles */
+.ptr-offer-tile {
+  position: relative;
+  display: block;
+  min-height: 340px;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgb(var(--c-asphalt));
+}
+
+/* The offer banners are promo posters with their own baked-in headline,
+   so the artwork is dimmed and desaturated to read as texture behind the
+   tile's own heading instead of competing with it. */
+.ptr-offer-tile-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.55) brightness(0.7);
+  transition: transform 0.6s ease;
+}
+
+.ptr-offer-tile:hover .ptr-offer-tile-img {
+  transform: scale(1.04);
+}
+
+.ptr-offer-tile-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    rgb(0 0 0 / 0.93) 0%,
+    rgb(0 0 0 / 0.85) 50%,
+    rgb(0 0 0 / 0.6) 100%
+  );
+}
+
+.ptr-offer-tile-body {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--color-surface-2);
-  border: 1px solid transparent;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  gap: 0.75rem;
+  padding: 1.75rem;
+  max-width: 30ch;
 }
 
-.finder-step-tab.active > button { border-color: var(--brand-red); background: #fff; }
-.finder-step-tab.done > button { background: rgb(var(--c-red) / 0.06); }
-.finder-step-tab.locked > button { opacity: 0.45; cursor: not-allowed; }
-
-.finder-step-tab-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--brand-gravel);
+.ptr-offer-tile-heading {
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #ffffff;
 }
 
-.finder-step-tab-value {
-  margin-top: 1px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--brand-ink);
+@media (min-width: 640px) {
+  .ptr-offer-tile-heading {
+    font-size: 1.5rem;
+  }
 }
 
-.finder-step-tab.active .finder-step-tab-value { color: var(--brand-red); }
-
-/* ── Body ── */
-.finder-modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 18px 22px;
+.ptr-offer-tile-desc {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgb(255 255 255 / 0.8);
 }
 
-.finder-loader { display: flex; justify-content: center; padding: 48px 0; }
+.ptr-offer-tile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.5rem;
+  padding: 0.6875rem 1.75rem;
+  border-radius: 9999px;
+  background: rgb(var(--c-surface));
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--c-ink));
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
 
-.finder-search-box {
+.ptr-offer-tile:hover .ptr-offer-tile-btn {
+  background: rgb(var(--c-red));
+  color: #ffffff;
+}
+
+/* ── Search / Finder — small screens ────────────────────────────────
+   Off the home page the finder is `position: fixed`, so its 360px-wide
+   tab block could overflow the viewport harmlessly. Inside the Partora
+   card it sits in normal flow, where that same min-width widens the whole
+   document instead. Below 768px the capsule therefore stacks: tabs on one
+   row, the field group beneath, both full width. Scoped to .ptr-finder so
+   the listing-page finder keeps the pinned capsule it has today. */
+@media (max-width: 767px) {
+  .ptr-finder .search-tabs {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    max-width: 100%;
+    gap: 6px;
+    padding: 6px;
+    border-width: 4px;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.18);
+  }
+
+  .ptr-finder .nav-tabs {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: 42px;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 14px;
+  }
+
+  /* The skewed wedge only reads against the field group's left edge,
+     which no longer sits beside the tabs. */
+  .ptr-finder .nav-tabs::before {
+    display: none;
+  }
+
+  /* The two tab labels are `flex: 1 0 auto` + `white-space: nowrap` at
+     14px, so together they demand ~414px and push the document wider
+     than a phone. Let them shrink and ellipsis instead. */
+  .ptr-finder .nav-tabs .button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .ptr-finder .nav-tabs .button a {
+    font-size: 11px;
+    padding: 9px 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ptr-finder .tab-content {
+    width: 100%;
+    max-width: 100%;
+    height: 52px;
+    margin: 0;
+    border-radius: 14px;
+  }
+
+  .ptr-finder .tab-inner {
+    border-radius: 14px;
+  }
+
+  .ptr-finder .selection-item {
+    padding: 0 10px;
+    font-size: 13px;
+  }
+}
+
+/* ── Trusted Service Providers — card hover ─────────────────────────
+   One coordinated hover state instead of four independent ones. Every
+   transform shares a 280ms cubic-bezier(.4,0,.2,1) so the lift, the
+   photo reveal and the logo move as a single gesture; only the photo
+   runs longer (700ms) so it drifts rather than snaps.
+
+   `:focus-within` mirrors every rule, so tabbing to the card's link
+   surfaces the same affordance a mouse gets. */
+.ptr-sp-card {
+  position: relative;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.04);
+  transition:
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.28s ease;
+}
+
+.ptr-sp-card:hover,
+.ptr-sp-card:focus-within {
+  transform: translateY(-6px);
+  border-color: rgb(var(--c-red) / 0.45);
+  box-shadow:
+    0 18px 40px -12px rgb(var(--c-red) / 0.22),
+    0 8px 20px -8px rgb(0 0 0 / 0.12);
+}
+
+/* Accent rail wiping across the card head — the one flourish that says
+   "this is the card you're on" without moving any content. */
+.ptr-sp-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 30;
+  background: linear-gradient(90deg, rgb(var(--c-red)), rgb(var(--c-amber)));
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[lang="ar"] .ptr-sp-card::before {
+  transform-origin: right center;
+}
+
+.ptr-sp-card:hover::before,
+.ptr-sp-card:focus-within::before {
+  transform: scaleX(1);
+}
+
+/* The banner photo sits at 40% so the artwork title stays readable;
+   on hover it brightens and drifts, revealing the workshop behind. */
+.ptr-sp-photo {
+  opacity: 0.4;
+  transition:
+    opacity 0.5s ease,
+    transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ptr-sp-card:hover .ptr-sp-photo,
+.ptr-sp-card:focus-within .ptr-sp-photo {
+  opacity: 0.72;
+  transform: scale(1.06);
+}
+
+/* Veil eases back as the photo comes up, so the two don't fight. */
+.ptr-sp-veil {
+  transition: opacity 0.5s ease;
+}
+
+.ptr-sp-card:hover .ptr-sp-veil,
+.ptr-sp-card:focus-within .ptr-sp-veil {
+  opacity: 0.75;
+}
+
+.ptr-sp-logo {
+  transition:
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.28s ease;
+}
+
+.ptr-sp-card:hover .ptr-sp-logo,
+.ptr-sp-card:focus-within .ptr-sp-logo {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow:
+    0 0 0 3px rgb(var(--c-red) / 0.22),
+    0 4px 10px rgb(0 0 0 / 0.18);
+}
+
+/* Reduced motion: keep the colour and shadow cues, drop every movement. */
+@media (prefers-reduced-motion: reduce) {
+  .ptr-sp-card,
+  .ptr-sp-card::before,
+  .ptr-sp-photo,
+  .ptr-sp-veil,
+  .ptr-sp-logo {
+    transition-duration: 0.01ms;
+  }
+
+  .ptr-sp-card:hover,
+  .ptr-sp-card:focus-within,
+  .ptr-sp-card:hover .ptr-sp-photo,
+  .ptr-sp-card:focus-within .ptr-sp-photo,
+  .ptr-sp-card:hover .ptr-sp-logo,
+  .ptr-sp-card:focus-within .ptr-sp-logo {
+    transform: none;
+  }
+}
+
+/* ── Car Services grid ──────────────────────────────────────────────
+   Nine nav-driven service cards. Same card language and same hover
+   gesture as the provider cards above, so the two service blocks read
+   as one family: lift, red border, red→amber rail, icon scale. */
+.ptr-services {
+  background: rgb(var(--c-surface));
+}
+
+.ptr-services-eyebrow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 12px;
-  height: 42px;
-  margin-bottom: 16px;
-  background: var(--color-surface-2);
-  border: 1px solid rgb(var(--c-line) / 0.7);
-  border-radius: 10px;
-  color: var(--brand-gravel);
+  gap: 0.375rem;
+  margin: 0 0 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgb(var(--c-red));
 }
 
-.finder-search-box .finder-option-search {
-  flex: 1;
-  height: 100%;
-  border: 0;
-  background: transparent;
-  font-size: 14px;
-  color: var(--brand-ink);
-  outline: none;
+.ptr-services-eyebrow span {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: rgb(var(--c-red));
 }
 
-.finder-options-grid {
+/* 2 up on phones, 3 on tablet, then 5 — nine cards fill 5+4, which
+   leaves one gap on the last row rather than a lone orphan card. */
+.ptr-services-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+  list-style: none;
   margin: 0;
   padding: 0;
 }
 
 @media (min-width: 640px) {
-  .finder-options-grid { grid-template-columns: repeat(6, 1fr); }
+  .ptr-services-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
 }
 
-.finder-option {
-  width: 100%;
-  padding: 11px 6px;
-  background: var(--color-surface-2);
-  border: 1px solid rgb(var(--c-line) / 0.6);
-  border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--brand-ink);
-  cursor: pointer;
-  transition: all 0.15s ease;
+@media (min-width: 1024px) {
+  .ptr-services-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 
-.finder-option:hover { border-color: var(--brand-red); color: var(--brand-red); }
-
-.finder-option.active {
-  background: var(--brand-red);
-  border-color: var(--brand-red);
-  color: #fff;
-}
-
-.finder-empty {
-  grid-column: 1 / -1;
-  padding: 32px 0;
+.ptr-service-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.875rem;
+  height: 100%;
+  padding: 1.5rem 0.875rem 1.75rem;
   text-align: center;
-  font-size: 14px;
-  color: var(--brand-gravel);
+  background: rgb(var(--c-surface));
+  border: 1px solid rgb(var(--c-line) / 0.55);
+  border-radius: 1rem;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.04);
+  overflow: hidden;
+  transition:
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.28s ease;
 }
 
-/* ── Footer ── */
-.finder-modal-footer {
+.ptr-service-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgb(var(--c-red)), rgb(var(--c-amber)));
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[lang="ar"] .ptr-service-card::before {
+  transform-origin: right center;
+}
+
+.ptr-service-card:hover,
+.ptr-service-card:focus-visible {
+  transform: translateY(-6px);
+  border-color: rgb(var(--c-red) / 0.45);
+  box-shadow:
+    0 18px 40px -12px rgb(var(--c-red) / 0.22),
+    0 8px 20px -8px rgb(0 0 0 / 0.12);
+}
+
+.ptr-service-card:hover::before,
+.ptr-service-card:focus-visible::before {
+  transform: scaleX(1);
+}
+
+.ptr-service-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+}
+
+.ptr-service-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ptr-service-card:hover .ptr-service-icon img {
+  transform: scale(1.1);
+}
+
+.ptr-service-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgb(var(--c-ink));
+  transition: color 0.2s ease;
+}
+
+.ptr-service-card:hover .ptr-service-label {
+  color: rgb(var(--c-red));
+}
+
+/* Arrow rises into place on hover — the affordance that says the whole
+   card is the link, without taking height at rest. */
+.ptr-service-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: rgb(var(--c-red));
+  color: #ffffff;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[lang="ar"] .ptr-service-go svg {
+  transform: scaleX(-1);
+}
+
+.ptr-service-card:hover .ptr-service-go,
+.ptr-service-card:focus-visible .ptr-service-go {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ptr-service-card,
+  .ptr-service-card::before,
+  .ptr-service-icon img,
+  .ptr-service-go {
+    transition-duration: 0.01ms;
+  }
+
+  .ptr-service-card:hover,
+  .ptr-service-card:hover .ptr-service-icon img {
+    transform: none;
+  }
+
+  .ptr-service-card:hover .ptr-service-go {
+    transform: none;
+  }
+}
+
+/* ── Hero search autocomplete ───────────────────────────────────────
+   The panel hangs below the pill input in the dark hero band, so it is
+   painted above the banner slider and the category rail. */
+.ptr-search {
+  position: relative;
+  z-index: 60;
+}
+
+.ptr-search-clear {
+  position: absolute;
+  inset-inline-end: 2.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: rgb(var(--c-fill));
+  color: rgb(var(--c-gravel));
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ptr-search-clear:hover {
+  background: rgb(var(--c-red));
+  color: #ffffff;
+}
+
+/* Leave room for the clear button so long queries don't run under it. */
+.ptr-search .ptr-search-input {
+  padding-inline-end: 4.25rem;
+}
+
+.ptr-spin {
+  animation: ptr-spin 0.9s linear infinite;
+}
+
+@keyframes ptr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ptr-spin {
+    animation: none;
+  }
+}
+
+.ptr-search-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  inset-inline: 0;
+  z-index: 60;
+  max-height: min(26rem, 70vh);
+  overflow-y: auto;
+  padding: 0.375rem;
+  background: rgb(var(--c-surface));
+  border: 1px solid rgb(var(--c-line) / 0.7);
+  border-radius: 1rem;
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.18),
+    0 8px 10px -6px rgb(0 0 0 / 0.12);
+}
+
+.ptr-search-group {
+  margin: 0.5rem 0 0.25rem;
+  padding-inline: 0.625rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgb(var(--c-gravel));
+}
+
+.ptr-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.625rem;
+  transition: background-color 0.15s ease;
+}
+
+/* One highlight state drives both mouse and keyboard, so arrowing down
+   looks identical to hovering. */
+.ptr-search-row.is-active {
+  background: rgb(var(--c-surface-2));
+}
+
+.ptr-search-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 0.5rem;
+  background: rgb(var(--c-surface-2));
+  color: rgb(var(--c-red));
+}
+
+.ptr-search-row.is-active .ptr-search-ico {
+  background: rgb(var(--c-red));
+  color: #ffffff;
+}
+
+.ptr-search-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: rgb(var(--c-surface-2));
+  color: rgb(var(--c-gravel));
+}
+
+.ptr-search-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ptr-search-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ptr-search-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: rgb(var(--c-ink));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ptr-search-meta {
+  font-size: 0.6875rem;
+  color: rgb(var(--c-gravel));
+}
+
+.ptr-search-price {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgb(var(--c-red));
+  white-space: nowrap;
+}
+
+.ptr-search-go {
+  flex-shrink: 0;
+  color: rgb(var(--c-line));
+}
+
+.ptr-search-row.is-active .ptr-search-go {
+  color: rgb(var(--c-red));
+}
+
+.ptr-search-status {
+  margin: 0;
+  padding: 1rem 0.625rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: rgb(var(--c-gravel));
+}
+
+.ptr-search-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  margin-top: 0.375rem;
+  padding: 0.625rem;
+  border-top: 1px solid rgb(var(--c-line) / 0.6);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(var(--c-red));
+  transition: background-color 0.15s ease;
+}
+
+.ptr-search-all:hover {
+  background: rgb(var(--c-surface-2));
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SPECIAL OFFERS PAGE
+   Mirrors the live Magento page: banner grid, live offer tiles, prose
+   block, FAQ accordion. Colours come from the brand tokens at the top
+   of this file; no new hex values.
+   ═══════════════════════════════════════════════════════════════════ */
+.so-container {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+/* ── Page head ──────────────────────────────────────────────────── */
+.so-hero {
+  background: rgb(var(--c-asphalt));
+  padding-block: 2rem 2.25rem;
+}
+
+.so-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: rgb(255 255 255 / 0.55);
+}
+
+.so-crumbs a:hover {
+  color: rgb(var(--c-amber));
+}
+
+.so-crumbs svg {
+  flex-shrink: 0;
+}
+
+html[lang="ar"] .so-crumbs svg {
+  transform: scaleX(-1);
+}
+
+.so-h1 {
+  margin: 0.5rem 0 0;
+  font-size: clamp(1.625rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #ffffff;
+}
+
+.so-body {
+  padding-block: 2.25rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
+}
+
+.so-h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(1.375rem, 2.6vw, 1.875rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: rgb(var(--c-ink));
+}
+
+.so-accent {
+  color: rgb(var(--c-red));
+}
+
+/* ── Banner grid ────────────────────────────────────────────────── */
+.so-banners {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .so-banners {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .so-banners {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.so-banner {
+  display: block;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgb(var(--c-fill));
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.05);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s ease;
+}
+
+.so-banner:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 34px -14px rgb(0 0 0 / 0.28);
+}
+
+.so-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 559 / 391;
+  object-fit: cover;
+}
+
+/* ── Live offer tiles ───────────────────────────────────────────── */
+.so-live-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .so-live-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.so-live-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-height: 132px;
+  padding: 1.25rem 1.375rem;
+  border: 1px solid rgb(var(--c-line) / 0.6);
+  border-left: 3px solid rgb(var(--c-red));
+  border-radius: 1rem;
+  background: rgb(var(--c-surface));
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s ease;
+}
+
+html[lang="ar"] .so-live-card {
+  border-left: 1px solid rgb(var(--c-line) / 0.6);
+  border-right: 3px solid rgb(var(--c-red));
+}
+
+.so-live-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 34px -14px rgb(var(--c-red) / 0.25);
+}
+
+.so-live-label {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: rgb(var(--c-ink));
+}
+
+.so-live-count {
+  font-size: 0.8125rem;
+  color: rgb(var(--c-gravel));
+}
+
+.so-live-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgb(var(--c-red));
+  transition: gap 0.2s ease;
+}
+
+.so-live-card:hover .so-live-go {
+  gap: 0.625rem;
+}
+
+html[lang="ar"] .so-live-go svg {
+  transform: scaleX(-1);
+}
+
+.so-skel {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--c-fill)) 25%,
+    rgb(var(--c-line) / 0.45) 37%,
+    rgb(var(--c-fill)) 63%
+  );
+  background-size: 400% 100%;
+  animation: ptr-skel 1.4s ease infinite;
+}
+
+/* ── Prose ──────────────────────────────────────────────────────── */
+.so-lead {
+  margin: 0;
+  max-width: 72ch;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: rgb(var(--c-ink) / 0.78);
+}
+
+.so-sections {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  margin-top: 1.75rem;
+}
+
+@media (min-width: 768px) {
+  .so-sections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem 2.5rem;
+  }
+}
+
+.so-section h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgb(var(--c-ink));
+}
+
+.so-section p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: rgb(var(--c-ink) / 0.72);
+}
+
+/* ── FAQ accordion ──────────────────────────────────────────────
+   Built on <details>, so every question is open to search engines and
+   works with JavaScript disabled. */
+.so-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.so-faq-item {
+  border: 1px solid rgb(var(--c-line) / 0.6);
+  border-radius: 0.875rem;
+  background: rgb(var(--c-surface));
+  overflow: hidden;
+}
+
+.so-faq-item[open] {
+  border-color: rgb(var(--c-red) / 0.4);
+}
+
+.so-faq-item summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 22px;
-  border-top: 1px solid rgb(var(--c-line) / 0.6);
-}
-
-.finder-cancel-btn,
-.finder-next-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  border: 0;
-  border-radius: 9999px;
+  gap: 1rem;
+  padding: 0.9375rem 1.125rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: rgb(var(--c-ink));
   cursor: pointer;
-  transition: all 0.15s ease;
+  list-style: none;
 }
 
-.finder-cancel-btn { background: var(--color-surface-2); color: var(--brand-ink); }
-.finder-cancel-btn:hover { background: rgb(var(--c-line) / 0.5); }
+.so-faq-item summary::-webkit-details-marker {
+  display: none;
+}
 
-.finder-next-btn { background: var(--brand-red); color: #fff; }
-.finder-next-btn:hover:not(:disabled) { background: var(--brand-ink); }
-.finder-next-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.so-faq-item summary:hover {
+  color: rgb(var(--c-red));
+}
+
+.so-faq-item summary svg {
+  flex-shrink: 0;
+  color: rgb(var(--c-red));
+  transition: transform 0.25s ease;
+}
+
+.so-faq-item[open] summary svg {
+  transform: rotate(90deg);
+}
+
+html[lang="ar"] .so-faq-item summary svg {
+  transform: scaleX(-1);
+}
+
+html[lang="ar"] .so-faq-item[open] summary svg {
+  transform: scaleX(-1) rotate(-90deg);
+}
+
+.so-faq-item p {
+  margin: 0;
+  padding: 0 1.125rem 1.125rem;
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: rgb(var(--c-ink) / 0.72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .so-banner,
+  .so-live-card,
+  .so-faq-item summary svg {
+    transition-duration: 0.01ms;
+  }
+
+  .so-banner:hover,
+  .so-live-card:hover {
+    transform: none;
+  }
+}

@@ -23,7 +23,7 @@ export default function AboutUs({ locale: localeProp }: AboutUsProps) {
               {isAr ? "نحن" : "US"}
             </span>
           </h2>
-          <p className="font-sans text-black text-xs sm:text-[14px] font-bold tracking-tight m-0">
+          <p className="font-sans text-black text-xs sm:text-[14px] font-bold tracking-normal m-0">
             <strong>
               {isAr
                 ? "شريكك الموثوق للإطارات في الإمارات – أفضل الأسعار عبر الإنترنت"
