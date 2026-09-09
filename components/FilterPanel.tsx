@@ -204,8 +204,11 @@ export default function FilterPanel({
             : `right-0 ${open ? "translate-x-0" : "translate-x-full"}`
         }`}
       >
-        {/* Top Header: Pure Red banner with White X close button */}
-        <div className="flex items-center justify-end px-4 py-3.5 bg-[#ed1c24] shrink-0 min-h-[50px]">
+        {/* Top Header: Pure Red banner with FILTER BY title and White X close button */}
+        <div className="flex items-center justify-between px-5 py-3.5 bg-[#ed1c24] shrink-0 min-h-[50px]">
+          <span className="text-white font-black text-sm uppercase tracking-wider">
+            {dir === "rtl" ? "تصفية حسب" : "FILTER BY"}
+          </span>
           <button
             type="button"
             onClick={onClose}

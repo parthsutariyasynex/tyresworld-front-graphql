@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
+import StaggeredTyreCard from "@/components/StaggeredTyreCard";
 import TyreFinder from "@/components/TyreFinder";
 import StickyBottomFinder from "@/components/home/partora/StickyBottomFinder";
 import CategorySeoSection from "@/components/CategorySeoSection";
@@ -16,6 +17,37 @@ import type { Product } from "@/lib/data";
 import Pagination from "@/components/tyre/Pagination";
 
 const PAGE_SIZE = 12;
+
+const SIZE_KEYS = new Set([
+  "width",
+  "height",
+  "haight",
+  "rim",
+  "width_rear",
+  "rear_width",
+  "rwidth",
+  "haight_rear",
+  "height_rear",
+  "rear_height",
+  "rheight",
+  "rim_rear",
+  "rear_rim",
+  "rrim",
+]);
+
+const SYSTEM_PARAMS = new Set([
+  "page",
+  "sort",
+  "product_list_order",
+  "q",
+  "search",
+  "category_uid",
+  "category_id",
+  "categoryUid",
+  "store",
+  "pageSize",
+  "product_list_limit",
+]);
 
 interface CategoryInfo {
   uid: string;
@@ -107,16 +139,25 @@ export interface CategoryPageInnerProps {
   locale: Locale;
   /** Hero title — shown in white on the black banner */
   heroTitle?: string;
-  /** Hero title in Arabic — falls back to heroTitle */
-  heroTitleAr?: string;
   /** Render the TyreFinder widget under the hero (tyre categories). */
   showTyreFinder?: boolean;
+  /** Hide the top hero banner (for landing pages that provide their own) */
+  hideHeroBanner?: boolean;
+  /** Hide the breadcrumb bar */
+  hideBreadcrumbs?: boolean;
 }
 
 /* ════════════════════════════════════════════════════════════════
    COMPONENT
 ════════════════════════════════════════════════════════════════ */
-export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitleAr, showTyreFinder }: CategoryPageInnerProps) {
+export default function CategoryPageInner({
+  urlKey,
+  locale,
+  heroTitle,
+  showTyreFinder,
+  hideHeroBanner,
+  hideBreadcrumbs,
+}: CategoryPageInnerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dir = locale === "ar" ? "rtl" : "ltr";
@@ -133,6 +174,17 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  /* Front+rear (staggered) pairing now happens server-side in
+     /api/category-page, which also paginates by the actual pair count
+     instead of Magento's front-only total — see that route for why.
+     `null` means this wasn't a staggered request; `total: 0` means one was
+     made but nothing paired, so the plain `products` listing is shown instead. */
+  const [staggered, setStaggered] = useState<{
+    total: number;
+    totalPages: number;
+    products: Product[];
+    rearProducts: Product[];
+  } | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
 
   const [filterOpen, setFilterOpen] = useState(false);
@@ -142,7 +194,6 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
 
   // Sync URL searchParams to selected state on mount and when query changes
   useEffect(() => {
-    const SYSTEM_PARAMS = new Set(["page", "sort", "product_list_order", "q"]);
     const initial: Record<string, string[]> = {};
     for (const [key, val] of searchParams.entries()) {
       if (SYSTEM_PARAMS.has(key)) continue;
@@ -216,6 +267,24 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
         setProducts(items);
         setTotal(j.total ?? 0);
         setTotalPages(j.totalPages ?? 1);
+
+        if (j.staggered) {
+          // Sort keeps front+rear paired at the same index — re-order both
+          // arrays together by front price rather than sorting independently.
+          let pairs: { front: Product; rear: Product }[] = (j.staggered.products ?? []).map(
+            (front: Product, i: number) => ({ front, rear: j.staggered.rearProducts?.[i] }),
+          );
+          if (sort === "high-to-low") pairs = [...pairs].sort((a, b) => (b.front.price ?? 0) - (a.front.price ?? 0));
+          else if (sort === "low-to-high") pairs = [...pairs].sort((a, b) => (a.front.price ?? 0) - (b.front.price ?? 0));
+          setStaggered({
+            total: j.staggered.total ?? 0,
+            totalPages: j.staggered.totalPages ?? 1,
+            products: pairs.map((p) => p.front),
+            rearProducts: pairs.map((p) => p.rear),
+          });
+        } else {
+          setStaggered(null);
+        }
         /* Sidebar options ride along on this same response — the listing
            makes exactly one products request, no second filters call. */
         if (Array.isArray(j.filters)) {
@@ -309,12 +378,23 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
     router.replace(p.toString() ? `${basePath}?${p}` : basePath, { scroll: false });
   };
 
-  const activeFilterCount = Object.values(selected).reduce((s, v) => s + v.length, 0);
+  const sidebarFilterCount = Object.entries(selected)
+    .filter(([k]) => !SYSTEM_PARAMS.has(k) && !SIZE_KEYS.has(k))
+    .reduce((s, [, v]) => s + v.length, 0);
+
+  const hasActiveSizeFilter = Array.from(SIZE_KEYS).some(
+    (k) => (selected[k]?.length ?? 0) > 0
+  );
+  const showActiveFiltersBar = hasActiveSizeFilter || sidebarFilterCount > 0;
   const isLoading = catLoading || (!!category?.uid && loading);
 
-  const displayTitle = isAr
-    ? (heroTitleAr ?? heroTitle ?? category?.name?.toUpperCase() ?? "")
-    : (heroTitle ?? category?.name?.toUpperCase() ?? "");
+  // Paginate by the paired count while a staggered search is actually
+  // showing paired cards; fall back to the plain front-only count once
+  // there's nothing to pair (see the /api/category-page staggered branch).
+  const isStaggeredDisplay = !!staggered && staggered.total > 0;
+  const displayTotalPages = isStaggeredDisplay ? staggered.totalPages : totalPages;
+
+  const displayTitle = heroTitle ?? category?.name?.toUpperCase() ?? "";
 
   const productsLabel = isAr
     ? `${total.toLocaleString("ar-SA")} إطار`
@@ -325,77 +405,80 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
 
       {/* ── Page title ─────────────────────────────────────────────
            Mirrors the theme's .page-title-wrapper > .title > h1 > span.base */}
-      <div className="page-title-wrapper bg-cover-image">
-        <div className="container">
-          <div className="title">
-            {/* A configured heroTitle is known on the server, so render the
-                H1 straight away and only fall back to a skeleton when the
-                title has to come from the category name we're still loading. */}
-            {catLoading && !displayTitle ? (
-              <span className="page-title-skeleton" aria-hidden="true" />
-            ) : (
-              <h1 id="page-title-heading">
-                <span className="base" data-ui-id="page-title-wrapper">
-                  {displayTitle}
-                </span>
-              </h1>
-            )}
+      {!hideHeroBanner && (
+        <div className="page-title-wrapper bg-cover-image">
+          <div className="container">
+            <div className="title">
+              {/* A configured heroTitle is known on the server, so render the
+                  H1 straight away and only fall back to a skeleton when the
+                  title has to come from the category name we're still loading. */}
+              {catLoading && !displayTitle ? (
+                <span className="page-title-skeleton" aria-hidden="true" />
+              ) : (
+                <h1 id="page-title-heading">
+                  <span className="base" data-ui-id="page-title-wrapper">
+                    {displayTitle}
+                  </span>
+                </h1>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-
+      )}
 
       {/* ── Breadcrumb (Home > Tyres > Brand > Sailun) ─────────────── */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
-          <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap font-medium">
-            <Link href={`/${locale}`} className="hover:text-black transition-colors">
-              {isAr ? "الرئيسية" : "Home"}
-            </Link>
-            {(() => {
-              const segments = urlKey.split("/").filter(Boolean);
-              let acc = "";
-              return segments.map((seg, idx) => {
-                const isLast = idx === segments.length - 1;
-                acc += (acc ? `/${seg}` : seg);
-                const segLower = seg.toLowerCase();
-                
-                let label = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
-                let href = `/${locale}/${acc}`;
+      {!hideBreadcrumbs && (
+        <div className="bg-white border-b border-gray-100">
+          <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+            <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap font-medium">
+              <Link href={`/${locale}`} className="hover:text-black transition-colors">
+                {isAr ? "الرئيسية" : "Home"}
+              </Link>
+              {(() => {
+                const segments = urlKey.split("/").filter(Boolean);
+                let acc = "";
+                return segments.map((seg, idx) => {
+                  const isLast = idx === segments.length - 1;
+                  acc += (acc ? `/${seg}` : seg);
+                  const segLower = seg.toLowerCase();
+                  
+                  let label = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
+                  let href = `/${locale}/${acc}`;
 
-                if (segLower === "tyres") {
-                  label = isAr ? "الإطارات" : "Tyres";
-                  href = `/${locale}/tyres`;
-                } else if (segLower === "brand" || segLower === "brands") {
-                  label = isAr ? "الماركة" : "Brand";
-                  href = `/${locale}/brands`;
-                } else if (isLast && category?.name) {
-                  label = category.name;
-                }
+                  if (segLower === "tyres") {
+                    label = isAr ? "الإطارات" : "Tyres";
+                    href = `/${locale}/tyres`;
+                  } else if (segLower === "brand" || segLower === "brands") {
+                    label = isAr ? "الماركة" : "Brand";
+                    href = `/${locale}/brands`;
+                  } else if (isLast && category?.name) {
+                    label = category.name;
+                  }
 
-                return (
-                  <React.Fragment key={acc}>
-                    <ChevronRight size={12} className="shrink-0 text-gray-400" />
-                    {isLast ? (
-                      <span className="text-black font-semibold">
-                        {catLoading && !category?.name ? (
-                          <span className="inline-block bg-gray-200 rounded animate-pulse w-16 h-3 align-middle" />
-                        ) : (
-                          label
-                        )}
-                      </span>
-                    ) : (
-                      <Link href={href} className="hover:text-black transition-colors">
-                        {label}
-                      </Link>
-                    )}
-                  </React.Fragment>
-                );
-              });
-            })()}
-          </nav>
+                  return (
+                    <React.Fragment key={acc}>
+                      <ChevronRight size={12} className="shrink-0 text-gray-400" />
+                      {isLast ? (
+                        <span className="text-black font-semibold">
+                          {catLoading && !category?.name ? (
+                            <span className="inline-block bg-gray-200 rounded animate-pulse w-16 h-3 align-middle" />
+                          ) : (
+                            label
+                          )}
+                        </span>
+                      ) : (
+                        <Link href={href} className="hover:text-black transition-colors">
+                          {label}
+                        </Link>
+                      )}
+                    </React.Fragment>
+                  );
+                });
+              })()}
+            </nav>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Filter drawer ──────────────────────────────────────────── */}
       <FilterPanel
@@ -415,41 +498,77 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
         <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
 
           {/* ── Active Filters Bar (Matches reference screenshot) ───── */}
-          {activeFilterCount > 0 && (() => {
-            const hasSize = Boolean(selected.width?.length || selected.height?.length || selected.rim?.length);
-            const otherFilters = Object.entries(selected).filter(([code]) => code !== "width" && code !== "height" && code !== "rim");
+          {showActiveFiltersBar && (() => {
+            const hasSize = hasActiveSizeFilter;
+            const otherFilters = Object.entries(selected).filter(([code]) => !SIZE_KEYS.has(code) && !SYSTEM_PARAMS.has(code));
 
             const widthVal = selected.width?.[0];
-            const heightVal = selected.height?.[0];
+            const heightVal = selected.height?.[0] ?? selected.haight?.[0];
             const rimVal = selected.rim?.[0];
 
+            const rearWidthVal =
+              selected.width_rear?.[0] ??
+              selected.rear_width?.[0] ??
+              selected.rwidth?.[0];
+            const rearHeightVal =
+              selected.haight_rear?.[0] ??
+              selected.height_rear?.[0] ??
+              selected.rear_height?.[0] ??
+              selected.rheight?.[0];
+            const rearRimVal =
+              selected.rim_rear?.[0] ??
+              selected.rear_rim?.[0] ??
+              selected.rrim?.[0];
+
             const widthOpt = filterGroups.find((g) => g.code === "width")?.options.find((o) => o.value === widthVal || o.label === widthVal)?.label ?? widthVal;
-            const heightOpt = filterGroups.find((g) => g.code === "height")?.options.find((o) => o.value === heightVal || o.label === heightVal)?.label ?? heightVal;
+            const heightOpt = filterGroups.find((g) => g.code === "height" || g.code === "haight")?.options.find((o) => o.value === heightVal || o.label === heightVal)?.label ?? heightVal;
             const rimOpt = filterGroups.find((g) => g.code === "rim")?.options.find((o) => o.value === rimVal || o.label === rimVal)?.label ?? rimVal;
 
-            let sizeFormatted = "";
+            const rearWidthOpt = filterGroups.find((g) => g.code === "width_rear" || g.code === "rear_width" || g.code === "rwidth" || g.code === "width")?.options.find((o) => o.value === rearWidthVal || o.label === rearWidthVal)?.label ?? rearWidthVal;
+            const rearHeightOpt = filterGroups.find((g) => g.code === "haight_rear" || g.code === "height_rear" || g.code === "rear_height" || g.code === "rheight" || g.code === "height")?.options.find((o) => o.value === rearHeightVal || o.label === rearHeightVal)?.label ?? rearHeightVal;
+            const rearRimOpt = filterGroups.find((g) => g.code === "rim_rear" || g.code === "rear_rim" || g.code === "rrim" || g.code === "rim")?.options.find((o) => o.value === rearRimVal || o.label === rearRimVal)?.label ?? rearRimVal;
+
+            let frontFormatted = "";
             if (widthOpt && heightOpt && rimOpt) {
               const cleanRim = rimOpt.replace(/^R/i, "");
-              sizeFormatted = `${widthOpt}/${heightOpt} R${cleanRim}`;
+              frontFormatted = `${widthOpt}/${heightOpt} R${cleanRim}`;
             } else if (widthOpt && heightOpt) {
-              sizeFormatted = `${widthOpt}/${heightOpt}`;
+              frontFormatted = `${widthOpt}/${heightOpt}`;
             } else if (widthOpt && rimOpt) {
               const cleanRim = rimOpt.replace(/^R/i, "");
-              sizeFormatted = `${widthOpt} R${cleanRim}`;
+              frontFormatted = `${widthOpt} R${cleanRim}`;
             } else if (widthOpt) {
-              sizeFormatted = `${widthOpt}`;
+              frontFormatted = `${widthOpt}`;
             } else if (heightOpt) {
-              sizeFormatted = `/${heightOpt}`;
+              frontFormatted = `/${heightOpt}`;
             } else if (rimOpt) {
               const cleanRim = rimOpt.replace(/^R/i, "");
-              sizeFormatted = `R${cleanRim}`;
+              frontFormatted = `R${cleanRim}`;
+            }
+
+            let rearFormatted = "";
+            if (rearWidthOpt && rearHeightOpt && rearRimOpt) {
+              const cleanRearRim = rearRimOpt.replace(/^R/i, "");
+              rearFormatted = `${rearWidthOpt}/${rearHeightOpt} R${cleanRearRim}`;
+            } else if (rearWidthOpt && rearHeightOpt) {
+              rearFormatted = `${rearWidthOpt}/${rearHeightOpt}`;
+            } else if (rearWidthOpt && rearRimOpt) {
+              const cleanRearRim = rearRimOpt.replace(/^R/i, "");
+              rearFormatted = `${rearWidthOpt} R${cleanRearRim}`;
+            } else if (rearWidthOpt) {
+              rearFormatted = `${rearWidthOpt}`;
+            }
+
+            let sizeFormatted = frontFormatted;
+            if (frontFormatted && rearFormatted) {
+              sizeFormatted = `${frontFormatted} – ${rearFormatted}`;
+            } else if (!frontFormatted && rearFormatted) {
+              sizeFormatted = rearFormatted;
             }
 
             const handleRemoveSizeFilter = () => {
               const p = new URLSearchParams(searchParams.toString());
-              p.delete("width");
-              p.delete("height");
-              p.delete("rim");
+              SIZE_KEYS.forEach((k) => p.delete(k));
               p.delete("page");
               router.replace(p.toString() ? `${basePath}?${p}` : basePath, { scroll: false });
             };
@@ -528,9 +647,9 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
               >
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
               </svg>
-              {activeFilterCount > 0 && (
+              {sidebarFilterCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center">
-                  {activeFilterCount}
+                  {sidebarFilterCount}
                 </span>
               )}
             </button>
@@ -555,14 +674,34 @@ export default function CategoryPageInner({ urlKey, locale, heroTitle, heroTitle
                 {isAr ? "جرّب بحثاً مختلفاً." : "Try a different search or check back later."}
               </p>
             </div>
-          ) : (
-            <ul className="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5 list-none p-0 m-0">
-              {products.map(product => (
-                <TyreListingCard key={product.id} product={product} locale={locale} />
-              ))}
-            </ul>
-          )}
-          <Pagination current={page} total={totalPages} onChange={setPage} locale={locale} />
+          ) : (() => {
+            // Pairing + its pagination are computed server-side in
+            // /api/category-page (staggered.total/.totalPages) so the page
+            // control never promises more pairs than will actually render.
+            if (isStaggeredDisplay) {
+              return (
+                <ul className="products-grid grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 list-none p-0 m-0">
+                  {staggered.products.map((front, idx) => (
+                    <StaggeredTyreCard
+                      key={`${front.id}-${staggered.rearProducts[idx]?.id}-${idx}`}
+                      frontProduct={front}
+                      rearProduct={staggered.rearProducts[idx]}
+                      locale={locale}
+                    />
+                  ))}
+                </ul>
+              );
+            }
+
+            return (
+              <ul className="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5 list-none p-0 m-0">
+                {products.map(product => (
+                  <TyreListingCard key={product.id} product={product} locale={locale} enableHoverZoom />
+                ))}
+              </ul>
+            );
+          })()}
+          <Pagination current={page} total={displayTotalPages} onChange={setPage} locale={locale} />
         </div>
       </div>
 

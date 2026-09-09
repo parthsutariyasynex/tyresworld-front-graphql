@@ -56,9 +56,12 @@ function CarSprite() {
 export default function TyreListingCard({
   product,
   locale = "en",
+  enableHoverZoom = false,
 }: {
   product: Product;
   locale?: Locale;
+  /** Image zoom-on-hover — opt-in so it only applies where explicitly enabled (products/category listing). */
+  enableHoverZoom?: boolean;
 }) {
   const href = product.urlKey ? `/${locale}/product/${product.urlKey}` : "#";
   const tyreSize = getTyreSize(product);
@@ -86,7 +89,7 @@ export default function TyreListingCard({
     ? `/${locale}/tyres/brand/${brandSlug}`
     : null;
 
-  const offerLabels = useOfferLabels();
+  const offerLabels = useOfferLabels(locale === "ar" ? "ar" : "default");
   const offerLabel = product.offersId ? offerLabels[product.offersId] : undefined;
 
   const { addItem } = useCart();
@@ -128,7 +131,7 @@ export default function TyreListingCard({
 
   return (
     <li className="list-none h-full">
-      <div className="flex flex-col h-full bg-white rounded-lg border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow">
+      <div className={`flex flex-col h-full bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow${enableHoverZoom ? " group" : ""}`}>
 
         {/* ── Top Red Banner: Dynamic Offer (Only rendered when product has an offer) ── */}
         {offerLabel && (
@@ -165,21 +168,21 @@ export default function TyreListingCard({
                 src={product.image}
                 alt={product.name}
                 fill
-                className="object-contain"
+                className={`object-contain p-1${enableHoverZoom ? " group-hover:scale-105 transition-transform duration-300 ease-out" : ""}`}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"
               />
             </Link>
 
-            {/* Bottom-left warranty badge */}
+            {/* Bottom-left warranty */}
             {warranty && (
-              <div className="absolute left-1 bottom-0 z-10 bg-white/95 border border-gray-200 px-1.5 py-0.5 rounded-xs shadow-2xs">
-                <span className="text-[10px] font-extrabold uppercase text-gray-900 leading-none">{warranty}</span>
-              </div>
+              <span className="absolute left-0.5 bottom-0.5 z-10 text-[10.5px] font-black uppercase text-gray-900 leading-none">
+                {warranty}
+              </span>
             )}
 
             {/* Bottom-right year */}
             {year && (
-              <span className="absolute right-1 bottom-0 z-10 text-[11px] font-black text-gray-900">
+              <span className="absolute right-0.5 bottom-0.5 z-10 text-[11px] font-black text-gray-900 leading-none">
                 {year}
               </span>
             )}

@@ -1417,26 +1417,33 @@
      Showroom photograph with the copy on a translucent panel over its
      right half. The panel is what makes the text readable — the photo's
      subject (the wheel wall) sits exactly where the copy goes.
+
+     Scoped under .ptr-home (matching the sibling .section-padding rule
+     below) because "about-us" is also a literal class name Magento's own
+     CMS-page HTML happens to reuse for its intro block — unscoped, this
+     rule's background photo + translucent panel painted itself behind
+     that unrelated content on every CMS page (Car Battery Service, Car
+     Insurance, etc.) rendered via app/[locale]/[...slug]/page.tsx.
      ═════════════════════════════════════════════════════════════════ */
-  .about-us {
+  .ptr-home .about-us {
     background-image: url("/bg/car-tyre-new-1.webp");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
   }
 
-  .about-us-grid {
+  .ptr-home .about-us-grid {
     @apply grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-10 items-center;
   }
 
   /* Holds the photo open beside the copy on desktop; collapses on mobile,
      where a full-width panel over the photo is the only readable option. */
-  .about-us-spacer {
+  .ptr-home .about-us-spacer {
     @apply hidden md:block;
     min-height: 420px;
   }
 
-  .about-us-panel {
+  .ptr-home .about-us-panel {
     @apply p-6 sm:p-9;
     background: rgb(255 255 255 / 0.94);
     border-radius: var(--radius-card);
@@ -1446,22 +1453,22 @@
 
   /* The shared section heading is centred; here it's left-aligned and
      tighter to the title beneath it. */
-  .about-us-heading {
+  .ptr-home .about-us-heading {
     @apply text-left mb-3 lg:mb-3;
   }
 
-  .about-us-title {
+  .ptr-home .about-us-title {
     @apply font-display uppercase leading-tight text-ink mt-0 mb-4;
     font-size: clamp(22px, 2.4vw, 32px);
     font-weight: 600;
   }
 
-  .about-us .text-wrap p {
+  .ptr-home .about-us .text-wrap p {
     @apply text-sm leading-relaxed mb-4;
     color: var(--brand-gravel);
   }
 
-  .about-us .text-wrap .button-read-more {
+  .ptr-home .about-us .text-wrap .button-read-more {
     @apply mt-2;
   }
 
@@ -2371,6 +2378,403 @@ html[lang="ar"] .tab-content {
   color: #111;
 }
 
+.cms-content h4 {
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #111;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+  line-height: 1.2;
+}
+
+/* ── CMS legacy grid + utility classes ────────────────────────────
+   Magento's Page Builder content (Car Tyre Service, Car Battery
+   Service, and every other page rendered through the CMS_PAGE branch
+   of app/[locale]/[...slug]/page.tsx) is authored in the OLD theme's
+   Bootstrap 5 markup. Everything below is scoped under .cms-content
+   ONLY — never globally — after .about-us (a real home-page class)
+   collided with this same content's own "about-us" class name and
+   painted a hero photo behind an unrelated paragraph. Values here are
+   a reasonable equivalent of the old theme, not a pixel-for-pixel
+   copy — this project's own spacing/radius tokens win where they
+   differ (see the brand-tokens guidance: guidelines beat live theme). */
+
+.cms-content .theme_color {
+  color: var(--brand-red);
+}
+
+.cms-content .section {
+  display: block;
+}
+
+.cms-content .section-padding {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
+.cms-content .container,
+.cms-content .container-fluid {
+  width: 100%;
+}
+
+.cms-content .container.custom-width {
+  max-width: 56rem;
+  margin-inline: auto;
+}
+
+.cms-content .section-title {
+  margin-bottom: 1.5rem;
+}
+
+.cms-content .section-title.text-center,
+.cms-content .text-center {
+  text-align: center;
+}
+
+.cms-content .section-title h2 {
+  font-size: clamp(22px, 3vw, 34px);
+}
+
+.cms-content .section-title p {
+  color: #6b7280;
+  font-size: 0.9375rem;
+  text-transform: none;
+}
+
+/* Row/column grid — flexbox equivalent of the Bootstrap 12-col system
+   this content is authored against. Vertical alignment (align-items-center)
+   comes straight from the classes already on each row in the source markup.
+
+   Gutters (g-0 / g-4 / g-md-5) use negative row margin + column padding,
+   NOT the `gap` property — two 50%-wide columns plus a `gap` between them
+   sum to MORE than the row's own width (50% + 50% + gap > 100%), which
+   pushed them onto separate lines instead of side by side. Padding-based
+   gutters don't have that problem: the gap lives inside each column's own
+   box, so two 50% columns always sum to exactly 100% regardless of gutter
+   size. */
+.cms-content .row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -0.75rem;
+  margin-right: -0.75rem;
+}
+
+.cms-content .row.g-0 {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.cms-content .row.g-4 {
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+}
+
+.cms-content .row.align-items-center {
+  align-items: center;
+}
+
+.cms-content .row.justify-content-center {
+  justify-content: center;
+}
+
+.cms-content [class*="col-"] {
+  width: 100%;
+  min-width: 0;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.cms-content .row.g-0 > [class*="col-"] {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.cms-content .row.g-4 > [class*="col-"] {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .cms-content .row.g-md-5 {
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+  }
+  .cms-content .row.g-md-5 > [class*="col-"] {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
+.cms-content .mx-auto {
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .cms-content .col-sm-6 { flex: 0 0 50%; max-width: 50%; }
+}
+@media (min-width: 768px) {
+  .cms-content .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+}
+@media (min-width: 1024px) {
+  .cms-content .col-lg-3 { flex: 0 0 25%; max-width: 25%; }
+  .cms-content .col-lg-4 { flex: 0 0 33.3333%; max-width: 33.3333%; }
+  .cms-content .col-lg-10 { flex: 0 0 83.3333%; max-width: 83.3333%; }
+}
+@media (min-width: 1280px) {
+  .cms-content .col-xl-6 { flex: 0 0 50%; max-width: 50%; }
+  .cms-content .col-xl-8 { flex: 0 0 66.6667%; max-width: 66.6667%; }
+  .cms-content .col-xl-12 { flex: 0 0 100%; max-width: 100%; }
+}
+
+/* Alternating image/text service rows */
+.cms-content .content-image {
+  overflow: hidden;
+  border-radius: var(--radius-card);
+}
+
+.cms-content .content-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.cms-content .service-content {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 1.5rem 0;
+}
+
+@media (min-width: 1024px) {
+  .cms-content .service-content {
+    padding: 1.5rem 2.5rem;
+  }
+}
+
+.cms-content .list-dot {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.cms-content .list-dot li {
+  margin-bottom: 0.5rem;
+}
+
+.cms-content .list-dot li::marker {
+  color: var(--brand-red);
+}
+
+.cms-content .list-dot li p {
+  margin-bottom: 0;
+  display: inline;
+}
+
+/* Benefit cards ("Why Choose TyresWorld") */
+.cms-content .card {
+  background: #fff;
+  border-radius: var(--radius-card);
+  height: 100%;
+}
+
+.cms-content .card.shadow-sm {
+  box-shadow: var(--shadow-card);
+}
+
+.cms-content .card-body {
+  padding: 1.5rem;
+}
+
+.cms-content .rounded-circle {
+  border-radius: 9999px;
+}
+
+.cms-content .d-inline-flex {
+  display: inline-flex;
+}
+
+.cms-content .d-flex {
+  display: flex;
+}
+
+.cms-content .align-items-center.d-flex,
+.cms-content .d-flex.align-items-center {
+  align-items: center;
+}
+
+.cms-content .justify-content-center {
+  justify-content: center;
+}
+
+.cms-content .gap-3 {
+  gap: 0.75rem;
+}
+
+.cms-content .bg-white {
+  background-color: #fff;
+}
+
+.cms-content .bg-light {
+  background-color: #f8f9fa;
+}
+
+.cms-content .p-3 {
+  padding: 0.75rem;
+}
+
+.cms-content .p-4 {
+  padding: 1.5rem;
+}
+
+.cms-content .mb-0 { margin-bottom: 0; }
+.cms-content .mb-1 { margin-bottom: 0.25rem; }
+.cms-content .mb-2 { margin-bottom: 0.5rem; }
+.cms-content .mb-3 { margin-bottom: 0.75rem; }
+.cms-content .mb-4 { margin-bottom: 1rem; }
+.cms-content .mb-5 { margin-bottom: 2rem; }
+.cms-content .mt-2 { margin-top: 0.5rem; }
+.cms-content .mt-auto { margin-top: auto; }
+.cms-content .mt-40 { margin-top: 2.5rem; }
+
+.cms-content .fw-bold {
+  font-weight: 700;
+}
+
+.cms-content .text-uppercase {
+  text-transform: uppercase;
+}
+
+.cms-content .text-muted,
+.cms-content .text-secondary {
+  color: #6b7280;
+}
+
+.cms-content .small {
+  font-size: 0.8125rem;
+}
+
+.cms-content .lh-lg {
+  line-height: 1.8;
+}
+
+.cms-content .h6 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Icon badge — the circular "theme_color" icon above each benefit/offer
+   card title. Icons use stroke="currentColor" / fill="currentColor" in
+   the source SVG, so colouring the badge text colour is enough. */
+.cms-content .rounded-circle.theme_color {
+  color: var(--brand-red);
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+/* "What We Offer" boxes */
+.cms-content .offer-content .row {
+  gap: 1.5rem 0;
+}
+
+.cms-content .offer-box {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-card);
+  padding: 1.75rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cms-content .offer-box .box-bottom {
+  margin-top: auto;
+  padding-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cms-content .offer-box .icon {
+  color: var(--brand-red);
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.cms-content .offer-box .icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.cms-content .offer-box .action-btn a {
+  color: var(--brand-red);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  text-decoration: none;
+}
+
+.cms-content .offer-box .action-btn a:hover {
+  text-decoration: underline;
+}
+
+.cms-content .offer-box .action-btn svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  fill: currentColor;
+}
+
+/* Testimonial carousel — behaviour wired up by <CmsCarousel> (rendered
+   alongside .cms-content), this is just the visual state it toggles. */
+.cms-content .carousel-item {
+  display: none;
+}
+
+.cms-content .carousel-item.active {
+  display: block;
+}
+
+.cms-content .carousel-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  list-style: none;
+}
+
+.cms-content .carousel-indicators button {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  border: 0;
+  background: #d1d5db;
+  padding: 0;
+  cursor: pointer;
+}
+
+.cms-content .carousel-indicators button.active {
+  background: var(--brand-red);
+  width: 1.5rem;
+  border-radius: 9999px;
+}
+
+.cms-content .border.rounded-3 {
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-card);
+}
+
+.cms-content [style*="min-height: 280px"] {
+  display: flex;
+  flex-direction: column;
+}
+
 /* ── Product Single Price Modal Inclusions ── */
 .popup-overlay.product-single-modal {
   position: fixed;
@@ -2514,21 +2918,15 @@ html[lang="ar"] .tab-content {
   background-repeat: no-repeat;
 }
 
-/* ── TyreFinder Modal Red Scrollbar (matching screenshot) ── */
+/* ── TyreFinder Modal Hide Scrollbar ── */
 .finder-modal-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-.finder-modal-scroll::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 9999px;
-}
-.finder-modal-scroll::-webkit-scrollbar-thumb {
-  background: #d12729;
-  border-radius: 9999px;
+  display: none;
+  width: 0;
+  height: 0;
 }
 .finder-modal-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #d12729 #f1f5f9;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 
@@ -2890,20 +3288,21 @@ html[lang="ar"] .ptr-search-input {
   color: rgb(var(--c-red));
 }
 
-/* Category rail head + body — one stacked card across the two rows. */
+/* Category rail head + body */
 .ptr-cat-head {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.9375rem 1rem;
-  border-radius: 1rem 1rem 0 0;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
   background: rgb(var(--c-surface));
-  border-bottom: 1px solid rgb(var(--c-line) / 0.7);
+  border: 1px solid rgb(var(--c-line) / 0.7);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: rgb(var(--c-ink));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .ptr-cat-head-bars {
@@ -2939,8 +3338,9 @@ html[lang="ar"] .ptr-search-input {
   flex-direction: column;
   height: 100%;
   background: rgb(var(--c-surface));
-  border-radius: 0 0 1rem 1rem;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  border-radius: 0.75rem;
+  border: 1px solid rgb(var(--c-line) / 0.7);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
   padding-block: 0.5rem;
   overflow: visible;
   z-index: 40;

@@ -1,74 +1,36 @@
 export default function TyreListingCardSkeleton() {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col animate-pulse">
-      {/* Brand header — matches h-[60px] */}
-      <div className="flex items-center justify-between h-[60px] px-4 border-b border-gray-100">
-        <div className="h-7 w-24 bg-gray-200 rounded" />
-        <div className="flex items-center gap-1.5">
-          <div className="h-3.5 w-12 bg-gray-100 rounded" />
-          <div className="h-4 w-4 bg-gray-100 rounded" />
-        </div>
+    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col h-full shadow-[0_2px_12px_rgba(0,0,0,0.04)] animate-pulse">
+      {/* Top Image area */}
+      <div className="relative w-full aspect-square bg-gray-100 flex items-center justify-center p-4">
+        <div className="w-3/4 h-3/4 bg-gray-200 rounded-full" />
       </div>
 
-      {/* Tyre image area — aspect 4/3 with warranty + year placeholders */}
-      <div className="relative bg-white" style={{ aspectRatio: "4/3" }}>
-        <div className="absolute inset-0 bg-gray-100 m-4 rounded" />
-        <div className="absolute bottom-2 left-0 bg-gray-200 h-[15px] w-28" />
-        <div className="absolute bottom-2 right-2 bg-gray-200 h-3 w-8 rounded" />
-      </div>
+      {/* Content area */}
+      <div className="p-4 flex flex-col flex-1 gap-2">
+        {/* Title */}
+        <div className="h-4 bg-gray-200 rounded w-5/6" />
+        <div className="h-4 bg-gray-200 rounded w-2/3" />
 
-      {/* Name + size */}
-      <div className="px-3 pt-3 text-center">
-        <div className="h-9 flex flex-col items-center justify-between py-[3px]">
-          <div className="h-3 w-11/12 bg-gray-200 rounded" />
-          <div className="h-3 w-3/4 bg-gray-200 rounded" />
-        </div>
-        <div className="h-4 bg-gray-100 rounded w-1/2 mx-auto mt-1" />
-      </div>
+        {/* Store */}
+        <div className="h-3 bg-gray-100 rounded w-1/3 mt-1" />
 
-      {/* Vehicle info row */}
-      <div className="grid grid-cols-3 items-center h-[44px] bg-white mt-3">
-        <div className="flex items-center justify-start pl-4">
-          <div className="w-10 h-4 bg-gray-200 rounded" />
-        </div>
-        <div className="flex items-center justify-center gap-1">
-          <div className="w-4 h-4 bg-gray-200 rounded-full" />
-          <div className="w-12 h-3 bg-gray-200 rounded" />
-        </div>
-        <div className="flex items-center justify-center">
-          <div className="w-8 h-3 bg-gray-200 rounded" />
-        </div>
-      </div>
+        {/* Price */}
+        <div className="h-6 bg-gray-200 rounded w-1/2 mt-2" />
 
-      {/* Rating */}
-      <div className="flex justify-center mt-3 px-3 h-[18px] items-center">
-        <div className="flex gap-1">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="w-[13px] h-[13px] bg-gray-200 rounded" />
-          ))}
-        </div>
-      </div>
+        {/* Subtype */}
+        <div className="h-3 bg-gray-100 rounded w-2/5" />
 
-      {/* Price section */}
-      <div className="text-center mt-3 pt-3 px-4 border-t border-gray-100">
-        <div className="h-2.5 w-24 bg-gray-100 rounded mx-auto" />
-        <div className="h-5 w-32 bg-gray-200 rounded mx-auto mt-1" />
-      </div>
+        {/* Stock */}
+        <div className="h-3 bg-emerald-100 rounded w-1/4" />
 
-      {/* Installments */}
-      <div className="flex items-center justify-center gap-1.5 py-2.5 px-3 flex-wrap">
-        <div className="h-3 w-24 bg-gray-100 rounded" />
-        <div className="h-[18px] w-10 bg-gray-200 rounded-full" />
-        <div className="h-[18px] w-12 bg-gray-200 rounded-full" />
-      </div>
-
-      {/* CTA area (quantity + add to cart) */}
-      <div className="px-4 pb-4 mt-auto">
-        <div className="flex items-center gap-2">
-          {/* Quantity selector placeholder */}
-          <div className="w-[107px] h-[42px] border border-gray-200 rounded-full bg-gray-50 flex-shrink-0" />
-          {/* Add to cart button placeholder */}
-          <div className="flex-1 h-[42px] bg-gray-200 rounded-full" />
+        {/* Bottom actions */}
+        <div className="mt-auto pt-3 flex items-center justify-between gap-2">
+          <div className="flex gap-1.5">
+            <div className="h-5 w-14 bg-emerald-50 rounded-md" />
+            <div className="h-5 w-14 bg-emerald-50 rounded-md" />
+          </div>
+          <div className="h-8 w-24 bg-emerald-800/30 rounded-lg" />
         </div>
       </div>
     </div>

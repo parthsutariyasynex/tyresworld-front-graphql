@@ -5,13 +5,9 @@ import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
-import { PhoneCall } from "lucide-react";
 import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
-import { useAuth } from "@/lib/auth-context";
-import { APP_CONFIG } from "@/src/config/app-config";
 import CategoryRail from "@/components/home/partora/CategoryRail";
 import HomeSearchBar from "@/components/home/partora/HomeSearchBar";
-import { User } from "lucide-react";
 
 /* Shapes as /api/homepage already returns them — unchanged. */
 type Slide = {
@@ -27,7 +23,7 @@ type Slide = {
  * Homepage hero, laid out the way Partora lays out theirs:
  *
  *   ┌ dark band ────────────────────────────────────────────────┐
- *   │  [ Browse All Categories ] [ search ] [ callback CTA ]    │
+ *   │  [ Browse All Categories ] [ search                     ] │
  *   └───────────────────────────────────────────────────────────┘
  *     [ category rail 3 ][ banner slider 9 ]
  *
@@ -36,7 +32,6 @@ type Slide = {
  */
 export default function PartoraHero({ locale }: { locale: string }) {
   const isAr = locale === "ar";
-  const { isLoggedIn, customer } = useAuth();
   const swiperRef = useRef<SwiperType | null>(null);
   const reducedMotion = usePrefersReducedMotion();
 
@@ -80,22 +75,8 @@ export default function PartoraHero({ locale }: { locale: string }) {
             </div>
           </div>
 
-          <div className="col-span-12 mb-3 lg:mb-0 lg:col-span-6">
+          <div className="col-span-12 mb-3 lg:mb-0 lg:col-span-9">
             <HomeSearchBar locale={locale} />
-          </div>
-
-          <div className="col-span-12 lg:col-span-3 flex items-center lg:justify-end">
-            <Link
-              href={isLoggedIn ? `/${locale}/account` : `/${locale}/account`}
-              className="ptr-hero-cta"
-            >
-              <User size={18} strokeWidth={2.2} />
-              <span>
-                {isLoggedIn
-                  ? (customer?.firstname || (isAr ? "حسابي" : "My Account"))
-                  : (isAr ? "تسجيل الدخول / حساب جديد" : "Login / Sign Up")}
-              </span>
-            </Link>
           </div>
         </div>
 

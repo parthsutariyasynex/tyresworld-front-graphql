@@ -15,56 +15,46 @@ const SERVICES = [
   {
     slug: "car-tyre-service-abu-dhabi",
     label: "Tyre Change & Repair",
-    labelAr: "تغيير وإصلاح الإطارات",
     icon: "/service-icons/service-icons-01.png",
   },
   {
     slug: "car-wheel-alignment-service-abu-dhabi",
     label: "Wheel Alignment Service",
-    labelAr: "خدمة ضبط زوايا العجلات",
     icon: "/service-icons/service-icons-02.png",
   },
   {
     slug: "car-battery-service-abu-dhabi",
     label: "Battery Replacement",
-    labelAr: "استبدال البطارية",
     icon: "/service-icons/service-icons-03.png",
   },
   {
     slug: "car-brake-service-abu-dhabi",
     label: "Brake Pad Replacement Service",
-    labelAr: "خدمة استبدال وسادات الفرامل",
     icon: "/service-icons/service-icons-04.png",
   },
   {
     slug: "car-oil-change-service-abu-dhabi",
     label: "Oil Change",
-    labelAr: "تغيير الزيت",
     icon: "/service-icons/service-icons-05.png",
   },
   {
     slug: "car-ac-service-abu-dhabi",
     label: "AC Repair & Gas Refill",
-    labelAr: "إصلاح التكييف وتعبئة الغاز",
     icon: "/service-icons/service-icons-06.png",
   },
   {
     slug: "car-rim-repair-service-abu-dhabi",
     label: "Car Rim Repair",
-    labelAr: "إصلاح جنوط السيارات",
     icon: "/service-icons/service-icons-07.png",
   },
   {
     slug: "car-mechanical-service-abu-dhabi",
     label: "Mechanical Service",
-    labelAr: "الخدمة الميكانيكية",
     icon: "/service-icons/service-icons-08.png",
   },
 ];
 
 export default function WideRangeServices({ locale = "en" }: { locale?: string }) {
-  const isAr = locale === "ar";
-
   return (
     <section className="section section-padding services">
       <div className="container">
@@ -72,13 +62,10 @@ export default function WideRangeServices({ locale = "en" }: { locale?: string }
         {/* ── Section title ───────────────────────────────────── */}
         <div className="section-heading">
           <h2>
-            {isAr ? "مجموعة واسعة من " : "Wide range of "}
-            <span className="theme_color">{isAr ? "الخدمات" : "services"}</span>
+            Wide range of <span className="theme_color">services</span>
           </h2>
           <p>
-            {isAr
-              ? "يقدم فريقنا من الفنيين المهرة، مع مرفق مجهز بالكامل، مجموعة واسعة من خدمات السيارات في أبوظبي للحفاظ على سيارتك في أفضل حال."
-              : "Our team of skilled technicians, combined with a fully equipped facility, provides a wide range of car services in Abu Dhabi to keep your car running at its best."}
+            Our team of skilled technicians, combined with a fully equipped facility, provides a wide range of car services in Abu Dhabi to keep your car running at its best.
           </p>
         </div>
 
@@ -100,7 +87,7 @@ export default function WideRangeServices({ locale = "en" }: { locale?: string }
                   />
                 </span>
                 <h3 className="service-card-title">
-                  {isAr ? service.labelAr : service.label}
+                  {service.label}
                 </h3>
               </Link>
             </li>
@@ -110,7 +97,7 @@ export default function WideRangeServices({ locale = "en" }: { locale?: string }
         {/* ── CTA ─────────────────────────────────────────────── */}
         <div className="section-cta">
           <Link href={`/${locale}/car-service-abudhabi`} className="button-primary">
-            <span>{isAr ? "عرض جميع خدمات السيارات" : "View All Car Services"}</span>
+            <span>View All Car Services</span>
           </Link>
         </div>
 

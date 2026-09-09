@@ -25,8 +25,7 @@ function toBrand(entry: Partial<Brand> | null | undefined): Brand | null {
 
 export default function BrandStrip() {
   const pathname = usePathname();
-  const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
-  const isAr = locale === "ar";
+  const locale = pathname?.split("/")[1] || "en";
 
   const [brands, setBrands] = useState<Brand[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,15 +67,13 @@ export default function BrandStrip() {
         {/* ── Section title ───────────────────────────────────── */}
         <div className="section-title mb-10 text-center max-w-3xl mx-auto">
           <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black uppercase tracking-wide text-black mb-3 leading-tight">
-            {isAr ? "تسوق حسب " : "Shop by "}
+            Shop by{" "}
             <span className="text-[#ed1c24] theme_color">
-              {isAr ? "ماركات الإطارات" : "Tyre Brands"}
+              Tyre Brands
             </span>
           </h2>
           <p className="text-gray-700 text-xs sm:text-[13.5px] leading-relaxed font-normal max-w-2xl mx-auto m-0 tracking-normal">
-            {isAr
-              ? "تصفّح مجموعة واسعة من ماركات إطارات السيارات واشترِ الإطارات عبر الإنترنت بأفضل الأسعار. شركاء التركيب لدينا في جميع أنحاء الإمارات جاهزون لتقديم خدمة استثنائية لك."
-              : "Browse a wide selection of car tyre brands and purchase tyres online at the best prices. Our customer friendly fitment partners across the UAE are ready to provide you with exceptional service."}
+            Browse a wide selection of car tyre brands and purchase tyres online at the best prices. Our customer friendly fitment partners across the UAE are ready to provide you with exceptional service.
           </p>
         </div>
 
@@ -104,7 +101,7 @@ export default function BrandStrip() {
                       <Link
                         href={`/${locale}/tyres/brand/${brandSlug || encodeURIComponent(brand.filterValue)}`}
                         className="brand-link w-full h-full flex items-center justify-center"
-                        aria-label={isAr ? `إطارات ${brand.name}` : `${brand.name} tyres`}
+                        aria-label={`${brand.name} tyres`}
                       >
                         <div className="image-wrap w-full h-full flex items-center justify-center">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -124,7 +121,7 @@ export default function BrandStrip() {
           </div>
         ) : (
           <p className="text-center text-gray-500 py-6" role="status" aria-live="polite">
-            {isAr ? "لا تتوفر ماركات للعرض حالياً." : "No brands available to display right now."}
+            No brands available to display right now.
           </p>
         )}
 
@@ -134,7 +131,7 @@ export default function BrandStrip() {
             href={`/${locale}/brands`}
             className="button-primary inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#ed1c24] text-white text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-[#c6181d] transition-all shadow-md hover:scale-105 active:scale-95"
           >
-            <span>{isAr ? "جميع الماركات" : "All Brands"}</span>
+            <span>All Brands</span>
           </Link>
         </div>
 

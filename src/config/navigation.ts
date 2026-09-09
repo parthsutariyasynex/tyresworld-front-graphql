@@ -11,7 +11,6 @@ export interface NavItem {
   /** Stable key for React + dropdown state. */
   id: string;
   label: string;
-  labelAr: string;
   /** Bare slug, no locale prefix and no ".html" suffix. "" = home. */
   slug: string;
   /** Render the dropdown as a wide multi-column panel. */
@@ -23,79 +22,69 @@ export const MAIN_NAV: NavItem[] = [
   {
     id: "tyres",
     label: "Tyres",
-    labelAr: "الإطارات",
     slug: "tyres",
     children: [
-      { id: "all-tyres",     label: "All Tyres",        labelAr: "جميع الإطارات",              slug: "tyres" },
-      { id: "ev-tyres",      label: "EV Tyres",         labelAr: "إطارات المركبات الكهربائية", slug: "ev-tyres" },
-      { id: "tyres-size",    label: "Tyres by Size",    labelAr: "الإطارات حسب المقاس",        slug: "tyres" },
-      { id: "tyres-brand",   label: "Tyres by Brand",   labelAr: "الإطارات حسب العلامة",       slug: "brands" },
-      { id: "tyres-vehicle", label: "Tyres by Vehicle", labelAr: "الإطارات حسب نوع السيارة",   slug: "tyres" },
+      { id: "all-tyres",     label: "All Tyres",        slug: "tyres" },
+      { id: "ev-tyres",      label: "EV Tyres",         slug: "electric-vehicle-tyres-uae" },
+      { id: "tyres-size",    label: "Tyres by Size",    slug: "tyres/size" },
+      { id: "tyres-brand",   label: "Tyres by Brand",   slug: "brands" },
+      { id: "tyres-vehicle", label: "Tyres by Vehicle", slug: "tyres/cars" },
     ],
   },
   {
     id: "car-battery",
     label: "Car Battery",
-    labelAr: "بطارية السيارة",
     slug: "car-battery",
   },
   {
     id: "car-insurance",
     label: "Car Insurance",
-    labelAr: "تأمين السيارات",
     slug: "car-insurance",
   },
   {
     id: "car-services",
     label: "Car Services",
-    labelAr: "خدمات السيارات",
     slug: "car-service",
     children: [
-      { id: "svc-tyre",      label: "Car Tyre Service",            labelAr: "خدمة إطارات السيارات",     slug: "car-tyre-service-abu-dhabi" },
-      { id: "svc-battery",   label: "Car Battery Service",         labelAr: "خدمة بطاريات السيارات",    slug: "car-battery-service-abu-dhabi" },
-      { id: "svc-ac",        label: "Car AC Service",              labelAr: "خدمة تكييف السيارات",      slug: "car-ac-service-abu-dhabi" },
-      { id: "svc-brake",     label: "Car Brake Service",           labelAr: "خدمة فرامل السيارات",      slug: "car-brake-service-abu-dhabi" },
-      { id: "svc-oil",       label: "Car Oil Change Service",      labelAr: "خدمة تغيير زيت السيارات",  slug: "car-oil-change-service-abu-dhabi" },
-      { id: "svc-mech",      label: "Car Mechanical Service",      labelAr: "الخدمة الميكانيكية للسيارات", slug: "car-mechanical-service-abu-dhabi" },
-      { id: "svc-alignment", label: "Car Wheel Alignment Service", labelAr: "خدمة ضبط زوايا العجلات",   slug: "car-wheel-alignment-service-abu-dhabi" },
-      { id: "svc-balancing", label: "Car Wheel Balancing Service", labelAr: "خدمة موازنة العجلات",      slug: "car-wheel-balancing-service-abu-dhabi" },
-      { id: "svc-rim",       label: "Car Rim Repair Service",      labelAr: "خدمة إصلاح جنوط السيارات", slug: "car-rim-repair-service-abu-dhabi" },
+      { id: "svc-tyre",      label: "Car Tyre Service",            slug: "car-tyre-service" },
+      { id: "svc-battery",   label: "Car Battery Service",         slug: "car-battery-service" },
+      { id: "svc-ac",        label: "Car AC Service",              slug: "car-ac-service" },
+      { id: "svc-brake",     label: "Car Brake Service",           slug: "car-brake-service" },
+      { id: "svc-oil",       label: "Car Oil Change Service",      slug: "car-oil-change-service" },
+      { id: "svc-mech",      label: "Car Mechanical Service",      slug: "car-mechanical-service" },
+      { id: "svc-alignment", label: "Car Wheel Alignment Service", slug: "car-wheel-alignment-service" },
+      { id: "svc-balancing", label: "Car Wheel Balancing Service", slug: "car-wheel-balancing-service" },
+      { id: "svc-rim",       label: "Car Rim Repair Service",      slug: "car-rim-repair-service" },
     ],
   },
   {
     id: "rims-wheels",
     label: "Rims/Wheels",
-    labelAr: "الجنوط والعجلات",
     slug: "car-wheels",
   },
   {
     id: "motorbike-tyres",
     label: "Motorbike Tyres",
-    labelAr: "إطارات الدراجات النارية",
     slug: "motorcycle-tyre",
   },
   {
     id: "offers",
     label: "Offers",
-    labelAr: "العروض",
     slug: "special-offers",
   },
   {
     id: "installers",
     label: "Installer Network",
-    labelAr: "شبكة مراكز التركيب",
     slug: "fitting-installation-partner",
   },
   {
     id: "faq",
     label: "FAQs",
-    labelAr: "الأسئلة الشائعة",
     slug: "faq",
   },
   {
     id: "contact",
     label: "Contact Us",
-    labelAr: "اتصل بنا",
     slug: "contact",
   },
 ];
@@ -106,8 +95,8 @@ export function navHref(item: NavItem, locale: string): string {
 }
 
 /** Label for the active locale. */
-export function navLabel(item: NavItem, locale: string): string {
-  return locale === "ar" ? item.labelAr : item.label;
+export function navLabel(item: NavItem, _locale?: string): string {
+  return item.label;
 }
 
 /** True when `pathname` is on `item` (or one of its children). */

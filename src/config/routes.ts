@@ -25,34 +25,36 @@ export const ROUTES = {
  */
 export interface CategoryHero {
   heroTitle?: string;
-  heroTitleAr?: string;
   showTyreFinder?: boolean;
 }
 
 export const CATEGORY_HERO: Record<string, CategoryHero> = {
   "tyres": {
     heroTitle: "Buy Car Tyres Online in UAE – Premium Quality, Great Prices",
-    heroTitleAr: "اشترِ إطارات السيارات عبر الإنترنت في الإمارات – جودة ممتازة وأسعار رائعة",
     showTyreFinder: true,
   },
   "on-road-tires": {
     heroTitle: "Buy On-Road Car Tyres Online in the UAE",
-    heroTitleAr: "اشترِ إطارات الطريق عبر الإنترنت في الإمارات",
     showTyreFinder: true,
   },
   "off-road-tires-4x4": {
     heroTitle: "Buy Off-Road & 4x4 Tyres Online in the UAE",
-    heroTitleAr: "اشترِ إطارات الطرق الوعرة و4×4 عبر الإنترنت في الإمارات",
     showTyreFinder: true,
   },
+  "electric-vehicle-tyres-uae": {
+    heroTitle: "Electric Vehicle Tyres in UAE",
+    showTyreFinder: false,
+  },
   "ev-tires": {
-    heroTitle: "Buy EV Tyres Online in the UAE",
-    heroTitleAr: "اشترِ إطارات السيارات الكهربائية عبر الإنترنت في الإمارات",
-    showTyreFinder: true,
+    heroTitle: "Electric Vehicle Tyres in UAE",
+    showTyreFinder: false,
+  },
+  "ev-tyres": {
+    heroTitle: "Electric Vehicle Tyres in UAE",
+    showTyreFinder: false,
   },
   "run-flat-tires": {
     heroTitle: "Buy Run-Flat Tyres Online in the UAE",
-    heroTitleAr: "اشترِ إطارات رن فلات عبر الإنترنت في الإمارات",
     showTyreFinder: true,
   },
 };

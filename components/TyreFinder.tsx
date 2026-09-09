@@ -53,7 +53,19 @@ interface TyreFinderProps {
   disableSticky?: boolean;
 }
 
-const SIZE_FIELDS = ["width", "height", "rim"] as const;
+const SIZE_FIELDS = [
+  "width",
+  "height",
+  "haight",
+  "rim",
+  "width_rear",
+  "rear_width",
+  "haight_rear",
+  "height_rear",
+  "rear_height",
+  "rim_rear",
+  "rear_rim",
+] as const;
 
 /** Purely numeric label, e.g. "225" or "22.5" — but not "31X" or "15C". */
 const NUMERIC_LABEL = /^\d+(\.\d+)?$/;
@@ -516,14 +528,16 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
     e.preventDefault();
     if (!selWidth && !selHeight && !selRim) return;
     const dest = basePath ?? tyresBase;
-    /* width/height/rim only. Magento's ProductAttributeFilterInput has no rear
-       counterpart (no rear_width / width_rear), and sending one fails the whole
-       products query, so the rear selection can't be filtered server-side. */
     const filterObj: Record<string, string> = {
       width: selWidth,
       height: selHeight,
       rim: selRim,
     };
+    if (hasRearTyre && selRearWidth && selRearHeight && selRearRim) {
+      filterObj.rear_width = selRearWidth;
+      filterObj.rear_height = selRearHeight;
+      filterObj.rear_rim = selRearRim;
+    }
     router.push(
       `${dest}?${appendCategory(buildFilterParams(filterObj, [...SIZE_FIELDS]))}`
     );
@@ -531,17 +545,21 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
 
   const handleVehicleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    /* The vehicle itself is not filterable — no product carries vehicle/model,
-       and `year` is the tyre's production year. The trim's fitment size is what
-       filters the catalog. */
     if (!selSize) return;
     const dest = basePath ?? tyresBase;
+    const filterObj: Record<string, string> = {
+      width: selSize.width,
+      height: selSize.height,
+      rim: selSize.rim,
+    };
+    if (selSize.rear) {
+      filterObj.rear_width = selSize.rear.width;
+      filterObj.rear_height = selSize.rear.height;
+      filterObj.rear_rim = selSize.rear.rim;
+    }
     router.push(
       `${dest}?${appendCategory(
-        buildFilterParams(
-          { width: selSize.width, height: selSize.height, rim: selSize.rim },
-          [...SIZE_FIELDS]
-        )
+        buildFilterParams(filterObj, [...SIZE_FIELDS])
       )}`
     );
   };
@@ -744,12 +762,19 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
     setSelSize(s);
     setVehQuery("");
     const dest = basePath ?? tyresBase;
+    const filterObj: Record<string, string> = {
+      width: s.width,
+      height: s.height,
+      rim: s.rim,
+    };
+    if (s.rear) {
+      filterObj.rear_width = s.rear.width;
+      filterObj.rear_height = s.rear.height;
+      filterObj.rear_rim = s.rear.rim;
+    }
     router.push(
       `${dest}?${appendCategory(
-        buildFilterParams(
-          { width: s.width, height: s.height, rim: s.rim },
-          [...SIZE_FIELDS]
-        )
+        buildFilterParams(filterObj, [...SIZE_FIELDS])
       )}`
     );
     closeVeh();
@@ -959,36 +984,33 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                 onClick={closeSize}
               >
                 <div
-                  className="relative w-full max-w-[760px] h-[580px] sm:h-[610px] max-h-[90vh] bg-white rounded-[22px] shadow-2xl overflow-hidden flex flex-col border border-gray-100 animate-in fade-in zoom-in-95 duration-200"
+                  className="relative w-full max-w-[780px] h-[590px] sm:h-[620px] max-h-[92vh] bg-white rounded-md shadow-2xl overflow-hidden flex flex-col border border-gray-200 animate-in fade-in zoom-in-95 duration-200"
                   onClick={(e) => e.stopPropagation()}
                   role="dialog"
                   aria-modal="true"
                   aria-label="Find tyres by size"
                 >
-                  {/* ── RED HEADER ── */}
-                  <div
-                    className="text-white p-[20px_20px_10px] relative rounded-t-[22px] flex-shrink-0"
-                    style={{ background: "linear-gradient(#D52D27 0%, #D52D27 55%, #D52D27 100%)" }}
-                  >
+                  {/* ── RED GRADIENT HEADER ── */}
+                  <div className="text-white p-5 sm:p-6 pb-4 relative rounded-t-md flex-shrink-0 bg-gradient-to-r from-[#ab1218] via-[#ed1c24] to-[#c7171e] shadow-md">
                     {/* Top Close Button */}
                     <button
                       type="button"
-                      className="absolute top-3 right-4 text-white/90 hover:text-white hover:scale-110 transition-transform p-1 cursor-pointer z-10"
+                      className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-md bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center text-white transition-all cursor-pointer z-10"
                       onClick={closeSize}
                       aria-label="Close"
                     >
-                      <X size={20} strokeWidth={2.5} />
+                      <X size={18} strokeWidth={2.5} />
                     </button>
 
                     {/* Top Row: Title + Current Selection badge */}
-                    <div className="flex items-start justify-between gap-2 mb-3.5">
+                    <div className="flex items-start justify-between gap-3 mb-4 pr-10">
                       <div>
-                        <h4 className="text-xl sm:text-2xl font-bold text-white leading-tight m-0 tracking-tight">
+                        <h4 className="text-xl sm:text-2xl font-black text-white leading-tight m-0 tracking-tight">
                           {sizeStep === "summary" ? "Ready to search!" : "What size are your tyres?"}
                         </h4>
-                        <p className="text-white/85 text-xs sm:text-[13px] font-normal mt-1 mb-0 leading-relaxed">
+                        <p className="text-white/85 text-xs sm:text-[13px] font-medium mt-1 mb-0 leading-snug">
                           {sizeStep === "summary"
-                            ? "Your selected tyre size."
+                            ? "Review your selected tyre specifications."
                             : sizeStep === "width"
                             ? "Pick the width — it's the first number on your sidewall (e.g. 235)."
                             : sizeStep === "height"
@@ -997,30 +1019,30 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         </p>
                       </div>
 
-                      {/* Current Selection Box */}
-                      <div className="bg-[#851214] rounded-lg px-4 py-2 text-center min-w-[130px] border border-white/10 shrink-0 mt-4">
+                      {/* Current Selection Capsule */}
+                      <div className="bg-black/35 backdrop-blur-md rounded-md px-3.5 py-1.5 text-center min-w-[130px] border border-white/20 shrink-0 shadow-inner hidden sm:block">
                         {!hasRearTyre ? (
                           <>
-                            <span className="text-[9px] uppercase font-bold tracking-wider text-white/70 block leading-tight">
+                            <span className="text-[9px] uppercase font-bold tracking-wider text-red-200/90 block leading-tight">
                               CURRENT SELECTION
                             </span>
-                            <span className="text-sm font-bold text-white tracking-widest block mt-0.5 leading-tight font-sans">
+                            <span className="text-xs sm:text-[13px] font-bold text-white block mt-0.5 leading-tight">
                               {frontFormatted}
                             </span>
                           </>
                         ) : (
                           <>
-                            <span className="text-[8px] uppercase font-bold tracking-wider text-white/70 block leading-tight">
+                            <span className="text-[8px] uppercase font-bold tracking-wider text-red-200/90 block leading-tight">
                               FRONT SIZE
                             </span>
-                            <span className="text-xs font-bold text-white block mt-0.5 leading-tight font-sans">
+                            <span className="text-xs font-bold text-white block mt-0.5 leading-tight">
                               {frontFormatted}
                             </span>
                             <div className="border-t border-white/20 my-0.5" />
-                            <span className="text-[8px] uppercase font-bold tracking-wider text-white/70 block leading-tight">
+                            <span className="text-[8px] uppercase font-bold tracking-wider text-red-200/90 block leading-tight">
                               REAR
                             </span>
-                            <span className="text-xs font-bold text-white block mt-0.5 leading-tight font-sans">
+                            <span className="text-xs font-bold text-white block mt-0.5 leading-tight">
                               {rearFormatted}
                             </span>
                           </>
@@ -1029,21 +1051,28 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                     </div>
 
                     {/* Step Tabs Row (WIDTH / HEIGHT / RIM) */}
-                    <div className="grid grid-cols-3 gap-3.5 mt-4">
+                    <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                       {/* Width Tab */}
                       {(() => {
                         const isDone = Boolean(currWidth) && sizeStep !== "width";
                         const isActive = sizeStep === "width";
                         return (
                           <div
-                            className={`relative rounded-lg p-3 flex items-center gap-3 text-left transition-all cursor-pointer bg-white/10 border border-white/20 select-none hover:bg-white/15 ${
-                              isActive ? "border-b-2 border-b-[#f4a923]" : ""
+                            onClick={() => setSizeStep("width")}
+                            className={`relative rounded-md p-2.5 sm:p-3 flex items-center gap-2.5 sm:gap-3 text-left transition-all cursor-pointer select-none ${
+                              isActive
+                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
+                                : isDone
+                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
+                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
                             }`}
                           >
                             <div
-                              className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                                isDone || isActive
-                                  ? "bg-[#f4a923] text-white"
+                              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
+                                isActive
+                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
+                                  : isDone
+                                  ? "bg-emerald-500 text-white"
                                   : "bg-white/15 text-white/70"
                               }`}
                             >
@@ -1054,12 +1083,18 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
+                              <span
+                                className={`text-[10px] sm:text-[11px] uppercase font-extrabold tracking-wider block leading-tight ${
+                                  isActive ? "text-gray-400" : "text-white/80"
+                                }`}
+                              >
                                 WIDTH
                               </span>
                               <span
-                                className={`text-xs sm:text-[14px] font-bold block leading-tight mt-0.5 truncate ${
-                                  currWidth ? "text-[#f4a923]" : "text-white/70"
+                                className={`text-xs sm:text-[15px] font-black block leading-tight mt-0.5 truncate ${
+                                  isActive
+                                    ? currWidth ? "text-[#ed1c24]" : "text-gray-900"
+                                    : currWidth ? "text-white font-bold" : "text-white/60"
                                 }`}
                               >
                                 {currWidth ? labelFor("width", currWidth) : "Select"}
@@ -1075,14 +1110,21 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         const isActive = sizeStep === "height";
                         return (
                           <div
-                            className={`relative rounded-lg p-3 flex items-center gap-3 text-left transition-all cursor-pointer select-none bg-white/10 border border-white/20 hover:bg-white/15 ${
-                              isActive ? "border-b-2 border-b-[#f4a923]" : ""
+                            onClick={() => currWidth && setSizeStep("height")}
+                            className={`relative rounded-md p-2.5 sm:p-3 flex items-center gap-2.5 sm:gap-3 text-left transition-all cursor-pointer select-none ${
+                              isActive
+                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
+                                : isDone
+                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
+                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
                             }`}
                           >
                             <div
-                              className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                                isDone || isActive
-                                  ? "bg-[#f4a923] text-white"
+                              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
+                                isActive
+                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
+                                  : isDone
+                                  ? "bg-emerald-500 text-white"
                                   : "bg-white/15 text-white/70"
                               }`}
                             >
@@ -1093,12 +1135,18 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
+                              <span
+                                className={`text-[10px] sm:text-[11px] uppercase font-extrabold tracking-wider block leading-tight ${
+                                  isActive ? "text-gray-400" : "text-white/80"
+                                }`}
+                              >
                                 HEIGHT
                               </span>
                               <span
-                                className={`text-xs sm:text-[14px] font-bold block leading-tight mt-0.5 truncate ${
-                                  currHeight ? "text-[#f4a923]" : "text-white/70"
+                                className={`text-xs sm:text-[15px] font-black block leading-tight mt-0.5 truncate ${
+                                  isActive
+                                    ? currHeight ? "text-[#ed1c24]" : "text-gray-900"
+                                    : currHeight ? "text-white font-bold" : "text-white/60"
                                 }`}
                               >
                                 {currHeight ? labelFor("height", currHeight) : "Select"}
@@ -1114,14 +1162,21 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         const isActive = sizeStep === "rim" || (sizeStep === "summary" && Boolean(currRim));
                         return (
                           <div
-                            className={`relative rounded-lg p-3 flex items-center gap-3 text-left transition-all cursor-pointer select-none bg-white/10 border border-white/20 hover:bg-white/15 ${
-                              isActive ? "border-b-2 border-b-[#f4a923]" : ""
+                            onClick={() => currWidth && currHeight && setSizeStep("rim")}
+                            className={`relative rounded-md p-2.5 sm:p-3 flex items-center gap-2.5 sm:gap-3 text-left transition-all cursor-pointer select-none ${
+                              isActive
+                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
+                                : isDone
+                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
+                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
                             }`}
                           >
                             <div
-                              className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                                isDone || isActive
-                                  ? "bg-[#f4a923] text-white"
+                              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
+                                isActive
+                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
+                                  : isDone
+                                  ? "bg-emerald-500 text-white"
                                   : "bg-white/15 text-white/70"
                               }`}
                             >
@@ -1132,12 +1187,18 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
+                              <span
+                                className={`text-[10px] sm:text-[11px] uppercase font-extrabold tracking-wider block leading-tight ${
+                                  isActive ? "text-gray-400" : "text-white/80"
+                                }`}
+                              >
                                 RIM
                               </span>
                               <span
-                                className={`text-xs sm:text-[14px] font-bold block leading-tight mt-0.5 truncate ${
-                                  currRim ? "text-[#f4a923]" : "text-white/70"
+                                className={`text-xs sm:text-[15px] font-black block leading-tight mt-0.5 truncate ${
+                                  isActive
+                                    ? currRim ? "text-[#ed1c24]" : "text-gray-900"
+                                    : currRim ? "text-white font-bold" : "text-white/60"
                                 }`}
                               >
                                 {currRim
@@ -1161,9 +1222,9 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                             setActiveSizeTab("front");
                             if (sizeStep !== "summary") setSizeStep("width");
                           }}
-                          className={`px-4 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                          className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
                             activeSizeTab === "front"
-                              ? "bg-white text-[#d12729] shadow-sm"
+                              ? "bg-white text-[#ed1c24] shadow-md"
                               : "border border-white/40 text-white hover:bg-white/10 font-semibold"
                           }`}
                         >
@@ -1175,9 +1236,9 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                             setActiveSizeTab("rear");
                             if (sizeStep !== "summary") setSizeStep("width");
                           }}
-                          className={`px-4 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                          className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
                             activeSizeTab === "rear"
-                              ? "bg-white text-[#d12729] shadow-sm"
+                              ? "bg-white text-[#ed1c24] shadow-md"
                               : "border border-white/40 text-white hover:bg-white/10 font-semibold"
                           }`}
                         >
@@ -1188,7 +1249,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                   </div>
 
                   {/* ── WHITE BODY ── */}
-                  <div className="px-5 py-1 flex-1 overflow-y-auto finder-modal-scroll bg-white flex flex-col justify-start">
+                  <div className="px-5 sm:px-6 py-4 flex-1 overflow-y-auto finder-modal-scroll bg-white flex flex-col justify-start">
                     {depLoading || (sizeStep === "width" && widthLoading) ? (
                       <div className="flex justify-center items-center py-16 flex-1">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1200,18 +1261,27 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         <div className="relative mb-4 shrink-0">
                           <Search
                             size={18}
-                            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                           />
                           <input
                             type="text"
                             placeholder={`Search ${activeSizeTab === "rear" ? "rear " : ""}${sizeStep}...`}
                             value={sizeQuery}
                             onChange={(e) => setSizeQuery(e.target.value)}
-                            className="w-full bg-white border border-gray-200 rounded-lg pl-10 pr-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-300 transition-all font-normal"
+                            className="w-full bg-gray-50/90 border border-gray-200 rounded-md pl-11 pr-10 py-2.5 sm:py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:border-[#ed1c24] focus:ring-2 focus:ring-red-500/15 transition-all font-medium shadow-2xs"
                           />
+                          {sizeQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setSizeQuery("")}
+                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer p-1"
+                            >
+                              <X size={15} />
+                            </button>
+                          )}
                         </div>
 
-                        {/* Options List / Grid (Consistent button size across Width, Height, Rim) */}
+                        {/* Options List / Grid */}
                         {filteredOptions.length < 5 ? (
                           <div className="flex flex-wrap gap-3 justify-center pt-2">
                             {filteredOptions.map((o) => {
@@ -1227,10 +1297,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                                       ? pickHeight(o.value)
                                       : pickRim(o.value)
                                   }
-                                  className={`w-[130px] h-[48px] border rounded-lg flex items-center justify-center text-center text-[15px] font-bold transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0 ${
+                                  className={`w-[130px] h-[48px] sm:h-[50px] rounded-md flex items-center justify-center text-center text-sm sm:text-[15px] font-bold transition-all duration-150 active:scale-95 cursor-pointer shrink-0 ${
                                     isSelected
-                                      ? "border-2 border-[#d12729] text-[#d12729] bg-[#fff5f5] shadow-sm"
-                                      : "border-gray-200 text-gray-900 bg-white hover:border-gray-400 hover:shadow-sm"
+                                      ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25 font-black"
+                                      : "border border-gray-200 text-gray-800 bg-white hover:border-red-400 hover:bg-red-50/50 hover:text-[#ed1c24] hover:shadow-sm shadow-2xs"
                                   }`}
                                 >
                                   {o.label}
@@ -1239,7 +1309,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                             })}
                           </div>
                         ) : (
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-1">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3 pt-1 pb-2">
                             {filteredOptions.map((o) => {
                               const isSelected = currVal === o.value;
                               return (
@@ -1253,10 +1323,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                                       ? pickHeight(o.value)
                                       : pickRim(o.value)
                                   }
-                                  className={`w-full h-[48px] border rounded-lg flex items-center justify-center text-center text-[15px] font-bold transition-all duration-150 active:scale-[0.98] cursor-pointer ${
+                                  className={`w-full h-[48px] sm:h-[50px] rounded-md flex items-center justify-center text-center text-sm sm:text-[15px] font-bold transition-all duration-150 active:scale-95 cursor-pointer ${
                                     isSelected
-                                      ? "border-2 border-[#d12729] text-[#d12729] bg-[#fff5f5] shadow-sm"
-                                      : "border-gray-200 text-gray-900 bg-white hover:border-gray-400 hover:shadow-sm"
+                                      ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25 font-black"
+                                      : "border border-gray-200 text-gray-800 bg-white hover:border-red-400 hover:bg-red-50/50 hover:text-[#ed1c24] hover:shadow-sm shadow-2xs"
                                   }`}
                                 >
                                   {o.label}
@@ -1273,74 +1343,83 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         )}
                       </>
                     ) : (
-                      /* ── READY TO SEARCH / SUMMARY VIEW (Screenshot 3 & 4) ── */
-                      <div className="py-2 text-center">
-                        <h3 className="text-2xl sm:text-[26px] font-bold text-gray-900 mb-1 tracking-tight">
+                      /* ── READY TO SEARCH / SUMMARY VIEW ── */
+                      <div className="py-2 px-2 text-center my-auto flex flex-col justify-center items-center">
+                        <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-1 tracking-tight">
                           Ready to search!
                         </h3>
-                        <p className="text-[13px] text-[#6c757d] mb-[10px] font-normal">
+                        <p className="text-xs sm:text-sm text-gray-500 mb-4 font-medium">
                           Your selected tyre size
                         </p>
 
-                        {/* Selection Cards (Side-by-Side if Dual, Single Card if Single) */}
+                        {/* Selection Cards */}
                         <div
-                          className={`finder-summary-sizes flex justify-center gap-4 mb-[22px] mx-auto ${
-                            hasRearTyre ? "max-w-2xl" : "max-w-md"
+                          className={`w-full grid gap-3.5 mb-4 ${
+                            hasRearTyre ? "grid-cols-1 sm:grid-cols-2 max-w-2xl" : "max-w-[320px]"
                           }`}
                         >
                           {/* Front Tyre Card */}
-                          <div className="finder-summary-front text-left bg-[#fbfcfe] border border-[#ccc] rounded-[8px] p-[14px_18px_12px] w-full relative overflow-hidden shadow-none">
-                            <div className="absolute -right-[30px] -top-[30px] bg-[#faf2e3] h-[96px] w-[96px] rounded-full pointer-events-none" />
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
-                              {hasRearTyre ? "FRONT TYRES:" : "ALL TYRES"}
-                            </span>
-                            <div className="text-2xl sm:text-[26px] font-extrabold text-gray-900 tracking-tight leading-none my-1 font-sans">
-                              {frontFormatted}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveSizeTab("front");
-                                setSizeStep("width");
-                              }}
-                              className="text-xs font-bold uppercase tracking-wider text-[#d12729] hover:underline mt-2 inline-block cursor-pointer"
-                            >
-                              EDIT
-                            </button>
-                          </div>
-
-                          {/* Rear Tyre Card (if enabled) */}
-                          {hasRearTyre && (
-                            <div className="finder-summary-rear text-left bg-[#fbfcfe] border border-[#ccc] rounded-[8px] p-[14px_18px_12px] w-full relative overflow-hidden shadow-none">
-                              <div className="absolute -right-[30px] -top-[30px] bg-[#faf2e3] h-[96px] w-[96px] rounded-full pointer-events-none" />
-                              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
-                                REAR TYRES:
+                          <div className="text-left bg-white border border-gray-200 rounded-md p-4 shadow-xs flex flex-col justify-between hover:border-gray-300 transition-all">
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded-xs">
+                                {hasRearTyre ? "FRONT TYRES" : "ALL TYRES"}
                               </span>
-                              <div className="text-2xl sm:text-[26px] font-extrabold text-gray-900 tracking-tight leading-none my-1 font-sans">
-                                {rearFormatted}
-                              </div>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setActiveSizeTab("rear");
+                                  setActiveSizeTab("front");
                                   setSizeStep("width");
                                 }}
-                                className="text-xs font-bold uppercase tracking-wider text-[#d12729] hover:underline mt-2 inline-block cursor-pointer"
+                                className="text-xs font-bold uppercase tracking-wider text-[#ed1c24] hover:text-[#b71218] hover:underline cursor-pointer"
                               >
                                 EDIT
                               </button>
                             </div>
+                            <div className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight py-0.5">
+                              {frontFormatted}
+                            </div>
+                          </div>
+
+                          {/* Rear Tyre Card (if enabled) */}
+                          {hasRearTyre && (
+                            <div className="text-left bg-white border border-gray-200 rounded-md p-4 shadow-xs flex flex-col justify-between hover:border-gray-300 transition-all">
+                              <div className="flex items-center justify-between gap-2 mb-2">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded-xs">
+                                  REAR TYRES
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveSizeTab("rear");
+                                    setSizeStep("width");
+                                  }}
+                                  className="text-xs font-bold uppercase tracking-wider text-[#ed1c24] hover:text-[#b71218] hover:underline cursor-pointer"
+                                >
+                                  EDIT
+                                </button>
+                              </div>
+                              <div className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight py-0.5">
+                                {rearFormatted}
+                              </div>
+                            </div>
                           )}
                         </div>
 
-                        {/* Add / Same Size Switcher Button (Dashed rounded-full) */}
-                        <div className="flex justify-center mt-3 mb-1">
+                        {/* Add / Same Size Switcher Button */}
+                        <div className="flex justify-center">
                           <button
                             type="button"
-                            onClick={toggleRearMode}
-                            className="border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50 rounded-full py-2.5 px-6 inline-flex items-center gap-2.5 font-bold text-xs uppercase tracking-wider text-gray-700 transition-all cursor-pointer select-none active:scale-95"
+                            onClick={(e) => {
+                              if (hasRearTyre) {
+                                handleSizeSearch(e);
+                                closeSize();
+                              } else {
+                                toggleRearMode();
+                              }
+                            }}
+                            className="border border-dashed border-gray-300 hover:border-red-400 hover:bg-red-50/40 rounded-md py-2.5 px-6 inline-flex items-center gap-3 font-bold text-xs uppercase tracking-wider text-gray-700 transition-all cursor-pointer select-none active:scale-95 shadow-2xs"
                           >
-                            <span className="w-5 h-5 rounded-full bg-[#d12729] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                            <span className="w-5 h-5 rounded-full bg-[#ed1c24] text-white flex items-center justify-center text-xs font-black shrink-0">
                               {hasRearTyre ? "—" : "+"}
                             </span>
                             <span>
@@ -1355,10 +1434,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                   </div>
 
                   {/* ── FOOTER ── */}
-                  <div className="px-6 py-3.5 border-t border-gray-100 flex items-center justify-between bg-white shrink-0 rounded-b-[22px]">
+                  <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white shrink-0 rounded-b-md">
                     <button
                       type="button"
-                      className="text-sm font-bold text-gray-900 hover:text-black flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="text-sm font-bold text-gray-600 hover:text-gray-900 flex items-center gap-2 transition-colors px-4 py-2.5 rounded-md hover:bg-gray-100 cursor-pointer"
                       onClick={handleBackOrCancel}
                     >
                       <ArrowLeft size={16} strokeWidth={2.5} />
@@ -1372,10 +1451,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         type="button"
                         disabled={!currVal}
                         onClick={handleNextStep}
-                        className={`rounded-full px-8 py-2.5 sm:py-3 text-sm font-bold flex items-center gap-2 transition-all ${
+                        className={`rounded-md px-8 py-2.5 sm:py-3 text-sm font-bold flex items-center gap-2 transition-all ${
                           currVal
-                            ? "bg-[#8b9bb4] hover:bg-[#7789a3] text-white cursor-pointer shadow-sm active:scale-95"
-                            : "bg-[#8b9bb4] text-white/80 opacity-60 cursor-not-allowed"
+                            ? "bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white cursor-pointer shadow-md shadow-red-500/25 active:scale-95 hover:scale-[1.01]"
+                            : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
                         }`}
                       >
                         <span>Next</span>
@@ -1388,7 +1467,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                           handleSizeSearch(e);
                           closeSize();
                         }}
-                        className="bg-black hover:bg-gray-900 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-full px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
+                        className="bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white font-bold text-sm uppercase tracking-wider rounded-md px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md shadow-red-500/25 cursor-pointer"
                       >
                         <span>Search</span>
                         <ArrowRight size={16} strokeWidth={2.5} />
@@ -1426,33 +1505,30 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                 : "";
 
             return (
-              <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+              <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-200">
                 <div className="absolute inset-0" onClick={closeVeh} />
-                <div className="relative w-full max-w-[760px] h-[580px] sm:h-[610px] max-h-[90vh] bg-white rounded-[22px] shadow-2xl overflow-hidden flex flex-col border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
-                  {/* ── RED HEADER ── */}
-                  <div
-                    className="text-white p-[20px_20px_10px] relative rounded-t-[22px] flex-shrink-0"
-                    style={{ background: "linear-gradient(#D52D27 0%, #D52D27 55%, #D52D27 100%)" }}
-                  >
+                <div className="relative w-full max-w-[780px] h-[590px] sm:h-[620px] max-h-[92vh] bg-white rounded-md shadow-2xl overflow-hidden flex flex-col border border-gray-200 animate-in fade-in zoom-in-95 duration-200">
+                  {/* ── RED GRADIENT HEADER ── */}
+                  <div className="text-white p-5 sm:p-6 pb-4 relative rounded-t-md flex-shrink-0 bg-gradient-to-r from-[#ab1218] via-[#ed1c24] to-[#c7171e] shadow-md">
                     {/* Top Close Button */}
                     <button
                       type="button"
-                      className="absolute top-3 right-4 text-white/90 hover:text-white hover:scale-110 transition-transform p-1 cursor-pointer z-10"
+                      className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-md bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center text-white transition-all cursor-pointer z-10"
                       onClick={closeVeh}
                       aria-label="Close"
                     >
-                      <X size={20} strokeWidth={2.5} />
+                      <X size={18} strokeWidth={2.5} />
                     </button>
 
-                    <div className="flex items-start justify-between gap-2 mb-3.5">
+                    <div className="flex items-start justify-between gap-3 mb-4 pr-10">
                       {/* Left: Titles */}
                       <div className="min-w-0 flex-1">
-                        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight m-0">
+                        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight m-0">
                           {vehStep === "summary"
                             ? "Ready to search!"
                             : "Which vehicle are you looking for?"}
                         </h2>
-                        <p className="text-white/85 text-xs sm:text-[13px] font-normal mt-1 mb-0 leading-relaxed">
+                        <p className="text-white/85 text-xs sm:text-[13px] font-medium mt-1 mb-0 leading-snug">
                           {vehStep === "vehicle"
                             ? "Pick the vehicle make (e.g. BMW, Toyota, Mercedes)."
                             : vehStep === "model"
@@ -1465,49 +1541,62 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         </p>
                       </div>
 
-                      {/* Right: CURRENT SELECTION Badge */}
-                      <div className="bg-[#851214] border border-white/10 rounded-lg px-4 py-2 text-center min-w-[130px] shrink-0 mt-4">
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-white/70 block leading-tight">
+                      {/* Right: CURRENT SELECTION Capsule */}
+                      <div className="bg-black/35 backdrop-blur-md rounded-md px-3.5 py-1.5 text-center min-w-[130px] border border-white/20 shrink-0 shadow-inner hidden sm:block">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-red-200/90 block leading-tight">
                           CURRENT SELECTION
                         </span>
-                        <span className="text-sm font-bold text-white block leading-tight mt-0.5 max-w-[220px] truncate">
+                        <span className="text-xs sm:text-[13px] font-bold text-white block mt-0.5 max-w-[220px] truncate">
                           {vehFormatted}
                         </span>
                       </div>
                     </div>
 
                     {/* ── 4 STEP TABS ROW (Make / Model / Year / Engine) ── */}
-                    <div className="grid grid-cols-4 gap-2.5 sm:gap-3 mt-4">
+                    <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
                       {/* Step 1: Make */}
                       {(() => {
                         const isDone = Boolean(selVehicle) && vehStep !== "vehicle";
                         const isActive = vehStep === "vehicle";
                         return (
                           <div
-                            className={`relative rounded-lg p-3 flex items-center gap-3 text-left transition-all cursor-pointer bg-white/10 border border-white/20 select-none hover:bg-white/15 ${
-                              isActive ? "border-b-2 border-b-[#f4a923]" : ""
+                            onClick={() => setVehStep("vehicle")}
+                            className={`relative rounded-md p-2 sm:p-2.5 flex items-center gap-2 text-left transition-all cursor-pointer select-none ${
+                              isActive
+                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
+                                : isDone
+                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
+                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
                             }`}
                           >
                             <div
-                              className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                                isDone || isActive
-                                  ? "bg-[#f4a923] text-white"
+                              className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
+                                isActive
+                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
+                                  : isDone
+                                  ? "bg-emerald-500 text-white"
                                   : "bg-white/15 text-white/70"
                               }`}
                             >
                               {isDone ? (
-                                <Check size={18} strokeWidth={3} />
+                                <Check size={16} strokeWidth={3} />
                               ) : (
-                                <Car size={18} strokeWidth={2.5} />
+                                <Car size={16} strokeWidth={2.5} />
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
+                              <span
+                                className={`text-[9.5px] uppercase font-extrabold tracking-wider block leading-tight ${
+                                  isActive ? "text-gray-400" : "text-white/80"
+                                }`}
+                              >
                                 MAKE
                               </span>
                               <span
-                                className={`text-xs sm:text-[14px] font-bold block leading-tight mt-0.5 truncate ${
-                                  selVehicle ? "text-[#f4a923]" : "text-white/70"
+                                className={`text-xs font-black block leading-tight mt-0.5 truncate ${
+                                  isActive
+                                    ? selVehicle ? "text-[#ed1c24]" : "text-gray-900"
+                                    : selVehicle ? "text-white font-bold" : "text-white/60"
                                 }`}
                               >
                                 {selVehicle ? labelFor("vehicle", selVehicle) : "Select"}
@@ -1525,30 +1614,43 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         const isActive = vehStep === "model";
                         return (
                           <div
-                            className={`relative rounded-lg p-3 flex items-center gap-3 text-left transition-all cursor-pointer select-none bg-white/10 border border-white/20 hover:bg-white/15 ${
-                              isActive ? "border-b-2 border-b-[#f4a923]" : ""
+                            onClick={() => selVehicle && setVehStep("model")}
+                            className={`relative rounded-md p-2 sm:p-2.5 flex items-center gap-2 text-left transition-all cursor-pointer select-none ${
+                              isActive
+                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
+                                : isDone
+                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
+                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
                             }`}
                           >
                             <div
-                              className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                                isDone || isActive
-                                  ? "bg-[#f4a923] text-white"
+                              className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
+                                isActive
+                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
+                                  : isDone
+                                  ? "bg-emerald-500 text-white"
                                   : "bg-white/15 text-white/70"
                               }`}
                             >
                               {isDone ? (
-                                <Check size={18} strokeWidth={3} />
+                                <Check size={16} strokeWidth={3} />
                               ) : (
-                                <Layers size={18} strokeWidth={2.5} />
+                                <Layers size={16} strokeWidth={2.5} />
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
+                              <span
+                                className={`text-[9.5px] uppercase font-extrabold tracking-wider block leading-tight ${
+                                  isActive ? "text-gray-400" : "text-white/80"
+                                }`}
+                              >
                                 MODEL
                               </span>
                               <span
-                                className={`text-xs sm:text-[14px] font-bold block leading-tight mt-0.5 truncate ${
-                                  selModel ? "text-[#f4a923]" : "text-white/70"
+                                className={`text-xs font-black block leading-tight mt-0.5 truncate ${
+                                  isActive
+                                    ? selModel ? "text-[#ed1c24]" : "text-gray-900"
+                                    : selModel ? "text-white font-bold" : "text-white/60"
                                 }`}
                               >
                                 {selModel ? labelFor("model", selModel) : "Select"}
@@ -1565,30 +1667,43 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         const isActive = vehStep === "year";
                         return (
                           <div
-                            className={`relative rounded-lg p-3 flex items-center gap-3 text-left transition-all cursor-pointer select-none bg-white/10 border border-white/20 hover:bg-white/15 ${
-                              isActive ? "border-b-2 border-b-[#f4a923]" : ""
+                            onClick={() => selVehicle && selModel && setVehStep("year")}
+                            className={`relative rounded-md p-2 sm:p-2.5 flex items-center gap-2 text-left transition-all cursor-pointer select-none ${
+                              isActive
+                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
+                                : isDone
+                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
+                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
                             }`}
                           >
                             <div
-                              className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                                isDone || isActive
-                                  ? "bg-[#f4a923] text-white"
+                              className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
+                                isActive
+                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
+                                  : isDone
+                                  ? "bg-emerald-500 text-white"
                                   : "bg-white/15 text-white/70"
                               }`}
                             >
                               {isDone ? (
-                                <Check size={18} strokeWidth={3} />
+                                <Check size={16} strokeWidth={3} />
                               ) : (
-                                <Calendar size={18} strokeWidth={2.5} />
+                                <Calendar size={16} strokeWidth={2.5} />
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
+                              <span
+                                className={`text-[9.5px] uppercase font-extrabold tracking-wider block leading-tight ${
+                                  isActive ? "text-gray-400" : "text-white/80"
+                                }`}
+                              >
                                 YEAR
                               </span>
                               <span
-                                className={`text-xs sm:text-[14px] font-bold block leading-tight mt-0.5 truncate ${
-                                  selYear ? "text-[#f4a923]" : "text-white/70"
+                                className={`text-xs font-black block leading-tight mt-0.5 truncate ${
+                                  isActive
+                                    ? selYear ? "text-[#ed1c24]" : "text-gray-900"
+                                    : selYear ? "text-white font-bold" : "text-white/60"
                                 }`}
                               >
                                 {selYear ? labelFor("year", selYear) : "Select"}
@@ -1604,30 +1719,43 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         const isActive = vehStep === "engine";
                         return (
                           <div
-                            className={`relative rounded-lg p-3 flex items-center gap-3 text-left transition-all cursor-pointer select-none bg-white/10 border border-white/20 hover:bg-white/15 ${
-                              isActive ? "border-b-2 border-b-[#f4a923]" : ""
+                            onClick={() => selVehicle && selModel && selYear && setVehStep("engine")}
+                            className={`relative rounded-md p-2 sm:p-2.5 flex items-center gap-2 text-left transition-all cursor-pointer select-none ${
+                              isActive
+                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
+                                : isDone
+                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
+                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
                             }`}
                           >
                             <div
-                              className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                                isDone || isActive
-                                  ? "bg-[#f4a923] text-white"
+                              className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
+                                isActive
+                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
+                                  : isDone
+                                  ? "bg-emerald-500 text-white"
                                   : "bg-white/15 text-white/70"
                               }`}
                             >
                               {isDone ? (
-                                <Check size={18} strokeWidth={3} />
+                                <Check size={16} strokeWidth={3} />
                               ) : (
-                                <Gauge size={18} strokeWidth={2.5} />
+                                <Gauge size={16} strokeWidth={2.5} />
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
+                              <span
+                                className={`text-[9.5px] uppercase font-extrabold tracking-wider block leading-tight ${
+                                  isActive ? "text-gray-400" : "text-white/80"
+                                }`}
+                              >
                                 ENGINE
                               </span>
                               <span
-                                className={`text-xs sm:text-[14px] font-bold block leading-tight mt-0.5 truncate ${
-                                  selEngine ? "text-[#f4a923]" : "text-white/70"
+                                className={`text-xs font-black block leading-tight mt-0.5 truncate ${
+                                  isActive
+                                    ? selEngine ? "text-[#ed1c24]" : "text-gray-900"
+                                    : selEngine ? "text-white font-bold" : "text-white/60"
                                 }`}
                               >
                                 {selEngine
@@ -1644,7 +1772,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                   </div>
 
                   {/* ── WHITE BODY ── */}
-                  <div className="px-5 py-3 flex-1 overflow-y-auto finder-modal-scroll bg-white flex flex-col justify-start">
+                  <div className="px-5 sm:px-6 py-4 flex-1 overflow-y-auto finder-modal-scroll bg-white flex flex-col justify-start">
                     {depLoading && (vehStep === "vehicle" || vehStep === "model" || vehStep === "year") ? (
                       <div className="flex justify-center items-center py-16 flex-1">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1656,20 +1784,20 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         <div className="relative mb-4 shrink-0">
                           <Search
                             size={18}
-                            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                           />
                           <input
                             type="text"
                             placeholder="Search here ..."
                             value={vehQuery}
                             onChange={(e) => setVehQuery(e.target.value)}
-                            className="w-full bg-white border border-gray-200 rounded-lg pl-10 pr-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-300 transition-all font-normal"
+                            className="w-full bg-gray-50/90 border border-gray-200 rounded-md pl-11 pr-10 py-2.5 sm:py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:border-[#ed1c24] focus:ring-2 focus:ring-red-500/15 transition-all font-medium shadow-2xs"
                           />
                           {vehQuery && (
                             <button
                               type="button"
                               onClick={() => setVehQuery("")}
-                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer p-1"
                             >
                               <X size={15} />
                             </button>
@@ -1680,7 +1808,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         {vehStep === "vehicle" && (() => {
                           const opts = vehFilter(meta.vehicle ?? []);
                           return (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-1">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3 pt-1 pb-2">
                               {opts.map((o) => {
                                 const isSelected = selVehicle === o.value;
                                 return (
@@ -1688,10 +1816,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                                     key={o.value}
                                     type="button"
                                     onClick={() => pickVehicle(o.value)}
-                                    className={`border rounded-lg p-2.5 sm:p-3 flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer h-[100px] w-full text-center ${
+                                    className={`rounded-md p-2.5 sm:p-3 flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer h-[100px] w-full text-center ${
                                       isSelected
-                                        ? "border-2 border-[#d12729] text-[#d12729] bg-[#fff5f5] shadow-sm"
-                                        : "border-gray-200 text-gray-900 bg-white hover:border-gray-400 hover:shadow-sm"
+                                        ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25"
+                                        : "border border-gray-200 text-gray-900 bg-white hover:border-red-400 hover:bg-red-50/50 hover:text-[#ed1c24] hover:shadow-sm shadow-2xs"
                                     }`}
                                   >
                                     <VehicleLogo label={o.label} logoUrl={o.logo} />
@@ -1714,7 +1842,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         {vehStep === "model" && (() => {
                           const opts = vehFilter(displayModels);
                           return (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-1">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 pt-1 pb-2">
                               {opts.map((o) => {
                                 const isSelected = selModel === o.value;
                                 return (
@@ -1722,10 +1850,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                                     key={o.value}
                                     type="button"
                                     onClick={() => pickModel(o.value)}
-                                    className={`w-full h-[48px] border rounded-lg flex items-center justify-center text-center text-sm font-bold transition-all duration-150 active:scale-[0.98] cursor-pointer px-3 ${
+                                    className={`w-full h-[48px] sm:h-[50px] rounded-md flex items-center justify-center text-center text-sm font-bold transition-all duration-150 active:scale-95 cursor-pointer px-3 ${
                                       isSelected
-                                        ? "border-2 border-[#d12729] text-[#d12729] bg-[#fff5f5] shadow-sm"
-                                        : "border-gray-200 text-gray-900 bg-white hover:border-gray-400 hover:shadow-sm"
+                                        ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25"
+                                        : "border border-gray-200 text-gray-900 bg-white hover:border-red-400 hover:bg-red-50/50 hover:text-[#ed1c24] hover:shadow-sm shadow-2xs"
                                     }`}
                                   >
                                     <span className="truncate">{o.label}</span>
@@ -1745,7 +1873,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         {vehStep === "year" && (() => {
                           const opts = vehFilter(displayYears);
                           return (
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 pt-1">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 sm:gap-3 pt-1 pb-2">
                               {opts.map((o) => {
                                 const isSelected = selYear === o.value;
                                 return (
@@ -1753,10 +1881,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                                     key={o.value}
                                     type="button"
                                     onClick={() => pickYear(o.value)}
-                                    className={`w-full h-[48px] border rounded-lg flex items-center justify-center text-center text-[15px] font-bold transition-all duration-150 active:scale-[0.98] cursor-pointer ${
+                                    className={`w-full h-[48px] sm:h-[50px] rounded-md flex items-center justify-center text-center text-sm sm:text-[15px] font-bold transition-all duration-150 active:scale-95 cursor-pointer ${
                                       isSelected
-                                        ? "border-2 border-[#d12729] text-[#d12729] bg-[#fff5f5] shadow-sm"
-                                        : "border-gray-200 text-gray-900 bg-white hover:border-gray-400 hover:shadow-sm"
+                                        ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25"
+                                        : "border border-gray-200 text-gray-900 bg-white hover:border-red-400 hover:bg-red-50/50 hover:text-[#ed1c24] hover:shadow-sm shadow-2xs"
                                     }`}
                                   >
                                     {o.label}
@@ -1772,7 +1900,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                           );
                         })()}
 
-                        {/* Step 4: Engine + Sizes Combined View (Screenshot layout) */}
+                        {/* Step 4: Engine + Sizes Combined View */}
                         {vehStep === "engine" && (() => {
                           const baseOpts: AttrOption[] =
                             displayEngines.length > 0
@@ -1791,12 +1919,12 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                               {Object.entries(groups).map(([fuel, engs]) => (
                                 <div key={fuel} className="w-full">
                                   {/* Fuel Header: e.g. "Petrol" */}
-                                  <h4 className="text-center font-extrabold text-base sm:text-lg text-black mb-3.5">
+                                  <h4 className="text-center font-black text-base sm:text-lg text-gray-900 mb-3.5">
                                     {fuel === "Trims" || fuel === "Other" ? "Petrol" : fuel}
                                   </h4>
 
                                   {/* Centered Engine Options Pills */}
-                                  <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+                                  <div className="flex flex-wrap items-center justify-center gap-2.5 mb-6">
                                     {engs.map((o) => {
                                       const isSelected = selEngine === o.value;
                                       const cleanLabel = o.label.replace(/\s*\d+\s*hp/i, "").trim();
@@ -1806,10 +1934,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                                           key={o.value}
                                           type="button"
                                           onClick={() => setSelEngine(o.value)}
-                                          className={`px-6 py-2.5 rounded-lg border text-sm font-bold transition-all cursor-pointer select-none active:scale-95 ${
+                                          className={`px-5 py-2.5 rounded-md border text-sm font-bold transition-all cursor-pointer select-none active:scale-95 ${
                                             isSelected
-                                              ? "border-gray-800 text-black bg-white shadow-sm ring-1 ring-black"
-                                              : "border-gray-200 text-gray-800 bg-white hover:border-gray-400"
+                                              ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/20"
+                                              : "border-gray-200 text-gray-800 bg-white hover:border-gray-400 hover:bg-gray-50"
                                           }`}
                                         >
                                           <span>{cleanLabel || o.label}</span>
@@ -1828,37 +1956,51 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                                       <img src="/images/loader-style1.svg" alt="Loading" width={44} height={44} />
                                     </div>
                                   ) : displaySizes.length > 0 ? (
-                                    <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+                                    <div className="flex flex-wrap items-center justify-center gap-4 pt-3">
                                       {displaySizes.map((s) => {
                                         const isSelected = selSize?.label === s.label && selSize?.rearLabel === s.rearLabel;
                                         const rimVal = s.rim ? (s.rim.includes('"') ? s.rim : `${s.rim}"`) : "";
-                                        const frontText = rimVal ? `${rimVal} | ${s.label}` : s.label;
-                                        const rearRimVal = s.rear?.rim ? (s.rear.rim.includes('"') ? s.rear.rim : `${s.rear.rim}"`) : "";
-                                        const rearText = rearRimVal ? `${rearRimVal} | ${s.rearLabel}` : s.rearLabel;
 
                                         return (
                                           <button
                                             key={`${s.label}-${s.rearLabel ?? ""}`}
                                             type="button"
                                             onClick={() => pickSize(s)}
-                                            className={`relative border rounded-lg p-3.5 pt-4 min-w-[155px] text-center cursor-pointer transition-all hover:shadow-md active:scale-95 ${
+                                            className={`relative border rounded-md px-4 py-3 cursor-pointer transition-all hover:shadow-md active:scale-95 text-left inline-flex items-center gap-2 flex-wrap ${
                                               isSelected
-                                                ? "border-2 border-[#d12729] bg-[#fff5f5] shadow-sm"
-                                                : "border-gray-200 bg-white hover:border-gray-400"
+                                                ? "border-2 border-[#ed1c24] bg-red-50/50 shadow-sm"
+                                                : "border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50/60"
                                             }`}
                                           >
                                             {/* Red FACTORY SIZE / OPTIONAL SIZE tag */}
-                                            <span className="absolute -top-2.5 left-2 bg-[#d12729] text-white text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-wider shadow-sm">
+                                            <span className="absolute -top-2.5 left-3 bg-[#ed1c24] text-white text-[9px] font-bold px-2 py-0.5 rounded-[3px] uppercase tracking-wider shadow-xs">
                                               {s.isFactory ? "FACTORY SIZE" : "OPTIONAL SIZE"}
                                             </span>
-                                            <span className="text-sm font-bold text-gray-900 block mt-1">
-                                              {frontText}
-                                            </span>
-                                            {s.rearLabel && (
-                                              <span className="text-[11px] font-semibold text-gray-500 block mt-0.5">
-                                                Rear: {rearText}
+
+                                            <div className="flex items-center flex-wrap gap-2 text-sm sm:text-base font-bold text-gray-900 mt-0.5">
+                                              {/* Front Size */}
+                                              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                                {rimVal && <span>{rimVal} | </span>}
+                                                <span>{s.label}</span>
+                                                {s.speedIndex && (
+                                                  <span className="bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide leading-none">
+                                                    {s.speedIndex}
+                                                  </span>
+                                                )}
                                               </span>
-                                            )}
+
+                                              {/* Rear Size (if staggered fitment) */}
+                                              {s.rearLabel && (
+                                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap ml-1 sm:ml-2">
+                                                  <span>{s.rearLabel}</span>
+                                                  {s.rearSpeedIndex && (
+                                                    <span className="bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide leading-none">
+                                                      {s.rearSpeedIndex}
+                                                    </span>
+                                                  )}
+                                                </span>
+                                              )}
+                                            </div>
                                           </button>
                                         );
                                       })}
@@ -1870,7 +2012,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                                   )}
 
                                   {/* Disclaimer Note */}
-                                  <p className="text-center text-xs italic text-gray-700 mt-8 max-w-xl mx-auto leading-relaxed">
+                                  <p className="text-center text-xs italic text-gray-600 mt-8 max-w-xl mx-auto leading-relaxed">
                                     Note: Most vehicle manufacturer&apos;s produce vehicles with more than one possible size. We strongly recommend all customers check the tyre size printed on the side wall of their tyres before purchase.
                                   </p>
                                 </div>
@@ -1886,21 +2028,31 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                       </>
                     ) : (
                       /* ── READY TO SEARCH / SUMMARY VIEW ── */
-                      <div className="py-2 text-center">
-                        <h3 className="text-2xl sm:text-[26px] font-bold text-gray-900 mb-1 tracking-tight">
+                      <div className="py-2 px-2 text-center my-auto flex flex-col justify-center items-center">
+                        <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-1 tracking-tight">
                           Ready to search!
                         </h3>
-                        <p className="text-[13px] text-[#6c757d] mb-[10px] font-normal">
+                        <p className="text-xs sm:text-sm text-gray-500 mb-4 font-medium">
                           Your selected vehicle
                         </p>
 
-                        <div className="finder-summary-sizes flex justify-center gap-4 mb-[22px] mx-auto max-w-md">
-                          <div className="finder-summary-front text-left bg-[#fbfcfe] border border-[#ccc] rounded-[8px] p-[14px_18px_12px] w-full relative overflow-hidden shadow-none">
-                            <div className="absolute -right-[30px] -top-[30px] bg-[#faf2e3] h-[96px] w-[96px] rounded-full pointer-events-none" />
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
-                              SELECTED VEHICLE:
-                            </span>
-                            <div className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight leading-tight my-1">
+                        <div className="w-full max-w-lg mb-4">
+                          <div className="text-left bg-white border border-gray-200 rounded-md p-5 shadow-xs hover:border-gray-300 transition-all">
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded-xs">
+                                SELECTED VEHICLE
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setVehStep("engine");
+                                }}
+                                className="text-xs font-bold uppercase tracking-wider text-[#ed1c24] hover:text-[#b71218] hover:underline cursor-pointer"
+                              >
+                                EDIT
+                              </button>
+                            </div>
+                            <div className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight leading-tight my-2">
                               {labelFor("vehicle", selVehicle)} {labelFor("model", selModel)}
                             </div>
                             <div className="text-sm font-semibold text-gray-600 mt-1">
@@ -1916,7 +2068,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                             </div>
                             {/* The size is what the search actually filters on. */}
                             {selSize && (
-                              <div className="text-sm font-semibold text-gray-600 mt-1">
+                              <div className="text-sm font-semibold text-gray-600 mt-1.5 pt-1.5 border-t border-gray-100">
                                 Tyre size:{" "}
                                 <span className="text-gray-900 font-bold">{selSize.label}</span>
                                 {selSize.rearLabel && (
@@ -1927,15 +2079,6 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                                 )}
                               </div>
                             )}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setVehStep("engine");
-                              }}
-                              className="text-xs font-bold uppercase tracking-wider text-[#d12729] hover:underline mt-2 inline-block cursor-pointer"
-                            >
-                              EDIT
-                            </button>
                           </div>
                         </div>
                       </div>
@@ -1943,10 +2086,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                   </div>
 
                   {/* ── FOOTER ── */}
-                  <div className="px-6 py-3.5 border-t border-gray-100 flex items-center justify-between bg-white shrink-0 rounded-b-[22px]">
+                  <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white shrink-0 rounded-b-md">
                     <button
                       type="button"
-                      className="text-sm font-bold text-gray-900 hover:text-black flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="text-sm font-bold text-gray-600 hover:text-gray-900 flex items-center gap-2 transition-colors px-4 py-2.5 rounded-md hover:bg-gray-100 cursor-pointer"
                       onClick={handleVehBack}
                     >
                       <ArrowLeft size={16} strokeWidth={2.5} />
@@ -1960,10 +2103,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         type="button"
                         disabled={!currVehVal}
                         onClick={handleVehNext}
-                        className={`rounded-full px-8 py-2.5 sm:py-3 text-sm font-bold flex items-center gap-2 transition-all ${
+                        className={`rounded-md px-8 py-2.5 sm:py-3 text-sm font-bold flex items-center gap-2 transition-all ${
                           currVehVal
-                            ? "bg-[#8b9bb4] hover:bg-[#7789a3] text-white cursor-pointer shadow-sm active:scale-95"
-                            : "bg-[#8b9bb4] text-white/80 opacity-60 cursor-not-allowed"
+                            ? "bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white cursor-pointer shadow-md shadow-red-500/25 active:scale-95 hover:scale-[1.01]"
+                            : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
                         }`}
                       >
                         <span>Next</span>
@@ -1976,7 +2119,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                           handleVehicleSearch(e);
                           closeVeh();
                         }}
-                        className="bg-black hover:bg-gray-900 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-full px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
+                        className="bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white font-bold text-sm uppercase tracking-wider rounded-md px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md shadow-red-500/25 cursor-pointer"
                       >
                         <span>Search</span>
                         <ArrowRight size={16} strokeWidth={2.5} />

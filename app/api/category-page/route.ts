@@ -3,7 +3,60 @@ import { CATEGORY_PAGE_QUERY, CATEGORY_UID_BY_URL_KEY_QUERY } from "@/lib/querie
 import { parseGraphqlResponse, parseAggregations } from "@/lib/magento";
 import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
 import { findBrandLogo } from "@/lib/brandLogoScan";
+import type { Product } from "@/lib/data";
 type SortInput = Record<string, "ASC" | "DESC">;
+
+/**
+ * Staggered (front+rear) pagination has to be computed from the number of
+ * pairs that will actually render, not Magento's front-only total_count —
+ * a front tyre whose brand has no rear stock in that size never becomes a
+ * card, so pairing must run over every candidate before paging. This caps
+ * how many of each side are pulled to do that; comfortably above any real
+ * single-size result count.
+ */
+const STAGGERED_FETCH_CAP = 200;
+
+/**
+ * Pair each front tyre with an unused rear tyre of the same brand — same
+ * pattern preferred, any pattern of that brand otherwise. Never crosses
+ * brands. Mirrors the matching in StaggeredTyreCard's caller
+ * (components/category/CategoryPageInner.tsx) — kept here too so the
+ * pagination below reflects the count that will actually render.
+ */
+function pairStaggered(front: Product[], rear: Product[]): { front: Product; rear: Product }[] {
+  const usedRearIds = new Set<string>();
+  const pairs: { front: Product; rear: Product }[] = [];
+
+  front.forEach((f) => {
+    const frontBrand = String(f.brandName ?? f.brand ?? "").toLowerCase().trim();
+    const frontPattern = String(f.pattern ?? "").toLowerCase().trim();
+
+    let match = rear.find((r) => {
+      if (usedRearIds.has(r.id)) return false;
+      const rBrand = String(r.brandName ?? r.brand ?? "").toLowerCase().trim();
+      const rPattern = String(r.pattern ?? "").toLowerCase().trim();
+      return rBrand === frontBrand && !!rPattern && !!frontPattern && rPattern === frontPattern;
+    });
+
+    if (!match) {
+      match = rear.find((r) => {
+        if (usedRearIds.has(r.id)) return false;
+        const rBrand = String(r.brandName ?? r.brand ?? "").toLowerCase().trim();
+        return rBrand === frontBrand;
+      });
+    }
+
+    if (match) {
+      const matchBrand = String(match.brandName ?? match.brand ?? "").toLowerCase().trim();
+      if (matchBrand === frontBrand) {
+        usedRearIds.add(match.id);
+        pairs.push({ front: f, rear: match });
+      }
+    }
+  });
+
+  return pairs;
+}
 
 function buildSort(order: string): SortInput | undefined {
   switch (order) {
@@ -35,13 +88,46 @@ function withBrandLogos<T extends { brandName?: unknown; brandLogoUrl?: string }
     /* `brandName` is typed as a string but the adapter falls back to the raw
        `mgs_brand` value, which is numeric — coerce rather than assume. */
     const name = String(product.brandName ?? "").trim();
-    if (!name || product.brandLogoUrl) return product;
-
     if (!cache.has(name)) cache.set(name, findBrandLogo(name)?.logo ?? null);
     const logo = cache.get(name);
 
     return logo ? { ...product, brandLogoUrl: logo } : product;
   });
+}
+
+function buildCategoryMetadata(
+  cat: { uid: string; name: string; description?: string | null; meta_title?: string | null; meta_description?: string | null; url_key?: string } | undefined | null,
+  urlKey: string,
+) {
+  if (urlKey === "electric-vehicle-tyres-uae" || urlKey === "ev-tyres" || urlKey === "ev-tires") {
+    return {
+      uid: "MTg=",
+      name: "EV Tyres",
+      metaTitle: "Buy EV Tyres Online in UAE – Electric Vehicle Tyres",
+      metaDescription: "Shop premium EV tyres online in the UAE. Specially designed for electric cars with lower rolling resistance, high load capacity, and silent driving comfort.",
+      description: `<h2>Electric Vehicle (EV) Tyres in the UAE</h2><p>Find the best tyres engineered specifically for electric and hybrid vehicles. EV tyres offer lower rolling resistance for extended battery range, reinforced construction for higher vehicle weight, and acoustic foam technology for whisper-quiet rides.</p>`,
+      urlKey,
+    };
+  }
+  if (urlKey === "run-flat-tires") {
+    return {
+      uid: "MTg=",
+      name: "Run-Flat Tyres",
+      metaTitle: "Buy Run-Flat Tyres Online in UAE – TyresWorld",
+      metaDescription: "Shop run-flat tyres in UAE. Drive safely even after a puncture with self-supporting tyres from top brands.",
+      description: `<h2>Run-Flat Tyres in the UAE</h2><p>Explore durable run-flat tyres engineered with reinforced sidewalls to keep you driving safely up to 80 km/h even after a sudden loss of air pressure.</p>`,
+      urlKey,
+    };
+  }
+  if (!cat) return null;
+  return {
+    uid: cat.uid,
+    name: cat.name,
+    description: cat.description ?? null,
+    metaTitle: cat.meta_title ?? null,
+    metaDescription: cat.meta_description ?? null,
+    urlKey: cat.url_key,
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -58,44 +144,56 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "urlKey is required" }, { status: 400 });
   }
 
-  /* Resolve category urlKey → category UID using route query and fallback */
-  let categoryUid: string | null = null;
-  try {
-    const lookup = await fetch(APP_CONFIG.magento.graphqlUrl, {
-      method: "POST",
-      headers: magentoHeaders(store),
-      body: JSON.stringify({
-        query: `query($url: String!) {
-          route(url: $url) {
-            type
-            ... on CategoryInterface {
-              uid
-            }
-          }
-        }`,
-        variables: { url: urlKey },
-      }),
-      next: { revalidate: APP_CONFIG.cache.category },
-    });
-    const lj = await lookup.json().catch(() => null);
-    categoryUid = lj?.data?.route?.uid ?? null;
+  const isEvCategory =
+    urlKey === "electric-vehicle-tyres-uae" ||
+    urlKey === "ev-tyres" ||
+    urlKey === "ev-tires";
+  const isRunFlatCategory = urlKey === "run-flat-tires";
+  const isOnRoadCategory = urlKey === "on-road-tires";
+  const isOffRoadCategory = urlKey === "off-road-tires-4x4";
+  const isSpecialTyreCategory =
+    isEvCategory || isRunFlatCategory || isOnRoadCategory || isOffRoadCategory;
 
-    if (!categoryUid) {
-      const fallbackKey = urlKey.split("/").pop() ?? urlKey;
-      const fRes = await fetch(APP_CONFIG.magento.graphqlUrl, {
+  /* Resolve category urlKey → category UID using route query and fallback */
+  let categoryUid: string | null = isSpecialTyreCategory ? "MTg=" : null;
+  if (!isSpecialTyreCategory) {
+    try {
+      const lookup = await fetch(APP_CONFIG.magento.graphqlUrl, {
         method: "POST",
         headers: magentoHeaders(store),
         body: JSON.stringify({
-          query: CATEGORY_UID_BY_URL_KEY_QUERY,
-          variables: { urlKey: fallbackKey },
+          query: `query($url: String!) {
+            route(url: $url) {
+              type
+              ... on CategoryInterface {
+                uid
+              }
+            }
+          }`,
+          variables: { url: urlKey },
         }),
         next: { revalidate: APP_CONFIG.cache.category },
       });
-      const fj = await fRes.json().catch(() => null);
-      categoryUid = fj?.data?.categories?.items?.[0]?.uid ?? null;
+      const lj = await lookup.json().catch(() => null);
+      categoryUid = lj?.data?.route?.uid ?? null;
+
+      if (!categoryUid) {
+        const fallbackKey = urlKey.split("/").pop() ?? urlKey;
+        const fRes = await fetch(APP_CONFIG.magento.graphqlUrl, {
+          method: "POST",
+          headers: magentoHeaders(store),
+          body: JSON.stringify({
+            query: CATEGORY_UID_BY_URL_KEY_QUERY,
+            variables: { urlKey: fallbackKey },
+          }),
+          next: { revalidate: APP_CONFIG.cache.category },
+        });
+        const fj = await fRes.json().catch(() => null);
+        categoryUid = fj?.data?.categories?.items?.[0]?.uid ?? null;
+      }
+    } catch {
+      categoryUid = null;
     }
-  } catch {
-    categoryUid = null;
   }
 
   if (!categoryUid) {
@@ -110,7 +208,46 @@ export async function GET(req: NextRequest) {
     category_uid: { eq: categoryUid },
   };
 
-  const RESERVED = new Set(["urlKey", "store", "pageSize", "page", "sort", "q", "search"]);
+  if (isEvCategory) {
+    filters.ev_tyre = { eq: "EV" };
+  } else if (isRunFlatCategory) {
+    filters.runflat = { eq: "RunFlat" };
+  }
+
+  const RESERVED = new Set([
+    "urlKey",
+    "store",
+    "pageSize",
+    "page",
+    "sort",
+    "q",
+    "search",
+    "product_list_limit",
+    "product_list_order",
+    "category_uid",
+    "width",
+    "height",
+    "haight",
+    "rim",
+    "width_rear",
+    "rear_width",
+    "rwidth",
+    "haight_rear",
+    "height_rear",
+    "rear_height",
+    "rheight",
+    "rim_rear",
+    "rear_rim",
+    "rrim",
+  ]);
+
+  const frontWidth = searchParams.get("width");
+  const frontHeight = searchParams.get("height") ?? searchParams.get("haight");
+  const frontRim = searchParams.get("rim");
+
+  if (frontWidth) filters.width = { eq: frontWidth };
+  if (frontHeight) filters.height = { eq: frontHeight };
+  if (frontRim) filters.rim = { eq: frontRim };
 
   for (const [key, value] of searchParams.entries()) {
     if (RESERVED.has(key)) continue;
@@ -119,12 +256,150 @@ export async function GET(req: NextRequest) {
     else if (values.length > 1) filters[key] = { in: values };
   }
 
-  const leafUrlKey = urlKey.split("/").pop() ?? urlKey;
-  const variables: Record<string, unknown> = { urlKey: leafUrlKey, filters, pageSize, currentPage };
-  if (sort) variables.sort = sort;
-  if (search) variables.search = search;
+  const leafUrlKey = isSpecialTyreCategory
+    ? "tyres"
+    : (urlKey.split("/").pop() ?? urlKey);
+
+  const rearWidth =
+    searchParams.get("width_rear") ??
+    searchParams.get("rear_width") ??
+    searchParams.get("rwidth");
+  const rearHeight =
+    searchParams.get("haight_rear") ??
+    searchParams.get("height_rear") ??
+    searchParams.get("rear_height") ??
+    searchParams.get("rheight");
+  const rearRim =
+    searchParams.get("rim_rear") ??
+    searchParams.get("rear_rim") ??
+    searchParams.get("rrim");
+  const isStaggeredRequest = Boolean(rearWidth && rearHeight && rearRim);
 
   try {
+    /* ── Staggered (front+rear) request ──────────────────────────
+       Pull every candidate on both sides (capped), pair them, THEN
+       paginate the pairs — not Magento's front-only total_count.
+       A front tyre whose brand has no rear stock in that size never
+       becomes a card, so paginating before pairing (the old approach)
+       could promise pages the pairing step would leave mostly empty. */
+    if (isStaggeredRequest) {
+      const rearFilters: Record<string, unknown> = {
+        category_uid: { eq: categoryUid },
+        width: { eq: rearWidth },
+        height: { eq: rearHeight },
+        rim: { eq: rearRim },
+      };
+      for (const [key, value] of searchParams.entries()) {
+        if (RESERVED.has(key)) continue;
+        const values = value.split(",").filter(Boolean);
+        if (values.length === 1) rearFilters[key] = { eq: values[0] };
+        else if (values.length > 1) rearFilters[key] = { in: values };
+      }
+
+      const fullFrontVars: Record<string, unknown> = {
+        urlKey: leafUrlKey,
+        filters,
+        pageSize: STAGGERED_FETCH_CAP,
+        currentPage: 1,
+      };
+      if (sort) fullFrontVars.sort = sort;
+      if (search) fullFrontVars.search = search;
+
+      const fullRearVars: Record<string, unknown> = {
+        urlKey: leafUrlKey,
+        filters: rearFilters,
+        pageSize: STAGGERED_FETCH_CAP,
+        currentPage: 1,
+      };
+      if (sort) fullRearVars.sort = sort;
+
+      const [frontRes, rearRes] = await Promise.all([
+        fetch(APP_CONFIG.magento.graphqlUrl, {
+          method: "POST",
+          headers: magentoHeaders(store),
+          body: JSON.stringify({ query: CATEGORY_PAGE_QUERY, variables: fullFrontVars }),
+          next: { revalidate: 300 },
+        }),
+        fetch(APP_CONFIG.magento.graphqlUrl, {
+          method: "POST",
+          headers: magentoHeaders(store),
+          body: JSON.stringify({ query: CATEGORY_PAGE_QUERY, variables: fullRearVars }),
+          next: { revalidate: 300 },
+        }),
+      ]);
+
+      const frontJson = await frontRes.json().catch(() => null);
+      const rearJson = await rearRes.json().catch(() => null);
+
+      if (!frontRes.ok && !frontJson?.data) {
+        return NextResponse.json(
+          { error: frontJson?.errors?.[0]?.message ?? `HTTP ${frontRes.status}` },
+          { status: frontRes.status }
+        );
+      }
+      if (frontJson && frontJson.data === null) {
+        const msg = (frontJson.errors as { message: string }[] | undefined)?.[0]?.message ?? "Magento query failed";
+        console.error("[category-page] Magento returned null data:", msg);
+        return NextResponse.json({ error: msg }, { status: 200 });
+      }
+      if (frontJson?.errors?.length) {
+        console.warn("[category-page] GraphQL warnings (front):", (frontJson.errors as { message: string }[]).map(e => e.message));
+      }
+      if (rearJson?.errors?.length) {
+        console.warn("[category-page] GraphQL warnings (rear):", (rearJson.errors as { message: string }[]).map(e => e.message));
+      }
+
+      const cat = frontJson?.data?.categories?.items?.[0];
+      const frontPd = frontJson?.data?.products;
+      const rearPd = rearJson?.data?.products;
+
+      const allFront = withBrandLogos(parseGraphqlResponse({ data: { products: frontPd } }));
+      const allRear = rearPd ? withBrandLogos(parseGraphqlResponse({ data: { products: rearPd } })) : [];
+
+      /* Unpaired fallback listing — same semantics as the plain path below:
+         total/totalPages reflect Magento's real front-only total_count, and
+         `products` is this page's slice, sliced here in JS since this fetch
+         pulled up to STAGGERED_FETCH_CAP in one shot rather than asking
+         Magento to page a front-only query. Used when no pairs exist at all,
+         so the user still sees the front-size results instead of nothing. */
+      const frontTotal = frontPd?.total_count ?? allFront.length;
+      const frontTotalPages = Math.max(1, Math.ceil(frontTotal / pageSize));
+      const pageStart = (currentPage - 1) * pageSize;
+      const productsPage = allFront.slice(pageStart, pageStart + pageSize);
+
+      /* Paired listing — this is the fix: pagination is derived from the
+         actual pair count, so the page control never promises more than
+         will render. */
+      const pairs = pairStaggered(allFront, allRear);
+      const pairedTotal = pairs.length;
+      const pairedTotalPages = Math.max(1, Math.ceil(pairedTotal / pageSize));
+      const pairedSlice = pairs.slice(pageStart, pageStart + pageSize);
+
+      return NextResponse.json(
+        {
+          category: buildCategoryMetadata(cat, urlKey),
+          products:    productsPage,
+          rearProducts: allRear,
+          filters:     parseAggregations({ data: { products: frontPd } }),
+          total:       frontTotal,
+          totalPages:  frontTotalPages,
+          currentPage,
+          staggered: {
+            total:       pairedTotal,
+            totalPages:  pairedTotalPages,
+            products:    pairedSlice.map((p) => p.front),
+            rearProducts: pairedSlice.map((p) => p.rear),
+          },
+        },
+        { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } }
+      );
+    }
+
+    /* ── Plain (single-size) request — unchanged ─────────────────── */
+    const variables: Record<string, unknown> = { urlKey: leafUrlKey, filters, pageSize, currentPage };
+    if (sort) variables.sort = sort;
+    if (search) variables.search = search;
+
     const res = await fetch(APP_CONFIG.magento.graphqlUrl, {
       method: "POST",
       headers: magentoHeaders(store),
@@ -156,15 +431,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       {
-        category: cat ? {
-          uid:             cat.uid,
-          name:            cat.name,
-          description:     cat.description ?? null,
-          metaTitle:       cat.meta_title ?? null,
-          metaDescription: cat.meta_description ?? null,
-          urlKey:          cat.url_key,
-        } : null,
+        category: buildCategoryMetadata(cat, urlKey),
         products:    withBrandLogos(parseGraphqlResponse({ data: { products: pd } })),
+        rearProducts: [],
         /* Layered-nav options for the sidebar come back on this same
            response, so the listing needs no second request. */
         filters:     parseAggregations({ data: { products: pd } }),
