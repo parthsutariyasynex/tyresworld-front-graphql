@@ -231,19 +231,11 @@ export default function TyreListingCard({
             </div>
           </div>
 
-          {/* ── Pay In Installments (Tabby / Tamara / Emkan) ─────── */}
-          <div className="flex items-center justify-center gap-2 text-[11px] text-gray-800 my-2">
-            <span className="font-medium text-black">Pay In Installments</span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/tabby-tamara-icon.webp"
-              alt="Tabby, Tamara and Emkan installments"
-              width={736}
-              height={82}
-              loading="lazy"
-              decoding="async"
-              className="h-4 w-auto object-contain"
-            />
+          {/* ── Pay In Installments (Tabby / Tamara) ─────── */}
+          <div className="flex items-center gap-1.5 my-2 flex-wrap">
+            <span className="text-[10.5px] text-gray-500 font-medium">Pay In Installments</span>
+            <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tabby</span>
+            <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tamara</span>
           </div>
 
           {/* ── Bottom Actions ────────────────────────────────────

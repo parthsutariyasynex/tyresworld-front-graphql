@@ -129,7 +129,7 @@ export default function BrandStrip() {
         <div className="section-cta text-center mt-10">
           <Link
             href={`/${locale}/brands`}
-            className="button-primary inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#ed1c24] text-white text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-[#c6181d] transition-all shadow-md hover:scale-105 active:scale-95"
+            className="button-primary inline-flex items-center justify-center px-8 py-3 rounded-lg bg-[#ed1c24] text-white text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-[#c6181d] transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer"
           >
             <span>All Brands</span>
           </Link>

@@ -12,6 +12,10 @@ import {
   Menu,
   X,
   ChevronDown,
+  Trash2,
+  Plus,
+  Minus,
+  ArrowRight,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
@@ -126,89 +130,150 @@ export default function Header() {
 
                 {/* Dropdown panel */}
                 {cartDropdownOpen && (
-                  <div className="absolute right-0 top-full pt-1.5 w-[340px] z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <div className="bg-white rounded-sm shadow-2xl border border-gray-100 p-4 text-left">
+                  <div className="absolute right-0 top-full pt-2 w-[350px] sm:w-[370px] z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 text-left overflow-hidden">
                       {cartCount > 0 ? (
                         <>
                           {/* Header: X Items in Cart */}
-                          <div className="text-center font-extrabold text-[14px] text-gray-900 border-b border-gray-100 pb-3 mb-3">
-                            {cartCount} {cartCount === 1 ? "Item" : "Items"} in Cart
+                          <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-gray-100 bg-white">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-[#ed1c24]">
+                                <ShoppingBag size={14} strokeWidth={2.5} />
+                              </div>
+                              <span className="font-black text-xs sm:text-[13px] text-gray-950 tracking-tight">
+                                {cartCount} {cartCount === 1 ? (locale === "ar" ? "منتج في السلة" : "Item in Cart") : (locale === "ar" ? "منتجات في السلة" : "Items in Cart")}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setCartDropdownOpen(false)}
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+                              aria-label="Close"
+                            >
+                              <X size={14} strokeWidth={2.5} />
+                            </button>
                           </div>
 
                           {/* Subtotal */}
-                          <div className="flex justify-between items-center text-[12px] font-bold text-gray-950 mb-4 px-1">
-                            <span className="text-gray-500 font-medium">Cart Subtotal</span>
-                            <span>{fmtMoney(subtotalExclTax)}</span>
+                          <div className="flex justify-between items-center px-4 sm:px-5 py-2.5 bg-gray-50/80 border-b border-gray-100 text-xs">
+                            <span className="font-semibold text-gray-500">
+                              {locale === "ar" ? "المجموع الجزئي" : "Cart Subtotal"}
+                            </span>
+                            <span className="font-black text-sm text-gray-950 tabular-nums">
+                              {fmtMoney(subtotalExclTax)}
+                            </span>
                           </div>
 
                           {/* Items List */}
-                          <div className="max-h-[260px] overflow-y-auto divide-y divide-gray-100 pr-1 custom-scrollbar">
-                            {items.map((item) => (
-                              <div key={item.uid} className="py-3 flex gap-3 items-start">
-                                <div className="w-14 h-14 border border-gray-100 rounded-sm overflow-hidden bg-white p-1 flex-shrink-0 flex items-center justify-center relative">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={item.product.thumbnail?.url ?? ""}
-                                    alt={item.product.name}
-                                    className="object-contain w-full h-full"
-                                  />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-[12px] font-bold text-gray-900 leading-snug line-clamp-2">
-                                    {item.product.name}
-                                  </p>
-                                  <p className="text-[12px] text-[#ed1c24] font-black mt-1">
-                                    {fmtMoney(item.prices.price.value)}
-                                  </p>
-
-                                  {/* Qty and Delete */}
-                                  <div className="flex items-center justify-between mt-2">
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-[10px] uppercase font-bold text-gray-400">QTY</span>
-                                      <input
-                                        type="number"
-                                        min="1"
-                                        value={item.quantity}
-                                        onChange={(e) => updateQty(item.uid, parseInt(e.target.value) || 1)}
-                                        className="w-10 h-7 border border-gray-200 text-center rounded-sm font-bold text-[11px] focus:border-gray-400 outline-none"
-                                      />
-                                    </div>
-                                    <button
-                                      onClick={() => setItemToRemove(item.uid)}
-                                      className="text-gray-400 hover:text-gray-900 text-xs px-2 transition-colors"
-                                      aria-label="Remove item"
+                          <div className="max-h-[270px] overflow-y-auto divide-y divide-gray-100/80 px-4 py-1 custom-scrollbar">
+                            {items.map((item) => {
+                              const productUrl = `/${locale}/product/${item.product.url_key ?? item.product.sku}`;
+                              return (
+                                <div key={item.uid} className="py-2.5 flex gap-2.5 items-center group">
+                                  <Link
+                                    href={productUrl}
+                                    onClick={() => setCartDropdownOpen(false)}
+                                    className="w-11 h-11 bg-[#fafafa] border border-gray-150 rounded-lg overflow-hidden p-1 flex items-center justify-center shrink-0 group-hover:border-[#ed1c24]/30 transition-colors"
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={item.product.thumbnail?.url ?? ""}
+                                      alt={item.product.name}
+                                      className="object-contain w-full h-full drop-shadow-2xs"
+                                    />
+                                  </Link>
+                                  <div className="flex-1 min-w-0">
+                                    <Link
+                                      href={productUrl}
+                                      onClick={() => setCartDropdownOpen(false)}
+                                      className="text-xs font-black text-gray-950 hover:text-[#ed1c24] transition-colors leading-snug line-clamp-2"
                                     >
-                                      ✕
-                                    </button>
+                                      {item.product.name}
+                                    </Link>
+                                    <div className="flex items-center gap-1.5 mt-1">
+                                      <span className="text-xs font-black text-[#ed1c24] tabular-nums">
+                                        {fmtMoney(item.prices.price.value)}
+                                      </span>
+                                    </div>
+
+                                    {/* Qty and Delete */}
+                                    <div className="flex items-center justify-between mt-2">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">QTY</span>
+                                        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg p-0.5">
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              if (item.quantity > 1) {
+                                                updateQty(item.uid, item.quantity - 1);
+                                              } else {
+                                                setItemToRemove(item.uid);
+                                              }
+                                            }}
+                                            className="w-6 h-6 rounded flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-200/70 transition-colors cursor-pointer"
+                                            aria-label="Decrease quantity"
+                                          >
+                                            <Minus size={11} strokeWidth={2.5} />
+                                          </button>
+                                          <span className="w-6 text-center font-bold text-xs text-gray-950 tabular-nums">
+                                            {item.quantity}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={() => updateQty(item.uid, item.quantity + 1)}
+                                            className="w-6 h-6 rounded flex items-center justify-center text-gray-600 hover:text-black hover:bg-gray-200/70 transition-colors cursor-pointer"
+                                            aria-label="Increase quantity"
+                                          >
+                                            <Plus size={11} strokeWidth={2.5} />
+                                          </button>
+                                        </div>
+                                      </div>
+                                      <button
+                                        onClick={() => setItemToRemove(item.uid)}
+                                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                                        aria-label="Remove item"
+                                        title={locale === "ar" ? "حذف" : "Remove"}
+                                      >
+                                        <Trash2 size={13} strokeWidth={2.2} />
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
 
                           {/* View and Edit Cart Button */}
-                          <Link
-                            href="/cart"
-                            onClick={() => setCartDropdownOpen(false)}
-                            className="mt-4 block w-full bg-black hover:bg-[#ed1c24] text-white font-black text-[11px] uppercase tracking-wider py-3 rounded-sm transition-colors text-center"
-                          >
-                            VIEW AND EDIT CART
-                          </Link>
+                          <div className="p-4 bg-white border-t border-gray-100">
+                            <Link
+                              href={`/${locale}/cart`}
+                              onClick={() => setCartDropdownOpen(false)}
+                              className="btn-cta w-full text-xs py-3.5 rounded-xl shadow-md"
+                            >
+                              <span>{locale === "ar" ? "عرض وتعديل السلة" : "VIEW AND EDIT CART"}</span>
+                              <ArrowRight size={14} strokeWidth={2.5} className={locale === "ar" ? "rotate-180" : ""} />
+                            </Link>
+                          </div>
                         </>
                       ) : (
                         /* Empty state */
-                        <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-                          <svg className="w-14 h-14 text-black mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 3h3l2.5 11h10l2-8H7" />
-                            <circle cx="9" cy="18.5" r="1.5" fill="currentColor" />
-                            <circle cx="16" cy="18.5" r="1.5" fill="currentColor" />
-                            <circle cx="17.5" cy="12.5" r="4.5" fill="white" stroke="currentColor" strokeWidth="1.5" />
-                            <line x1="17.5" y1="10.5" x2="17.5" y2="12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                            <circle cx="17.5" cy="14.5" r="0.5" fill="currentColor" />
-                          </svg>
-                          <p className="text-[13px] font-bold text-gray-800 leading-normal max-w-[200px]">
-                            You have no items in your shopping cart.
+                        <div className="flex flex-col items-center justify-center py-9 px-4 text-center">
+                          <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400 mb-3">
+                            <ShoppingBag size={24} strokeWidth={1.75} />
+                          </div>
+                          <p className="text-sm font-black text-gray-900 mb-1">
+                            {locale === "ar" ? "سلة التسوق فارغة" : "Your cart is empty"}
                           </p>
+                          <p className="text-xs text-gray-500 max-w-[200px] mb-4">
+                            {locale === "ar" ? "لم تقم بإضافة أي إطارات بعد." : "Browse our catalogue and find the best tyres."}
+                          </p>
+                          <Link
+                            href={`/${locale}/tyres`}
+                            onClick={() => setCartDropdownOpen(false)}
+                            className="bg-gray-950 hover:bg-[#ed1c24] text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-colors cursor-pointer"
+                          >
+                            {locale === "ar" ? "تصفح الإطارات" : "START SHOPPING"}
+                          </Link>
                         </div>
                       )}
                     </div>
@@ -425,44 +490,52 @@ export default function Header() {
 
       {/* Item Removal Confirmation Modal */}
       {itemToRemove && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-[9999] flex items-center justify-center p-4" dir={locale === "ar" ? "rtl" : "ltr"}>
-          <div className="bg-white rounded-lg shadow-2xl max-w-[540px] w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/65 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 animate-in fade-in duration-200" dir={locale === "ar" ? "rtl" : "ltr"}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-[480px] w-full p-6 sm:p-7 relative overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100 text-center">
             {/* Close button X */}
             <button
               onClick={() => setItemToRemove(null)}
-              className={`absolute top-4 ${locale === "ar" ? "left-4" : "right-4"} text-gray-400 hover:text-gray-600 transition-colors focus:outline-none`}
+              className={`absolute top-4 ${locale === "ar" ? "left-4" : "right-4"} w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer`}
               aria-label="Close dialog"
             >
-              <X size={18} />
+              <X size={18} strokeWidth={2.5} />
             </button>
 
-            {/* Modal body */}
-            <div className="pt-12 pb-6 px-8 text-center">
-              <p className="text-[15.5px] font-semibold text-gray-800 leading-normal">
-                {locale === "ar"
-                  ? "هل أنت متأكد أنك تريد إزالة هذا المنتج من عربة التسوق؟"
-                  : "Are you sure you would like to remove this item from the shopping cart?"}
-              </p>
+            {/* Trash icon illustration */}
+            <div className="w-12 h-12 rounded-2xl bg-red-50 text-[#ed1c24] flex items-center justify-center mx-auto mb-4">
+              <Trash2 size={22} strokeWidth={2.2} />
             </div>
 
+            {/* Modal title & body */}
+            <h3 className="text-base sm:text-lg font-black text-gray-950 mb-2">
+              {locale === "ar" ? "إزالة المنتج من السلة؟" : "Remove Item from Cart?"}
+            </h3>
+            <p className="text-xs sm:text-sm font-medium text-gray-600 leading-relaxed max-w-[360px] mx-auto mb-6">
+              {locale === "ar"
+                ? "هل أنت متأكد من رغبتك في إزالة هذا المنتج من عربة التسوق؟"
+                : "Are you sure you want to remove this item from your shopping cart?"}
+            </p>
+
             {/* Modal footer / Actions */}
-            <div className="pb-8 flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-3">
               <button
+                type="button"
                 onClick={() => setItemToRemove(null)}
-                className="px-8 py-2.5 bg-[#ed1c24] hover:bg-[#d61820] text-white text-[13px] font-bold uppercase rounded-md transition-colors min-w-[110px] focus:outline-none"
+                className="flex-1 py-3 px-5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
               >
                 {locale === "ar" ? "إلغاء" : "Cancel"}
               </button>
               <button
+                type="button"
                 onClick={async () => {
                   if (itemToRemove) {
                     await removeItem(itemToRemove);
                     setItemToRemove(null);
                   }
                 }}
-                className="px-8 py-2.5 bg-black hover:bg-neutral-800 text-white text-[13px] font-bold uppercase rounded-md transition-colors min-w-[110px] focus:outline-none"
+                className="btn-cta flex-1 py-3 px-5 rounded-xl shadow-md text-xs"
               >
-                {locale === "ar" ? "موافق" : "OK"}
+                <span>{locale === "ar" ? "حذف" : "Remove"}</span>
               </button>
             </div>
           </div>

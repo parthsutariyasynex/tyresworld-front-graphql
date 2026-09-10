@@ -301,9 +301,9 @@ export default function TyreCard({ product }: { product: Product }) {
 
         {/* Installments */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] text-gray-500 font-medium">Pay In Installments</span>
-          <span className="bg-[#1DBF73] text-white text-[9px] font-black px-2 py-0.5 rounded leading-none">tabby</span>
-          <span className="bg-[#7B2FBE] text-white text-[9px] font-black px-2 py-0.5 rounded leading-none">tamara</span>
+          <span className="text-[10.5px] text-gray-500 font-medium">Pay In Installments</span>
+          <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tabby</span>
+          <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tamara</span>
         </div>
 
         {/* CTA — Contact Us for OUT_OF_STOCK, qty + ADD TO CART for IN_STOCK */}
@@ -320,19 +320,21 @@ export default function TyreCard({ product }: { product: Product }) {
           <div className="mt-auto flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
               {/* Quantity selector */}
-              <div className="flex items-center border border-gray-200 rounded-full overflow-hidden h-9 flex-shrink-0">
+              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden h-9 flex-shrink-0 bg-white shadow-2xs">
                 <button
                   type="button"
                   onClick={() => setQty(q => Math.max(1, q - 1))}
-                  className="w-9 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors text-lg leading-none"
+                  className="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors text-base font-bold leading-none cursor-pointer"
+                  aria-label="Decrease quantity"
                 >
                   −
                 </button>
-                <span className="w-6 text-center text-[13px] font-bold select-none">{qty}</span>
+                <span className="w-7 text-center text-[13px] font-bold select-none text-gray-900">{qty}</span>
                 <button
                   type="button"
                   onClick={() => setQty(q => q + 1)}
-                  className="w-9 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors text-lg leading-none"
+                  className="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors text-base font-bold leading-none cursor-pointer"
+                  aria-label="Increase quantity"
                 >
                   +
                 </button>
@@ -342,14 +344,16 @@ export default function TyreCard({ product }: { product: Product }) {
                 type="button"
                 onClick={handleAddToCart}
                 disabled={adding}
-                className={`flex-1 flex items-center justify-center gap-1.5 rounded-full h-9 text-[12px] font-bold transition-colors disabled:opacity-60 ${
-                  cartAdded ? "bg-emerald-500 text-white" : "bg-gray-900 hover:bg-gray-800 text-white"
-                }`}
+                className={`btn-tocart ${cartAdded ? "is-added" : ""}`}
+                title="Add to Cart"
               >
-                {adding ? <Loader2 size={12} className="animate-spin" />
-                  : cartAdded ? <Check size={12} />
-                  : <ShoppingBag size={12} />}
-                {adding ? "Adding…" : cartAdded ? "Added!" : "ADD TO CART"}
+                {adding ? (
+                  <><Loader2 size={13} className="animate-spin mr-1.5" /><span>Adding…</span></>
+                ) : cartAdded ? (
+                  <><Check size={13} className="mr-1.5" /><span>Added</span></>
+                ) : (
+                  <span>ADD TO CART</span>
+                )}
               </button>
             </div>
             {addError && (

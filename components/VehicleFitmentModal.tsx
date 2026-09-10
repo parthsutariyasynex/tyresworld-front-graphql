@@ -252,7 +252,7 @@ export default function VehicleFitmentModal({
           <button
             type="button"
             onClick={onClose}
-            className="bg-black hover:bg-gray-900 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-full px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
+            className="bg-black hover:bg-gray-900 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-lg px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
           >
             <span>Done</span>
             <ArrowRight size={16} strokeWidth={2.5} />

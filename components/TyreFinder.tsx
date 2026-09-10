@@ -978,257 +978,86 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
               o.label.toLowerCase().includes(sizeQuery.toLowerCase())
             );
 
+                const stepNumber = sizeStep === "width" ? 1 : sizeStep === "height" ? 2 : 3;
+            const progressPct = sizeStep === "width" ? 33 : sizeStep === "height" ? 66 : 100;
+
             return (
               <div
-                className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-200"
+                className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-200"
                 onClick={closeSize}
               >
                 <div
-                  className="relative w-full max-w-[780px] h-[590px] sm:h-[620px] max-h-[92vh] bg-white rounded-md shadow-2xl overflow-hidden flex flex-col border border-gray-200 animate-in fade-in zoom-in-95 duration-200"
+                  className="relative w-full max-w-[920px] h-[660px] sm:h-[680px] max-h-[94vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 animate-in fade-in zoom-in-95 duration-200"
                   onClick={(e) => e.stopPropagation()}
                   role="dialog"
                   aria-modal="true"
-                  aria-label="Find tyres by size"
+                  aria-label="Select your tyre size"
                 >
-                  {/* ── RED GRADIENT HEADER ── */}
-                  <div className="text-white p-5 sm:p-6 pb-4 relative rounded-t-md flex-shrink-0 bg-gradient-to-r from-[#ab1218] via-[#ed1c24] to-[#c7171e] shadow-md">
-                    {/* Top Close Button */}
-                    <button
-                      type="button"
-                      className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-md bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center text-white transition-all cursor-pointer z-10"
-                      onClick={closeSize}
-                      aria-label="Close"
-                    >
-                      <X size={18} strokeWidth={2.5} />
-                    </button>
-
-                    {/* Top Row: Title + Current Selection badge */}
-                    <div className="flex items-start justify-between gap-3 mb-4 pr-10">
-                      <div>
-                        <h4 className="text-xl sm:text-2xl font-black text-white leading-tight m-0 tracking-tight">
-                          {sizeStep === "summary" ? "Ready to search!" : "What size are your tyres?"}
-                        </h4>
-                        <p className="text-white/85 text-xs sm:text-[13px] font-medium mt-1 mb-0 leading-snug">
+                  {/* ── TOP HEADER ── */}
+                  <div className="text-white px-5 sm:px-7 pt-4 pb-3.5 relative bg-gradient-to-r from-[#8f0d13] via-[#ed1c24] to-[#c7171e] shadow-md shrink-0">
+                    <div className="flex items-center justify-between gap-3">
+                      {/* Left: Title + Progress Chip */}
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2.5">
+                          <h4 className="text-lg sm:text-2xl font-black text-white leading-tight tracking-tight m-0">
+                            Select your tyre size
+                          </h4>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-black/30 backdrop-blur-md border border-white/25 text-[11px] sm:text-xs font-black text-white tracking-wide shadow-inner">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            {sizeStep === "summary" ? "Complete" : `${stepNumber} of 3`}
+                          </span>
+                        </div>
+                        <p className="text-white/90 text-xs sm:text-[13px] font-medium mt-1 mb-0 leading-snug">
                           {sizeStep === "summary"
-                            ? "Review your selected tyre specifications."
+                            ? "Review your tyre specifications before searching available inventory."
                             : sizeStep === "width"
-                            ? "Pick the width — it's the first number on your sidewall (e.g. 235)."
+                            ? "Step 1 of 3: Select the tyre width in millimeters (first number, e.g. 235)."
                             : sizeStep === "height"
-                            ? "Now the aspect ratio (height) — the second number (e.g. 40)."
-                            : "Finally, the rim diameter in inches (e.g. R20)."}
+                            ? "Step 2 of 3: Select aspect ratio / height percentage (second number, e.g. 40)."
+                            : "Step 3 of 3: Select wheel rim diameter in inches (third number, e.g. R19)."}
                         </p>
                       </div>
 
-                      {/* Current Selection Capsule */}
-                      <div className="bg-black/35 backdrop-blur-md rounded-md px-3.5 py-1.5 text-center min-w-[130px] border border-white/20 shrink-0 shadow-inner hidden sm:block">
-                        {!hasRearTyre ? (
-                          <>
-                            <span className="text-[9px] uppercase font-bold tracking-wider text-red-200/90 block leading-tight">
-                              CURRENT SELECTION
-                            </span>
-                            <span className="text-xs sm:text-[13px] font-bold text-white block mt-0.5 leading-tight">
-                              {frontFormatted}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-[8px] uppercase font-bold tracking-wider text-red-200/90 block leading-tight">
-                              FRONT SIZE
-                            </span>
-                            <span className="text-xs font-bold text-white block mt-0.5 leading-tight">
-                              {frontFormatted}
-                            </span>
-                            <div className="border-t border-white/20 my-0.5" />
-                            <span className="text-[8px] uppercase font-bold tracking-wider text-red-200/90 block leading-tight">
-                              REAR
-                            </span>
-                            <span className="text-xs font-bold text-white block mt-0.5 leading-tight">
-                              {rearFormatted}
-                            </span>
-                          </>
-                        )}
+                      {/* Right: Spec pill + Close Button */}
+                      <div className="flex items-center gap-3">
+                        <div className="bg-black/35 backdrop-blur-md rounded-xl px-3.5 py-1.5 text-center min-w-[125px] border border-white/20 shrink-0 hidden md:block shadow-inner">
+                          <span className="text-[9px] uppercase font-extrabold tracking-wider text-red-200 block leading-tight">
+                            {hasRearTyre ? (activeSizeTab === "rear" ? "REAR AXLE SPEC" : "FRONT AXLE SPEC") : "TYRE SPEC"}
+                          </span>
+                          <span className="text-xs sm:text-sm font-black text-white block mt-0.5 leading-tight tracking-tight">
+                            {activeSizeTab === "rear" ? rearFormatted : frontFormatted}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 active:bg-white/35 flex items-center justify-center text-white transition-all cursor-pointer shrink-0"
+                          onClick={closeSize}
+                          aria-label="Close"
+                        >
+                          <X size={18} strokeWidth={2.5} />
+                        </button>
                       </div>
                     </div>
 
-                    {/* Step Tabs Row (WIDTH / HEIGHT / RIM) */}
-                    <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
-                      {/* Width Tab */}
-                      {(() => {
-                        const isDone = Boolean(currWidth) && sizeStep !== "width";
-                        const isActive = sizeStep === "width";
-                        return (
-                          <div
-                            onClick={() => setSizeStep("width")}
-                            className={`relative rounded-md p-2.5 sm:p-3 flex items-center gap-2.5 sm:gap-3 text-left transition-all cursor-pointer select-none ${
-                              isActive
-                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
-                                : isDone
-                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
-                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
-                            }`}
-                          >
-                            <div
-                              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
-                                isActive
-                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
-                                  : isDone
-                                  ? "bg-emerald-500 text-white"
-                                  : "bg-white/15 text-white/70"
-                              }`}
-                            >
-                              {isDone ? (
-                                <Check size={18} strokeWidth={3} />
-                              ) : (
-                                <ArrowLeftRight size={18} strokeWidth={2.5} />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <span
-                                className={`text-[10px] sm:text-[11px] uppercase font-extrabold tracking-wider block leading-tight ${
-                                  isActive ? "text-gray-400" : "text-white/80"
-                                }`}
-                              >
-                                WIDTH
-                              </span>
-                              <span
-                                className={`text-xs sm:text-[15px] font-black block leading-tight mt-0.5 truncate ${
-                                  isActive
-                                    ? currWidth ? "text-[#ed1c24]" : "text-gray-900"
-                                    : currWidth ? "text-white font-bold" : "text-white/60"
-                                }`}
-                              >
-                                {currWidth ? labelFor("width", currWidth) : "Select"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Height Tab */}
-                      {(() => {
-                        const isDone = Boolean(currHeight) && (sizeStep === "rim" || sizeStep === "summary");
-                        const isActive = sizeStep === "height";
-                        return (
-                          <div
-                            onClick={() => currWidth && setSizeStep("height")}
-                            className={`relative rounded-md p-2.5 sm:p-3 flex items-center gap-2.5 sm:gap-3 text-left transition-all cursor-pointer select-none ${
-                              isActive
-                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
-                                : isDone
-                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
-                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
-                            }`}
-                          >
-                            <div
-                              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
-                                isActive
-                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
-                                  : isDone
-                                  ? "bg-emerald-500 text-white"
-                                  : "bg-white/15 text-white/70"
-                              }`}
-                            >
-                              {isDone ? (
-                                <Check size={18} strokeWidth={3} />
-                              ) : (
-                                <ArrowUpDown size={18} strokeWidth={2.5} />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <span
-                                className={`text-[10px] sm:text-[11px] uppercase font-extrabold tracking-wider block leading-tight ${
-                                  isActive ? "text-gray-400" : "text-white/80"
-                                }`}
-                              >
-                                HEIGHT
-                              </span>
-                              <span
-                                className={`text-xs sm:text-[15px] font-black block leading-tight mt-0.5 truncate ${
-                                  isActive
-                                    ? currHeight ? "text-[#ed1c24]" : "text-gray-900"
-                                    : currHeight ? "text-white font-bold" : "text-white/60"
-                                }`}
-                              >
-                                {currHeight ? labelFor("height", currHeight) : "Select"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Rim Tab */}
-                      {(() => {
-                        const isDone = Boolean(currRim) && sizeStep === "summary";
-                        const isActive = sizeStep === "rim" || (sizeStep === "summary" && Boolean(currRim));
-                        return (
-                          <div
-                            onClick={() => currWidth && currHeight && setSizeStep("rim")}
-                            className={`relative rounded-md p-2.5 sm:p-3 flex items-center gap-2.5 sm:gap-3 text-left transition-all cursor-pointer select-none ${
-                              isActive
-                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
-                                : isDone
-                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
-                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
-                            }`}
-                          >
-                            <div
-                              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
-                                isActive
-                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
-                                  : isDone
-                                  ? "bg-emerald-500 text-white"
-                                  : "bg-white/15 text-white/70"
-                              }`}
-                            >
-                              {isDone ? (
-                                <Check size={18} strokeWidth={3} />
-                              ) : (
-                                <CircleDot size={18} strokeWidth={2.5} />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <span
-                                className={`text-[10px] sm:text-[11px] uppercase font-extrabold tracking-wider block leading-tight ${
-                                  isActive ? "text-gray-400" : "text-white/80"
-                                }`}
-                              >
-                                RIM
-                              </span>
-                              <span
-                                className={`text-xs sm:text-[15px] font-black block leading-tight mt-0.5 truncate ${
-                                  isActive
-                                    ? currRim ? "text-[#ed1c24]" : "text-gray-900"
-                                    : currRim ? "text-white font-bold" : "text-white/60"
-                                }`}
-                              >
-                                {currRim
-                                  ? currRim.startsWith("R")
-                                    ? currRim
-                                    : `R${labelFor("rim", currRim)}`
-                                  : "Select"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Front / Rear Switcher Pills (when Rear Tyre Size is active) */}
+                    {/* Staggered Front / Rear Axle Switcher */}
                     {hasRearTyre && (
-                      <div className="flex items-center gap-2 mt-3">
+                      <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-white/20">
+                        <span className="text-[10px] font-extrabold text-white/80 uppercase tracking-wider">Axle:</span>
                         <button
                           type="button"
                           onClick={() => {
                             setActiveSizeTab("front");
                             if (sizeStep !== "summary") setSizeStep("width");
                           }}
-                          className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                          className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                             activeSizeTab === "front"
-                              ? "bg-white text-[#ed1c24] shadow-md"
-                              : "border border-white/40 text-white hover:bg-white/10 font-semibold"
+                              ? "bg-white text-[#ed1c24] shadow-md font-black"
+                              : "border border-white/35 text-white hover:bg-white/10"
                           }`}
                         >
-                          Front Size
+                          <span>Front Axle:</span>
+                          <span className="font-extrabold">{frontFormatted}</span>
                         </button>
                         <button
                           type="button"
@@ -1236,208 +1065,577 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                             setActiveSizeTab("rear");
                             if (sizeStep !== "summary") setSizeStep("width");
                           }}
-                          className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                          className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                             activeSizeTab === "rear"
-                              ? "bg-white text-[#ed1c24] shadow-md"
-                              : "border border-white/40 text-white hover:bg-white/10 font-semibold"
+                              ? "bg-white text-[#ed1c24] shadow-md font-black"
+                              : "border border-white/35 text-white hover:bg-white/10"
                           }`}
                         >
-                          Rear Size
+                          <span>Rear Axle:</span>
+                          <span className="font-extrabold">{rearFormatted}</span>
                         </button>
                       </div>
                     )}
+
+                    {/* 3-Segment Progress Line */}
+                    <div className="w-full bg-black/20 h-1 rounded-full mt-3 overflow-hidden">
+                      <div
+                        className="bg-white h-full transition-all duration-300 rounded-full"
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
                   </div>
 
-                  {/* ── WHITE BODY ── */}
-                  <div className="px-5 sm:px-6 py-4 flex-1 overflow-y-auto finder-modal-scroll bg-white flex flex-col justify-start">
-                    {depLoading || (sizeStep === "width" && widthLoading) ? (
-                      <div className="flex justify-center items-center py-16 flex-1">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/images/loader-style1.svg" alt="Loading" width={56} height={56} />
-                      </div>
-                    ) : sizeStep !== "summary" ? (
-                      <>
-                        {/* Search Bar */}
-                        <div className="relative mb-4 shrink-0">
-                          <Search
-                            size={18}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                          />
-                          <input
-                            type="text"
-                            placeholder={`Search ${activeSizeTab === "rear" ? "rear " : ""}${sizeStep}...`}
-                            value={sizeQuery}
-                            onChange={(e) => setSizeQuery(e.target.value)}
-                            className="w-full bg-gray-50/90 border border-gray-200 rounded-md pl-11 pr-10 py-2.5 sm:py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:border-[#ed1c24] focus:ring-2 focus:ring-red-500/15 transition-all font-medium shadow-2xs"
-                          />
-                          {sizeQuery && (
-                            <button
-                              type="button"
-                              onClick={() => setSizeQuery("")}
-                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer p-1"
-                            >
-                              <X size={15} />
-                            </button>
-                          )}
+                  {/* ── BODY (2-COLUMN: HIGH-TECH STEPPER SIDEBAR + DYNAMIC GRID) ── */}
+                  <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-white">
+                    {/* LEFT COLUMN: INTERACTIVE VISUAL STEPPER & SIDEWALL DIAGRAM */}
+                    <div className="w-full md:w-72 lg:w-80 bg-gradient-to-b from-gray-50 via-slate-50 to-gray-100/90 border-b md:border-b-0 md:border-r border-gray-200 p-4 sm:p-5 flex flex-col justify-between shrink-0 overflow-y-auto">
+                      <div>
+                        {/* Interactive Sidewall Visual Diagram */}
+                        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-2xs mb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] uppercase font-black tracking-wider text-gray-400">
+                              Sidewall Anatomy
+                            </span>
+                            <span className="text-[10px] font-bold text-[#ed1c24] bg-red-50 px-1.5 py-0.5 rounded">
+                              {sizeStep === "width" ? "Width (mm)" : sizeStep === "height" ? "Aspect Ratio (%)" : sizeStep === "rim" ? "Rim (inches)" : "Complete"}
+                            </span>
+                          </div>
+
+                          {/* Tyre Cross-Section SVG Diagram */}
+                          <div className="relative h-28 w-full flex items-center justify-center bg-gray-900 rounded-lg p-2 overflow-hidden shadow-inner">
+                            <svg viewBox="0 0 200 100" className="w-full h-full">
+                              {/* Outer Tyre Tread */}
+                              <rect
+                                x="40"
+                                y="8"
+                                width="120"
+                                height="20"
+                                rx="4"
+                                className={`transition-all duration-200 ${
+                                  sizeStep === "width"
+                                    ? "fill-[#ed1c24] stroke-white stroke-2 drop-shadow"
+                                    : currWidth
+                                    ? "fill-gray-700 stroke-emerald-400 stroke-1"
+                                    : "fill-gray-800 stroke-gray-600 stroke-1"
+                                }`}
+                              />
+                              <text
+                                x="100"
+                                y="22"
+                                textAnchor="middle"
+                                className="fill-white font-black text-[9px] uppercase tracking-wider"
+                              >
+                                {currWidth ? `${labelFor("width", currWidth)} mm` : "1. Width"}
+                              </text>
+
+                              {/* Left & Right Sidewall (Height) */}
+                              <path
+                                d="M 40 28 Q 28 55 42 82 L 58 82 Q 46 55 58 28 Z"
+                                className={`transition-all duration-200 ${
+                                  sizeStep === "height"
+                                    ? "fill-[#ed1c24] stroke-white stroke-2 drop-shadow"
+                                    : currHeight
+                                    ? "fill-gray-700 stroke-emerald-400 stroke-1"
+                                    : "fill-gray-800 stroke-gray-600 stroke-1"
+                                }`}
+                              />
+                              <path
+                                d="M 160 28 Q 172 55 158 82 L 142 82 Q 154 55 142 28 Z"
+                                className={`transition-all duration-200 ${
+                                  sizeStep === "height"
+                                    ? "fill-[#ed1c24] stroke-white stroke-2 drop-shadow"
+                                    : currHeight
+                                    ? "fill-gray-700 stroke-emerald-400 stroke-1"
+                                    : "fill-gray-800 stroke-gray-600 stroke-1"
+                                }`}
+                              />
+                              <text
+                                x="26"
+                                y="58"
+                                textAnchor="middle"
+                                className="fill-white font-bold text-[8px]"
+                              >
+                                {currHeight ? `${labelFor("height", currHeight)}%` : "2. Height"}
+                              </text>
+
+                              {/* Center Wheel Rim */}
+                              <circle
+                                cx="100"
+                                cy="58"
+                                r="24"
+                                className={`transition-all duration-200 ${
+                                  sizeStep === "rim"
+                                    ? "fill-[#ed1c24] stroke-white stroke-2 drop-shadow"
+                                    : currRim
+                                    ? "fill-gray-700 stroke-emerald-400 stroke-1"
+                                    : "fill-gray-800 stroke-gray-600 stroke-1"
+                                }`}
+                              />
+                              <circle cx="100" cy="58" r="8" className="fill-gray-900 stroke-gray-600 stroke-1" />
+                              <text
+                                x="100"
+                                y="62"
+                                textAnchor="middle"
+                                className="fill-white font-black text-[9px] uppercase tracking-tight"
+                              >
+                                {currRim ? (currRim.startsWith("R") ? currRim : `R${labelFor("rim", currRim)}`) : "3. Rim"}
+                              </text>
+                            </svg>
+                          </div>
                         </div>
 
-                        {/* Options List / Grid */}
-                        {filteredOptions.length < 5 ? (
-                          <div className="flex flex-wrap gap-3 justify-center pt-2">
-                            {filteredOptions.map((o) => {
-                              const isSelected = currVal === o.value;
-                              return (
+                        {/* Stepper Card Buttons */}
+                        <div className="space-y-1.5">
+                          {/* Step 1: Width */}
+                          {(() => {
+                            const isDone = Boolean(currWidth) && sizeStep !== "width";
+                            const isActive = sizeStep === "width";
+                            return (
+                              <div className="relative">
                                 <button
-                                  key={o.value}
                                   type="button"
-                                  onClick={() =>
-                                    sizeStep === "width"
-                                      ? pickWidth(o.value)
-                                      : sizeStep === "height"
-                                      ? pickHeight(o.value)
-                                      : pickRim(o.value)
-                                  }
-                                  className={`w-[130px] h-[48px] sm:h-[50px] rounded-md flex items-center justify-center text-center text-sm sm:text-[15px] font-bold transition-all duration-150 active:scale-95 cursor-pointer shrink-0 ${
-                                    isSelected
-                                      ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25 font-black"
-                                      : "border border-gray-200 text-gray-800 bg-white hover:border-red-400 hover:bg-red-50/50 hover:text-[#ed1c24] hover:shadow-sm shadow-2xs"
+                                  onClick={() => setSizeStep("width")}
+                                  className={`w-full p-3 rounded-xl flex items-center gap-3 text-left transition-all cursor-pointer border ${
+                                    isActive
+                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
+                                      : isDone
+                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
+                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
                                   }`}
                                 >
-                                  {o.label}
+                                  <div
+                                    className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
+                                      isActive
+                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
+                                        : isDone
+                                        ? "bg-emerald-500 text-white shadow-xs"
+                                        : "bg-gray-200 text-gray-600"
+                                    }`}
+                                  >
+                                    {isDone ? <Check size={17} strokeWidth={3} /> : "1"}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <span
+                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
+                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
+                                        }`}
+                                      >
+                                        Width (mm)
+                                      </span>
+                                      {isDone && (
+                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                          ✓ Selected
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div
+                                      className={`text-sm sm:text-base font-black truncate leading-tight mt-0.5 ${
+                                        isActive
+                                          ? currWidth ? "text-[#ed1c24]" : "text-gray-900"
+                                          : isDone
+                                          ? "text-gray-900 font-extrabold"
+                                          : "text-gray-400"
+                                      }`}
+                                    >
+                                      {currWidth ? `${labelFor("width", currWidth)} mm` : "Select Width"}
+                                    </div>
+                                  </div>
                                 </button>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3 pt-1 pb-2">
-                            {filteredOptions.map((o) => {
-                              const isSelected = currVal === o.value;
-                              return (
+                                <div className="w-0.5 h-2 bg-gray-300/80 ml-7 my-0.5" />
+                              </div>
+                            );
+                          })()}
+
+                          {/* Step 2: Height */}
+                          {(() => {
+                            const isDone = Boolean(currHeight) && (sizeStep === "rim" || sizeStep === "summary");
+                            const isActive = sizeStep === "height";
+                            const isClickable = Boolean(currWidth);
+                            return (
+                              <div className="relative">
                                 <button
-                                  key={o.value}
                                   type="button"
-                                  onClick={() =>
-                                    sizeStep === "width"
-                                      ? pickWidth(o.value)
-                                      : sizeStep === "height"
-                                      ? pickHeight(o.value)
-                                      : pickRim(o.value)
-                                  }
-                                  className={`w-full h-[48px] sm:h-[50px] rounded-md flex items-center justify-center text-center text-sm sm:text-[15px] font-bold transition-all duration-150 active:scale-95 cursor-pointer ${
-                                    isSelected
-                                      ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25 font-black"
-                                      : "border border-gray-200 text-gray-800 bg-white hover:border-red-400 hover:bg-red-50/50 hover:text-[#ed1c24] hover:shadow-sm shadow-2xs"
+                                  disabled={!isClickable}
+                                  onClick={() => isClickable && setSizeStep("height")}
+                                  className={`w-full p-3 rounded-xl flex items-center gap-3 text-left transition-all border ${
+                                    !isClickable ? "cursor-not-allowed opacity-45 bg-transparent border-transparent" : "cursor-pointer"
+                                  } ${
+                                    isActive
+                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
+                                      : isDone
+                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
+                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
                                   }`}
                                 >
-                                  {o.label}
+                                  <div
+                                    className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
+                                      isActive
+                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
+                                        : isDone
+                                        ? "bg-emerald-500 text-white shadow-xs"
+                                        : "bg-gray-200 text-gray-600"
+                                    }`}
+                                  >
+                                    {isDone ? <Check size={17} strokeWidth={3} /> : "2"}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <span
+                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
+                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
+                                        }`}
+                                      >
+                                        Height / Profile
+                                      </span>
+                                      {isDone && (
+                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                          ✓ Selected
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div
+                                      className={`text-sm sm:text-base font-black truncate leading-tight mt-0.5 ${
+                                        isActive
+                                          ? currHeight ? "text-[#ed1c24]" : "text-gray-900"
+                                          : isDone
+                                          ? "text-gray-900 font-extrabold"
+                                          : "text-gray-400"
+                                      }`}
+                                    >
+                                      {currHeight ? `${labelFor("height", currHeight)} %` : "Select Height"}
+                                    </div>
+                                  </div>
                                 </button>
-                              );
-                            })}
-                          </div>
-                        )}
+                                <div className="w-0.5 h-2 bg-gray-300/80 ml-7 my-0.5" />
+                              </div>
+                            );
+                          })()}
 
-                        {filteredOptions.length === 0 && (
-                          <div className="py-14 text-center text-sm font-medium text-gray-400">
-                            No options available.
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      /* ── READY TO SEARCH / SUMMARY VIEW ── */
-                      <div className="py-2 px-2 text-center my-auto flex flex-col justify-center items-center">
-                        <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-1 tracking-tight">
-                          Ready to search!
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-500 mb-4 font-medium">
-                          Your selected tyre size
-                        </p>
+                          {/* Step 3: Rim */}
+                          {(() => {
+                            const isDone = Boolean(currRim) && sizeStep === "summary";
+                            const isActive = sizeStep === "rim";
+                            const isClickable = Boolean(currWidth && currHeight);
+                            return (
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  disabled={!isClickable}
+                                  onClick={() => isClickable && setSizeStep("rim")}
+                                  className={`w-full p-3 rounded-xl flex items-center gap-3 text-left transition-all border ${
+                                    !isClickable ? "cursor-not-allowed opacity-45 bg-transparent border-transparent" : "cursor-pointer"
+                                  } ${
+                                    isActive
+                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
+                                      : isDone
+                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
+                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
+                                      isActive
+                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
+                                        : isDone
+                                        ? "bg-emerald-500 text-white shadow-xs"
+                                        : "bg-gray-200 text-gray-600"
+                                    }`}
+                                  >
+                                    {isDone ? <Check size={17} strokeWidth={3} /> : "3"}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <span
+                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
+                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
+                                        }`}
+                                      >
+                                        Rim Diameter
+                                      </span>
+                                      {isDone && (
+                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                          ✓ Selected
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div
+                                      className={`text-sm sm:text-base font-black truncate leading-tight mt-0.5 ${
+                                        isActive
+                                          ? currRim ? "text-[#ed1c24]" : "text-gray-900"
+                                          : isDone
+                                          ? "text-gray-900 font-extrabold"
+                                          : "text-gray-400"
+                                      }`}
+                                    >
+                                      {currRim
+                                        ? currRim.startsWith("R")
+                                          ? currRim
+                                          : `R${labelFor("rim", currRim)}`
+                                        : "Select Rim"}
+                                    </div>
+                                  </div>
+                                </button>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
 
-                        {/* Selection Cards */}
-                        <div
-                          className={`w-full grid gap-3.5 mb-4 ${
-                            hasRearTyre ? "grid-cols-1 sm:grid-cols-2 max-w-2xl" : "max-w-[320px]"
-                          }`}
-                        >
-                          {/* Front Tyre Card */}
-                          <div className="text-left bg-white border border-gray-200 rounded-md p-4 shadow-xs flex flex-col justify-between hover:border-gray-300 transition-all">
-                            <div className="flex items-center justify-between gap-2 mb-2">
-                              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded-xs">
-                                {hasRearTyre ? "FRONT TYRES" : "ALL TYRES"}
-                              </span>
+                      {/* Live Full Specification Capsule Card */}
+                      <div className="mt-4 pt-3 border-t border-gray-200/80 hidden md:block">
+                        <div className="bg-white rounded-xl p-3.5 border border-gray-200 shadow-2xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] uppercase font-black text-gray-400 tracking-wider">
+                              Configured Size
+                            </span>
+                            <span className="text-[10px] font-black text-[#ed1c24] uppercase">
+                              {activeSizeTab === "rear" ? "Rear" : "Front"}
+                            </span>
+                          </div>
+                          <div className="text-lg font-black text-gray-900 tracking-tight mt-0.5">
+                            {activeSizeTab === "rear" ? rearFormatted : frontFormatted}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: API-DRIVEN OPTION GRID & SUMMARY */}
+                    <div className="flex-1 flex flex-col p-4 sm:p-6 overflow-y-auto finder-modal-scroll bg-white">
+                      {depLoading || (sizeStep === "width" && widthLoading) ? (
+                        <div className="flex flex-col justify-center items-center py-24 flex-1">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src="/images/loader-style1.svg" alt="Loading" width={52} height={52} className="animate-spin" />
+                          <span className="text-xs font-bold text-gray-400 mt-3 uppercase tracking-wider">
+                            Fetching dimensions...
+                          </span>
+                        </div>
+                      ) : sizeStep !== "summary" ? (
+                        <>
+                          {/* Search & Grid Header */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
+                            <div>
+                              <h5 className="text-base sm:text-lg font-black text-gray-900 m-0 tracking-tight flex items-center gap-2">
+                                <span>
+                                  {sizeStep === "width"
+                                    ? `Select Tyre Width`
+                                    : sizeStep === "height"
+                                    ? `Select Aspect Ratio / Height`
+                                    : `Select Rim Diameter`}
+                                </span>
+                                <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                                  {filteredOptions.length} options
+                                </span>
+                              </h5>
+                              <p className="text-xs text-gray-500 font-medium m-0 mt-0.5">
+                                {sizeStep === "width"
+                                  ? "Nominal section width in millimeters (e.g. 235)"
+                                  : sizeStep === "height"
+                                  ? "Sidewall height as percentage of width (e.g. 40)"
+                                  : "Wheel diameter in inches (e.g. R19)"}
+                              </p>
+                            </div>
+
+                            {/* Search Filter Input */}
+                            <div className="relative w-full sm:w-56">
+                              <Search
+                                size={16}
+                                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                              />
+                              <input
+                                type="text"
+                                placeholder={`Filter ${sizeStep}...`}
+                                value={sizeQuery}
+                                onChange={(e) => setSizeQuery(e.target.value)}
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-8 py-2 text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:border-[#ed1c24] focus:ring-2 focus:ring-red-500/15 transition-all font-medium shadow-2xs"
+                              />
+                              {sizeQuery && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSizeQuery("")}
+                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer p-1"
+                                >
+                                  <X size={14} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Options Grid */}
+                          {filteredOptions.length < 5 ? (
+                            <div className="flex flex-wrap gap-3 justify-start pt-1 pb-3">
+                              {filteredOptions.map((o) => {
+                                const isSelected = currVal === o.value;
+                                return (
+                                  <button
+                                    key={o.value}
+                                    type="button"
+                                    onClick={() =>
+                                      sizeStep === "width"
+                                        ? pickWidth(o.value)
+                                        : sizeStep === "height"
+                                        ? pickHeight(o.value)
+                                        : pickRim(o.value)
+                                    }
+                                    className={`w-[120px] sm:w-[130px] h-[52px] rounded-xl flex items-center justify-center text-center text-sm sm:text-base font-bold transition-all duration-150 active:scale-95 cursor-pointer shrink-0 relative ${
+                                      isSelected
+                                        ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/30 font-black scale-[1.02]"
+                                        : "border border-gray-200 text-gray-800 bg-white hover:border-red-400 hover:bg-red-50/40 hover:text-[#ed1c24] hover:shadow-xs shadow-2xs font-bold"
+                                    }`}
+                                  >
+                                    <span>{o.label}</span>
+                                    {isSelected && (
+                                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-white ring-2 ring-white/50" />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-2.5 sm:gap-3 pt-1 pb-3">
+                              {filteredOptions.map((o) => {
+                                const isSelected = currVal === o.value;
+                                return (
+                                  <button
+                                    key={o.value}
+                                    type="button"
+                                    onClick={() =>
+                                      sizeStep === "width"
+                                        ? pickWidth(o.value)
+                                        : sizeStep === "height"
+                                        ? pickHeight(o.value)
+                                        : pickRim(o.value)
+                                    }
+                                    className={`w-full h-[52px] rounded-xl flex items-center justify-center text-center text-sm sm:text-base font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
+                                      isSelected
+                                        ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/30 font-black scale-[1.02]"
+                                        : "border border-gray-200 text-gray-800 bg-white hover:border-red-400 hover:bg-red-50/40 hover:text-[#ed1c24] hover:shadow-xs shadow-2xs font-bold"
+                                    }`}
+                                  >
+                                    <span>{o.label}</span>
+                                    {isSelected && (
+                                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-white ring-2 ring-white/50" />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {filteredOptions.length === 0 && (
+                            <div className="py-20 text-center text-sm font-medium text-gray-400 flex flex-col items-center justify-center">
+                              <span className="text-gray-300 mb-1">No matching size found</span>
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setActiveSizeTab("front");
-                                  setSizeStep("width");
-                                }}
-                                className="text-xs font-bold uppercase tracking-wider text-[#ed1c24] hover:text-[#b71218] hover:underline cursor-pointer"
+                                onClick={() => setSizeQuery("")}
+                                className="text-xs text-[#ed1c24] font-bold hover:underline mt-1"
                               >
-                                EDIT
+                                Clear search query
                               </button>
                             </div>
-                            <div className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight py-0.5">
-                              {frontFormatted}
-                            </div>
+                          )}
+                        </>
+                      ) : (
+                        /* ── SUMMARY VIEW ── */
+                        <div className="py-4 px-2 text-center my-auto flex flex-col justify-center items-center">
+                          <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-2">
+                            <Check size={26} strokeWidth={3} />
                           </div>
+                          <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-1 tracking-tight">
+                            Ready to search tyres!
+                          </h3>
+                          <p className="text-xs sm:text-sm text-gray-500 mb-5 font-medium">
+                            Confirmed tyre dimensions for your vehicle fitment
+                          </p>
 
-                          {/* Rear Tyre Card (if enabled) */}
-                          {hasRearTyre && (
-                            <div className="text-left bg-white border border-gray-200 rounded-md p-4 shadow-xs flex flex-col justify-between hover:border-gray-300 transition-all">
+                          {/* Specification Confirmation Cards */}
+                          <div
+                            className={`w-full grid gap-4 mb-5 ${
+                              hasRearTyre ? "grid-cols-1 sm:grid-cols-2 max-w-xl" : "max-w-[360px]"
+                            }`}
+                          >
+                            {/* Front Tyre Card */}
+                            <div className="text-left bg-white border-2 border-red-100 hover:border-red-300 rounded-2xl p-4 shadow-sm transition-all flex flex-col justify-between">
                               <div className="flex items-center justify-between gap-2 mb-2">
-                                <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded-xs">
-                                  REAR TYRES
+                                <span className="text-[10px] font-black uppercase tracking-wider text-[#ed1c24] bg-red-50 px-2 py-0.5 rounded-md">
+                                  {hasRearTyre ? "FRONT AXLE" : "ALL TYRES"}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setActiveSizeTab("rear");
+                                    setActiveSizeTab("front");
                                     setSizeStep("width");
                                   }}
-                                  className="text-xs font-bold uppercase tracking-wider text-[#ed1c24] hover:text-[#b71218] hover:underline cursor-pointer"
+                                  className="text-xs font-black uppercase tracking-wider text-[#ed1c24] hover:text-[#b71218] hover:underline cursor-pointer"
                                 >
-                                  EDIT
+                                  Edit Size
                                 </button>
                               </div>
-                              <div className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight py-0.5">
-                                {rearFormatted}
+                              <div className="text-2xl font-black text-gray-900 tracking-tight py-1">
+                                {frontFormatted}
                               </div>
                             </div>
-                          )}
-                        </div>
 
-                        {/* Add / Same Size Switcher Button */}
-                        <div className="flex justify-center">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              if (hasRearTyre) {
-                                handleSizeSearch(e);
-                                closeSize();
-                              } else {
-                                toggleRearMode();
-                              }
-                            }}
-                            className="border border-dashed border-gray-300 hover:border-red-400 hover:bg-red-50/40 rounded-md py-2.5 px-6 inline-flex items-center gap-3 font-bold text-xs uppercase tracking-wider text-gray-700 transition-all cursor-pointer select-none active:scale-95 shadow-2xs"
-                          >
-                            <span className="w-5 h-5 rounded-full bg-[#ed1c24] text-white flex items-center justify-center text-xs font-black shrink-0">
-                              {hasRearTyre ? "—" : "+"}
-                            </span>
-                            <span>
-                              {hasRearTyre
-                                ? "SEARCH ALL SAME SIZE TYRES"
-                                : "ADD DIFFERENT REAR TYRE SIZE"}
-                            </span>
-                          </button>
+                            {/* Rear Tyre Card (if enabled) */}
+                            {hasRearTyre && (
+                              <div className="text-left bg-white border-2 border-red-100 hover:border-red-300 rounded-2xl p-4 shadow-sm transition-all flex flex-col justify-between">
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-[#ed1c24] bg-red-50 px-2 py-0.5 rounded-md">
+                                    REAR AXLE
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveSizeTab("rear");
+                                      setSizeStep("width");
+                                    }}
+                                    className="text-xs font-black uppercase tracking-wider text-[#ed1c24] hover:text-[#b71218] hover:underline cursor-pointer"
+                                  >
+                                    Edit Size
+                                  </button>
+                                </div>
+                                <div className="text-2xl font-black text-gray-900 tracking-tight py-1">
+                                  {rearFormatted}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Staggered Dual Axle Toggle */}
+                          <div className="flex justify-center">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                if (hasRearTyre) {
+                                  handleSizeSearch(e);
+                                  closeSize();
+                                } else {
+                                  toggleRearMode();
+                                }
+                              }}
+                              className="border border-dashed border-gray-300 hover:border-red-400 hover:bg-red-50/40 rounded-xl py-2.5 px-6 inline-flex items-center gap-3 font-bold text-xs uppercase tracking-wider text-gray-700 transition-all cursor-pointer select-none active:scale-95 shadow-2xs"
+                            >
+                              <span className="w-5 h-5 rounded-full bg-[#ed1c24] text-white flex items-center justify-center text-xs font-black shrink-0">
+                                {hasRearTyre ? "—" : "+"}
+                              </span>
+                              <span>
+                                {hasRearTyre
+                                  ? "Search all same size tyres"
+                                  : "Add different rear tyre size"}
+                              </span>
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
 
-                  {/* ── FOOTER ── */}
-                  <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white shrink-0 rounded-b-md">
+                  {/* ── FOOTER (BACK / NEXT / SEARCH) ── */}
+                  <div className="px-5 sm:px-7 py-3.5 border-t border-gray-200 flex items-center justify-between bg-gray-50/80 shrink-0 rounded-b-2xl">
                     <button
                       type="button"
-                      className="text-sm font-bold text-gray-600 hover:text-gray-900 flex items-center gap-2 transition-colors px-4 py-2.5 rounded-md hover:bg-gray-100 cursor-pointer"
+                      className="text-xs sm:text-sm font-bold text-gray-700 hover:text-gray-900 flex items-center gap-2 transition-colors px-4 py-2.5 rounded-xl hover:bg-gray-200/60 cursor-pointer"
                       onClick={handleBackOrCancel}
                     >
                       <ArrowLeft size={16} strokeWidth={2.5} />
@@ -1451,10 +1649,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         type="button"
                         disabled={!currVal}
                         onClick={handleNextStep}
-                        className={`rounded-md px-8 py-2.5 sm:py-3 text-sm font-bold flex items-center gap-2 transition-all ${
+                        className={`rounded-xl px-7 sm:px-8 py-2.5 text-xs sm:text-sm font-bold flex items-center gap-2 transition-all ${
                           currVal
                             ? "bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white cursor-pointer shadow-md shadow-red-500/25 active:scale-95 hover:scale-[1.01]"
-                            : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                            : "bg-gray-200 text-gray-400 border border-gray-200 cursor-not-allowed"
                         }`}
                       >
                         <span>Next</span>
@@ -1467,9 +1665,9 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                           handleSizeSearch(e);
                           closeSize();
                         }}
-                        className="bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white font-bold text-sm uppercase tracking-wider rounded-md px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md shadow-red-500/25 cursor-pointer"
+                        className="bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl px-8 py-2.5 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md shadow-red-500/25 cursor-pointer"
                       >
-                        <span>Search</span>
+                        <span>Search Matching Tyres</span>
                         <ArrowRight size={16} strokeWidth={2.5} />
                       </button>
                     )}
@@ -1504,592 +1702,813 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                 ? selEngine
                 : "";
 
-            return (
-              <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-200">
-                <div className="absolute inset-0" onClick={closeVeh} />
-                <div className="relative w-full max-w-[780px] h-[590px] sm:h-[620px] max-h-[92vh] bg-white rounded-md shadow-2xl overflow-hidden flex flex-col border border-gray-200 animate-in fade-in zoom-in-95 duration-200">
-                  {/* ── RED GRADIENT HEADER ── */}
-                  <div className="text-white p-5 sm:p-6 pb-4 relative rounded-t-md flex-shrink-0 bg-gradient-to-r from-[#ab1218] via-[#ed1c24] to-[#c7171e] shadow-md">
-                    {/* Top Close Button */}
-                    <button
-                      type="button"
-                      className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-md bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center text-white transition-all cursor-pointer z-10"
-                      onClick={closeVeh}
-                      aria-label="Close"
-                    >
-                      <X size={18} strokeWidth={2.5} />
-                    </button>
+            const vehStepNumber =
+              vehStep === "vehicle"
+                ? 1
+                : vehStep === "model"
+                ? 2
+                : vehStep === "year"
+                ? 3
+                : 4;
 
-                    <div className="flex items-start justify-between gap-3 mb-4 pr-10">
-                      {/* Left: Titles */}
-                      <div className="min-w-0 flex-1">
-                        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight m-0">
-                          {vehStep === "summary"
-                            ? "Ready to search!"
-                            : "Which vehicle are you looking for?"}
-                        </h2>
-                        <p className="text-white/85 text-xs sm:text-[13px] font-medium mt-1 mb-0 leading-snug">
+            const vehProgressPct =
+              vehStep === "vehicle"
+                ? 25
+                : vehStep === "model"
+                ? 50
+                : vehStep === "year"
+                ? 75
+                : 100;
+
+            return (
+              <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-200">
+                <div className="absolute inset-0" onClick={closeVeh} />
+                <div
+                  className="relative w-full max-w-[920px] h-[660px] sm:h-[680px] max-h-[94vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 animate-in fade-in zoom-in-95 duration-200"
+                  onClick={(e) => e.stopPropagation()}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Select your vehicle"
+                >
+                  {/* ── TOP HEADER ── */}
+                  <div className="text-white px-5 sm:px-7 pt-4 pb-3.5 relative bg-gradient-to-r from-[#8f0d13] via-[#ed1c24] to-[#c7171e] shadow-md shrink-0">
+                    <div className="flex items-center justify-between gap-3">
+                      {/* Left: Title + Progress */}
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2.5">
+                          <h4 className="text-lg sm:text-2xl font-black text-white leading-tight tracking-tight m-0">
+                            Select your vehicle
+                          </h4>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-black/30 backdrop-blur-md border border-white/25 text-[11px] sm:text-xs font-black text-white tracking-wide shadow-inner">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            {vehStep === "summary" ? "Complete" : `${vehStepNumber} of 4`}
+                          </span>
+                        </div>
+                        <p className="text-white/90 text-xs sm:text-[13px] font-medium mt-1 mb-0 leading-snug">
                           {vehStep === "vehicle"
-                            ? "Pick the vehicle make (e.g. BMW, Toyota, Mercedes)."
+                            ? "Step 1 of 4: Select your vehicle make (e.g. BMW, Toyota, Mercedes)."
                             : vehStep === "model"
-                            ? "Now pick your vehicle model."
+                            ? "Step 2 of 4: Select your vehicle model."
                             : vehStep === "year"
-                            ? "Select the manufacture year."
+                            ? "Step 3 of 4: Select the manufacture year."
                             : vehStep === "engine" || (vehStep as string) === "size"
-                            ? "Select a factory tyre size."
-                            : "Your selected vehicle."}
+                            ? "Step 4 of 4: Choose engine trim and factory tyre dimensions."
+                            : "Review vehicle and confirmed tyre fitment."}
                         </p>
                       </div>
 
-                      {/* Right: CURRENT SELECTION Capsule */}
-                      <div className="bg-black/35 backdrop-blur-md rounded-md px-3.5 py-1.5 text-center min-w-[130px] border border-white/20 shrink-0 shadow-inner hidden sm:block">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-red-200/90 block leading-tight">
-                          CURRENT SELECTION
-                        </span>
-                        <span className="text-xs sm:text-[13px] font-bold text-white block mt-0.5 max-w-[220px] truncate">
-                          {vehFormatted}
-                        </span>
+                      {/* Right: Spec pill + Close Button */}
+                      <div className="flex items-center gap-3">
+                        <div className="bg-black/35 backdrop-blur-md rounded-xl px-3.5 py-1.5 text-center min-w-[130px] border border-white/20 shrink-0 hidden md:block shadow-inner">
+                          <span className="text-[9px] uppercase font-extrabold tracking-wider text-red-200 block leading-tight">
+                            VEHICLE SPEC
+                          </span>
+                          <span className="text-xs sm:text-sm font-black text-white block mt-0.5 max-w-[200px] truncate leading-tight tracking-tight">
+                            {vehFormatted}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 active:bg-white/35 flex items-center justify-center text-white transition-all cursor-pointer shrink-0"
+                          onClick={closeVeh}
+                          aria-label="Close"
+                        >
+                          <X size={18} strokeWidth={2.5} />
+                        </button>
                       </div>
                     </div>
 
-                    {/* ── 4 STEP TABS ROW (Make / Model / Year / Engine) ── */}
-                    <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
-                      {/* Step 1: Make */}
-                      {(() => {
-                        const isDone = Boolean(selVehicle) && vehStep !== "vehicle";
-                        const isActive = vehStep === "vehicle";
-                        return (
-                          <div
-                            onClick={() => setVehStep("vehicle")}
-                            className={`relative rounded-md p-2 sm:p-2.5 flex items-center gap-2 text-left transition-all cursor-pointer select-none ${
-                              isActive
-                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
-                                : isDone
-                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
-                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
-                            }`}
-                          >
-                            <div
-                              className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
-                                isActive
-                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
-                                  : isDone
-                                  ? "bg-emerald-500 text-white"
-                                  : "bg-white/15 text-white/70"
-                              }`}
-                            >
-                              {isDone ? (
-                                <Check size={16} strokeWidth={3} />
-                              ) : (
-                                <Car size={16} strokeWidth={2.5} />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <span
-                                className={`text-[9.5px] uppercase font-extrabold tracking-wider block leading-tight ${
-                                  isActive ? "text-gray-400" : "text-white/80"
-                                }`}
-                              >
-                                MAKE
-                              </span>
-                              <span
-                                className={`text-xs font-black block leading-tight mt-0.5 truncate ${
-                                  isActive
-                                    ? selVehicle ? "text-[#ed1c24]" : "text-gray-900"
-                                    : selVehicle ? "text-white font-bold" : "text-white/60"
-                                }`}
-                              >
-                                {selVehicle ? labelFor("vehicle", selVehicle) : "Select"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Step 2: Model */}
-                      {(() => {
-                        const isDone =
-                          Boolean(selModel) &&
-                          (vehStep === "year" || vehStep === "engine" || vehStep === "summary");
-                        const isActive = vehStep === "model";
-                        return (
-                          <div
-                            onClick={() => selVehicle && setVehStep("model")}
-                            className={`relative rounded-md p-2 sm:p-2.5 flex items-center gap-2 text-left transition-all cursor-pointer select-none ${
-                              isActive
-                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
-                                : isDone
-                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
-                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
-                            }`}
-                          >
-                            <div
-                              className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
-                                isActive
-                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
-                                  : isDone
-                                  ? "bg-emerald-500 text-white"
-                                  : "bg-white/15 text-white/70"
-                              }`}
-                            >
-                              {isDone ? (
-                                <Check size={16} strokeWidth={3} />
-                              ) : (
-                                <Layers size={16} strokeWidth={2.5} />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <span
-                                className={`text-[9.5px] uppercase font-extrabold tracking-wider block leading-tight ${
-                                  isActive ? "text-gray-400" : "text-white/80"
-                                }`}
-                              >
-                                MODEL
-                              </span>
-                              <span
-                                className={`text-xs font-black block leading-tight mt-0.5 truncate ${
-                                  isActive
-                                    ? selModel ? "text-[#ed1c24]" : "text-gray-900"
-                                    : selModel ? "text-white font-bold" : "text-white/60"
-                                }`}
-                              >
-                                {selModel ? labelFor("model", selModel) : "Select"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Step 3: Year */}
-                      {(() => {
-                        const isDone =
-                          Boolean(selYear) && (vehStep === "engine" || vehStep === "summary");
-                        const isActive = vehStep === "year";
-                        return (
-                          <div
-                            onClick={() => selVehicle && selModel && setVehStep("year")}
-                            className={`relative rounded-md p-2 sm:p-2.5 flex items-center gap-2 text-left transition-all cursor-pointer select-none ${
-                              isActive
-                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
-                                : isDone
-                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
-                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
-                            }`}
-                          >
-                            <div
-                              className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
-                                isActive
-                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
-                                  : isDone
-                                  ? "bg-emerald-500 text-white"
-                                  : "bg-white/15 text-white/70"
-                              }`}
-                            >
-                              {isDone ? (
-                                <Check size={16} strokeWidth={3} />
-                              ) : (
-                                <Calendar size={16} strokeWidth={2.5} />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <span
-                                className={`text-[9.5px] uppercase font-extrabold tracking-wider block leading-tight ${
-                                  isActive ? "text-gray-400" : "text-white/80"
-                                }`}
-                              >
-                                YEAR
-                              </span>
-                              <span
-                                className={`text-xs font-black block leading-tight mt-0.5 truncate ${
-                                  isActive
-                                    ? selYear ? "text-[#ed1c24]" : "text-gray-900"
-                                    : selYear ? "text-white font-bold" : "text-white/60"
-                                }`}
-                              >
-                                {selYear ? labelFor("year", selYear) : "Select"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Step 4: Engine */}
-                      {(() => {
-                        const isDone = Boolean(selEngine);
-                        const isActive = vehStep === "engine";
-                        return (
-                          <div
-                            onClick={() => selVehicle && selModel && selYear && setVehStep("engine")}
-                            className={`relative rounded-md p-2 sm:p-2.5 flex items-center gap-2 text-left transition-all cursor-pointer select-none ${
-                              isActive
-                                ? "bg-white text-gray-900 shadow-xl border-2 border-white scale-[1.02]"
-                                : isDone
-                                ? "bg-white/20 hover:bg-white/30 border border-white/30 text-white"
-                                : "bg-white/10 hover:bg-white/15 border border-white/15 text-white/75"
-                            }`}
-                          >
-                            <div
-                              className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 shadow-xs ${
-                                isActive
-                                  ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white"
-                                  : isDone
-                                  ? "bg-emerald-500 text-white"
-                                  : "bg-white/15 text-white/70"
-                              }`}
-                            >
-                              {isDone ? (
-                                <Check size={16} strokeWidth={3} />
-                              ) : (
-                                <Gauge size={16} strokeWidth={2.5} />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <span
-                                className={`text-[9.5px] uppercase font-extrabold tracking-wider block leading-tight ${
-                                  isActive ? "text-gray-400" : "text-white/80"
-                                }`}
-                              >
-                                ENGINE
-                              </span>
-                              <span
-                                className={`text-xs font-black block leading-tight mt-0.5 truncate ${
-                                  isActive
-                                    ? selEngine ? "text-[#ed1c24]" : "text-gray-900"
-                                    : selEngine ? "text-white font-bold" : "text-white/60"
-                                }`}
-                              >
-                                {selEngine
-                                  ? selEngine === "all"
-                                    ? "All Trims"
-                                    : labelFor("engine", selEngine)
-                                  : "Select"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
+                    {/* 4-Segment Progress Bar */}
+                    <div className="w-full bg-black/20 h-1 rounded-full mt-3 overflow-hidden">
+                      <div
+                        className="bg-white h-full transition-all duration-300 rounded-full"
+                        style={{ width: `${vehProgressPct}%` }}
+                      />
                     </div>
                   </div>
 
-                  {/* ── WHITE BODY ── */}
-                  <div className="px-5 sm:px-6 py-4 flex-1 overflow-y-auto finder-modal-scroll bg-white flex flex-col justify-start">
-                    {depLoading && (vehStep === "vehicle" || vehStep === "model" || vehStep === "year") ? (
-                      <div className="flex justify-center items-center py-16 flex-1">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/images/loader-style1.svg" alt="Loading" width={56} height={56} />
-                      </div>
-                    ) : vehStep !== "summary" ? (
-                      <>
-                        {/* Search Bar */}
-                        <div className="relative mb-4 shrink-0">
-                          <Search
-                            size={18}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Search here ..."
-                            value={vehQuery}
-                            onChange={(e) => setVehQuery(e.target.value)}
-                            className="w-full bg-gray-50/90 border border-gray-200 rounded-md pl-11 pr-10 py-2.5 sm:py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:border-[#ed1c24] focus:ring-2 focus:ring-red-500/15 transition-all font-medium shadow-2xs"
-                          />
-                          {vehQuery && (
-                            <button
-                              type="button"
-                              onClick={() => setVehQuery("")}
-                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer p-1"
-                            >
-                              <X size={15} />
-                            </button>
-                          )}
+                  {/* ── BODY (2-COLUMN: VERTICAL STEPPER LEFT + OPTION GRID RIGHT) ── */}
+                  <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-white">
+                    {/* LEFT COLUMN: VEHICLE STEPPER & CAR ANATOMY */}
+                    <div className="w-full md:w-72 lg:w-80 bg-gradient-to-b from-gray-50 via-slate-50 to-gray-100/90 border-b md:border-b-0 md:border-r border-gray-200 p-4 sm:p-5 flex flex-col justify-between shrink-0 overflow-y-auto">
+                      <div>
+                        {/* Vehicle Anatomy Illustration Box */}
+                        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-2xs mb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] uppercase font-black tracking-wider text-gray-400">
+                              Vehicle Fitment
+                            </span>
+                            <span className="text-[10px] font-bold text-[#ed1c24] bg-red-50 px-1.5 py-0.5 rounded">
+                              {vehStep === "vehicle" ? "Make" : vehStep === "model" ? "Model" : vehStep === "year" ? "Year" : "Engine & Size"}
+                            </span>
+                          </div>
+
+                          {/* Car Blueprint SVG Graphic */}
+                          <div className="relative h-24 w-full flex items-center justify-center bg-gray-900 rounded-lg p-2 overflow-hidden shadow-inner">
+                            <svg viewBox="0 0 220 90" className="w-full h-full">
+                              {/* Car Body Silhouette */}
+                              <path
+                                d="M 25 58 L 40 45 L 75 32 L 145 32 L 175 45 L 200 52 L 205 65 L 185 65 L 175 65 C 175 52 155 52 155 65 L 75 65 C 75 52 55 52 55 65 L 20 65 Z"
+                                className={`transition-all duration-200 ${
+                                  vehStep === "vehicle" || vehStep === "model"
+                                    ? "fill-[#ed1c24] stroke-white stroke-2 drop-shadow"
+                                    : selVehicle
+                                    ? "fill-gray-700 stroke-emerald-400 stroke-1"
+                                    : "fill-gray-800 stroke-gray-600 stroke-1"
+                                }`}
+                              />
+                              {/* Windows */}
+                              <path
+                                d="M 78 36 L 110 36 L 110 46 L 60 46 Z"
+                                className="fill-cyan-950/80 stroke-cyan-400/40 stroke-1"
+                              />
+                              <path
+                                d="M 115 36 L 142 36 L 165 46 L 115 46 Z"
+                                className="fill-cyan-950/80 stroke-cyan-400/40 stroke-1"
+                              />
+                              {/* Front Wheel */}
+                              <circle
+                                cx="165"
+                                cy="65"
+                                r="14"
+                                className={`transition-all duration-200 ${
+                                  vehStep === "engine"
+                                    ? "fill-[#ed1c24] stroke-white stroke-2"
+                                    : selSize
+                                    ? "fill-emerald-500 stroke-white stroke-1"
+                                    : "fill-gray-600 stroke-gray-400 stroke-1"
+                                }`}
+                              />
+                              <circle cx="165" cy="65" r="6" className="fill-gray-900" />
+                              {/* Rear Wheel */}
+                              <circle
+                                cx="65"
+                                cy="65"
+                                r="14"
+                                className={`transition-all duration-200 ${
+                                  vehStep === "engine"
+                                    ? "fill-[#ed1c24] stroke-white stroke-2"
+                                    : selSize
+                                    ? "fill-emerald-500 stroke-white stroke-1"
+                                    : "fill-gray-600 stroke-gray-400 stroke-1"
+                                }`}
+                              />
+                              <circle cx="65" cy="65" r="6" className="fill-gray-900" />
+                              {/* Car Model Text overlay */}
+                              <text
+                                x="110"
+                                y="78"
+                                textAnchor="middle"
+                                className="fill-white font-black text-[9px] uppercase tracking-wider"
+                              >
+                                {selModel ? `${labelFor("model", selModel)} (${selYear || "—"})` : selVehicle ? labelFor("vehicle", selVehicle) : "Select Car"}
+                              </text>
+                            </svg>
+                          </div>
                         </div>
 
-                        {/* Step 1: Make Grid */}
-                        {vehStep === "vehicle" && (() => {
-                          const opts = vehFilter(meta.vehicle ?? []);
-                          return (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3 pt-1 pb-2">
-                              {opts.map((o) => {
-                                const isSelected = selVehicle === o.value;
-                                return (
-                                  <button
-                                    key={o.value}
-                                    type="button"
-                                    onClick={() => pickVehicle(o.value)}
-                                    className={`rounded-md p-2.5 sm:p-3 flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer h-[100px] w-full text-center ${
-                                      isSelected
-                                        ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25"
-                                        : "border border-gray-200 text-gray-900 bg-white hover:border-red-400 hover:bg-red-50/50 hover:text-[#ed1c24] hover:shadow-sm shadow-2xs"
+                        {/* Stepper Cards */}
+                        <div className="space-y-1.5">
+                          {/* Step 1: Make */}
+                          {(() => {
+                            const isDone = Boolean(selVehicle) && vehStep !== "vehicle";
+                            const isActive = vehStep === "vehicle";
+                            return (
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => setVehStep("vehicle")}
+                                  className={`w-full p-2.5 sm:p-3 rounded-xl flex items-center gap-3 text-left transition-all cursor-pointer border ${
+                                    isActive
+                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
+                                      : isDone
+                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
+                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
+                                      isActive
+                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
+                                        : isDone
+                                        ? "bg-emerald-500 text-white shadow-xs"
+                                        : "bg-gray-200 text-gray-600"
                                     }`}
                                   >
-                                    <VehicleLogo label={o.label} logoUrl={o.logo} />
-                                    <span className="text-xs font-bold line-clamp-1">
-                                      {o.label}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                              {opts.length === 0 && (
-                                <div className="col-span-full py-14 text-center text-sm font-medium text-gray-400">
-                                  {vehQuery ? `No makes matching "${vehQuery}".` : "No makes available."}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
-
-                        {/* Step 2: Model Grid */}
-                        {vehStep === "model" && (() => {
-                          const opts = vehFilter(displayModels);
-                          return (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 pt-1 pb-2">
-                              {opts.map((o) => {
-                                const isSelected = selModel === o.value;
-                                return (
-                                  <button
-                                    key={o.value}
-                                    type="button"
-                                    onClick={() => pickModel(o.value)}
-                                    className={`w-full h-[48px] sm:h-[50px] rounded-md flex items-center justify-center text-center text-sm font-bold transition-all duration-150 active:scale-95 cursor-pointer px-3 ${
-                                      isSelected
-                                        ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25"
-                                        : "border border-gray-200 text-gray-900 bg-white hover:border-red-400 hover:bg-red-50/50 hover:text-[#ed1c24] hover:shadow-sm shadow-2xs"
-                                    }`}
-                                  >
-                                    <span className="truncate">{o.label}</span>
-                                  </button>
-                                );
-                              })}
-                              {opts.length === 0 && (
-                                <div className="col-span-full py-14 text-center text-sm font-medium text-gray-400">
-                                  {vehQuery ? `No models matching "${vehQuery}".` : "No models for this make."}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
-
-                        {/* Step 3: Year Grid */}
-                        {vehStep === "year" && (() => {
-                          const opts = vehFilter(displayYears);
-                          return (
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 sm:gap-3 pt-1 pb-2">
-                              {opts.map((o) => {
-                                const isSelected = selYear === o.value;
-                                return (
-                                  <button
-                                    key={o.value}
-                                    type="button"
-                                    onClick={() => pickYear(o.value)}
-                                    className={`w-full h-[48px] sm:h-[50px] rounded-md flex items-center justify-center text-center text-sm sm:text-[15px] font-bold transition-all duration-150 active:scale-95 cursor-pointer ${
-                                      isSelected
-                                        ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25"
-                                        : "border border-gray-200 text-gray-900 bg-white hover:border-red-400 hover:bg-red-50/50 hover:text-[#ed1c24] hover:shadow-sm shadow-2xs"
-                                    }`}
-                                  >
-                                    {o.label}
-                                  </button>
-                                );
-                              })}
-                              {opts.length === 0 && (
-                                <div className="col-span-full py-14 text-center text-sm font-medium text-gray-400">
-                                  {vehQuery ? `No years matching "${vehQuery}".` : "No years for this model."}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
-
-                        {/* Step 4: Engine + Sizes Combined View */}
-                        {vehStep === "engine" && (() => {
-                          const baseOpts: AttrOption[] =
-                            displayEngines.length > 0
-                              ? displayEngines
-                              : [{ label: "All Trims", value: "all" }];
-                          const filtered = vehFilter(baseOpts);
-
-                          const groups = filtered.reduce<Record<string, AttrOption[]>>((acc, eng) => {
-                            const key = eng.fuel ?? "Petrol";
-                            (acc[key] ??= []).push(eng);
-                            return acc;
-                          }, {});
-
-                          return (
-                            <div className="space-y-4 w-full pt-1">
-                              {Object.entries(groups).map(([fuel, engs]) => (
-                                <div key={fuel} className="w-full">
-                                  {/* Fuel Header: e.g. "Petrol" */}
-                                  <h4 className="text-center font-black text-base sm:text-lg text-gray-900 mb-3.5">
-                                    {fuel === "Trims" || fuel === "Other" ? "Petrol" : fuel}
-                                  </h4>
-
-                                  {/* Centered Engine Options Pills */}
-                                  <div className="flex flex-wrap items-center justify-center gap-2.5 mb-6">
-                                    {engs.map((o) => {
-                                      const isSelected = selEngine === o.value;
-                                      const cleanLabel = o.label.replace(/\s*\d+\s*hp/i, "").trim();
-                                      const hpVal = o.hp || o.label.match(/(\d+)\s*hp/i)?.[1];
-                                      return (
-                                        <button
-                                          key={o.value}
-                                          type="button"
-                                          onClick={() => setSelEngine(o.value)}
-                                          className={`px-5 py-2.5 rounded-md border text-sm font-bold transition-all cursor-pointer select-none active:scale-95 ${
-                                            isSelected
-                                              ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/20"
-                                              : "border-gray-200 text-gray-800 bg-white hover:border-gray-400 hover:bg-gray-50"
-                                          }`}
-                                        >
-                                          <span>{cleanLabel || o.label}</span>
-                                          {hpVal ? (
-                                            <sup className="text-[10px] font-semibold ml-0.5">{hpVal}hp</sup>
-                                          ) : null}
-                                        </button>
-                                      );
-                                    })}
+                                    {isDone ? <Check size={16} strokeWidth={3} /> : "1"}
                                   </div>
-
-                                  {/* Sizes for selected engine */}
-                                  {depLoading ? (
-                                    <div className="flex justify-center items-center py-8">
-                                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                                      <img src="/images/loader-style1.svg" alt="Loading" width={44} height={44} />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <span
+                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
+                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
+                                        }`}
+                                      >
+                                        Make (Brand)
+                                      </span>
+                                      {isDone && (
+                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                          ✓ Selected
+                                        </span>
+                                      )}
                                     </div>
-                                  ) : displaySizes.length > 0 ? (
-                                    <div className="flex flex-wrap items-center justify-center gap-4 pt-3">
-                                      {displaySizes.map((s) => {
-                                        const isSelected = selSize?.label === s.label && selSize?.rearLabel === s.rearLabel;
-                                        const rimVal = s.rim ? (s.rim.includes('"') ? s.rim : `${s.rim}"`) : "";
+                                    <div
+                                      className={`text-sm font-black truncate leading-tight mt-0.5 ${
+                                        isActive
+                                          ? selVehicle ? "text-[#ed1c24]" : "text-gray-900"
+                                          : isDone
+                                          ? "text-gray-900 font-extrabold"
+                                          : "text-gray-400"
+                                      }`}
+                                    >
+                                      {selVehicle ? labelFor("vehicle", selVehicle) : "Select Make"}
+                                    </div>
+                                  </div>
+                                </button>
+                                <div className="w-0.5 h-2 bg-gray-300/80 ml-6 my-0.5" />
+                              </div>
+                            );
+                          })()}
 
+                          {/* Step 2: Model */}
+                          {(() => {
+                            const isDone =
+                              Boolean(selModel) &&
+                              (vehStep === "year" || vehStep === "engine" || vehStep === "summary");
+                            const isActive = vehStep === "model";
+                            const isClickable = Boolean(selVehicle);
+                            return (
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  disabled={!isClickable}
+                                  onClick={() => isClickable && setVehStep("model")}
+                                  className={`w-full p-2.5 sm:p-3 rounded-xl flex items-center gap-3 text-left transition-all border ${
+                                    !isClickable ? "cursor-not-allowed opacity-45 bg-transparent border-transparent" : "cursor-pointer"
+                                  } ${
+                                    isActive
+                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
+                                      : isDone
+                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
+                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
+                                      isActive
+                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
+                                        : isDone
+                                        ? "bg-emerald-500 text-white shadow-xs"
+                                        : "bg-gray-200 text-gray-600"
+                                    }`}
+                                  >
+                                    {isDone ? <Check size={16} strokeWidth={3} /> : "2"}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <span
+                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
+                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
+                                        }`}
+                                      >
+                                        Model
+                                      </span>
+                                      {isDone && (
+                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                          ✓ Selected
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div
+                                      className={`text-sm font-black truncate leading-tight mt-0.5 ${
+                                        isActive
+                                          ? selModel ? "text-[#ed1c24]" : "text-gray-900"
+                                          : isDone
+                                          ? "text-gray-900 font-extrabold"
+                                          : "text-gray-400"
+                                      }`}
+                                    >
+                                      {selModel ? labelFor("model", selModel) : "Select Model"}
+                                    </div>
+                                  </div>
+                                </button>
+                                <div className="w-0.5 h-2 bg-gray-300/80 ml-6 my-0.5" />
+                              </div>
+                            );
+                          })()}
+
+                          {/* Step 3: Year */}
+                          {(() => {
+                            const isDone =
+                              Boolean(selYear) && (vehStep === "engine" || vehStep === "summary");
+                            const isActive = vehStep === "year";
+                            const isClickable = Boolean(selVehicle && selModel);
+                            return (
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  disabled={!isClickable}
+                                  onClick={() => isClickable && setVehStep("year")}
+                                  className={`w-full p-2.5 sm:p-3 rounded-xl flex items-center gap-3 text-left transition-all border ${
+                                    !isClickable ? "cursor-not-allowed opacity-45 bg-transparent border-transparent" : "cursor-pointer"
+                                  } ${
+                                    isActive
+                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
+                                      : isDone
+                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
+                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
+                                      isActive
+                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
+                                        : isDone
+                                        ? "bg-emerald-500 text-white shadow-xs"
+                                        : "bg-gray-200 text-gray-600"
+                                    }`}
+                                  >
+                                    {isDone ? <Check size={16} strokeWidth={3} /> : "3"}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <span
+                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
+                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
+                                        }`}
+                                      >
+                                        Year
+                                      </span>
+                                      {isDone && (
+                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                          ✓ Selected
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div
+                                      className={`text-sm font-black truncate leading-tight mt-0.5 ${
+                                        isActive
+                                          ? selYear ? "text-[#ed1c24]" : "text-gray-900"
+                                          : isDone
+                                          ? "text-gray-900 font-extrabold"
+                                          : "text-gray-400"
+                                      }`}
+                                    >
+                                      {selYear ? labelFor("year", selYear) : "Select Year"}
+                                    </div>
+                                  </div>
+                                </button>
+                                <div className="w-0.5 h-2 bg-gray-300/80 ml-6 my-0.5" />
+                              </div>
+                            );
+                          })()}
+
+                          {/* Step 4: Engine & Size */}
+                          {(() => {
+                            const isDone = Boolean(selEngine && selSize);
+                            const isActive = vehStep === "engine";
+                            const isClickable = Boolean(selVehicle && selModel && selYear);
+                            return (
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  disabled={!isClickable}
+                                  onClick={() => isClickable && setVehStep("engine")}
+                                  className={`w-full p-2.5 sm:p-3 rounded-xl flex items-center gap-3 text-left transition-all border ${
+                                    !isClickable ? "cursor-not-allowed opacity-45 bg-transparent border-transparent" : "cursor-pointer"
+                                  } ${
+                                    isActive
+                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
+                                      : isDone
+                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
+                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
+                                      isActive
+                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
+                                        : isDone
+                                        ? "bg-emerald-500 text-white shadow-xs"
+                                        : "bg-gray-200 text-gray-600"
+                                    }`}
+                                  >
+                                    {isDone ? <Check size={16} strokeWidth={3} /> : "4"}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <span
+                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
+                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
+                                        }`}
+                                      >
+                                        Engine & Fitment
+                                      </span>
+                                      {isDone && (
+                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                          ✓ Selected
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div
+                                      className={`text-sm font-black truncate leading-tight mt-0.5 ${
+                                        isActive
+                                          ? selEngine ? "text-[#ed1c24]" : "text-gray-900"
+                                          : isDone
+                                          ? "text-gray-900 font-extrabold"
+                                          : "text-gray-400"
+                                      }`}
+                                    >
+                                      {selEngine
+                                        ? selEngine === "all"
+                                          ? "All Trims"
+                                          : labelFor("engine", selEngine)
+                                        : "Select Trim & Size"}
+                                    </div>
+                                  </div>
+                                </button>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* Configured Vehicle Badge */}
+                      <div className="mt-4 pt-3 border-t border-gray-200/80 hidden md:block">
+                        <div className="bg-white rounded-xl p-3.5 border border-gray-200 shadow-2xs">
+                          <span className="text-[9px] uppercase font-black text-gray-400 block tracking-wider">
+                            SELECTED VEHICLE
+                          </span>
+                          <div className="text-sm font-black text-gray-900 tracking-tight mt-0.5 truncate">
+                            {vehFormatted}
+                          </div>
+                          {selSize && (
+                            <div className="text-xs font-bold text-[#ed1c24] mt-1 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#ed1c24]" />
+                              <span>Tyre: {selSize.label}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: API-DRIVEN GRID / SUMMARY */}
+                    <div className="flex-1 flex flex-col p-4 sm:p-6 overflow-y-auto finder-modal-scroll bg-white">
+                      {depLoading && (vehStep === "vehicle" || vehStep === "model" || vehStep === "year") ? (
+                        <div className="flex flex-col justify-center items-center py-24 flex-1">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src="/images/loader-style1.svg" alt="Loading" width={52} height={52} className="animate-spin" />
+                          <span className="text-xs font-bold text-gray-400 mt-3 uppercase tracking-wider">
+                            Loading vehicle data...
+                          </span>
+                        </div>
+                      ) : vehStep !== "summary" ? (
+                        <>
+                          {/* Search Header */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
+                            <div>
+                              <h5 className="text-base sm:text-lg font-black text-gray-900 m-0 tracking-tight">
+                                {vehStep === "vehicle"
+                                  ? "Choose Vehicle Make"
+                                  : vehStep === "model"
+                                  ? `Choose Model for ${labelFor("vehicle", selVehicle)}`
+                                  : vehStep === "year"
+                                  ? `Choose Year for ${labelFor("model", selModel)}`
+                                  : "Choose Engine Trim & Tyre Size"}
+                              </h5>
+                              <p className="text-xs text-gray-500 font-medium m-0 mt-0.5">
+                                Select your exact vehicle specification below
+                              </p>
+                            </div>
+
+                            {/* Search Filter Input */}
+                            <div className="relative w-full sm:w-56">
+                              <Search
+                                size={16}
+                                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                              />
+                              <input
+                                type="text"
+                                placeholder={`Filter ${vehStep}...`}
+                                value={vehQuery}
+                                onChange={(e) => setVehQuery(e.target.value)}
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-8 py-2 text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:border-[#ed1c24] focus:ring-2 focus:ring-red-500/15 transition-all font-medium shadow-2xs"
+                              />
+                              {vehQuery && (
+                                <button
+                                  type="button"
+                                  onClick={() => setVehQuery("")}
+                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer p-1"
+                                >
+                                  <X size={14} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Step 1: Make Grid */}
+                          {vehStep === "vehicle" && (() => {
+                            const opts = vehFilter(meta.vehicle ?? []);
+                            return (
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3 pt-1 pb-3">
+                                {opts.map((o) => {
+                                  const isSelected = selVehicle === o.value;
+                                  return (
+                                    <button
+                                      key={o.value}
+                                      type="button"
+                                      onClick={() => pickVehicle(o.value)}
+                                      className={`rounded-xl p-2.5 sm:p-3 flex flex-col items-center justify-center gap-2 transition-all cursor-pointer h-[104px] w-full text-center relative ${
+                                        isSelected
+                                          ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25 font-black scale-[1.02]"
+                                          : "border border-gray-200 text-gray-900 bg-white hover:border-red-400 hover:bg-red-50/40 hover:text-[#ed1c24] hover:shadow-xs shadow-2xs font-bold"
+                                      }`}
+                                    >
+                                      <VehicleLogo label={o.label} logoUrl={o.logo} />
+                                      <span className="text-xs font-extrabold line-clamp-1">
+                                        {o.label}
+                                      </span>
+                                      {isSelected && (
+                                        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-white ring-2 ring-white/50" />
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                                {opts.length === 0 && (
+                                  <div className="col-span-full py-16 text-center text-sm font-medium text-gray-400">
+                                    {vehQuery ? `No makes matching "${vehQuery}".` : "No makes available."}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Step 2: Model Grid */}
+                          {vehStep === "model" && (() => {
+                            const opts = vehFilter(displayModels);
+                            return (
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 pt-1 pb-3">
+                                {opts.map((o) => {
+                                  const isSelected = selModel === o.value;
+                                  return (
+                                    <button
+                                      key={o.value}
+                                      type="button"
+                                      onClick={() => pickModel(o.value)}
+                                      className={`w-full h-[52px] rounded-xl flex items-center justify-center text-center text-sm font-bold transition-all duration-150 active:scale-95 cursor-pointer px-3 relative ${
+                                        isSelected
+                                          ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25 font-black scale-[1.02]"
+                                          : "border border-gray-200 text-gray-900 bg-white hover:border-red-400 hover:bg-red-50/40 hover:text-[#ed1c24] hover:shadow-xs shadow-2xs"
+                                      }`}
+                                    >
+                                      <span className="truncate">{o.label}</span>
+                                      {isSelected && (
+                                        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-white ring-2 ring-white/50" />
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                                {opts.length === 0 && (
+                                  <div className="col-span-full py-16 text-center text-sm font-medium text-gray-400">
+                                    {vehQuery ? `No models matching "${vehQuery}".` : "No models for this make."}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Step 3: Year Grid */}
+                          {vehStep === "year" && (() => {
+                            const opts = vehFilter(displayYears);
+                            return (
+                              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 sm:gap-3 pt-1 pb-3">
+                                {opts.map((o) => {
+                                  const isSelected = selYear === o.value;
+                                  return (
+                                    <button
+                                      key={o.value}
+                                      type="button"
+                                      onClick={() => pickYear(o.value)}
+                                      className={`w-full h-[52px] rounded-xl flex items-center justify-center text-center text-sm sm:text-base font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
+                                        isSelected
+                                          ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/25 font-black scale-[1.02]"
+                                          : "border border-gray-200 text-gray-900 bg-white hover:border-red-400 hover:bg-red-50/40 hover:text-[#ed1c24] hover:shadow-xs shadow-2xs"
+                                      }`}
+                                    >
+                                      <span>{o.label}</span>
+                                      {isSelected && (
+                                        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-white ring-2 ring-white/50" />
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                                {opts.length === 0 && (
+                                  <div className="col-span-full py-16 text-center text-sm font-medium text-gray-400">
+                                    {vehQuery ? `No years matching "${vehQuery}".` : "No years for this model."}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Step 4: Engine + Sizes Combined View */}
+                          {vehStep === "engine" && (() => {
+                            const baseOpts: AttrOption[] =
+                              displayEngines.length > 0
+                                ? displayEngines
+                                : [{ label: "All Trims", value: "all" }];
+                            const filtered = vehFilter(baseOpts);
+
+                            const groups = filtered.reduce<Record<string, AttrOption[]>>((acc, eng) => {
+                              const key = eng.fuel ?? "Petrol";
+                              (acc[key] ??= []).push(eng);
+                              return acc;
+                            }, {});
+
+                            return (
+                              <div className="space-y-4 w-full pt-1">
+                                {Object.entries(groups).map(([fuel, engs]) => (
+                                  <div key={fuel} className="w-full">
+                                    <h4 className="font-black text-sm sm:text-base text-gray-900 mb-2.5 flex items-center gap-2">
+                                      <span className="w-2 h-2 rounded-full bg-[#ed1c24]" />
+                                      <span>{fuel === "Trims" || fuel === "Other" ? "Engine Variants" : fuel}</span>
+                                    </h4>
+
+                                    {/* Engine Options Pills */}
+                                    <div className="flex flex-wrap items-center gap-2.5 mb-5">
+                                      {engs.map((o) => {
+                                        const isSelected = selEngine === o.value;
+                                        const cleanLabel = o.label.replace(/\s*\d+\s*hp/i, "").trim();
+                                        const hpVal = o.hp || o.label.match(/(\d+)\s*hp/i)?.[1];
                                         return (
                                           <button
-                                            key={`${s.label}-${s.rearLabel ?? ""}`}
+                                            key={o.value}
                                             type="button"
-                                            onClick={() => pickSize(s)}
-                                            className={`relative border rounded-md px-4 py-3 cursor-pointer transition-all hover:shadow-md active:scale-95 text-left inline-flex items-center gap-2 flex-wrap ${
+                                            onClick={() => setSelEngine(o.value)}
+                                            className={`px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition-all cursor-pointer select-none active:scale-95 ${
                                               isSelected
-                                                ? "border-2 border-[#ed1c24] bg-red-50/50 shadow-sm"
-                                                : "border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50/60"
+                                                ? "border-2 border-[#ed1c24] text-white bg-gradient-to-r from-[#ed1c24] to-[#c9141b] shadow-md shadow-red-500/20 font-black"
+                                                : "border-gray-200 text-gray-800 bg-white hover:border-gray-400 hover:bg-gray-50 shadow-2xs"
                                             }`}
                                           >
-                                            {/* Red FACTORY SIZE / OPTIONAL SIZE tag */}
-                                            <span className="absolute -top-2.5 left-3 bg-[#ed1c24] text-white text-[9px] font-bold px-2 py-0.5 rounded-[3px] uppercase tracking-wider shadow-xs">
-                                              {s.isFactory ? "FACTORY SIZE" : "OPTIONAL SIZE"}
-                                            </span>
-
-                                            <div className="flex items-center flex-wrap gap-2 text-sm sm:text-base font-bold text-gray-900 mt-0.5">
-                                              {/* Front Size */}
-                                              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                                                {rimVal && <span>{rimVal} | </span>}
-                                                <span>{s.label}</span>
-                                                {s.speedIndex && (
-                                                  <span className="bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide leading-none">
-                                                    {s.speedIndex}
-                                                  </span>
-                                                )}
-                                              </span>
-
-                                              {/* Rear Size (if staggered fitment) */}
-                                              {s.rearLabel && (
-                                                <span className="inline-flex items-center gap-1.5 whitespace-nowrap ml-1 sm:ml-2">
-                                                  <span>{s.rearLabel}</span>
-                                                  {s.rearSpeedIndex && (
-                                                    <span className="bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide leading-none">
-                                                      {s.rearSpeedIndex}
-                                                    </span>
-                                                  )}
-                                                </span>
-                                              )}
-                                            </div>
+                                            <span>{cleanLabel || o.label}</span>
+                                            {hpVal ? (
+                                              <sup className="text-[10px] font-semibold ml-1 bg-black/10 px-1 py-0.5 rounded">{hpVal}hp</sup>
+                                            ) : null}
                                           </button>
                                         );
                                       })}
                                     </div>
-                                  ) : (
-                                    <div className="py-6 text-center text-xs text-gray-400">
-                                      No tyre sizes found for this trim.
-                                    </div>
-                                  )}
 
-                                  {/* Disclaimer Note */}
-                                  <p className="text-center text-xs italic text-gray-600 mt-8 max-w-xl mx-auto leading-relaxed">
-                                    Note: Most vehicle manufacturer&apos;s produce vehicles with more than one possible size. We strongly recommend all customers check the tyre size printed on the side wall of their tyres before purchase.
-                                  </p>
-                                </div>
-                              ))}
-                              {filtered.length === 0 && (
-                                <div className="py-14 text-center text-sm font-medium text-gray-400">
-                                  No engine trims found.
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </>
-                    ) : (
-                      /* ── READY TO SEARCH / SUMMARY VIEW ── */
-                      <div className="py-2 px-2 text-center my-auto flex flex-col justify-center items-center">
-                        <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-1 tracking-tight">
-                          Ready to search!
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-500 mb-4 font-medium">
-                          Your selected vehicle
-                        </p>
+                                    {/* Sizes for selected engine */}
+                                    {depLoading ? (
+                                      <div className="flex justify-center items-center py-10">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src="/images/loader-style1.svg" alt="Loading" width={44} height={44} className="animate-spin" />
+                                      </div>
+                                    ) : displaySizes.length > 0 ? (
+                                      <div className="space-y-2 pt-1">
+                                        <div className="text-xs font-black uppercase text-gray-500 tracking-wider">
+                                          Compatible Tyre Dimensions:
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-3">
+                                          {displaySizes.map((s) => {
+                                            const isSelected = selSize?.label === s.label && selSize?.rearLabel === s.rearLabel;
+                                            const rimVal = s.rim ? (s.rim.includes('"') ? s.rim : `${s.rim}"`) : "";
 
-                        <div className="w-full max-w-lg mb-4">
-                          <div className="text-left bg-white border border-gray-200 rounded-md p-5 shadow-xs hover:border-gray-300 transition-all">
-                            <div className="flex items-center justify-between gap-2 mb-2">
-                              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded-xs">
-                                SELECTED VEHICLE
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setVehStep("engine");
-                                }}
-                                className="text-xs font-bold uppercase tracking-wider text-[#ed1c24] hover:text-[#b71218] hover:underline cursor-pointer"
-                              >
-                                EDIT
-                              </button>
-                            </div>
-                            <div className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight leading-tight my-2">
-                              {labelFor("vehicle", selVehicle)} {labelFor("model", selModel)}
-                            </div>
-                            <div className="text-sm font-semibold text-gray-600 mt-1">
-                              Year: <span className="text-gray-900 font-bold">{labelFor("year", selYear)}</span>
-                              {selEngine && (
-                                <>
-                                  {" • "}Engine:{" "}
-                                  <span className="text-gray-900 font-bold">
-                                    {selEngine === "all" ? "All Trims" : labelFor("engine", selEngine)}
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                            {/* The size is what the search actually filters on. */}
-                            {selSize && (
-                              <div className="text-sm font-semibold text-gray-600 mt-1.5 pt-1.5 border-t border-gray-100">
-                                Tyre size:{" "}
-                                <span className="text-gray-900 font-bold">{selSize.label}</span>
-                                {selSize.rearLabel && (
+                                            return (
+                                              <button
+                                                key={`${s.label}-${s.rearLabel ?? ""}`}
+                                                type="button"
+                                                onClick={() => pickSize(s)}
+                                                className={`relative border rounded-xl px-4 py-3.5 cursor-pointer transition-all hover:shadow-md active:scale-95 text-left inline-flex items-center gap-2.5 flex-wrap ${
+                                                  isSelected
+                                                    ? "border-2 border-[#ed1c24] bg-red-50/70 shadow-sm"
+                                                    : "border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50/70 shadow-2xs"
+                                                }`}
+                                              >
+                                                {/* Badge */}
+                                                <span className="absolute -top-2.5 left-3 bg-[#ed1c24] text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
+                                                  {s.isFactory ? "Factory Fitment" : "Optional Fitment"}
+                                                </span>
+
+                                                <div className="flex items-center flex-wrap gap-2 text-sm sm:text-base font-extrabold text-gray-900 mt-1">
+                                                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                                                    {rimVal && <span className="text-[#ed1c24] font-black">{rimVal}</span>}
+                                                    <span>{s.label}</span>
+                                                    {s.speedIndex && (
+                                                      <span className="bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide leading-none">
+                                                        {s.speedIndex}
+                                                      </span>
+                                                    )}
+                                                  </span>
+
+                                                  {s.rearLabel && (
+                                                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap ml-1 sm:ml-2">
+                                                      <span className="text-gray-400 font-normal">Rear:</span>
+                                                      <span>{s.rearLabel}</span>
+                                                      {s.rearSpeedIndex && (
+                                                        <span className="bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide leading-none">
+                                                          {s.rearSpeedIndex}
+                                                        </span>
+                                                      )}
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="py-6 text-center text-xs text-gray-400">
+                                        No tyre sizes found for this trim.
+                                      </div>
+                                    )}
+
+                                    {/* Note */}
+                                    <p className="text-xs text-gray-500 mt-6 leading-relaxed bg-gray-50 p-3 rounded-xl border border-gray-200">
+                                      💡 <span className="font-bold">Recommendation:</span> Most vehicles offer multiple rim and profile options. Please verify the dimensions printed on your current sidewall.
+                                    </p>
+                                  </div>
+                                ))}
+                                {filtered.length === 0 && (
+                                  <div className="py-16 text-center text-sm font-medium text-gray-400">
+                                    No engine trims found.
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </>
+                      ) : (
+                        /* ── SUMMARY VIEW ── */
+                        <div className="py-4 px-2 text-center my-auto flex flex-col justify-center items-center">
+                          <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-2">
+                            <Check size={26} strokeWidth={3} />
+                          </div>
+                          <h3 className="text-xl sm:text-2xl font-black text-gray-900 mb-1 tracking-tight">
+                            Vehicle Fitment Ready!
+                          </h3>
+                          <p className="text-xs sm:text-sm text-gray-500 mb-5 font-medium">
+                            Confirmed specifications for your car model
+                          </p>
+
+                          <div className="w-full max-w-lg mb-5">
+                            <div className="text-left bg-white border-2 border-red-100 rounded-2xl p-5 shadow-sm hover:border-red-300 transition-all">
+                              <div className="flex items-center justify-between gap-2 mb-2">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-[#ed1c24] bg-red-50 px-2.5 py-0.5 rounded-full">
+                                  CONFIRMED VEHICLE
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setVehStep("engine");
+                                  }}
+                                  className="text-xs font-black uppercase tracking-wider text-[#ed1c24] hover:text-[#b71218] hover:underline cursor-pointer"
+                                >
+                                  Edit Fitment
+                                </button>
+                              </div>
+                              <div className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight leading-tight my-2">
+                                {labelFor("vehicle", selVehicle)} {labelFor("model", selModel)}
+                              </div>
+                              <div className="text-xs sm:text-sm font-semibold text-gray-600 mt-1">
+                                Year: <span className="text-gray-900 font-bold">{labelFor("year", selYear)}</span>
+                                {selEngine && (
                                   <>
-                                    {" • "}Rear:{" "}
-                                    <span className="text-gray-900 font-bold">{selSize.rearLabel}</span>
+                                    {" • "}Trim:{" "}
+                                    <span className="text-gray-900 font-bold">
+                                      {selEngine === "all" ? "All Trims" : labelFor("engine", selEngine)}
+                                    </span>
                                   </>
                                 )}
                               </div>
-                            )}
+                              {selSize && (
+                                <div className="text-sm font-bold text-gray-900 mt-2.5 pt-2.5 border-t border-gray-100 flex items-center gap-2">
+                                  <span className="text-gray-500 font-medium">Tyre Dimensions:</span>
+                                  <span className="text-[#ed1c24] font-black">{selSize.label}</span>
+                                  {selSize.rearLabel && (
+                                    <>
+                                      <span className="text-gray-400">/</span>
+                                      <span className="text-[#ed1c24] font-black">{selSize.rearLabel}</span>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
 
                   {/* ── FOOTER ── */}
-                  <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white shrink-0 rounded-b-md">
+                  <div className="px-5 sm:px-7 py-3.5 border-t border-gray-200 flex items-center justify-between bg-gray-50/80 shrink-0 rounded-b-2xl">
                     <button
                       type="button"
-                      className="text-sm font-bold text-gray-600 hover:text-gray-900 flex items-center gap-2 transition-colors px-4 py-2.5 rounded-md hover:bg-gray-100 cursor-pointer"
+                      className="text-xs sm:text-sm font-bold text-gray-700 hover:text-gray-900 flex items-center gap-2 transition-colors px-4 py-2.5 rounded-xl hover:bg-gray-200/60 cursor-pointer"
                       onClick={handleVehBack}
                     >
                       <ArrowLeft size={16} strokeWidth={2.5} />
@@ -2103,10 +2522,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         type="button"
                         disabled={!currVehVal}
                         onClick={handleVehNext}
-                        className={`rounded-md px-8 py-2.5 sm:py-3 text-sm font-bold flex items-center gap-2 transition-all ${
+                        className={`rounded-xl px-7 sm:px-8 py-2.5 text-xs sm:text-sm font-bold flex items-center gap-2 transition-all ${
                           currVehVal
                             ? "bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white cursor-pointer shadow-md shadow-red-500/25 active:scale-95 hover:scale-[1.01]"
-                            : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                            : "bg-gray-200 text-gray-400 border border-gray-200 cursor-not-allowed"
                         }`}
                       >
                         <span>Next</span>
@@ -2119,9 +2538,9 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                           handleVehicleSearch(e);
                           closeVeh();
                         }}
-                        className="bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white font-bold text-sm uppercase tracking-wider rounded-md px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md shadow-red-500/25 cursor-pointer"
+                        className="bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl px-8 py-2.5 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md shadow-red-500/25 cursor-pointer"
                       >
-                        <span>Search</span>
+                        <span>Search Matching Tyres</span>
                         <ArrowRight size={16} strokeWidth={2.5} />
                       </button>
                     ) : null}

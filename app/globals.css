@@ -426,15 +426,12 @@
            font-display uppercase text-white transition-colors;
     /* Guidelines specify 8px 25px for the square button; the pill needs a
        little more room at the rounded ends to avoid looking cramped. */
-    padding: 10px 34px;
-    font-size: 18px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    padding: 10px 30px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     background: var(--brand-red);
-    /* Pill. The guidelines make square the default and rounded an
-       explicit variant (.button-rounded) — this is that variant, chosen
-       deliberately for the section CTAs. */
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
   }
 
   .button-primary::before {
@@ -579,15 +576,50 @@
     transform: scaleY(0);
   }
 
+  /* ── Large CTA button — same slide-up wipe as btn-tocart ──────────
+     Use for full-width or prominent CTAs: Checkout, View Cart, etc.
+     Red base; on hover an Ink (black) fill wipes UP from the bottom. */
+  .btn-cta {
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden
+           font-black uppercase tracking-wider text-white transition-colors cursor-pointer;
+    background: var(--brand-red);
+    border-radius: var(--radius-sm);
+  }
+
+  .btn-cta::before {
+    content: "";
+    @apply absolute inset-0 z-0;
+    background: var(--brand-ink);
+    transform: scaleY(0);
+    transform-origin: bottom center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-cta:hover::before {
+    transform: scaleY(1);
+  }
+
+  .btn-cta > * {
+    @apply relative z-10;
+  }
+
+  .btn-cta:disabled {
+    @apply opacity-60 cursor-not-allowed;
+  }
+
+  .btn-cta:disabled::before {
+    transform: scaleY(0);
+  }
+
   .button-secondary {
     @apply relative inline-flex items-center justify-center overflow-hidden
            font-display uppercase text-ink transition-colors;
-    padding: 10px 34px;
-    font-size: 18px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    padding: 10px 30px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     background: var(--brand-amber);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
   }
 
   .button-secondary::before {

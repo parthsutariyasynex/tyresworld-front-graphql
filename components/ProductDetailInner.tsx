@@ -251,12 +251,10 @@ function SpecsTable({
 function PricingCard({
   product,
   onPriceInfoClick,
-  onAddToCartSuccess,
   onShareClick,
 }: {
   product: ProductDetail;
   onPriceInfoClick: () => void;
-  onAddToCartSuccess: () => void;
   onShareClick: () => void;
 }) {
   const currency = product.currency || undefined;
@@ -279,8 +277,6 @@ function PricingCard({
       if (result.error) {
         setAddError(result.error);
         setTimeout(() => setAddError(null), 4000);
-      } else {
-        onAddToCartSuccess();
       }
     } finally {
       setAdding(false);
@@ -320,7 +316,7 @@ function PricingCard({
           href={`https://wa.me/966500000000?text=${encodeURIComponent(`Hi, I'm interested in: ${product.name}`)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 bg-[#049b43] hover:bg-[#038237] text-white font-bold text-sm py-3 rounded-full transition-colors w-full"
+          className="flex items-center justify-center gap-2 bg-[#049b43] hover:bg-[#038237] text-white font-bold text-sm py-3 rounded-lg transition-colors w-full"
         >
           <WaIcon />
           Contact Us
@@ -356,14 +352,12 @@ function PricingCard({
       <hr className="border-gray-100 my-1" />
 
       {/* Installments Card Wrapper */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col gap-2 mt-1">
-        <p className="text-[11px] text-gray-500 font-medium">Pay In Installments</p>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/tabby-tamara-icon.webp"
-          alt="Tabby Tamara Payment"
-          className="h-6 w-auto object-contain self-start"
-        />
+      <div className="bg-gray-50/70 border border-gray-100 rounded-xl p-3 sm:p-3.5 flex items-center justify-between gap-2 mt-1">
+        <span className="text-[11px] sm:text-xs text-gray-600 font-medium">Pay In Installments</span>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[10.5px] font-black px-2.5 py-0.5 rounded-md leading-none select-none">tabby</span>
+          <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[10.5px] font-black px-2.5 py-0.5 rounded-md leading-none select-none">tamara</span>
+        </div>
       </div>
     </div>
   );
@@ -638,7 +632,6 @@ export default function ProductDetailInner({
   const specs = parseTyreProductName(product.name);
   const [activeImg, setActiveImg] = useState(0);
   const [isPriceInfoOpen, setIsPriceInfoOpen] = useState(false);
-  const [isAddedToCartOpen, setIsAddedToCartOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isWriteReviewOpen, setIsWriteReviewOpen] = useState(false);
 
@@ -786,7 +779,6 @@ export default function ProductDetailInner({
               <PricingCard
                 product={product}
                 onPriceInfoClick={() => setIsPriceInfoOpen(true)}
-                onAddToCartSuccess={() => setIsAddedToCartOpen(true)}
                 onShareClick={() => setIsShareOpen(true)}
               />
             </div>
@@ -794,37 +786,6 @@ export default function ProductDetailInner({
           </div>
         </div>
       </div>
-
-      {/* ── Added to Cart Popup Modal ──────────────────────────────── */}
-      {isAddedToCartOpen && (
-        <div className="popup-overlay product-single-modal">
-          <div className="absolute inset-0" onClick={() => setIsAddedToCartOpen(false)} />
-          <div className="popup-content text-center max-w-[520px]">
-            <span className="popup-close" onClick={() => setIsAddedToCartOpen(false)} />
-            <h3 className="text-xl font-extrabold uppercase tracking-tight text-gray-900 mb-3 mt-4">
-              ADDED TO CART
-            </h3>
-            <p className="text-[14px] font-black text-gray-900 uppercase tracking-tight max-w-[420px] mx-auto mb-6">
-              {product.name}
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                href={`/${locale}/cart`}
-                className="w-full sm:w-auto bg-[#ed1c24] hover:bg-[#c6181d] text-white text-[13px] font-black uppercase tracking-wider py-3.5 px-8 rounded-lg transition-colors text-center"
-              >
-                PROCEED TO CART
-              </Link>
-              <button
-                type="button"
-                onClick={() => setIsAddedToCartOpen(false)}
-                className="w-full sm:w-auto bg-black hover:bg-gray-900 text-white text-[13px] font-black uppercase tracking-wider py-3.5 px-8 rounded-lg transition-colors text-center"
-              >
-                CONTINUE SHOPPING
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Inclusions Popup Modal ─────────────────────────────────── */}
       {isPriceInfoOpen && (

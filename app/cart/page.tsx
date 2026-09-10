@@ -1,68 +1,141 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { ShoppingBag, ArrowRight, X, Tag, Loader2 } from "lucide-react";
-import { useCart } from "@/lib/cart-context";
 import { usePathname } from "next/navigation";
+import {
+  ShoppingBag,
+  ArrowRight,
+  Package,
+  Trash2,
+  ChevronDown,
+  Check,
+} from "lucide-react";
+import { useCart } from "@/lib/cart-context";
 import { Money } from "@/components/Price";
 
-/* ── Qty stepper ──────────────────────────────────────────────── */
-function QtyInput({
+/* ── Custom Quantity Dropdown Component ───────────────────────── */
+function CartQtyDropdown({
   uid,
   quantity,
   onUpdate,
+  disabled,
 }: {
   uid: string;
   quantity: number;
   onUpdate: (uid: string, qty: number) => void;
+  disabled?: boolean;
 }) {
-  const [val, setVal] = useState(quantity);
-  useEffect(() => { setVal(quantity); }, [quantity]);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
-  const dec = () => { if (val > 1) { setVal(v => v - 1); onUpdate(uid, val - 1); } };
-  const inc = () => { setVal(v => v + 1); onUpdate(uid, val + 1); };
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const qtyOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 20];
+  const options = Array.from(new Set([...qtyOptions, quantity])).sort((a, b) => a - b);
 
   return (
-    <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden w-fit">
+    <div className="relative" ref={ref}>
       <button
-        onClick={dec}
-        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors text-base leading-none"
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Quantity: ${quantity}`}
+        className="flex items-center justify-between gap-2 min-w-[58px] sm:min-w-[64px] h-9 px-3 bg-[#f8f9fa] hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-lg text-gray-950 font-bold text-xs sm:text-sm cursor-pointer transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        −
+        <span>{quantity}</span>
+        <ChevronDown
+          size={14}
+          strokeWidth={2.5}
+          className={`text-gray-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
       </button>
-      <span className="w-9 text-center text-sm font-bold text-gray-900 select-none">{val}</span>
-      <button
-        onClick={inc}
-        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors text-base leading-none"
-      >
-        +
-      </button>
+
+      {open && (
+        <ul
+          role="listbox"
+          className="absolute left-0 bottom-full mb-1.5 z-50 w-20 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl p-1 animate-in fade-in zoom-in-95 duration-150"
+        >
+          {options.map((n) => (
+            <li key={n} role="option" aria-selected={n === quantity}>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  if (n !== quantity) onUpdate(uid, n);
+                }}
+                className={`flex items-center justify-between w-full h-8 px-2.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                  n === quantity
+                    ? "bg-[#ed1c24] text-white"
+                    : "text-gray-800 hover:bg-gray-100"
+                }`}
+              >
+                <span>{n}</span>
+                {n === quantity && <Check size={13} strokeWidth={3} />}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
 
-/* ── Main page ────────────────────────────────────────────────── */
+/* ── Main Cart Page ───────────────────────────────────────────── */
 export default function CartPage() {
   const pathname = usePathname();
-  const locale   = pathname.split("/")[1] === "ar" ? "ar" : "en";
-  const isAr     = locale === "ar";
+  const locale = pathname.split("/")[1] === "ar" ? "ar" : "en";
+  const isAr = locale === "ar";
 
   const {
-    items, subtotal, grandTotal, currency, cart, ready, loading,
-    updateQty, removeItem, applyCoupon, removeCoupon,
+    items,
+    subtotal,
+    grandTotal,
+    currency,
+    cart,
+    ready,
+    loading,
+    updateQty,
+    removeItem,
+    applyCoupon,
+    removeCoupon,
   } = useCart();
 
-  const [couponInput,   setCouponInput]   = useState("");
+  const [couponInput, setCouponInput] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
-  const [couponMsg,     setCouponMsg]     = useState<{ text: string; ok: boolean } | null>(null);
+  const [couponMsg, setCouponMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
-  const activeCoupon   = cart?.applied_coupons?.[0]?.code ?? null;
-  const discounts      = cart?.prices?.discounts ?? [];
+  const activeCoupon = cart?.applied_coupons?.[0]?.code ?? null;
+  const discounts = cart?.prices?.discounts ?? [];
   const discountAmount = discounts.reduce((acc, d) => acc + Math.abs(d.amount.value), 0);
-  const appliedTaxes   = cart?.prices?.applied_taxes ?? [];
-  const totalTax       = appliedTaxes.reduce((acc, t) => acc + t.amount.value, 0);
-  const shippingAmount = cart?.shipping_addresses?.[0]?.selected_shipping_method?.amount?.value ?? 0;
+  const appliedTaxes = cart?.prices?.applied_taxes ?? [];
+  const taxFromApi = appliedTaxes.reduce((acc, t) => acc + t.amount.value, 0);
+  const shippingAmount =
+    cart?.shipping_addresses?.[0]?.selected_shipping_method?.amount?.value ?? 0;
+
+  // Real store data calculations
+  const grandTotalValue = grandTotal > 0 ? grandTotal : subtotal;
+  const subtotalExclTax =
+    cart?.prices?.subtotal_excluding_tax?.value ??
+    (grandTotalValue > 0 ? grandTotalValue / 1.05 : subtotal);
+  const vatAmount =
+    taxFromApi > 0
+      ? taxFromApi
+      : grandTotalValue > subtotalExclTax
+      ? grandTotalValue - subtotalExclTax
+      : subtotal * 0.05;
+  const additionalCharge = shippingAmount;
 
   const fmt = (v: number) => <Money value={v} currency={currency} digits={2} />;
 
@@ -75,7 +148,7 @@ export default function CartPage() {
     if (errMsg) {
       setCouponMsg({ text: errMsg, ok: false });
     } else {
-      setCouponMsg({ text: isAr ? "تم تطبيق الكوبون" : "Coupon applied!", ok: true });
+      setCouponMsg({ text: isAr ? "تم تطبيق الكوبون بنجاح" : "Coupon applied successfully!", ok: true });
       setCouponInput("");
     }
     setCouponLoading(false);
@@ -88,274 +161,294 @@ export default function CartPage() {
     setCouponLoading(false);
   }
 
-  /* ── Loading skeleton ──────────────────────────────────────── */
+  /* ── Loading Skeleton ────────────────────────────────────────── */
   if (!ready) {
     return (
-      <>
-        {/* Header skeleton */}
-        <div className="bg-white border-b border-gray-100 py-6">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="h-3 w-24 bg-gray-200 rounded animate-pulse mb-3" />
-            <div className="h-7 w-36 bg-gray-200 rounded animate-pulse" />
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
+      <div className="min-h-[60vh] bg-[#f8f9fa] py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-6" />
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_390px] gap-8 items-start">
             <div className="space-y-4">
-              <div className="h-24 bg-gray-100 rounded-xl animate-pulse" />
-              <div className="h-24 bg-gray-100 rounded-xl animate-pulse" />
+              <div className="h-40 bg-white rounded-2xl border border-gray-100 p-6 animate-pulse" />
+              <div className="h-40 bg-white rounded-2xl border border-gray-100 p-6 animate-pulse" />
             </div>
-            <div className="h-72 bg-gray-100 rounded-xl animate-pulse" />
+            <div className="h-96 bg-white rounded-2xl border border-gray-100 p-6 animate-pulse" />
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
-  /* ── Empty cart ──────────────────────────────────────────────── */
+  /* ── Empty Cart View ─────────────────────────────────────────── */
   if (items.length === 0) {
     return (
-      <>
-        <div className="bg-white border-b border-gray-100 py-6">
-          <div className="max-w-7xl mx-auto px-4">
-            <p className="text-xs text-gray-400 mb-1">
-              <Link href={`/${locale}`} className="hover:text-gray-700 transition-colors">Home</Link>
+      <div className="bg-[#f8f9fa] min-h-[70vh] py-10" dir={isAr ? "rtl" : "ltr"}>
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Breadcrumb */}
+          <div className="mb-6">
+            <p className="text-xs text-gray-400 font-medium">
+              <Link href={`/${locale}`} className="hover:text-gray-700 transition-colors">
+                {isAr ? "الرئيسية" : "Home"}
+              </Link>
               {" / "}
-              <span className="text-gray-700">Cart</span>
+              <span className="text-gray-700 font-bold">{isAr ? "السلة" : "Cart"}</span>
             </p>
-            <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">
-              {isAr ? "سلة التسوق" : "Shopping Cart"}
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200/80 p-10 sm:p-16 text-center max-w-xl mx-auto shadow-2xs">
+            <div className="w-20 h-20 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-6 text-[#ed1c24]">
+              <ShoppingBag size={34} strokeWidth={2.2} />
+            </div>
+            <h1 className="text-2xl font-black text-gray-950 uppercase tracking-tight mb-2 font-sans">
+              {isAr ? "سلة التسوق فارغة" : "Your cart is empty"}
             </h1>
+            <p className="text-gray-500 text-sm mb-8 leading-relaxed max-w-sm mx-auto">
+              {isAr
+                ? "لم تضف أي إطارات إلى سلتك بعد. استكشف مجموعتنا الواسعة من الإطارات الممتازة."
+                : "You haven't added any tyres to your cart yet. Explore our wide range of premium tyres today."}
+            </p>
+            <Link
+              href={`/${locale}/tyres`}
+              className="inline-flex items-center justify-center gap-2 bg-[#ed1c24] hover:bg-[#c6181d] active:bg-[#aa1217] text-white font-black text-xs sm:text-sm uppercase tracking-wider py-4 px-8 rounded-xl shadow-md shadow-red-500/25 transition-all cursor-pointer"
+            >
+              {isAr ? "استكشف الإطارات الآن" : "Browse Tyres"}
+              {!isAr && <ArrowRight size={16} strokeWidth={2.5} />}
+            </Link>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 py-28 text-center max-w-sm">
-          <div className="w-20 h-20 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-6">
-            <ShoppingBag size={30} className="text-gray-300" />
-          </div>
-          <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight mb-2">
-            {isAr ? "سلتك فارغة" : "Your cart is empty"}
-          </h2>
-          <p className="text-gray-500 text-sm mb-8 leading-relaxed">
-            {isAr ? "لم تضف أي إطارات بعد." : "You haven't added any tyres yet."}
-          </p>
-          <Link
-            href={`/${locale}/tyres`}
-            className="inline-flex items-center gap-2 bg-[#ed1c24] hover:bg-[#c6181d] text-white font-black text-xs uppercase tracking-widest py-4 px-8 rounded-lg transition-colors"
-          >
-            {isAr ? "تسوق الآن" : "Browse Tyres"}
-            <ArrowRight size={14} />
-          </Link>
-        </div>
-      </>
+      </div>
     );
   }
 
-  /* ── Cart ─────────────────────────────────────────────────────── */
+  /* ── Cart with Items ─────────────────────────────────────────── */
   return (
-    <div dir={isAr ? "rtl" : "ltr"}>
-
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 py-6 mb-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <p className="text-xs text-gray-400 mb-1">
+    <div className="bg-[#f8f9fa] pb-10" dir={isAr ? "rtl" : "ltr"}>
+      <div className="max-w-7xl mx-auto px-4 pt-5">
+        {/* Breadcrumb */}
+        <div className="mb-3">
+          <p className="text-xs text-gray-400 font-medium">
             <Link href={`/${locale}`} className="hover:text-gray-700 transition-colors">
               {isAr ? "الرئيسية" : "Home"}
             </Link>
             {" / "}
-            <span className="text-gray-700">{isAr ? "سلة التسوق" : "Cart"}</span>
-          </p>
-          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">
-            {isAr ? "سلة التسوق" : "Shopping Cart"}
-          </h1>
-          <p className="text-gray-400 text-xs mt-1 font-medium">
-            {isAr
-              ? `${items.length} ${items.length === 1 ? "منتج" : "منتجات"}`
-              : `${items.length} ${items.length === 1 ? "item" : "items"}`}
+            <span className="text-gray-700 font-bold">{isAr ? "السلة" : "Cart"}</span>
           </p>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 pb-20">
-        <div className={`grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start ${loading ? "opacity-60 pointer-events-none" : ""}`}>
-
-          {/* ── Left: Cart Items ──────────────────────────────── */}
-          <div className="space-y-4">
-
-            {/* Items Card */}
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-              {/* Table header */}
-              <div className="hidden md:grid grid-cols-[1fr_120px_140px_120px] bg-gray-50 border-b border-gray-100 px-5 py-3">
-                <span className="text-[11px] font-black uppercase tracking-widest text-gray-500">{isAr ? "المنتج" : "Item"}</span>
-                <span className="text-[11px] font-black uppercase tracking-widest text-gray-500 text-center">{isAr ? "السعر" : "Price"}</span>
-                <span className="text-[11px] font-black uppercase tracking-widest text-gray-500 text-center">{isAr ? "الكمية" : "Qty"}</span>
-                <span className="text-[11px] font-black uppercase tracking-widest text-gray-500 text-right">{isAr ? "الإجمالي" : "Subtotal"}</span>
+        {/* Layout Grid: Left Items + Right Order Summary */}
+        <div
+          className={`grid grid-cols-1 lg:grid-cols-[1fr_390px] gap-5 items-start ${
+            loading ? "opacity-60 pointer-events-none" : ""
+          }`}
+        >
+          {/* ════ LEFT COLUMN: CART ITEMS ════ */}
+          <div className="space-y-3">
+            {/* Top Regular Cart Badge / Tab */}
+            <div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-gray-100 border border-gray-200/60 text-gray-800 text-xs font-bold shadow-2xs select-none">
+                <Package size={14} className="text-gray-500 shrink-0" />
+                <span>{isAr ? "عربة التسوق العادية" : "Regular Cart"}</span>
               </div>
+            </div>
 
-              {/* Desktop rows */}
-              <div className="hidden md:block divide-y divide-gray-50">
-                {items.map((item) => {
-                  const productUrl = `/${locale}/product/${item.product.url_key ?? item.product.sku}`;
-                  return (
-                    <div key={item.uid} className="grid grid-cols-[1fr_120px_140px_120px] items-center px-5 py-4">
-                      {/* Product */}
-                      <div className="flex items-center gap-4">
-                        <Link href={productUrl} className="w-16 h-16 bg-gray-50 border border-gray-100 rounded-lg overflow-hidden flex items-center justify-center p-2 shrink-0 hover:border-gray-300 transition-colors">
+            {/* ── Table Header ── */}
+            <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto] gap-x-6 px-4 py-3 bg-gray-100 border border-gray-200/70 rounded-xl text-[11px] font-bold uppercase tracking-wider text-gray-500 select-none">
+              <span>{isAr ? "المنتج" : "Item"}</span>
+              <span className="text-center w-20">{isAr ? "السعر" : "Price"}</span>
+              <span className="text-center w-12">{isAr ? "الكمية" : "Qty"}</span>
+              <span className="text-right w-24">{isAr ? "الإجمالي" : "Subtotal"}</span>
+            </div>
+
+            {/* Cart Items List */}
+            <div className="space-y-2">
+              {items.map((item) => {
+                const productUrl = `/${locale}/product/${item.product.url_key ?? item.product.sku}`;
+                const unitPrice = item.prices.price.value;
+                const rowTotal = item.prices.row_total.value;
+
+                return (
+                  /* ── Desktop: same 4-col grid as header ── */
+                  <div
+                    key={item.uid}
+                    className="bg-white border border-gray-200/90 rounded-xl px-4 py-3.5 shadow-2xs hover:shadow-xs transition-shadow"
+                  >
+                    {/* DESKTOP ROW */}
+                    <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto] gap-x-6 items-center">
+
+                      {/* Col 1 — Item (thumbnail + name + subtitle) */}
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <Link
+                          href={productUrl}
+                          className="w-16 h-16 bg-[#fafafa] border border-gray-100 rounded-xl flex items-center justify-center p-2 shrink-0 hover:border-gray-300 transition-colors"
+                        >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={item.product.thumbnail?.url ?? ""}
                             alt={item.product.name}
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-contain drop-shadow-sm"
+                            loading="lazy"
                           />
                         </Link>
                         <div className="min-w-0">
-                          <Link href={productUrl} className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 hover:text-[#ed1c24] transition-colors">{item.product.name}</Link>
-                          <button
-                            onClick={() => removeItem(item.uid)}
-                            className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-gray-400 hover:text-[#ed1c24] transition-colors font-medium"
+                          <Link
+                            href={productUrl}
+                            className="text-sm font-black text-gray-950 hover:text-[#ed1c24] transition-colors leading-snug line-clamp-2 block"
                           >
-                            <X size={10} />
-                            {isAr ? "حذف" : "Remove"}
+                            {item.product.name}
+                          </Link>
+                          <div className="flex items-center gap-1 text-[11px] text-gray-400 font-medium mt-0.5">
+                            <Package size={11} className="shrink-0" />
+                            <span>{isAr ? "مركز تركيب تايرز وورلد المعتمد" : "TyresWorld Certified Fitment Center"}</span>
+                          </div>
+                          {/* Remove button inline under name */}
+                          <button
+                            type="button"
+                            onClick={() => removeItem(item.uid)}
+                            className="mt-1 flex items-center gap-1 text-[11px] text-gray-400 hover:text-[#ed1c24] transition-colors cursor-pointer"
+                            aria-label={isAr ? "حذف المنتج" : "Remove item"}
+                          >
+                            <Trash2 size={11} strokeWidth={2.2} />
+                            <span>{isAr ? "حذف" : "Remove"}</span>
                           </button>
                         </div>
                       </div>
-                      {/* Price */}
-                      <p className="text-sm text-gray-600 text-center tabular-nums">{fmt(item.prices.price.value)}</p>
-                      {/* Qty */}
-                      <div className="flex justify-center">
-                        <QtyInput uid={item.uid} quantity={item.quantity} onUpdate={updateQty} />
-                      </div>
-                      {/* Row total */}
-                      <p className="text-sm font-bold text-gray-900 text-right tabular-nums">{fmt(item.prices.row_total.value)}</p>
-                    </div>
-                  );
-                })}
-              </div>
 
-              {/* Mobile cards */}
-              <div className="md:hidden divide-y divide-gray-50">
-                {items.map((item) => {
-                  const productUrl = `/${locale}/product/${item.product.url_key ?? item.product.sku}`;
-                  return (
-                  <div key={item.uid} className="p-4">
-                    <div className="flex gap-3">
-                      <Link href={productUrl} className="w-[72px] h-[72px] bg-gray-50 border border-gray-100 rounded-lg flex items-center justify-center p-2 shrink-0 hover:border-gray-300 transition-colors">
+                      {/* Col 2 — Price */}
+                      <div className="w-20 text-center">
+                        <span className="text-sm font-bold text-gray-700 tabular-nums">{fmt(unitPrice)}</span>
+                      </div>
+
+                      {/* Col 3 — Qty dropdown */}
+                      <div className="w-12 flex justify-center">
+                        <CartQtyDropdown
+                          uid={item.uid}
+                          quantity={item.quantity}
+                          onUpdate={updateQty}
+                        />
+                      </div>
+
+                      {/* Col 4 — Subtotal */}
+                      <div className="w-24 text-right">
+                        <span className="text-sm font-black text-gray-950 tabular-nums">{fmt(rowTotal)}</span>
+                      </div>
+                    </div>
+
+                    {/* MOBILE ROW (compact card) */}
+                    <div className="flex sm:hidden gap-3 items-center">
+                      <Link
+                        href={productUrl}
+                        className="w-16 h-16 bg-[#fafafa] border border-gray-100 rounded-xl flex items-center justify-center p-2 shrink-0"
+                      >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.product.thumbnail?.url ?? ""} alt={item.product.name} className="w-full h-full object-contain" />
+                        <img
+                          src={item.product.thumbnail?.url ?? ""}
+                          alt={item.product.name}
+                          className="w-full h-full object-contain"
+                          loading="lazy"
+                        />
                       </Link>
                       <div className="flex-1 min-w-0">
-                        <Link href={productUrl} className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 hover:text-[#ed1c24] transition-colors">{item.product.name}</Link>
-                        <p className="text-sm text-gray-500 mt-1 tabular-nums">{fmt(item.prices.price.value)}</p>
+                        <Link href={productUrl} className="text-xs font-black text-gray-950 hover:text-[#ed1c24] line-clamp-2 leading-snug block">
+                          {item.product.name}
+                        </Link>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <span className="text-xs text-gray-500 tabular-nums">{fmt(unitPrice)}</span>
+                          <span className="text-xs text-gray-300">×</span>
+                          <CartQtyDropdown uid={item.uid} quantity={item.quantity} onUpdate={updateQty} />
+                          <span className="text-xs text-gray-300">=</span>
+                          <span className="text-xs font-black text-gray-950 tabular-nums">{fmt(rowTotal)}</span>
+                        </div>
                       </div>
-                      <button onClick={() => removeItem(item.uid)} className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-[#ed1c24] rounded-lg hover:bg-red-50 transition-colors shrink-0">
-                        <X size={14} />
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.uid)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#ed1c24] hover:bg-red-50 border border-transparent hover:border-red-100 transition-colors cursor-pointer shrink-0"
+                        aria-label={isAr ? "حذف المنتج" : "Remove item"}
+                      >
+                        <Trash2 size={15} strokeWidth={2.2} />
                       </button>
                     </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <QtyInput uid={item.uid} quantity={item.quantity} onUpdate={updateQty} />
-                      <div className="text-right">
-                        <p className="text-[11px] text-gray-400 uppercase tracking-wide">{isAr ? "الإجمالي" : "Total"}</p>
-                        <p className="text-sm font-bold text-gray-900 tabular-nums">{fmt(item.prices.row_total.value)}</p>
-                      </div>
-                    </div>
                   </div>
-                  );
-                })}
-              </div>
+                );
+              })}
             </div>
 
-            {/* Continue Shopping */}
-            <div>
+            {/* Red Continue Shopping Button (matching original detail) */}
+            <div className="pt-1">
               <Link
                 href={`/${locale}/tyres`}
-                className="inline-flex items-center gap-2 bg-[#ed1c24] hover:bg-[#c6181d] text-white font-black text-xs uppercase tracking-widest py-3 px-7 rounded-lg transition-colors"
+                className="btn-cta text-xs sm:text-sm py-3.5 px-8 rounded-lg shadow-md"
               >
-                {isAr ? "مواصلة التسوق" : "CONTINUE SHOPPING"}
+                <span>{isAr ? "مواصلة التسوق" : "CONTINUE SHOPPING"}</span>
               </Link>
             </div>
           </div>
 
-          {/* ── Right: Order Summary ───────────────────────────── */}
-          <div className="lg:sticky lg:top-24 bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+          {/* ════ RIGHT COLUMN: ORDER SUMMARY ════ */}
+          <div className="lg:sticky lg:top-24 bg-white border border-gray-200/80 rounded-2xl p-5 sm:p-6 shadow-xs">
+            {/* Header */}
+            <h2 className="text-lg sm:text-xl font-black text-gray-950 tracking-tight leading-tight mb-4 font-sans">
+              {isAr ? "ملخص الطلب" : "Order Summary"}
+            </h2>
 
-            {/* Summary header */}
-            <div className="bg-[#f3f4f6] px-5 py-4 border-b border-gray-100">
-              <h2 className="font-extrabold text-sm uppercase tracking-wider text-gray-800">
-                {isAr ? "ملخص الطلب" : "Order Summary"}
-              </h2>
-            </div>
-
-            {/* Price rows */}
-            <div className="px-5 py-4 space-y-3">
-              <div className="flex justify-between text-sm text-gray-600 font-medium">
+            {/* Price Rows (Exact store fields: Subtotal, Additional Charge, VAT (5%), Order Total) */}
+            <div className="space-y-3.5">
+              {/* Subtotal */}
+              <div className="flex justify-between items-center text-sm text-gray-600 font-medium">
                 <span>{isAr ? "المجموع الجزئي" : "Subtotal"}</span>
-                <span className="font-bold text-gray-900 tabular-nums">{fmt(subtotal)}</span>
+                <span className="font-bold text-gray-950 tabular-nums text-base">
+                  {fmt(subtotalExclTax)}
+                </span>
               </div>
 
+              {/* Additional Charge */}
+              <div className="flex justify-between items-center text-sm text-gray-600 font-medium">
+                <span>{isAr ? "رسوم إضافية" : "Additional Charge"}</span>
+                <span className="font-bold text-gray-950 tabular-nums text-base">
+                  {fmt(additionalCharge)}
+                </span>
+              </div>
+
+              {/* VAT (5%) */}
+              <div className="flex justify-between items-center text-sm text-gray-600 font-medium">
+                <span>{isAr ? "ضريبة القيمة المضافة (5%)" : "VAT (5%)"}</span>
+                <span className="font-bold text-gray-950 tabular-nums text-base">
+                  {fmt(vatAmount)}
+                </span>
+              </div>
+
+              {/* Discount (if active) */}
               {discountAmount > 0 && (
-                <div className="flex justify-between text-sm text-gray-600 font-medium">
-                  <span className="text-[#ed1c24]">{isAr ? "الخصم" : "Discount"}</span>
-                  <span className="font-bold text-[#ed1c24] tabular-nums">− {fmt(discountAmount)}</span>
+                <div className="flex justify-between items-center text-sm text-[#ed1c24] font-medium">
+                  <span className="font-bold">{isAr ? "الخصم" : "Discount"}</span>
+                  <span className="font-black tabular-nums text-base">
+                    − {fmt(discountAmount)}
+                  </span>
                 </div>
               )}
 
-              {shippingAmount > 0 && (
-                <div className="flex justify-between text-sm text-gray-600 font-medium">
-                  <span>{isAr ? "رسوم التوصيل" : "Delivery Charges"}</span>
-                  <span className="font-bold text-gray-900 tabular-nums">{fmt(shippingAmount)}</span>
-                </div>
-              )}
+              {/* Divider */}
+              <div className="border-t border-gray-100 pt-3.5 my-1" />
 
-              {appliedTaxes.length > 0 ? appliedTaxes.map((tax) => (
-                <div key={tax.label} className="flex justify-between text-sm text-gray-600 font-medium">
-                  <span>{tax.label}</span>
-                  <span className="font-bold text-gray-900 tabular-nums">{fmt(tax.amount.value)}</span>
-                </div>
-              )) : (
-                <div className="flex justify-between text-sm text-gray-600 font-medium">
-                  <span>{isAr ? "ضريبة القيمة المضافة (15%)" : "VAT (15%)"}</span>
-                  <span className="font-bold text-gray-900 tabular-nums">{fmt(totalTax)}</span>
-                </div>
-              )}
-
-              <div className="flex justify-between text-[15px] font-black text-gray-900 border-t border-gray-200 pt-3">
-                <span>{isAr ? "إجمالي الطلب" : "Order Total"}</span>
-                <span className="text-[#ed1c24] tabular-nums">{fmt(grandTotal)}</span>
+              {/* Order Total */}
+              <div className="flex justify-between items-baseline mb-5">
+                <span className="text-lg sm:text-xl font-black text-gray-950">
+                  {isAr ? "إجمالي الطلب" : "Order Total"}
+                </span>
+                <span className="text-2xl sm:text-3xl font-black text-gray-950 tabular-nums">
+                  {fmt(grandTotalValue)}
+                </span>
               </div>
-            </div>
 
-            {/* CTA */}
-            <div className="px-5 pb-5">
+              {/* Checkout CTA Button */}
               <Link
                 href={`/${locale}/storelocator?ref=cart`}
-                className="flex items-center justify-center gap-2 w-full bg-black hover:bg-[#ed1c24] text-white font-black text-xs uppercase tracking-widest py-4 rounded-xl transition-colors"
+                className="btn-cta w-full text-sm py-4 rounded-xl shadow-md"
               >
-                {isAr ? "متابعة الدفع" : "PROCEED TO CHECKOUT"}
-                {!isAr && <ArrowRight size={13} />}
+                <span>{isAr ? "متابعة الدفع" : "PROCEED TO CHECKOUT"}</span>
               </Link>
-
-              {/* Payment badges — exact match to product page */}
-              <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col gap-2 mt-3">
-                <p className="text-[11px] text-gray-500 font-medium">
-                  {isAr ? "قسّم على 4 دفعات مع" : "Split in 4 Payment with"}
-                </p>
-                <div className="flex items-center gap-2.5">
-                  {/* Tabby */}
-                  <div className="inline-flex items-center justify-center bg-[#05FFD2] text-black px-3.5 py-1.5 rounded-lg font-black text-[11px] tracking-wide select-none">
-                    tabby
-                  </div>
-                  {/* Tamara */}
-                  <div className="inline-flex items-center justify-center bg-gradient-to-r from-[#FFB399] via-[#FF7D82] to-[#C095FF] text-black px-3.5 py-1.5 rounded-lg font-black text-[11px] tracking-wide select-none">
-                    tamara
-                  </div>
-                  {/* EMKAN */}
-                  <div className="text-[#2e3162] font-black text-[14px] tracking-widest uppercase select-none font-sans">
-                    EMKΛN
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>

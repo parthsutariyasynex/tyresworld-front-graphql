@@ -142,7 +142,7 @@ export default function AutomotiveBlog({ locale = "en" }: AutomotiveBlogProps) {
         <div className="blog-more text-center mt-4">
           <Link
             href={`/${locale}/blog`}
-            className="button button-primary inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-[#ed1c24] text-white text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-[#c6181d] transition-all shadow-md hover:scale-105 active:scale-95"
+            className="button button-primary inline-flex items-center justify-center px-8 py-3 rounded-lg bg-[#ed1c24] text-white text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-[#c6181d] transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer"
           >
             <span>All Blog</span>
           </Link>
