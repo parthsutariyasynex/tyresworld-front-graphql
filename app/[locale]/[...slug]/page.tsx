@@ -155,16 +155,20 @@ export default async function DynamicSlugPage({ params }: PageProps) {
        applied to category descriptions in CategoryPageInner.tsx. */
     /* This content's own <img> src/href attributes are root-relative
        ("/media/images/services/...") — correct on the Magento-served page
-       itself, but resolved against OUR origin here, where they 404. Rewrite
-       them to the public storefront domain (SITE_URL, not the GraphQL
-       endpoint's host) — MAGENTO_GRAPHQL_URL points at the www1 staging
-       backend, which sits behind HTTP basic auth even for media files;
-       the public www domain serves the same media with no auth needed. */
+       itself, but resolved against OUR origin here, where they 404. Route
+       them through /api/media instead, which fetches from the staging
+       origin server-side (with the Basic Auth header a plain <img> can't
+       send) and streams the bytes back same-origin — see that route for
+       why. (Previously rewritten to the public storefront domain, but not
+       every CMS-referenced asset is actually synced there — e.g.
+       /media/images/testimonials/author.png 404s on the public domain
+       while it's a real file on staging — so that public-domain mirror
+       can't be relied on to have everything CMS content links to.) */
     const decodedContent = page.content
       .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
       .replace(/&amp;/g, "&").replace(/\\"/g, '"')
       .replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n")
-      .replace(/((?:src|href))="\/media\//g, `$1="${SITE_URL}/media/`);
+      .replace(/((?:src|href))="\/media\//g, `$1="/api/media/`);
     return (
       <main dir={isAr ? "rtl" : "ltr"} className="bg-white">
         {/* Same hero banner treatment as category pages (page-title-wrapper /

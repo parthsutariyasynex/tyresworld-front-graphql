@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
+import { vehicleLogoProxyUrl } from "@/lib/vehicleLogo";
 
 /**
  * Vehicle fitment for a tyre size — the data behind the theme's
@@ -22,10 +23,11 @@ const FITMENT_PATH = "partsfinder/vehicle/buyTyreSearch";
 
 const MAGENTO_ORIGIN = APP_CONFIG.magento.graphqlUrl.replace(/\/graphql\/?$/, "");
 
-/* The controller returns logo_url empty; build it from the make slug against
-   the theme's static Hdweb_Vehicles logo folder (verified 200). */
-const LOGO_BASE =
-  `${MAGENTO_ORIGIN}/static/frontend/Klever/automotive/en_US/Hdweb_Vehicles/images/logo`;
+/* The controller returns logo_url empty; build it from the make slug. The
+   theme's static logo folder sits behind staging Basic Auth, so we can't
+   point the modal's <img> straight at it — route it through
+   /api/vehicle-logo, which fetches server-side (with the Basic Auth header)
+   and streams the bytes back same-origin. See lib/vehicleLogo.ts. */
 
 type UpstreamModel = { slug?: string; name?: string; year_range?: string; url?: string };
 type UpstreamMake = { slug?: string; name?: string; logo_url?: string; models?: UpstreamModel[] };
@@ -38,7 +40,7 @@ function reshape(vehicles: UpstreamMake[]): MakeGroup[] {
     .map((v): MakeGroup | null => {
       const make = v.name?.trim();
       if (!make) return null;
-      const logo = v.logo_url?.trim() || (v.slug ? `${LOGO_BASE}/${v.slug}.png` : "");
+      const logo = v.slug ? vehicleLogoProxyUrl(v.slug) : (v.logo_url?.trim() || "");
       const models = (v.models ?? [])
         .map((m): Model | null => {
           const name = m.name?.trim();

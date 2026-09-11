@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2, Check, ShoppingBag } from "lucide-react";
+import FullyFittedPriceModal from "@/components/FullyFittedPriceModal";
 import ProductImage from "@/components/ProductImage";
 import type { Product } from "@/lib/data";
 import { useOfferLabels } from "@/lib/useOfferLabels";
@@ -135,7 +136,7 @@ export default function TyreCard({ product }: { product: Product }) {
   const href     = product.urlKey ? `/en/product/${product.urlKey}` : product.sku ? `/product/${product.sku}` : "/";
   const waUrl    = `https://wa.me/966500000000?text=${encodeURIComponent(`Hi, I'm interested in: ${product.name}`)}`;
   const bStyle   = BRAND_STYLE[brand.toLowerCase()] ?? { bg: "#fff", text: "#111" };
-  const logoUrl  = product.brandLogoUrl ?? getBrandLogo(product.brand);
+  const logoUrl = product.brandLogoUrl ?? getBrandLogo(product.brand) ?? getBrandLogo(product.brandName);
   const warranty = WARRANTY_MAP[brand.toLowerCase()] ?? "1 YEAR WARRANTY";
 
   const offerLabels = useOfferLabels();
@@ -146,6 +147,7 @@ export default function TyreCard({ product }: { product: Product }) {
   const [adding,     setAdding]     = useState(false);
   const [cartAdded,  setCartAdded]  = useState(false);
   const [addError,   setAddError]   = useState<string | null>(null);
+  const [priceInfoOpen, setPriceInfoOpen] = useState(false);
 
   const isOutOfStock       = product.inStock === false;
   const showPriceOnContact = product.price <= 0 || isOutOfStock;
@@ -280,9 +282,14 @@ export default function TyreCard({ product }: { product: Product }) {
 
         {/* Price */}
         <div>
-          <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-0.5">
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
+            className="text-[9px] text-gray-400 uppercase tracking-wider mb-0.5 hover:text-gray-700 hover:underline cursor-pointer"
+            aria-label="What's included in the fully fitted price"
+          >
             Fully Fitted Price per Item
-          </p>
+          </button>
           {showPriceOnContact ? (
             <p className="text-[17px] font-black text-gray-900 leading-tight">Price on Contact</p>
           ) : (
@@ -363,6 +370,8 @@ export default function TyreCard({ product }: { product: Product }) {
         )}
 
       </div>
+
+      <FullyFittedPriceModal isOpen={priceInfoOpen} onClose={() => setPriceInfoOpen(false)} />
     </article>
   );
 }

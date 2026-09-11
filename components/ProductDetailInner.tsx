@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ChevronRight, ChevronLeft, Info, X, Loader2, Check, ShoppingBag, Star } from "lucide-react";
+import { ChevronRight, ChevronLeft, Info, X, Loader2, Check, ShoppingBag, Star, ArrowLeft, ArrowRight, CheckCircle, Gauge, Leaf } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -17,6 +17,7 @@ import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
 import TyreFinder from "@/components/TyreFinder";
 import StickyBottomFinder from "@/components/home/partora/StickyBottomFinder";
 import DriverReviewsWidget from "@/components/DriverReviews/DriverReviewsWidget";
+import VehicleFitmentModal from "@/components/VehicleFitmentModal";
 import { APP_CONFIG } from "@/src/config/app-config";
 import JsonLd from "@/components/JsonLd";
 import { useCurrencyCode } from "@/lib/store-config-context";
@@ -95,7 +96,7 @@ function parseTyreProductName(name: string): TyreSpecs {
    BRAND LOGO
  ══════════════════════════════════════════════════════════════════ */
 function BrandLogoDisplay({ brandId, brandName }: { brandId?: string; brandName?: string }) {
-  const logo = getBrandLogo(brandId);
+  const logo = getBrandLogo(brandId) || getBrandLogo(brandName);
   if (logo) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -163,85 +164,84 @@ function SpecsRating({ rating, reviewCount }: { rating: number; reviewCount: num
 function SpecsTable({
   specs,
   product,
+  onCheckFitment,
 }: {
   specs: TyreSpecs;
   product: ProductDetail;
+  onCheckFitment?: () => void;
 }) {
   const brandName = product.brandName ?? product.brand ?? null;
   const origin = product.country ?? product.origin ?? null;
-  const warranty = product.warrantyPeriod ?? "5 Years Warranty";
+  // No fabricated fallback — show "—" like every other spec when Magento has no warranty value.
+  const warranty = product.warrantyPeriod ?? null;
 
   const rows = [
     {
       left: { label: "Brand", value: brandName },
-      right: { label: "Pattern", value: specs.pattern }
+      right: { label: "Pattern", value: specs.pattern },
     },
     {
-      left: { label: "OEM Marking", value: specs.oemMarking },
-      right: { label: "Size", value: specs.size }
-    },
-    {
-      left: { label: "Load Index", value: specs.loadIndex },
-      right: {
-        label: "Run Flat",
-        value: specs.isRunFlat ? (
-          <span className="inline-flex items-center gap-1.5">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border-[3px] border-black bg-white">
-              <span className="w-1.5 h-1.5 rounded-full bg-black"></span>
-            </span>
-            <span className="font-bold text-gray-900">Run Flat</span>
-          </span>
-        ) : "No"
-      }
+      left: { label: "Size", value: specs.size },
+      right: { label: "Load Index", value: specs.loadIndex },
     },
     {
       left: { label: "Origin", value: origin },
-      right: { label: "Year", value: specs.year }
+      right: { label: "Year", value: specs.year },
     },
     {
       left: { label: "Warranty Period", value: warranty },
-      right: { label: "", value: "" }
-    }
+      right: specs.isRunFlat
+        ? { label: "Run Flat", value: "Yes" }
+        : specs.oemMarking
+        ? { label: "OEM Marking", value: specs.oemMarking }
+        : { label: "", value: "" },
+    },
   ];
 
   return (
-    <div className="border border-gray-200 rounded-[14px] overflow-hidden bg-white shadow-sm flex flex-col justify-between h-full">
-      <div className="divide-y divide-gray-100">
+    <div className="border border-gray-200/90 rounded-xl overflow-hidden bg-white shadow-2xs flex flex-col justify-between">
+      {/* ── Header ── */}
+      <div className="px-5 pt-4 pb-2">
+        <h3 className="text-xs font-black uppercase tracking-wider text-gray-950 font-sans">
+          PRODUCT SPECIFICATIONS
+        </h3>
+      </div>
+
+      {/* ── 2-Column Table Grid ── */}
+      <div className="divide-y divide-gray-100 px-5">
         {rows.map((row, idx) => (
-          <div key={idx} className="grid grid-cols-2 divide-x divide-gray-100 text-[13px] items-center">
+          <div key={idx} className="grid grid-cols-2 py-3 text-[13px] items-center">
             {/* Left Column */}
-            <div className="grid grid-cols-[115px_1fr] px-4 py-3 items-center">
-              <span className="text-gray-500 font-medium">{row.left.label}</span>
-              <span className="text-gray-900 font-bold truncate">
-                {row.left.value ?? "—"}
-              </span>
+            <div className="flex items-center gap-2 sm:gap-3 pr-2">
+              <span className="text-gray-500 font-medium w-24 sm:w-28 shrink-0">{row.left.label}</span>
+              <span className="text-gray-950 font-bold truncate">{row.left.value ?? "—"}</span>
             </div>
             {/* Right Column */}
-            <div className="grid grid-cols-[105px_1fr] px-4 py-3 items-center min-h-[45px]">
+            <div className="flex items-center gap-2 sm:gap-3 pl-2">
               {row.right.label ? (
                 <>
-                  <span className="text-gray-500 font-medium">{row.right.label}</span>
-                  <span className="text-gray-900 font-bold truncate">
-                    {row.right.value ?? "—"}
-                  </span>
+                  <span className="text-gray-500 font-medium w-20 sm:w-24 shrink-0">{row.right.label}</span>
+                  <span className="text-gray-950 font-bold truncate">{row.right.value ?? "—"}</span>
                 </>
-              ) : (
-                <div className="col-span-full h-full" />
-              )}
+              ) : null}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Check Vehicle Section */}
-      <div className="p-4 flex items-center gap-3 bg-[#f8f9fa] border-t border-gray-100 mt-auto">
-        <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-[#e0f7f6] shadow-sm">
-          <svg className="w-6 h-6 text-[#ed1c24]" viewBox="0 0 24 24" fill="currentColor">
+      {/* ── Check Vehicle Section ── */}
+      <div className="p-4 flex items-center gap-3 bg-[#f8f9fa] border-t border-gray-100 mt-2">
+        <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-[#5ac8d8]/20 shadow-2xs">
+          <svg className="w-5 h-5 text-[#ed1c24]" viewBox="0 0 24 24" fill="currentColor">
             <path d="M23.5 11.5L20 8.5C19.5 8 18.5 7.5 17.5 7.5H6.5C5.5 7.5 4.5 8 4 8.5L0.5 11.5C0.2 11.8 0 12.1 0 12.5V17C0 17.6 0.4 18 1 18H3C3 19.7 4.3 21 6 21C7.7 21 9 19.7 9 18H15C15 19.7 16.3 21 18 21C19.7 21 21 19.7 21 18H23C23.6 18 24 17.6 24 17V12.5C24 12.1 23.8 11.8 23.5 11.5ZM6 19.5C5.2 19.5 4.5 18.8 4.5 18C4.5 17.2 5.2 16.5 6 16.5C6.8 16.5 7.5 17.2 7.5 18C7.5 18.8 6.8 19.5 6 19.5ZM18 19.5C17.2 19.5 16.5 18.8 16.5 18C16.5 17.2 17.2 16.5 18 16.5C18.8 16.5 19.5 17.2 19.5 18C19.5 18.8 18.8 19.5 18 19.5ZM21.5 13.5H2.5V12.5L5.5 9.8C5.8 9.5 6.2 9.4 6.6 9.4H17.4C17.8 9.4 18.2 9.5 18.5 9.8L21.5 12.5V13.5Z" />
           </svg>
         </div>
-        <button className="flex-1 bg-black hover:bg-[#ed1c24] text-white text-[11px] font-black uppercase tracking-wider py-3.5 px-4 rounded-md transition-colors text-center">
-          CHECK IF THIS TYRE FITS IN YOUR VEHICLE
+        <button
+          type="button"
+          onClick={onCheckFitment}
+          className="btn-slide-black text-[11px] sm:text-xs font-black uppercase tracking-wider py-3 px-5 rounded-md text-center cursor-pointer shadow-2xs"
+        >
+          <span>CHECK IF THIS TYRE FITS IN YOUR VEHICLE</span>
         </button>
       </div>
     </div>
@@ -251,22 +251,22 @@ function SpecsTable({
 function PricingCard({
   product,
   onPriceInfoClick,
-  onShareClick,
 }: {
   product: ProductDetail;
   onPriceInfoClick: () => void;
-  onShareClick: () => void;
+  onShareClick?: () => void;
 }) {
   const currency = product.currency || undefined;
   const hasPrice = product.price > 0;
   const fmt = (v: number) => <Money value={v} currency={currency} />;
 
   const { addItem } = useCart();
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState(4);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
   const isOutOfStock = product.inStock === false;
+  const setOf4Price = hasPrice ? product.price * 4 : 0;
 
   async function handleAddToCart() {
     if (adding) return;
@@ -284,79 +284,141 @@ function PricingCard({
   }
 
   return (
-    <div className="bg-[#f8f9fa] border border-gray-100 rounded-xl p-5 flex flex-col gap-4 h-fit sticky top-24 shadow-sm">
-      {/* Price label */}
-      <div>
-        <div className="flex items-center gap-1.5 text-[13px] text-gray-800 font-medium">
+    <div className="space-y-4">
+      {/* ── Main Pricing Box ── */}
+      <div className="bg-white border border-gray-200/90 rounded-xl p-5 shadow-2xs">
+        {/* Label */}
+        <button
+          type="button"
+          onClick={onPriceInfoClick}
+          className="text-xs text-gray-700 font-medium hover:text-gray-900 hover:underline cursor-pointer"
+          aria-label="What's included in the fully fitted price"
+        >
           Fully Fitted Price per Item
-          <button
-            type="button"
-            onClick={onPriceInfoClick}
-            className="cursor-pointer text-gray-500 text-xs hover:text-gray-700 focus:outline-none"
-            aria-label="Price inclusions info"
-          >
-            ⓘ
-          </button>
-        </div>
+        </button>
+
+        {/* Big Price */}
         {hasPrice ? (
-          <div className="mt-1">
-            <p className="text-2xl font-black text-gray-900">{fmt(product.price)}</p>
-            {product.originalPrice && product.originalPrice > product.price && (
-              <p className="text-sm text-gray-400 line-through">{fmt(product.originalPrice)}</p>
-            )}
+          <div className="mt-1 mb-2">
+            <p className="text-3xl font-black text-gray-950 tracking-tight">
+              {fmt(product.price)}
+            </p>
+            <p className="text-sm font-bold text-gray-900 mt-1">
+              Set of 4: <span className="font-extrabold">{fmt(setOf4Price)}</span>
+            </p>
           </div>
         ) : (
-          <p className="text-xl font-bold text-gray-950 mt-1">Price on Contact</p>
+          <p className="text-xl font-bold text-gray-950 mt-1 mb-3">Price on Contact</p>
         )}
+
+        {/* CTA & Quantity */}
+        {isOutOfStock || !hasPrice ? (
+          <a
+            href={`https://wa.me/${APP_CONFIG.contact.whatsapp}?text=${encodeURIComponent(`Hi, I'm interested in: ${product.name}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 bg-[#049b43] hover:bg-[#038237] text-white font-bold text-sm py-3 rounded-md transition-colors w-full cursor-pointer"
+          >
+            <WaIcon />
+            Contact Us
+          </a>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="1"
+                value={qty}
+                onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-12 h-10 bg-[#f0f0f0] text-gray-950 border border-gray-200 text-center font-black rounded-md text-sm focus:outline-none shrink-0"
+              />
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={adding}
+                className="btn-slide-black flex-1 h-10 text-xs font-black uppercase tracking-wider rounded-md disabled:opacity-60 cursor-pointer shadow-2xs"
+              >
+                <span>{adding ? "Adding..." : "ADD TO CART"}</span>
+              </button>
+            </div>
+            {addError && <p className="text-[11px] text-red-500 text-center">{addError}</p>}
+          </div>
+        )}
+
+        {/* Split in 4 Payment with Tabby & Tamara */}
+        <div className="mt-4 pt-3.5 border-t border-gray-100">
+          <p className="text-xs text-gray-600 font-medium mb-2">Split in 4 Payment with</p>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-xs font-black px-3 py-1 rounded-md leading-none select-none">
+              tabby
+            </span>
+            <span className="inline-flex items-center justify-center bg-black text-white text-xs font-bold px-3 py-1 rounded-md leading-none select-none">
+              tamara
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* CTA — Contact Us for OUT_OF_STOCK / Price on Contact, qty + ADD TO CART for IN_STOCK */}
-      {isOutOfStock || !hasPrice ? (
-        <a
-          href={`https://wa.me/966500000000?text=${encodeURIComponent(`Hi, I'm interested in: ${product.name}`)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 bg-[#049b43] hover:bg-[#038237] text-white font-bold text-sm py-3 rounded-lg transition-colors w-full"
-        >
-          <WaIcon />
-          Contact Us
-        </a>
-      ) : (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            {/* Quantity input - simple gray box */}
-            <input
-              type="number"
-              min="1"
-              value={qty}
-              onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-10 h-10 bg-[#f0f0f0] text-gray-900 border-none text-center font-bold rounded-md text-[14px] focus:outline-none focus:ring-0 shrink-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-            {/* Add to cart button next to it */}
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              disabled={adding}
-              className="flex-1 h-10 bg-black hover:bg-[#ed1c24] text-white font-extrabold text-[12px] uppercase tracking-wider rounded-md transition-colors disabled:opacity-60"
-            >
-              {adding ? "Adding..." : "ADD TO CART"}
-            </button>
+      {/* ── 3 Trust Badges Card ── */}
+      <div className="bg-white border border-gray-200/90 rounded-xl p-4 space-y-4 shadow-2xs">
+        {/* Fast Shipping & Installation */}
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#ed1c24] text-white flex items-center justify-center shrink-0 mt-0.5">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <rect x="1" y="3" width="15" height="13" />
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+              <circle cx="5.5" cy="18.5" r="2.5" />
+              <circle cx="18.5" cy="18.5" r="2.5" />
+            </svg>
           </div>
-
-          {addError && (
-            <p className="text-[11px] text-red-500 text-center leading-tight">{addError}</p>
-          )}
+          <div>
+            <p className="text-xs font-black uppercase text-gray-900 leading-tight">
+              FAST SHIPPING &amp; INSTALLATION
+            </p>
+            <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+              We deliver and install most orders on the same day.
+            </p>
+          </div>
         </div>
-      )}
 
-      <hr className="border-gray-100 my-1" />
+        {/* Free Wheel Balancing */}
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#ed1c24] text-white flex items-center justify-center shrink-0 mt-0.5">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="4" />
+              <line x1="12" y1="2" x2="12" y2="8" />
+              <line x1="12" y1="16" x2="12" y2="22" />
+              <line x1="2" y1="12" x2="8" y2="12" />
+              <line x1="16" y1="12" x2="22" y2="12" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase text-gray-900 leading-tight">
+              FREE WHEEL BALANCING
+            </p>
+            <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+              Free wheel balancing included with every tyre installation.
+            </p>
+          </div>
+        </div>
 
-      {/* Installments Card Wrapper */}
-      <div className="bg-gray-50/70 border border-gray-100 rounded-xl p-3 sm:p-3.5 flex items-center justify-between gap-2 mt-1">
-        <span className="text-[11px] sm:text-xs text-gray-600 font-medium">Pay In Installments</span>
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[10.5px] font-black px-2.5 py-0.5 rounded-md leading-none select-none">tabby</span>
-          <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[10.5px] font-black px-2.5 py-0.5 rounded-md leading-none select-none">tamara</span>
+        {/* Always Authentic */}
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#ed1c24] text-white flex items-center justify-center shrink-0 mt-0.5">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path d="M9 12l2 2 4-4" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase text-gray-900 leading-tight">
+              ALWAYS AUTHENTIC
+            </p>
+            <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+              We only sell 100% authentic products backed by manufacturers warranty
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -385,25 +447,23 @@ function RatingsSection({
   const displayTitle = [brandName, patternName].filter(Boolean).join(" ") || product.name.toUpperCase();
 
   return (
-    <section className="border-t border-gray-100 bg-white py-10">
-      <div className="container">
-
-        {/* ── Header ──────────────────────────────────────────── */}
-        <div
-          className="flex items-center justify-between pb-4 mb-5"
-          style={{ borderBottom: `2px solid ${DR_MAGENTA}` }}
-        >
-          <h2 className="text-2xl font-black uppercase tracking-wider text-gray-900">
-            RATINGS &amp; REVIEWS
-          </h2>
-          {/* driverreviews logo */}
-          <div className="text-right leading-tight">
-            <p className="text-[10px] text-gray-400">Powered by</p>
-            <p className="font-black text-[17px] tracking-tight text-gray-900">
-              driver<span style={{ color: DR_MAGENTA }}>reviews</span>
-            </p>
-          </div>
+    <div>
+      {/* ── Header ──────────────────────────────────────────── */}
+      <div
+        className="flex items-center justify-between pb-4 mb-5"
+        style={{ borderBottom: `2px solid ${DR_MAGENTA}` }}
+      >
+        <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-gray-900">
+          RATINGS &amp; REVIEWS
+        </h2>
+        {/* driverreviews logo */}
+        <div className="text-right leading-tight">
+          <p className="text-[10px] text-gray-400">Powered by</p>
+          <p className="font-black text-[17px] tracking-tight text-gray-900">
+            driver<span style={{ color: DR_MAGENTA }}>reviews</span>
+          </p>
         </div>
+      </div>
 
         {/* ── Review count line ────────────────────────────────── */}
         <p className="text-[15px] font-black uppercase text-gray-900 mb-1">
@@ -420,7 +480,7 @@ function RatingsSection({
           <p className="text-[14px] font-semibold text-gray-700 mb-3">Overall rating</p>
 
           {/* ── Overall rating box ───────────────────────────── */}
-          <div className="border border-gray-200 rounded-sm px-4 py-3 flex items-center gap-2 mb-5">
+          <div className="border border-gray-200 rounded-sm px-4 py-3 flex items-center gap-2 mb-6">
             {[1, 2, 3, 4, 5].map(i => (
               <svg
                 key={i}
@@ -437,49 +497,14 @@ function RatingsSection({
             </span>
           </div>
 
-          {/* ── Two-column panel ─────────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-
-            {/* Star breakdown bars */}
-            <div className="border border-gray-200 rounded-sm p-4 space-y-3">
-              {[5, 4, 3, 2, 1].map(star => (
-                <div key={star} className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    className="text-[13px] flex-shrink-0 w-10 text-left hover:underline"
-                    style={{ color: DR_MAGENTA }}
-                  >
-                    {star} star
-                  </button>
-                  <div className="flex-1 h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: "0%", background: DR_MAGENTA }}
-                    />
-                  </div>
-                  <span className="text-[13px] text-gray-600 w-8 text-right">0%</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Right panel — placeholder for review comments */}
-            <div className="border border-gray-200 rounded-sm bg-gray-50" style={{ minHeight: 180 }} />
-          </div>
-
-          {/* ── Show All Reviews / Write Review buttons ──────────────────────── */}
-          <div className="flex justify-center mb-5 gap-4 flex-wrap">
-            <button
-              type="button"
-              className="bg-gray-900 hover:bg-[#ed1c24] text-white font-bold text-[14px] px-14 py-3 transition-colors"
-            >
-              Show All Reviews
-            </button>
+          {/* ── Write a Review CTA — jumps to the form below ─────── */}
+          <div className="flex justify-center mb-5">
             <button
               type="button"
               onClick={onWriteReviewClick}
-              className="border border-gray-900 text-gray-900 hover:bg-black hover:text-white font-bold text-[14px] px-14 py-3 transition-colors"
+              className="btn-slide-black text-[14px] font-bold px-14 py-3 rounded-md"
             >
-              Write a Review
+              <span>Write a Review</span>
             </button>
           </div>
         </div>
@@ -495,9 +520,102 @@ function RatingsSection({
           </button>{" "}
           about how DriverReviews moderates reviews.
         </div>
+    </div>
+  );
+}
 
+/* ══════════════════════════════════════════════════════════════════
+   OVERVIEW TAB — product description
+══════════════════════════════════════════════════════════════════ */
+function OverviewTabContent({ product }: { product: ProductDetail }) {
+  const hasDescription = !!(product.shortDescriptionHtml || product.descriptionHtml);
+
+  if (!hasDescription) {
+    return (
+      <p className="text-sm text-gray-400 italic">
+        No description available for this product yet.
+      </p>
+    );
+  }
+
+  const htmlClasses =
+    "text-[14px] leading-relaxed text-gray-700 [&_p]:mb-3 [&_p:last-child]:mb-0 " +
+    "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 " +
+    "[&_li]:mb-1 [&_strong]:font-bold [&_strong]:text-gray-900 [&_a]:text-[#ed1c24] [&_a]:underline";
+
+  return (
+    <div className="space-y-5">
+      {product.shortDescriptionHtml && (
+        <div
+          className={htmlClasses}
+          dangerouslySetInnerHTML={{ __html: product.shortDescriptionHtml }}
+        />
+      )}
+      {product.descriptionHtml && (
+        <div
+          className={htmlClasses}
+          dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PRODUCT INFO TABS — Overview / Specifications / Reviews
+   Tab state is lifted to the parent so the quick-specs strip above
+   can jump straight to the Specifications tab.
+══════════════════════════════════════════════════════════════════ */
+type ProductTabKey = "overview" | "reviews";
+
+const PRODUCT_TABS: { key: ProductTabKey; label: string }[] = [
+  { key: "overview", label: "Details" },
+  { key: "reviews", label: "Reviews" },
+];
+
+function ProductInfoTabs({
+  activeTab,
+  onTabChange,
+  product,
+}: {
+  activeTab: ProductTabKey;
+  onTabChange: (tab: ProductTabKey) => void;
+  product: ProductDetail;
+}) {
+  return (
+    <div id="product-info-tabs" className="mt-8 lg:mt-10 scroll-mt-24">
+      {/* ── Tab bar ── */}
+      <div className="flex gap-8 border-b border-gray-200 pb-2 mb-6" role="tablist">
+        {PRODUCT_TABS.map((t) => {
+          const isActive = activeTab === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => onTabChange(t.key)}
+              className={`text-sm font-bold transition-colors cursor-pointer ${
+                isActive ? "text-gray-950 font-black" : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
-    </section>
+
+      {/* ── Tab panels ── */}
+      <div>
+        {activeTab === "overview" && <OverviewTabContent product={product} />}
+
+        {activeTab === "reviews" && (
+          <div>
+            <WriteReviewCard product={product} />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -507,9 +625,11 @@ function RatingsSection({
 function RelatedProductsSection({
   size,
   currentSku,
+  locale = "en",
 }: {
   size: string | null;
   currentSku?: string;
+  locale?: string;
 }) {
   const swiperRef = useRef<SwiperType | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -543,10 +663,10 @@ function RelatedProductsSection({
             <span className="text-[#ed1c24]">SAME SIZE</span>
           </h2>
           <Link
-            href={`/en/run-flat-tires?search=${encodeURIComponent(size ?? "")}`}
-            className="border border-gray-900 text-xs font-black uppercase tracking-widest px-4 py-2 hover:bg-gray-900 hover:text-white transition-colors"
+            href={`/${locale}/tyres?search=${encodeURIComponent(size ?? "")}`}
+            className="btn-slide-black text-xs font-black uppercase tracking-widest px-4 py-2"
           >
-            VIEW ALL
+            <span>VIEW ALL</span>
           </Link>
         </div>
 
@@ -573,7 +693,7 @@ function RelatedProductsSection({
               >
                 {products.map(p => (
                   <SwiperSlide key={p.id} className="!h-auto">
-                    <TyreListingCard product={p} />
+                    <TyreListingCard product={p} locale={locale as any} enableHoverZoom />
                   </SwiperSlide>
                 ))}
               </Swiper>
@@ -633,7 +753,13 @@ export default function ProductDetailInner({
   const [activeImg, setActiveImg] = useState(0);
   const [isPriceInfoOpen, setIsPriceInfoOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
-  const [isWriteReviewOpen, setIsWriteReviewOpen] = useState(false);
+  const [isVehicleFitmentOpen, setIsVehicleFitmentOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<ProductTabKey>("overview");
+
+  const sizeMatch = specs.size?.match(/(\d{3})\/(\d{2,3})\s*R(\d{2})/i);
+  const width = product.width ?? sizeMatch?.[1] ?? "";
+  const height = product.height ?? sizeMatch?.[2] ?? "";
+  const rim = product.rim ?? sizeMatch?.[3] ?? "";
 
   const gallery = product.gallery?.length
     ? product.gallery
@@ -685,21 +811,30 @@ export default function ProductDetailInner({
     <>
       <JsonLd data={productJsonLd} />
 
-      {/* ── Breadcrumb ─────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-100">
+      {/* ── Top Hero Title Banner (Dark patterned tyre-tread header) ── */}
+      <div className="page-title-wrapper bg-cover-image py-9 sm:py-11 text-center">
+        <div className="container">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-wider text-center drop-shadow-md">
+            {product.name}
+          </h1>
+        </div>
+      </div>
+
+      {/* ── Breadcrumb ── */}
+      <div className="bg-white border-b border-gray-200/80">
         <div className="container py-3">
-          <nav className="flex items-center gap-1 text-[12px] text-gray-500 flex-wrap">
+          <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap">
             <Link href={`/${locale}`} className="hover:text-gray-900 transition-colors">Home</Link>
-            <span className="text-gray-300 mx-1.5">/</span>
-            <Link href={`/${locale}/run-flat-tires`} className="hover:text-gray-900 transition-colors">Tyres</Link>
+            <span className="text-gray-300">›</span>
+            <Link href={`/${locale}/tyres`} className="hover:text-gray-900 transition-colors">Tyres</Link>
             {specs.size && (
               <>
-                <span className="text-gray-300 mx-1.5">/</span>
+                <span className="text-gray-300">›</span>
                 <span className="text-gray-600">{specs.size}</span>
               </>
             )}
-            <span className="text-gray-300 mx-1.5">/</span>
-            <span className="text-gray-800 font-medium line-clamp-1 max-w-[260px] lg:max-w-none">
+            <span className="text-gray-300">›</span>
+            <span className="text-gray-900 font-medium line-clamp-1 max-w-[260px] lg:max-w-none">
               {product.name}
             </span>
           </nav>
@@ -709,25 +844,24 @@ export default function ProductDetailInner({
       {/* ── Main product section ────────────────────────────────────── */}
       <div className="bg-white py-6 lg:py-8">
         <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr_280px] gap-6 lg:gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr_300px] gap-6 lg:gap-8 items-start">
 
             {/* ── LEFT: Image Card ─────────────────────────────────── */}
             <div className="w-full">
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                {offerLabel && (
-                  <div className="bg-[#ed1c24] py-3 px-4 text-center">
-                    <p className="text-white font-black text-sm lg:text-base uppercase tracking-wide">
-                      {offerLabel}
-                    </p>
-                  </div>
-                )}
+              <div className="group bg-white border border-gray-200 rounded-xl overflow-hidden shadow-2xs hover:shadow-md transition-shadow">
+                {/* Top Red Offer Banner */}
+                <div className="bg-[#ed1c24] py-3 px-4 text-center">
+                  <p className="text-white font-black text-sm sm:text-base uppercase tracking-wider">
+                    {offerLabel || "FREE Wheel Alignment"}
+                  </p>
+                </div>
 
-                <div className="flex items-center justify-center p-6 bg-white" style={{ minHeight: 340 }}>
+                <div className="flex items-center justify-center p-6 bg-white overflow-hidden" style={{ minHeight: 340 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={currentImg}
                     alt={product.name}
-                    className="max-h-[340px] w-full object-contain"
+                    className="max-h-[340px] w-full object-contain group-hover:scale-105 transition-transform duration-300 ease-out"
                   />
                 </div>
 
@@ -755,23 +889,21 @@ export default function ProductDetailInner({
               {/* Brand logo */}
               <BrandLogoDisplay brandId={product.brand} brandName={product.brandName} />
 
-              {/* Combined Title */}
+              {/* Title */}
               {displayTitle && (
-                <h1 className="text-2xl lg:text-3xl font-black text-gray-900 mt-2 uppercase tracking-tight">
+                <h2 className="text-2xl lg:text-3xl font-black text-gray-950 mt-2 mb-4 uppercase tracking-tight font-sans">
                   {displayTitle}
-                </h1>
+                </h2>
               )}
 
-              {/* Specs label + rating */}
-              <div className="flex flex-wrap items-center gap-3 mt-3 mb-4">
-                <p className="text-xs font-black uppercase tracking-widest text-gray-700">
-                  PRODUCT SPECIFICATIONS
-                </p>
-                <SpecsRating rating={product.rating} reviewCount={product.reviewCount} />
+              {/* Full specification table — matching screenshot */}
+              <div>
+                <SpecsTable
+                  specs={specs}
+                  product={product}
+                  onCheckFitment={() => setIsVehicleFitmentOpen(true)}
+                />
               </div>
-
-              {/* Specs Table */}
-              <SpecsTable specs={specs} product={product} />
             </div>
 
             {/* ── RIGHT: Pricing Card ────────────────────────────── */}
@@ -784,46 +916,137 @@ export default function ProductDetailInner({
             </div>
 
           </div>
+
+          {/* ── Overview / Specifications / Reviews tabs ────────── */}
+          <ProductInfoTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            product={product}
+          />
         </div>
       </div>
 
       {/* ── Inclusions Popup Modal ─────────────────────────────────── */}
       {isPriceInfoOpen && (
-        <div className="popup-overlay product-single-modal">
-          <div className="absolute inset-0" onClick={() => setIsPriceInfoOpen(false)} />
-          <div className="popup-content">
-            <span className="popup-close" onClick={() => setIsPriceInfoOpen(false)} />
-            <h4>Fully fitted price per tire includes:</h4>
-            <ul className="list-none">
-              {[
-                "VAT",
-                "Professional tyre fitting (Beadlock wheels excluded)",
-                "Wheel balancing",
-                "New standard rubber valve",
-                "Delivery to the installer",
-                "Eco-friendly disposal of old tyres",
-                "Bonus: When you buy 4 tyres, enjoy 1 FREE tyre rotation every 20,000 km (up to once per year)"
-              ].map((item, idx) => (
-                <li key={idx}>
-                  {item}
-                </li>
-              ))}
-            </ul>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsPriceInfoOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Modal card — same shape as VehicleFitmentModal */}
+          <div className="relative w-full max-w-[480px] max-h-[90vh] bg-white rounded-[22px] shadow-2xl overflow-hidden flex flex-col border border-gray-100 z-10">
+
+            {/* ── RED HEADER ── */}
+            <div
+              className="text-white p-[20px_20px_14px] relative rounded-t-[22px] flex-shrink-0"
+              style={{ background: "linear-gradient(#D52D27 0%, #D52D27 100%)" }}
+            >
+              {/* Close X */}
+              <button
+                type="button"
+                className="absolute top-4 right-5 text-white/90 hover:text-white hover:scale-110 transition-transform p-1 cursor-pointer z-10"
+                onClick={() => setIsPriceInfoOpen(false)}
+                aria-label="Close"
+              >
+                <X size={20} strokeWidth={2.5} />
+              </button>
+
+              {/* Title row + badge */}
+              <div className="flex items-start justify-between gap-2 mb-3.5 pr-8">
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-xl sm:text-2xl font-bold text-white leading-tight m-0 tracking-tight">
+                    Fully Fitted Price
+                  </h4>
+                  <p className="text-white/85 text-xs sm:text-[13px] font-normal mt-1 mb-0 leading-relaxed">
+                    Per tyre — everything included, no hidden fees.
+                  </p>
+                </div>
+                {/* Badge chip — same as TYRE SIZE box */}
+                <div className="bg-[#851214] rounded-xl px-4 py-2 text-center min-w-[90px] border border-white/10 shrink-0">
+                  <span className="text-[9px] uppercase font-bold tracking-wider text-white/70 block leading-tight">Price</span>
+                  <span className="text-sm font-bold text-white tracking-widest block mt-0.5 leading-tight">FITTED</span>
+                </div>
+              </div>
+
+              {/* Amber chips — WIDTH / HEIGHT / RIM style */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { icon: <CheckCircle size={18} strokeWidth={2.5} />, label: "VAT",       val: "Included" },
+                  { icon: <Gauge       size={18} strokeWidth={2.5} />, label: "Balancing", val: "Free" },
+                  { icon: <Leaf        size={18} strokeWidth={2.5} />, label: "Disposal",  val: "Eco-free" },
+                ].map((c) => (
+                  <div
+                    key={c.label}
+                    className="relative rounded-xl p-3 flex items-center gap-3 text-left bg-white/10 border border-white/20 select-none"
+                  >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#f4a923] text-white">
+                      {c.icon}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
+                        {c.label}
+                      </span>
+                      <span className="text-xs sm:text-[13px] font-bold block leading-tight mt-0.5 truncate text-[#f4a923]">
+                        {c.val}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── WHITE BODY ── */}
+            <div className="px-5 py-4 flex-1 overflow-y-auto finder-modal-scroll bg-white">
+              <ul className="space-y-3">
+                {[
+                  "VAT",
+                  "Professional tyre fitting (Beadlock wheels excluded)",
+                  "Wheel balancing",
+                  "New standard rubber valve",
+                  "Delivery to the installer",
+                  "Eco-friendly disposal of old tyres",
+                  "Bonus: When you buy 4 tyres, enjoy 1 FREE tyre rotation every 20,000 km (up to once per year)",
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-sm text-gray-700">
+                    <span className="w-5 h-5 rounded-full border-2 border-[#ed1c24] flex items-center justify-center shrink-0 mt-0.5 text-[#ed1c24]">
+                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                        <path d="M1 4L3.5 6.5L9 1" stroke="#ed1c24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </span>
+                    <span className={idx === 6 ? "text-gray-500 text-xs leading-relaxed" : ""}>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* ── FOOTER — same as VehicleFitmentModal ── */}
+            <div className="px-6 py-3.5 border-t border-gray-100 flex items-center justify-between bg-white shrink-0 rounded-b-[22px]">
+              <button
+                type="button"
+                className="text-sm font-bold text-gray-900 hover:text-black flex items-center gap-1.5 transition-colors cursor-pointer"
+                onClick={() => setIsPriceInfoOpen(false)}
+              >
+                <ArrowLeft size={16} strokeWidth={2.5} />
+                <span>Cancel</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPriceInfoOpen(false)}
+                className="bg-black hover:bg-gray-900 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-lg px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
+              >
+                <span>Done</span>
+                <ArrowRight size={16} strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── DriverReviews (Klever) combined-review widget ──────────── */}
-      {/* Renders only for tyre products the SDK can match; the SDK fills it. */}
-      <div className="container">
-        <DriverReviewsWidget dr={product.driverReviews} variant="product" />
-      </div>
-
-      {/* ── Ratings & Reviews ──────────────────────────────────────── */}
-      <RatingsSection product={product} onWriteReviewClick={() => setIsWriteReviewOpen(true)} />
-
       {/* ── Related products ───────────────────────────────────────── */}
-      <RelatedProductsSection size={specs.size} currentSku={product.sku} />
+      <RelatedProductsSection size={specs.size} currentSku={product.sku} locale={locale} />
 
       {/* ── Share Modal ────────────────────────────────────────────── */}
       <ShareModal
@@ -832,12 +1055,18 @@ export default function ProductDetailInner({
         onClose={() => setIsShareOpen(false)}
       />
 
-      {/* ── Write Review Modal ──────────────────────────────────────── */}
-      <ReviewModal
-        product={product}
-        isOpen={isWriteReviewOpen}
-        onClose={() => setIsWriteReviewOpen(false)}
-      />
+      {/* ── Vehicle Fitment Modal ─────────────────────────────────── */}
+      {width && height && rim && (
+        <VehicleFitmentModal
+          open={isVehicleFitmentOpen}
+          onClose={() => setIsVehicleFitmentOpen(false)}
+          productName={product.name}
+          width={width}
+          height={height}
+          rim={rim}
+          locale={locale as any}
+        />
+      )}
 
       {/* ── Sticky Bottom Floating Search (Appears on scroll) ─────── */}
       <StickyBottomFinder locale={locale} categoryUid={APP_CONFIG.magento.tyresCategoryUid} />
@@ -1050,62 +1279,80 @@ interface RatingScale {
   values: { value_id: string; value: string }[];
 }
 
-function ReviewModal({
-  product,
-  isOpen,
-  onClose,
-}: {
-  product: ProductDetail;
-  isOpen: boolean;
-  onClose: () => void;
-}) {
+/* ══════════════════════════════════════════════════════════════════
+   WRITE YOUR OWN REVIEW — inline card, embedded directly in the
+   Reviews tab (matches the storefront's "Write Your Own Review"
+   block: rate-per-aspect stars, nickname, summary, detailed text).
+══════════════════════════════════════════════════════════════════ */
+function WriteReviewCard({ product }: { product: ProductDetail }) {
   const [nickname, setNickname] = useState("");
   const [summary, setSummary] = useState("");
   const [text, setText] = useState("");
   const [scales, setScales] = useState<RatingScale[]>([]);
   const [ratings, setRatings] = useState<Record<string, string>>({}); // { scaleId: valueId }
-  const [loadingMetadata, setLoadingMetadata] = useState(false);
+  const [hoveredStars, setHoveredStars] = useState<Record<string, number>>({});
+  const [loadingMetadata, setLoadingMetadata] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  // Fetch rating scale options on mount
+  // Default Quality / Value / Price scales matching Magento review form
+  const defaultScales: RatingScale[] = [
+    {
+      id: "Quality",
+      name: "Quality",
+      values: [
+        { value_id: "1", value: "1" },
+        { value_id: "2", value: "2" },
+        { value_id: "3", value: "3" },
+        { value_id: "4", value: "4" },
+        { value_id: "5", value: "5" },
+      ],
+    },
+    {
+      id: "Value",
+      name: "Value",
+      values: [
+        { value_id: "1", value: "1" },
+        { value_id: "2", value: "2" },
+        { value_id: "3", value: "3" },
+        { value_id: "4", value: "4" },
+        { value_id: "5", value: "5" },
+      ],
+    },
+    {
+      id: "Price",
+      name: "Price",
+      values: [
+        { value_id: "1", value: "1" },
+        { value_id: "2", value: "2" },
+        { value_id: "3", value: "3" },
+        { value_id: "4", value: "4" },
+        { value_id: "5", value: "5" },
+      ],
+    },
+  ];
+
   useEffect(() => {
-    if (isOpen) {
-      setStatusMsg(null);
-      setLoadingMetadata(true);
-      fetch("/api/reviews")
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.ratings?.length) {
-            setScales(data.ratings);
-            // Default first rating option for each scale
-            const defaults: Record<string, string> = {};
-            data.ratings.forEach((s: RatingScale) => {
-              if (s.values?.length) {
-                // Find index matching 5 stars or middle
-                defaults[s.id] = s.values[s.values.length - 1]?.value_id;
-              }
-            });
-            setRatings(defaults);
-          }
-        })
-        .catch(() => { })
-        .finally(() => setLoadingMetadata(false));
+    setLoadingMetadata(true);
+    fetch("/api/reviews")
+      .then((r) => r.json())
+      .then((data) => {
+        const activeScales = data.ratings?.length ? data.ratings : defaultScales;
+        setScales(activeScales);
+      })
+      .catch(() => {
+        setScales(defaultScales);
+      })
+      .finally(() => setLoadingMetadata(false));
 
-      // Prefill nickname if logged in
-      try {
-        const stored = localStorage.getItem("customer_info");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed.firstname) {
-            setNickname(parsed.firstname);
-          }
-        }
-      } catch { }
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
+    try {
+      const stored = localStorage.getItem("customer_info");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.firstname) setNickname(parsed.firstname);
+      }
+    } catch { }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -1113,7 +1360,6 @@ function ReviewModal({
     setSubmitting(true);
     setStatusMsg(null);
 
-    // Format selected rating options for Magento input
     const formattedRatings = Object.entries(ratings).map(([scaleId, valId]) => ({
       id: scaleId,
       value_id: valId,
@@ -1139,12 +1385,12 @@ function ReviewModal({
 
       const data = await res.json();
       if (data.review || !data.error) {
-        setStatusMsg({ ok: true, text: "Review submitted successfully! It is pending approval." });
+        setStatusMsg({ ok: true, text: "Review submitted successfully! It will appear once approved." });
         setSummary("");
         setText("");
-        setTimeout(onClose, 2500);
+        setRatings({});
       } else {
-        setStatusMsg({ ok: false, text: data.error || "Failed to submit review. Reviews may be disabled." });
+        setStatusMsg({ ok: false, text: data.error || "Failed to submit review." });
       }
     } catch {
       setStatusMsg({ ok: false, text: "A network error occurred. Please try again." });
@@ -1153,152 +1399,147 @@ function ReviewModal({
     }
   }
 
+  const activeScales = scales.length > 0 ? scales : defaultScales;
+
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="absolute inset-0" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-2xl border border-gray-150 max-w-lg w-full p-6 sm:p-8 z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-black transition-colors"
-          aria-label="Close"
-        >
-          <X size={20} />
-        </button>
+    <div id="write-review" className="bg-white border border-gray-200/80 rounded-sm p-6 sm:p-8 scroll-mt-24">
+      {/* ── Title & Subtitle ── */}
+      <h3 className="text-[15px] font-bold text-gray-900 mb-1">
+        Write Your Own Review
+      </h3>
+      <p className="text-[13px] text-gray-700 mb-5">
+        You&apos;re reviewing: <strong className="font-bold text-gray-900">{product.name}</strong>
+      </p>
 
-        <h3 className="text-lg font-black uppercase tracking-wider text-gray-900 mb-2">
-          Write a Product Review
-        </h3>
-        <p className="text-xs text-gray-500 mb-6 uppercase tracking-wider font-bold">
-          {product.name}
-        </p>
+      {loadingMetadata ? (
+        <div className="flex flex-col items-center justify-center py-10 gap-2">
+          <Loader2 className="animate-spin text-gray-400" size={24} />
+          <p className="text-xs text-gray-400 font-medium">Loading form...</p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* ── 3-Column Rating Box (Quality | Value | Price) ── */}
+          <div className="border border-gray-200/80 bg-[#fbfbfb] rounded-sm p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200/90">
+              {activeScales.map((s, idx) => {
+                const currentValId = ratings[s.id];
+                const activeValueNum = currentValId
+                  ? s.values.find((v) => v.value_id === currentValId)?.value
+                  : undefined;
+                const currentRatingNum = activeValueNum ? parseInt(activeValueNum, 10) || 0 : 0;
+                const hovered = hoveredStars[s.id] ?? 0;
+                const displayScore = hovered > 0 ? hovered : currentRatingNum;
 
-        {loadingMetadata ? (
-          <div className="flex flex-col items-center justify-center py-10 gap-2">
-            <Loader2 className="animate-spin text-gray-400" size={24} />
-            <p className="text-xs text-gray-400 uppercase tracking-widest font-black">Loading Ratings Scales...</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Dynamic Rating Scales from Magento */}
-            {scales.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3.5 border border-gray-100">
-                <p className="text-[11px] font-black uppercase tracking-wider text-gray-700 border-b border-gray-250 pb-1">
-                  Rate Aspects
-                </p>
-                {scales.map((s) => (
-                  <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <span className="text-[12px] font-bold text-gray-800">{s.name}</span>
-                    <div className="flex items-center gap-1.5">
-                      {s.values.map((v) => (
-                        <button
-                          key={v.value_id}
-                          type="button"
-                          onClick={() => setRatings((prev) => ({ ...prev, [s.id]: v.value_id }))}
-                          className={`w-8 h-8 rounded-full border text-[11px] font-bold flex items-center justify-center transition-colors ${ratings[s.id] === v.value_id
-                            ? "border-black bg-black text-white"
-                            : "border-gray-200 hover:border-gray-400 text-gray-600 bg-white"
-                            }`}
-                        >
-                          {v.value}
-                        </button>
-                      ))}
+                return (
+                  <div
+                    key={s.id}
+                    className={`flex flex-col items-center justify-center text-center ${
+                      idx > 0 ? "md:pl-4 pt-3 md:pt-0" : ""
+                    }`}
+                  >
+                    <span className="text-[13px] font-bold text-gray-900 mb-1.5">
+                      {s.name}
+                    </span>
+
+                    {/* 5 Stars */}
+                    <div className="flex items-center gap-1">
+                      {s.values.map((v, starIdx) => {
+                        const starNum = starIdx + 1;
+                        const isFilled = starNum <= displayScore;
+
+                        return (
+                          <button
+                            key={v.value_id}
+                            type="button"
+                            onClick={() => setRatings((prev) => ({ ...prev, [s.id]: v.value_id }))}
+                            onMouseEnter={() => setHoveredStars((prev) => ({ ...prev, [s.id]: starNum }))}
+                            onMouseLeave={() => setHoveredStars((prev) => ({ ...prev, [s.id]: 0 }))}
+                            title={`${v.value} Star${v.value === "1" ? "" : "s"}`}
+                            className="p-1 cursor-pointer transition-transform hover:scale-120 active:scale-95"
+                          >
+                            <Star
+                              size={21}
+                              strokeWidth={1.3}
+                              className={`transition-colors duration-150 ${
+                                isFilled
+                                  ? "text-amber-400 fill-amber-400 drop-shadow-xs"
+                                  : "text-gray-300 fill-none hover:text-amber-400"
+                              }`}
+                            />
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {/* Fallback Single Rating if no scales returned */}
-            {scales.length === 0 && (
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-100 flex items-center justify-between">
-                <span className="text-[12px] font-black uppercase tracking-wider text-gray-700">Rating</span>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((stars) => (
-                    <button
-                      key={stars}
-                      type="button"
-                      onClick={() => setRatings({ overall: String(stars) })}
-                      className="text-gray-300 hover:text-amber-400 transition-colors"
-                    >
-                      <Star
-                        size={22}
-                        fill={Number(ratings.overall || "5") >= stars ? "#fbbf24" : "none"}
-                        stroke={Number(ratings.overall || "5") >= stars ? "#fbbf24" : "#d1d5db"}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-[11px] font-black uppercase tracking-wider text-gray-700 mb-1">
-                Nickname *
-              </label>
-              <input
-                type="text"
-                required
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-black font-medium"
-                placeholder="e.g. JohnD"
-              />
+                );
+              })}
             </div>
+          </div>
 
-            <div>
-              <label className="block text-[11px] font-black uppercase tracking-wider text-gray-700 mb-1">
-                Review Summary (Heading) *
-              </label>
-              <input
-                type="text"
-                required
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-black font-medium"
-                placeholder="e.g. Outstanding grip and durability"
-              />
+          {/* ── Nickname ── */}
+          <div>
+            <label className="block text-[13px] font-bold text-gray-900 mb-1.5">
+              Nickname <span className="text-[#ed1c24]">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              className="w-full border border-gray-200/90 rounded-sm px-3.5 py-2.5 text-[13px] text-gray-900 bg-white hover:border-gray-400 focus:outline-none focus:border-[#ed1c24] focus:ring-1 focus:ring-[#ed1c24] transition-all"
+            />
+          </div>
+
+          {/* ── Summary ── */}
+          <div>
+            <label className="block text-[13px] font-bold text-gray-900 mb-1.5">
+              Summary <span className="text-[#ed1c24]">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              className="w-full border border-gray-200/90 rounded-sm px-3.5 py-2.5 text-[13px] text-gray-900 bg-white hover:border-gray-400 focus:outline-none focus:border-[#ed1c24] focus:ring-1 focus:ring-[#ed1c24] transition-all"
+            />
+          </div>
+
+          {/* ── Review ── */}
+          <div>
+            <label className="block text-[13px] font-bold text-gray-900 mb-1.5">
+              Review <span className="text-[#ed1c24]">*</span>
+            </label>
+            <textarea
+              rows={6}
+              required
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              className="w-full border border-gray-200/90 rounded-sm p-3.5 text-[13px] text-gray-900 bg-white hover:border-gray-400 focus:outline-none focus:border-[#ed1c24] focus:ring-1 focus:ring-[#ed1c24] transition-all resize-y"
+            />
+          </div>
+
+          {statusMsg && (
+            <div
+              className={`p-3 rounded text-[13px] font-medium ${
+                statusMsg.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"
+              }`}
+            >
+              {statusMsg.text}
             </div>
+          )}
 
-            <div>
-              <label className="block text-[11px] font-black uppercase tracking-wider text-gray-700 mb-1">
-                Detailed Review *
-              </label>
-              <textarea
-                rows={4}
-                required
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-black font-medium resize-none"
-                placeholder="Write your comments about this tyre here..."
-              />
-            </div>
-
-            {statusMsg && (
-              <p className={`text-xs font-semibold ${statusMsg.ok ? "text-emerald-600" : "text-red-500"}`}>
-                {statusMsg.text}
-              </p>
-            )}
-
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-5 py-2.5 rounded border border-gray-300 text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-6 py-2.5 rounded bg-black hover:bg-[#ed1c24] text-white text-xs font-black uppercase tracking-wider transition-colors disabled:opacity-60 flex items-center gap-1.5"
-              >
-                {submitting && <Loader2 size={13} className="animate-spin" />}
-                {submitting ? "Submitting..." : "Submit Review"}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
+          {/* ── Submit Review Button on Left with PLP Hover ── */}
+          <div className="pt-1">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-slide-black text-[13px] font-bold py-2.5 px-6 rounded-md disabled:opacity-60 shadow-2xs"
+            >
+              <span>{submitting ? "Submitting..." : "Submit Review"}</span>
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

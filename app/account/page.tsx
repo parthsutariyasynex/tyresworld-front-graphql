@@ -24,6 +24,7 @@ function AuthPanel() {
   const { login, register, busy } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [form, setForm] = useState({ firstname: "", lastname: "", email: "", password: "" });
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -41,259 +42,227 @@ function AuthPanel() {
   }
 
   return (
-    <div className="bg-white min-h-screen pb-16">
-      {/* Hero Banner */}
+    <div className="bg-[#f8f9fa]">
+      {/* ── Banner ── */}
       <div
-        className="relative bg-cover bg-center py-20 flex items-center justify-center text-center"
-        style={{ backgroundImage: `url('/heropage-banner/banner-continetal.jpg')` }}
+        className="py-10 sm:py-14 text-center"
+        style={{
+          backgroundImage: "url('/img/shopping-cart-banner.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
-        <div className="absolute inset-0 bg-black/65" />
-        <div className="relative z-10 container">
-          <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-widest">
-            {mode === "login" ? "LOGIN TO YOUR ACCOUNT - TYRESWORLD" : "CREATE AN ACCOUNT - TYRESWORLD"}
+        <div className="container mx-auto px-4">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase text-white tracking-wider">
+            {mode === "login" ? "LOGIN TO YOUR ACCOUNT" : "CREATE AN ACCOUNT"}
           </h1>
         </div>
       </div>
 
-      {/* Google Sign-in Option */}
-      <div className="container mt-8 flex justify-center">
-        <button
-          type="button"
-          className="flex items-center gap-3 bg-[#ed1c24] hover:bg-[#c6181d] text-white py-3 px-6 rounded-md font-bold text-xs uppercase tracking-wider transition-colors shadow-md shadow-red-500/10"
-        >
-          <div className="bg-white p-1 rounded">
-            <svg width="14" height="14" viewBox="0 0 24 24">
-              <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.47 15 0 12 0 7.35 0 3.39 2.67 1.47 6.56l3.87 3C6.27 6.84 8.91 5.04 12 5.04z" />
-              <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.71 2.88c2.17-2 3.71-4.94 3.71-8.61z" />
-              <path fill="#FBBC05" d="M5.34 14.59c-.24-.71-.38-1.47-.38-2.26s.14-1.55.38-2.26L1.47 7.07C.53 8.94 0 11.02 0 13.2s.53 4.26 1.47 6.13l3.87-3.01c-.24-.71-.38-1.47-.38-2.26z" />
-              <path fill="#34A853" d="M12 24c3.24 0 5.97-1.07 7.96-2.91l-3.71-2.88c-1.03.69-2.35 1.1-4.25 1.1-3.09 0-5.73-1.8-6.66-4.52L1.47 17.8c1.92 3.89 5.88 6.56 10.53 6.56z" />
-            </svg>
-          </div>
-          <span>Sign in with Google</span>
-        </button>
-      </div>
+      {/* ── Cards ── */}
+      <div className="container max-w-6xl mx-auto px-4 py-10">
 
-      {error && (
-        <div className="container max-w-6xl mx-auto mt-6 px-4">
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+        {/* Error */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
             {error}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Main content grid */}
-      <div className="container max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         {mode === "login" ? (
-          <>
-            {/* REGISTERED CUSTOMERS */}
-            <div className="bg-[#f8f9fa] border border-gray-200/50 rounded-xl p-6 lg:p-8 flex flex-col justify-between min-h-[420px]">
-              <div>
-                <h2 className="text-base font-black text-gray-900 uppercase tracking-wider mb-2">
-                  REGISTERED CUSTOMERS
-                </h2>
-                <p className="text-sm text-gray-500 mb-6">
-                  If you have an account, sign in with your email address.
-                </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
 
-                <form onSubmit={submit} className="flex flex-col gap-4">
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
-                      Email *
-                    </label>
-                    <input
-                      required
-                      type="email"
-                      value={form.email}
-                      onChange={set("email")}
-                      className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
-                    />
-                  </div>
+            {/* LEFT: Registered Customers */}
+            <div className="bg-white border border-gray-200 rounded-xl p-7 shadow-sm">
+              <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-1.5">
+                Registered Customers
+              </h2>
+              <p className="text-sm text-gray-500 mb-6">
+                If you have an account, sign in with your email address.
+              </p>
 
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
-                      Password *
-                    </label>
-                    <input
-                      required
-                      type={showPassword ? "text" : "password"}
-                      value={form.password}
-                      onChange={set("password")}
-                      className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
-                    />
-                  </div>
+              <form onSubmit={submit} className="flex flex-col gap-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-700 mb-1.5 block">
+                    Email <span className="text-[#ed1c24]">*</span>
+                  </label>
+                  <input
+                    required type="email"
+                    value={form.email} onChange={set("email")}
+                    className="w-full border border-gray-300 hover:border-gray-400 focus:border-[#ed1c24] focus:ring-2 focus:ring-[#ed1c24]/10 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none transition-all bg-white text-gray-900"
+                  />
+                </div>
 
-                  <div className="flex items-center gap-2 mb-2">
-                    <input
-                      type="checkbox"
-                      id="show-pass-login"
-                      checked={showPassword}
-                      onChange={(e) => setShowPassword(e.target.checked)}
-                      className="w-4 h-4 rounded text-[#ed1c24] focus:ring-[#ed1c24] border-gray-300"
-                    />
-                    <label htmlFor="show-pass-login" className="text-xs font-bold text-gray-700 select-none cursor-pointer">
-                      Show Password
-                    </label>
-                  </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-700 mb-1.5 block">
+                    Password <span className="text-[#ed1c24]">*</span>
+                  </label>
+                  <input
+                    required
+                    type={showPassword ? "text" : "password"}
+                    value={form.password} onChange={set("password")}
+                    className="w-full border border-gray-300 hover:border-gray-400 focus:border-[#ed1c24] focus:ring-2 focus:ring-[#ed1c24]/10 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none transition-all bg-white text-gray-900"
+                  />
+                </div>
 
-                  <div className="flex items-center justify-between gap-4 mt-2">
-                    <button
-                      type="submit"
-                      disabled={busy}
-                      className="bg-black hover:bg-[#ed1c24] text-white py-3.5 px-8 rounded-lg font-black uppercase tracking-wider text-xs transition-colors flex items-center justify-center min-w-[120px]"
-                    >
-                      {busy ? <Loader2 size={14} className="animate-spin" /> : "Sign In"}
-                    </button>
-                    <Link
-                      href="#"
-                      className="text-xs font-bold text-gray-800 hover:text-[#ed1c24] transition-colors uppercase tracking-wider"
-                    >
-                      Forgot Your Password?
-                    </Link>
-                  </div>
-                </form>
-              </div>
+                <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
+                  <input
+                    type="checkbox"
+                    checked={showPassword}
+                    onChange={(e) => setShowPassword(e.target.checked)}
+                    className="w-4 h-4 accent-[#ed1c24] cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-600">Show Password</span>
+                </label>
+
+                <div className="flex items-center justify-between gap-4 mt-1">
+                  <button
+                    type="submit" disabled={busy}
+                    className="btn-cta py-3 px-7 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed min-w-[110px]"
+                  >
+                    <span>{busy ? "Signing in…" : "Sign In"}</span>
+                    {busy && <Loader2 size={13} className="animate-spin relative z-10" />}
+                  </button>
+                  <Link href="/forgot-password" className="text-sm text-gray-500 hover:text-[#ed1c24] transition-colors underline-offset-4 hover:underline">
+                    Forgot Your Password?
+                  </Link>
+                </div>
+              </form>
             </div>
 
-            {/* NEW CUSTOMERS */}
-            <div className="bg-[#f8f9fa] border border-gray-200/50 rounded-xl p-6 lg:p-8 flex flex-col justify-between min-h-[420px]">
-              <div>
-                <h2 className="text-base font-black text-gray-900 uppercase tracking-wider mb-2">
-                  NEW CUSTOMERS
-                </h2>
-                <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                  Creating an account has many benefits: check out faster, keep more than one address, track orders and more.
-                </p>
-              </div>
+            {/* RIGHT: New Customers */}
+            <div className="bg-white border border-gray-200 rounded-xl p-7 shadow-sm">
+              <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-1.5">
+                New Customers
+              </h2>
+              <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                Creating an account has many benefits: check out faster, keep more than one address, track orders and more.
+              </p>
               <button
                 onClick={() => { setMode("register"); setError(""); }}
-                className="bg-black hover:bg-[#ed1c24] text-white py-3.5 px-8 rounded-lg font-black uppercase tracking-wider text-xs transition-colors self-start"
+                className="btn-cta py-3 px-7 rounded-lg text-xs"
               >
-                Create an Account
+                <span>Create an Account</span>
               </button>
             </div>
-          </>
+          </div>
+
         ) : (
-          <>
-            {/* CREATE AN ACCOUNT */}
-            <div className="bg-[#f8f9fa] border border-gray-200/50 rounded-xl p-6 lg:p-8 flex flex-col justify-between min-h-[420px]">
-              <div>
-                <h2 className="text-base font-black text-gray-900 uppercase tracking-wider mb-2">
-                  CREATE AN ACCOUNT
-                </h2>
-                <p className="text-sm text-gray-500 mb-6">
-                  Please fill in the information below to create your account.
-                </p>
+          <div className="flex justify-center">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm w-full max-w-xl">
 
-                <form onSubmit={submit} className="flex flex-col gap-4">
-                  <div className="grid grid-cols-2 gap-4">
+              {/* ── PERSONAL INFORMATION ── */}
+              <div className="border-b border-gray-200 px-7 py-4">
+                <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Personal Information</h2>
+              </div>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (form.password !== confirmPassword) { setError("Passwords do not match."); return; }
+                submit(e);
+              }} className="px-7 py-6 flex flex-col gap-5">
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-700 mb-1.5 block">
+                      First Name <span className="text-[#ed1c24]">*</span>
+                    </label>
+                    <input
+                      required type="text"
+                      value={form.firstname} onChange={set("firstname")}
+                      className="w-full border border-gray-300 hover:border-gray-400 focus:border-[#ed1c24] focus:ring-2 focus:ring-[#ed1c24]/10 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none transition-all bg-white text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-700 mb-1.5 block">
+                      Last Name <span className="text-[#ed1c24]">*</span>
+                    </label>
+                    <input
+                      required type="text"
+                      value={form.lastname} onChange={set("lastname")}
+                      className="w-full border border-gray-300 hover:border-gray-400 focus:border-[#ed1c24] focus:ring-2 focus:ring-[#ed1c24]/10 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none transition-all bg-white text-gray-900"
+                    />
+                  </div>
+                </div>
+
+                {/* ── SIGN-IN INFORMATION ── */}
+                <div className="border-t border-gray-200 pt-5 -mx-7 px-7">
+                  <h3 className="text-xs font-black text-gray-700 uppercase tracking-widest mb-4">Sign-in Information</h3>
+
+                  <div className="flex flex-col gap-4">
                     <div>
-                      <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
-                        First Name *
+                      <label className="text-xs font-bold text-gray-700 mb-1.5 block">
+                        Email <span className="text-[#ed1c24]">*</span>
+                      </label>
+                      <input
+                        required type="email"
+                        value={form.email} onChange={set("email")}
+                        className="w-full border border-gray-300 hover:border-gray-400 focus:border-[#ed1c24] focus:ring-2 focus:ring-[#ed1c24]/10 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none transition-all bg-white text-gray-900"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-gray-700 mb-1.5 block">
+                        Password <span className="text-[#ed1c24]">*</span>
                       </label>
                       <input
                         required
-                        type="text"
-                        value={form.firstname}
-                        onChange={set("firstname")}
-                        className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
+                        type={showPassword ? "text" : "password"}
+                        value={form.password} onChange={set("password")}
+                        className="w-full border border-gray-300 hover:border-gray-400 focus:border-[#ed1c24] focus:ring-2 focus:ring-[#ed1c24]/10 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none transition-all bg-white text-gray-900"
                       />
                     </div>
+
                     <div>
-                      <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
-                        Last Name *
+                      <label className="text-xs font-bold text-gray-700 mb-1.5 block">
+                        Confirm Password <span className="text-[#ed1c24]">*</span>
                       </label>
                       <input
                         required
-                        type="text"
-                        value={form.lastname}
-                        onChange={set("lastname")}
-                        className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
+                        type={showPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full border border-gray-300 hover:border-gray-400 focus:border-[#ed1c24] focus:ring-2 focus:ring-[#ed1c24]/10 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none transition-all bg-white text-gray-900"
                       />
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
-                      Email *
-                    </label>
-                    <input
-                      required
-                      type="email"
-                      value={form.email}
-                      onChange={set("email")}
-                      className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-700 uppercase mb-1.5 block">
-                      Password *
-                    </label>
-                    <input
-                      required
-                      type={showPassword ? "text" : "password"}
-                      value={form.password}
-                      onChange={set("password")}
-                      className="w-full bg-[#eef2f7] border-0 rounded-lg px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-[#ed1c24] outline-none text-gray-900"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2 mb-2">
-                    <input
-                      type="checkbox"
-                      id="show-pass-register"
-                      checked={showPassword}
-                      onChange={(e) => setShowPassword(e.target.checked)}
-                      className="w-4 h-4 rounded text-[#ed1c24] focus:ring-[#ed1c24] border-gray-300"
-                    />
-                    <label htmlFor="show-pass-register" className="text-xs font-bold text-gray-700 select-none cursor-pointer">
-                      Show Password
+                    <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
+                      <input
+                        type="checkbox"
+                        checked={showPassword}
+                        onChange={(e) => setShowPassword(e.target.checked)}
+                        className="w-4 h-4 accent-[#ed1c24] cursor-pointer"
+                      />
+                      <span className="text-sm text-gray-600">Show Password</span>
                     </label>
                   </div>
+                </div>
 
-                  <div className="flex items-center justify-between gap-4 mt-2">
-                    <button
-                      type="submit"
-                      disabled={busy}
-                      className="bg-black hover:bg-[#ed1c24] text-white py-3.5 px-8 rounded-lg font-black uppercase tracking-wider text-xs transition-colors flex items-center justify-center min-w-[150px]"
-                    >
-                      {busy ? <Loader2 size={14} className="animate-spin" /> : "Create Account"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setMode("login"); setError(""); }}
-                      className="text-xs font-bold text-gray-800 hover:text-[#ed1c24] transition-colors uppercase tracking-wider"
-                    >
-                      Back to Login
-                    </button>
-                  </div>
-                </form>
-              </div>
+                <div className="flex items-center justify-between gap-4 pt-2">
+                  <button
+                    type="submit" disabled={busy}
+                    className="btn-cta py-3 px-7 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px]"
+                  >
+                    <span>{busy ? "Creating…" : "Create an Account"}</span>
+                    {busy && <Loader2 size={13} className="animate-spin relative z-10" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMode("login"); setError(""); setConfirmPassword(""); }}
+                    className="text-sm text-gray-500 hover:text-[#ed1c24] transition-colors underline-offset-4 hover:underline"
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              </form>
             </div>
-
-            {/* ALREADY REGISTERED */}
-            <div className="bg-[#f8f9fa] border border-gray-200/50 rounded-xl p-6 lg:p-8 flex flex-col justify-between min-h-[420px]">
-              <div>
-                <h2 className="text-base font-black text-gray-900 uppercase tracking-wider mb-2">
-                  REGISTERED CUSTOMERS
-                </h2>
-                <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                  Already have an account? Sign in to access your dashboard, orders, and addresses.
-                </p>
-              </div>
-              <button
-                onClick={() => { setMode("login"); setError(""); }}
-                className="bg-black hover:bg-[#ed1c24] text-white py-3.5 px-8 rounded-lg font-black uppercase tracking-wider text-xs transition-colors self-start"
-              >
-                Sign In
-              </button>
-            </div>
-          </>
+          </div>
         )}
       </div>
     </div>
   );
 }
+
+
 
 /* ─────────────────────────────────────────────────────────────────
    ACCOUNT DASHBOARD (logged-in state)

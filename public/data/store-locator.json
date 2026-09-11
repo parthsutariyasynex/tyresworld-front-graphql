@@ -1,69 +1,37 @@
 {
   "en": {
-    "branches": [
+    "deliveryOptions": [
       {
-        "id": "224",
-        "name": "Continental - Al Malaz - Riyadh",
-        "address": "Salah Al Din Al Ayyubi Rd, Al Malaz, Riyadh"
+        "id": "install_outlet",
+        "title": "Install at Outlet",
+        "subtitle": "Visit our outlet for professional installation",
+        "icon": "store"
       },
       {
-        "id": "274",
-        "name": "Continental - Ar Rayyan - Riyadh",
-        "address": "Khurais Branch Rd, Ar Rayyan, Riyadh"
+        "id": "mobile_van",
+        "title": "Mobile Van Service",
+        "subtitle": "Our mobile van comes to your location",
+        "icon": "truck"
       },
       {
-        "id": "272",
-        "name": "Continental - Al Olaya - Riyadh",
-        "address": "Olaya St, Al Olaya, Riyadh"
-      },
-      {
-        "id": "273",
-        "name": "Continental - Al Rawdah - Riyadh",
-        "address": "Al Hasan Ibn Ali St, Al Rawdah, Riyadh"
-      },
-      {
-        "id": "277",
-        "name": "Continental - Al Hamra - Jeddah",
-        "address": "Arafat St, Al Hamra, Jeddah"
-      },
-      {
-        "id": "275",
-        "name": "Continental - Al Safa - Jeddah",
-        "address": "Prince Mutaib bin Abdulaziz Rd, Al Safa, Jeddah"
-      },
-      {
-        "id": "276",
-        "name": "Continental - Al Naeem - Jeddah",
-        "address": "Prince Sultan Rd, Al Naeem, Jeddah"
-      },
-      {
-        "id": "279",
-        "name": "Continental - Al Khalidiyyah - Jeddah",
-        "address": "Rawdah St, Al Khalidiyyah, Jeddah"
-      },
-      {
-        "id": "280",
-        "name": "Continental - Ash Shati - Jeddah",
-        "address": "Al Kurnaysh Rd, Ash Shati, Jeddah"
-      },
-      {
-        "id": "281",
-        "name": "Continental - Al Yasmin - Riyadh",
-        "address": "Anas Ibn Malik Rd, Al Yasmin, Riyadh"
+        "id": "free_shipping",
+        "title": "Free Shipping",
+        "subtitle": "Delivery without fitment service",
+        "icon": "package"
       }
     ],
     "mobileVans": [
       {
-        "id": "mv_riyadh_jeddah",
-        "name": "Mobile Van Fitting (Riyadh & Jeddah)",
-        "address": "Accross Riyadh & Jeddah",
-        "fee": "﷼ 150.00"
+        "id": "mv_dxb",
+        "name": "Mobile Van Fitting (Dubai & Northern Emirates)",
+        "address": "Across Dubai, Sharjah, Ajman",
+        "fee": "AED 150.00"
       },
       {
-        "id": "mv_dammam_khobar",
-        "name": "Mobile Van Fitting (Dammam & Al-Khobar)",
-        "address": "Accross Dammam & Al-Khobar",
-        "fee": "﷼ 150.00"
+        "id": "mv_ad",
+        "name": "Mobile Van Fitting (Abu Dhabi & Al Ain)",
+        "address": "Across Abu Dhabi & Al Ain",
+        "fee": "AED 150.00"
       }
     ],
     "timeSlots": [
@@ -73,70 +41,38 @@
     ]
   },
   "ar": {
-    "branches": [
+    "deliveryOptions": [
       {
-        "id": "224",
-        "name": "كونتيننتال - الملز - الرياض",
-        "address": "طريق صلاح الدين الأيوبي، الملز، الرياض"
+        "id": "install_outlet",
+        "title": "التركيب في المركز",
+        "subtitle": "قم بزيارة مركزنا للتركيب الاحترافي",
+        "icon": "store"
       },
       {
-        "id": "274",
-        "name": "كونتيننتال - الريان - الرياض",
-        "address": "طريق خريص الفرعي، الريان، الرياض"
+        "id": "mobile_van",
+        "title": "خدمة الفان المتنقل",
+        "subtitle": "الفان المتنقل يصل إلى موقعك",
+        "icon": "truck"
       },
       {
-        "id": "272",
-        "name": "كونتيننتال - العليا - الرياض",
-        "address": "شارع العليا، العليا، الرياض"
-      },
-      {
-        "id": "273",
-        "name": "كونتيننتال - الروضة - الرياض",
-        "address": "شارع الحسن بن علي، الروضة، الرياض"
-      },
-      {
-        "id": "277",
-        "name": "كونتيننتال - الحمراء - جدة",
-        "address": "شارع عرفات، الحمراء، جدة"
-      },
-      {
-        "id": "275",
-        "name": "كونتيننتال - الصفا - جدة",
-        "address": "طريق الأمير متعب بن عبدالعزيز، الصفا، جدة"
-      },
-      {
-        "id": "276",
-        "name": "كونتيننتال - النعيم - جدة",
-        "address": "طريق الأمير سلطان، النعيم، جدة"
-      },
-      {
-        "id": "279",
-        "name": "كونتيننتال - الخالدية - جدة",
-        "address": "شارع الروضة، الخالدية، جدة"
-      },
-      {
-        "id": "280",
-        "name": "كونتيننتال - الشاطئ - جدة",
-        "address": "طريق الكورنيش، الشاطئ، جدة"
-      },
-      {
-        "id": "281",
-        "name": "كونتيننتال - الياسمين - الرياض",
-        "address": "طريق أنس بن مالك، الياسمين، الرياض"
+        "id": "free_shipping",
+        "title": "توصيل مجاني",
+        "subtitle": "توصيل بدون خدمة التركيب",
+        "icon": "package"
       }
     ],
     "mobileVans": [
       {
-        "id": "mv_riyadh_jeddah",
-        "name": "خدمة التركيب المتنقل (الرياض وجدة)",
-        "address": "أرجاء الرياض وجدة",
-        "fee": "150.00 ر.س"
+        "id": "mv_dxb",
+        "name": "خدمة الفان المتنقل (دبي والإمارات الشمالية)",
+        "address": "كافة مناطق دبي والشارقة وعجمان",
+        "fee": "150.00 د.إ"
       },
       {
-        "id": "mv_dammam_khobar",
-        "name": "خدمة التركيب المتنقل (الدمام والخبر)",
-        "address": "أرجاء الدمام والخبر",
-        "fee": "150.00 ر.س"
+        "id": "mv_ad",
+        "name": "خدمة الفان المتنقل (أبو ظبي والعين)",
+        "address": "كافة مناطق أبو ظبي والعين",
+        "fee": "150.00 د.إ"
       }
     ],
     "timeSlots": [

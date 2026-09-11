@@ -1327,3 +1327,25 @@ export const SITEMAP_PRODUCTS_QUERY = /* GraphQL */ `
   }
 `;
 
+// ── Store locator ──────────────────────────────────────────────────
+// Magento's standard MSI "in-store pickup" API (Stores > Inventory >
+// Sources, with "Enable Store Pickup" turned on). Branches for the store
+// locator come only from this query — see app/api/store-locator/route.ts.
+export const PICKUP_LOCATIONS_QUERY = /* GraphQL */ `
+  query PickupLocations($pageSize: Int!) {
+    pickupLocations(pageSize: $pageSize) {
+      total_count
+      items {
+        pickup_location_code
+        name
+        city
+        street
+        region
+        phone
+        latitude
+        longitude
+      }
+    }
+  }
+`;
+

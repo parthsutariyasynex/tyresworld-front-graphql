@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ChevronRight,
+  Menu,
   Disc,
   BatteryCharging,
   ShieldCheck,
@@ -52,9 +53,16 @@ function getCategoryIcon(id: string, slug: string): LucideIcon {
  */
 export default function CategoryRail({ locale }: { locale: string }) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const isAr = locale === "ar";
 
   return (
-    <div className="ptr-cat-rail relative z-30" onMouseLeave={() => setHoveredId(null)}>
+    <div className="ptr-cat-rail relative z-40 rounded-xl shadow-sm border border-gray-200 bg-white" onMouseLeave={() => setHoveredId(null)}>
+      {/* Category Rail Header */}
+      <div className="bg-[#ed1c24] text-white font-black text-[11px] uppercase px-3.5 py-2.5 flex items-center gap-2 tracking-wider select-none shrink-0 rounded-t-xl">
+        <Menu size={15} className="stroke-[2.5]" />
+        <span>{isAr ? "جميع الفئات" : "ALL CATEGORIES"}</span>
+      </div>
+
       <div className="ptr-cat-rail-body">
         {MAIN_NAV.map((item) => {
           const Icon = getCategoryIcon(item.id, item.slug);
@@ -89,7 +97,7 @@ export default function CategoryRail({ locale }: { locale: string }) {
                 <div
                   className={`absolute top-0 ${
                     locale === "ar" ? "right-full -mr-1" : "left-full -ml-1"
-                  } z-50 min-w-[250px] max-w-[300px] bg-white rounded-xl shadow-2xl border border-gray-200 border-t-2 border-t-[#ed1c24] py-1 divide-y divide-gray-100 animate-in fade-in zoom-in-95 duration-150`}
+                  } z-[100] min-w-[250px] max-w-[300px] bg-white rounded-xl shadow-2xl border border-gray-200 border-t-2 border-t-[#ed1c24] py-1 divide-y divide-gray-100 animate-in fade-in zoom-in-95 duration-150`}
                 >
                   {item.children!.map((child) => {
                     const ChildIcon = getCategoryIcon(child.id, child.slug);

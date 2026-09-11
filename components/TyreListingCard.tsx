@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import VehicleFitmentModal from "@/components/VehicleFitmentModal";
 import Link from "next/link";
 import { Loader2, Check, ChevronDown } from "lucide-react";
+import FullyFittedPriceModal from "@/components/FullyFittedPriceModal";
 import ProductImage from "./ProductImage";
 import type { Product } from "@/lib/data";
 import { type Locale } from "@/lib/i18n";
@@ -56,11 +57,11 @@ function CarSprite() {
 export default function TyreListingCard({
   product,
   locale = "en",
-  enableHoverZoom = false,
+  enableHoverZoom = true,
 }: {
   product: Product;
   locale?: Locale;
-  /** Image zoom-on-hover — opt-in so it only applies where explicitly enabled (products/category listing). */
+  /** Image zoom-on-hover */
   enableHoverZoom?: boolean;
 }) {
   const href = product.urlKey ? `/${locale}/product/${product.urlKey}` : "#";
@@ -83,7 +84,7 @@ export default function TyreListingCard({
       : null;
 
   const brandLabel = product.brandName ?? String(product.brand ?? "");
-  const brandLogo = product.brandLogoUrl ?? getBrandLogo(product.brand);
+  const brandLogo = product.brandLogoUrl ?? getBrandLogo(product.brand) ?? getBrandLogo(product.brandName);
   const brandSlug = product.brandName?.toLowerCase().replace(/[^a-z0-9]+/g, "").replace(/(^-|-$)/g, "");
   const brandHref = brandSlug
     ? `/${locale}/tyres/brand/${brandSlug}`
@@ -99,6 +100,7 @@ export default function TyreListingCard({
   const [cartAdded, setCartAdded] = useState(false);
   const [fitmentOpen, setFitmentOpen] = useState(false);
   const [qtyOpen, setQtyOpen] = useState(false);
+  const [priceInfoOpen, setPriceInfoOpen] = useState(false);
   const qtyRef = useRef<HTMLDivElement>(null);
 
   /* Close the quantity menu on an outside click. */
@@ -220,9 +222,14 @@ export default function TyreListingCard({
 
           {/* ── Price Section ────────────────────────────────────── */}
           <div className="text-center px-1">
-            <span className="block text-[10.5px] font-medium text-gray-500">
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
+              className="text-[10.5px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer"
+              aria-label="What's included in the fully fitted price"
+            >
               Fully Fitted Price per Item
-            </span>
+            </button>
             <div className="flex items-center justify-center gap-1 font-black text-gray-900 text-[19px] sm:text-[21px] leading-tight my-0.5">
               <Money value={unitPrice} digits={2} />
             </div>
@@ -325,6 +332,8 @@ export default function TyreListingCard({
           locale={locale}
         />
       )}
+
+      <FullyFittedPriceModal isOpen={priceInfoOpen} onClose={() => setPriceInfoOpen(false)} />
     </li>
   );
 }

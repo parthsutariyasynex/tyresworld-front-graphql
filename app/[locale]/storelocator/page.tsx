@@ -1,2 +1,3 @@
-import StoreLocatorPage from "../../storelocator/page";
-export default StoreLocatorPage;
+"use client";
+export const dynamic = "force-dynamic";
+export { default } from "../../storelocator/page";

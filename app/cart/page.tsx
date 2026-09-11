@@ -164,8 +164,27 @@ export default function CartPage() {
   /* ── Loading Skeleton ────────────────────────────────────────── */
   if (!ready) {
     return (
-      <div className="min-h-[60vh] bg-[#f8f9fa] py-8">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="bg-[#f8f9fa] pb-10" dir={isAr ? "rtl" : "ltr"}>
+        {/* ── Page Hero Title Banner ── */}
+        <div
+          className="page-title-wrapper py-9 sm:py-11 text-center bg-black"
+          style={{
+            backgroundImage: "url('/img/shopping-cart-banner.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
+          <div className="container mx-auto px-4">
+            <div className="title">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase text-white tracking-wider font-sans">
+                <span className="base">{isAr ? "سلة التسوق" : "SHOPPING CART"}</span>
+              </h1>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-6" />
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_390px] gap-8 items-start">
             <div className="space-y-4">
@@ -182,16 +201,35 @@ export default function CartPage() {
   /* ── Empty Cart View ─────────────────────────────────────────── */
   if (items.length === 0) {
     return (
-      <div className="bg-[#f8f9fa] min-h-[70vh] py-10" dir={isAr ? "rtl" : "ltr"}>
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="bg-[#f8f9fa] min-h-[70vh] pb-12" dir={isAr ? "rtl" : "ltr"}>
+        {/* ── Page Hero Title Banner ── */}
+        <div
+          className="page-title-wrapper py-9 sm:py-11 text-center bg-black"
+          style={{
+            backgroundImage: "url('/img/shopping-cart-banner.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
+          <div className="container mx-auto px-4">
+            <div className="title">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase text-white tracking-wider font-sans">
+                <span className="base">{isAr ? "سلة التسوق" : "SHOPPING CART"}</span>
+              </h1>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 pt-6">
           {/* Breadcrumb */}
           <div className="mb-6">
-            <p className="text-xs text-gray-400 font-medium">
-              <Link href={`/${locale}`} className="hover:text-gray-700 transition-colors">
+            <p className="text-xs text-gray-500 font-medium">
+              <Link href={`/${locale}`} className="hover:text-gray-900 transition-colors">
                 {isAr ? "الرئيسية" : "Home"}
               </Link>
               {" / "}
-              <span className="text-gray-700 font-bold">{isAr ? "السلة" : "Cart"}</span>
+              <span className="text-gray-900 font-bold">{isAr ? "سلة التسوق" : "Shopping Cart"}</span>
             </p>
           </div>
 
@@ -199,9 +237,9 @@ export default function CartPage() {
             <div className="w-20 h-20 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-6 text-[#ed1c24]">
               <ShoppingBag size={34} strokeWidth={2.2} />
             </div>
-            <h1 className="text-2xl font-black text-gray-950 uppercase tracking-tight mb-2 font-sans">
+            <h2 className="text-2xl font-black text-gray-950 uppercase tracking-tight mb-2 font-sans">
               {isAr ? "سلة التسوق فارغة" : "Your cart is empty"}
-            </h1>
+            </h2>
             <p className="text-gray-500 text-sm mb-8 leading-relaxed max-w-sm mx-auto">
               {isAr
                 ? "لم تضف أي إطارات إلى سلتك بعد. استكشف مجموعتنا الواسعة من الإطارات الممتازة."
@@ -222,16 +260,35 @@ export default function CartPage() {
 
   /* ── Cart with Items ─────────────────────────────────────────── */
   return (
-    <div className="bg-[#f8f9fa] pb-10" dir={isAr ? "rtl" : "ltr"}>
+    <div className="bg-[#f8f9fa] pb-12" dir={isAr ? "rtl" : "ltr"}>
+      {/* ── Page Hero Title Banner ── */}
+      <div
+        className="page-title-wrapper py-9 sm:py-11 text-center bg-black"
+        style={{
+          backgroundImage: "url('/img/shopping-cart-banner.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div className="container mx-auto px-4">
+          <div className="title">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase text-white tracking-wider font-sans">
+              <span className="base">{isAr ? "سلة التسوق" : "SHOPPING CART"}</span>
+            </h1>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 pt-5">
         {/* Breadcrumb */}
-        <div className="mb-3">
-          <p className="text-xs text-gray-400 font-medium">
-            <Link href={`/${locale}`} className="hover:text-gray-700 transition-colors">
+        <div className="mb-4">
+          <p className="text-xs text-gray-500 font-medium">
+            <Link href={`/${locale}`} className="hover:text-gray-900 transition-colors">
               {isAr ? "الرئيسية" : "Home"}
             </Link>
             {" / "}
-            <span className="text-gray-700 font-bold">{isAr ? "السلة" : "Cart"}</span>
+            <span className="text-gray-900 font-bold">{isAr ? "سلة التسوق" : "Shopping Cart"}</span>
           </p>
         </div>
 
@@ -243,14 +300,6 @@ export default function CartPage() {
         >
           {/* ════ LEFT COLUMN: CART ITEMS ════ */}
           <div className="space-y-3">
-            {/* Top Regular Cart Badge / Tab */}
-            <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-gray-100 border border-gray-200/60 text-gray-800 text-xs font-bold shadow-2xs select-none">
-                <Package size={14} className="text-gray-500 shrink-0" />
-                <span>{isAr ? "عربة التسوق العادية" : "Regular Cart"}</span>
-              </div>
-            </div>
-
             {/* ── Table Header ── */}
             <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto] gap-x-6 px-4 py-3 bg-gray-100 border border-gray-200/70 rounded-xl text-[11px] font-bold uppercase tracking-wider text-gray-500 select-none">
               <span>{isAr ? "المنتج" : "Item"}</span>

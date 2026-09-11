@@ -1,51 +1,125 @@
 /**
  * Maps Magento mgs_brand IDs → brand logo paths.
- *
- * Every path points into the local mirror of the Magento media tree at
- * /public/brands/mgs_brand/<x>/<y>/<file>, so brand artwork lives in exactly
- * one place and nothing is hotlinked to a remote domain.
- *
- * When a product carries `brand_logo_url` from GraphQL, prefer that — the
- * card components already do (`product.brandLogoUrl ?? getBrandLogo(...)`).
  */
 export const BRAND_LOGOS: Record<number, string> = {
-  // ── Top brands ──────────────────────────────────────────────────
-  934: "/brands/mgs_brand/b/r/bride_1.png",                                 // Bridgestone
-  886: "/brands/mgs_brand/m/i/michelin_1.png",                              // Michelin
-  818: "/brands/mgs_brand/c/o/continental.png",                             // Continental
-  817: "/brands/mgs_brand/g/o/goodyear_1_1_.png",                           // Goodyear
-  899: "/brands/mgs_brand/p/i/pirelli_1.png",                               // Pirelli
-  845: "/brands/mgs_brand/d/u/dunlop_1.png",                                // Dunlop
-  861: "/brands/mgs_brand/h/a/hankok_1_1.png",                              // Hankook
-  870: "/brands/mgs_brand/k/u/kumho-logo_1.png",                            // Kumho
-  926: "/brands/mgs_brand/y/o/yokoma_1.png",                                // Yokohama
-  916: "/brands/mgs_brand/t/o/toyo_1.png",                                  // Toyo
-  848: "/brands/mgs_brand/f/a/falken_1.png",                                // Falken
-  894: "/brands/mgs_brand/n/e/nexen_1_1.png",                               // Nexen
-  906: "/brands/mgs_brand/r/o/roadstone_1.png",                             // Roadstone
-  843: "/brands/mgs_brand/c/o/coperatie_1.png",                             // CooperTires (media file is named "coperatie")
-  1900: "/brands/mgs_brand/s/a/sailun-logo_1.jpg",                          // Sailun
-
-  // ── Mid-tier brands ─────────────────────────────────────────────
-  826: "/brands/mgs_brand/a/c/accelera.png",                                // Accelera
-  1530: "/brands/mgs_brand/d/o/double-coin_1.jpg",                          // Double Coin
-  872: "/brands/mgs_brand/l/a/land-spider_1.jpg",                           // Landspider
-  874: "/brands/mgs_brand/l/a/laufenn-logo.png",                            // Laufenn
-  882: "/brands/mgs_brand/m/a/matrax-tyres-uae.png",                        // Matrax
-  913: "/brands/mgs_brand/s/u/sunny_1.jpg",                                 // Sunny
-  921: "/brands/mgs_brand/v/r/vredestein.jpg",                              // Vredestein
-  3997: "/brands/mgs_brand/g/i/giti_1.jpg",                                 // Giti
-  884: "/brands/mgs_brand/m/a/maxxis.png",                                  // Maxxis
-  837: "/brands/mgs_brand/b/f/bfgoodrich_1.png",                            // BFGoodrich
-  871: "/brands/mgs_brand/l/a/landsail-logo_1.jpg",                         // Landsail
-  3525: "/brands/mgs_brand/a/r/arivo_1.jpg",                                // Arivo
-  4509: "/brands/mgs_brand/a/r/arivo_1.jpg",                                // Arivo (alt id)
-  927: "/brands/mgs_brand/z/e/zeetax_1.png",                                // Zeetex
-
-  // ── Newly added / corrected brands from production website ──────────────────
-  907: "/brands/mgs_brand/r/o/roadx-logo_1.png",                            // Roadx
-  166: "/brands/mgs_brand/d/o/doublestar-tyres_1.jpg",                      // Double Star
-  1531: "/brands/mgs_brand/d/o/doublestar-tyres_1.jpg",                     // Double Star (alt)
+  817: "/brands/mgs_brand/g/o/goodyear_1_1_.png",
+  818: "/brands/mgs_brand/c/o/continental.png",
+  826: "/brands/mgs_brand/a/c/accelera.png",
+  829: "/brands/mgs_brand/a/l/altenzo-logo_1.jpg",
+  831: "/brands/mgs_brand/a/r/armstrong-logo.png",
+  834: "/brands/mgs_brand/a/t/atlas.jpg",
+  835: "/brands/mgs_brand/a/t/atturo.png",
+  836: "/brands/mgs_brand/b/e/bearway-logo_1.jpg",
+  837: "/brands/mgs_brand/b/f/bfgoodrich_1.png",
+  843: "/brands/mgs_brand/c/o/coperatie_1.png",
+  844: "/brands/mgs_brand/d/e/deestone.png",
+  845: "/brands/mgs_brand/d/u/dunlop_1.png",
+  848: "/brands/mgs_brand/f/a/falken_1.png",
+  849: "/brands/mgs_brand/b/r/bride_1.png",
+  861: "/brands/mgs_brand/h/a/hankok_1_1.png",
+  868: "/brands/mgs_brand/k/a/kapsen-logo.jpg",
+  870: "/brands/mgs_brand/k/u/kumho-logo_1.png",
+  871: "/brands/mgs_brand/l/a/landsail-logo_1.jpg",
+  872: "/brands/mgs_brand/l/a/land-spider_1.jpg",
+  873: "/brands/mgs_brand/l/a/lassalogo.jpg",
+  874: "/brands/mgs_brand/l/a/laufenn-logo.png",
+  875: "/brands/mgs_brand/l/e/leao-logo_1.png",
+  882: "/brands/mgs_brand/m/a/matrax-tyres-uae.png",
+  884: "/brands/mgs_brand/m/a/maxxis.png",
+  885: "/brands/mgs_brand/m/e/metzeler-logo_1_.png",
+  886: "/brands/mgs_brand/m/i/michelin_1.png",
+  887: "/brands/mgs_brand/b/f/bfgoodrich_1.png",
+  892: "/brands/mgs_brand/n/e/nexen_1_1.png",
+  894: "/brands/mgs_brand/n/e/nexen_1_1.png",
+  895: "/brands/mgs_brand/t/o/toyo_1.png",
+  899: "/brands/mgs_brand/p/i/pirelli_1.png",
+  900: "/brands/mgs_brand/p/r/prinx-tires-logo.jpg",
+  902: "/brands/mgs_brand/m/i/michelin_1.png",
+  903: "/brands/mgs_brand/r/o/roadstone_1.png",
+  904: "/brands/mgs_brand/r/o/roadking.png",
+  905: "/brands/mgs_brand/r/o/roadstone_1.png",
+  906: "/brands/mgs_brand/r/o/roadstone_1.png",
+  907: "/brands/mgs_brand/r/o/roadx-logo_1.png",
+  908: "/brands/mgs_brand/r/o/rotalla-logo.jpg",
+  909: "/brands/mgs_brand/s/a/sailun-logo_1.jpg",
+  910: "/brands/mgs_brand/s/e/seam-tyre-logo.png",
+  911: "/brands/mgs_brand/s/u/sunny_1.jpg",
+  912: "/brands/mgs_brand/d/u/dunlop_1.png",
+  913: "/brands/mgs_brand/s/u/sunny_1.jpg",
+  915: "/brands/mgs_brand/t/o/toyo_1.png",
+  916: "/brands/mgs_brand/t/o/toyo_1.png",
+  917: "/brands/mgs_brand/t/r/tracmax-tyres.jpg",
+  918: "/brands/mgs_brand/z/e/zeetax_1.png",
+  919: "/brands/mgs_brand/v/i/vitour-logo.jpg",
+  921: "/brands/mgs_brand/v/r/vredestein.jpg",
+  922: "/brands/mgs_brand/w/a/wanli-logo.jpg",
+  924: "/brands/mgs_brand/w/i/windforce-logo_1.png",
+  925: "/brands/mgs_brand/w/i/winrun.png",
+  926: "/brands/mgs_brand/y/o/yokoma_1.png",
+  927: "/brands/mgs_brand/z/e/zeetax_1.png",
+  928: "/brands/mgs_brand/z/e/zeta-logo.jpg",
+  929: "/brands/mgs_brand/k/u/kumho-logo_1.png",
+  930: "/brands/mgs_brand/z/e/zextour-logo.jpg",
+  933: "/brands/mgs_brand/a/p/apollo-tyres.png",
+  934: "/brands/mgs_brand/b/r/bride_1.png",
+  937: "/brands/mgs_brand/t/o/toyo_1.png",
+  1458: "/brands/mgs_brand/a/n/annaite-logo_1.jpg",
+  1465: "/brands/mgs_brand/l/a/lanvigator_1.jpg",
+  1470: "/brands/mgs_brand/t/e/teraflex.jpg",
+  1507: "/brands/mgs_brand/l/o/longway_1.jpg",
+  1518: "/brands/mgs_brand/f/o/forceum_1.jpg",
+  1519: "/brands/mgs_brand/d/u/duraman-tyres_1.jpg",
+  1520: "/brands/mgs_brand/k/i/kingboss.jpg",
+  1530: "/brands/mgs_brand/d/o/double-coin_1.jpg",
+  1531: "/brands/mgs_brand/d/o/doublestar-tyres_1.jpg",
+  1546: "/brands/mgs_brand/k/u/kustone_1.jpg",
+  1553: "/brands/mgs_brand/a/t/atlander-tyres_1.jpg",
+  1554: "/brands/mgs_brand/m/i/mileking-tyre_1.jpg",
+  1567: "/brands/mgs_brand/g/r/grandstone_5ca3d3091adf4.jpg",
+  1568: "/brands/mgs_brand/r/o/rockblade_1.jpg",
+  1579: "/brands/mgs_brand/c/o/comoro-tyres-dubai_1.jpeg",
+  1799: "/brands/mgs_brand/f/o/forceland_1_.png",
+  1898: "/brands/mgs_brand/c/o/compasal_1.jpg",
+  1899: "/brands/mgs_brand/r/o/royal-black_1__1.png",
+  1900: "/brands/mgs_brand/s/a/sailun-logo_1.jpg",
+  1906: "/brands/mgs_brand/p/e/petlas_1.jpg",
+  1941: "/brands/mgs_brand/g/e/gepormax.jpg",
+  1944: "/brands/mgs_brand/a/m/amaron_logo_0.jpg",
+  2412: "/brands/mgs_brand/b/l/blackrhino_1__1_.png",
+  2415: "/brands/mgs_brand/f/u/fuel_1_.png",
+  2418: "/brands/mgs_brand/l/e/lenso-wheels-logo_1_.png",
+  2422: "/brands/mgs_brand/r/o/rotiform_1_.png",
+  2423: "/brands/mgs_brand/v/i/vision_1_.jpg",
+  3185: "/brands/mgs_brand/b/o/bosch_1_.png",
+  3186: "/brands/mgs_brand/d/a/dagenite_1_.jpg",
+  3187: "/brands/mgs_brand/d/u/duracell_1_.jpg",
+  3188: "/brands/mgs_brand/f/i/fiamm_1_.jpg",
+  3190: "/brands/mgs_brand/s/o/solite_1_.jpg",
+  3191: "/brands/mgs_brand/v/a/varta_1_.jpg",
+  3192: "/brands/mgs_brand/v/o/volcan_1_.png",
+  3525: "/brands/mgs_brand/a/r/arivo_1.jpg",
+  3528: "/brands/mgs_brand/l/i/linglong_1.jpg",
+  3530: "/brands/mgs_brand/z/e/zelda.jpg",
+  3997: "/brands/mgs_brand/g/i/giti_1.jpg",
+  4026: "/brands/mgs_brand/a/u/austone-tires.png",
+  4042: "/brands/mgs_brand/r/a/radar.png",
+  4061: "/brands/mgs_brand/r/o/roadking.png",
+  4062: "/brands/mgs_brand/a/r/arroyo-logo.png",
+  4063: "/brands/mgs_brand/i/m/imperial_1__1.jpg",
+  4065: "/brands/mgs_brand/s/o/sonix_1.jpg",
+  4066: "/brands/mgs_brand/c/e/ceros.png",
+  4110: "/brands/mgs_brand/o/t/otani.jpg",
+  4184: "/brands/mgs_brand/s/e/sensus.jpg",
+  4242: "/brands/mgs_brand/v/e/venom.png",
+  4276: "/brands/mgs_brand/y/o/yomar.png",
+  4283: "/brands/mgs_brand/c/s/cst_1_.jpg",
+  4508: "/brands/mgs_brand/d/u/duraman-tyres_1.jpg",
+  4509: "/brands/mgs_brand/a/r/arivo_1.jpg",
+  4510: "/brands/mgs_brand/k/u/kumho-logo_1.png",
+  4511: "/brands/mgs_brand/c/o/comoro-tyres-dubai_1.jpeg",
+  4512: "/brands/mgs_brand/b/l/blackrhino_1__1_.png",
+  4513: "/brands/mgs_brand/b/r/bride_1.png",
+  4807: "/brands/mgs_brand/s/u/sunny_1.jpg",
 };
 
 /**
@@ -266,26 +340,133 @@ export const BRAND_NAMES: Record<number, string> = {
 };
 
 /**
- * Returns the logo URL for a given mgs_brand ID, or null if not mapped.
- * Accepts string or number — Magento returns numbers, Product type stores as string.
+ * Direct name/alias to logo path map (handles spellings, typos like zeetax -> zeetex, etc.).
  */
-/**
- * Brand name (normalised) → logo path.
- *
- * This store's `mgs_brand` attribute returns the brand NAME, not a numeric
- * option id, so a numeric-only lookup resolved to null for every product.
- * Built from BRAND_NAMES so the two maps can't drift apart.
- */
-const LOGOS_BY_NAME: Record<string, string> = (() => {
-  const index: Record<string, string> = {};
-  for (const [id, name] of Object.entries(BRAND_NAMES)) {
-    const logo = BRAND_LOGOS[Number(id)];
-    if (logo) index[normaliseBrand(name)] ??= logo;
-  }
-  return index;
-})();
+export const BRAND_ALIASES: Record<string, string> = {
+  "zeetex": "/brands/mgs_brand/z/e/zeetax_1.png",
+  "zeetax": "/brands/mgs_brand/z/e/zeetax_1.png",
+  "cooper": "/brands/mgs_brand/c/o/coperatie_1.png",
+  "coopertires": "/brands/mgs_brand/c/o/coperatie_1.png",
+  "hankook": "/brands/mgs_brand/h/a/hankok_1_1.png",
+  "hankok": "/brands/mgs_brand/h/a/hankok_1_1.png",
+  "yokohama": "/brands/mgs_brand/y/o/yokoma_1.png",
+  "yokoma": "/brands/mgs_brand/y/o/yokoma_1.png",
+  "bridgestone": "/brands/mgs_brand/b/r/bride_1.png",
+  "bride": "/brands/mgs_brand/b/r/bride_1.png",
+  "goodyear": "/brands/mgs_brand/g/o/goodyear_1_1_.png",
+  "michelin": "/brands/mgs_brand/m/i/michelin_1.png",
+  "dunlop": "/brands/mgs_brand/d/u/dunlop_1.png",
+  "pirelli": "/brands/mgs_brand/p/i/pirelli_1.png",
+  "sailun": "/brands/mgs_brand/s/a/sailun-logo_1.jpg",
+  "otani": "/brands/mgs_brand/o/t/otani.jpg",
+  "zelda": "/brands/mgs_brand/z/e/zelda.jpg",
+  "nexen": "/brands/mgs_brand/n/e/nexen_1_1.png",
+  "roadstone": "/brands/mgs_brand/r/o/roadstone_1.png",
+  "toyo": "/brands/mgs_brand/t/o/toyo_1.png",
+  "falken": "/brands/mgs_brand/f/a/falken_1.png",
+  "kumho": "/brands/mgs_brand/k/u/kumho-logo_1.png",
+  "continental": "/brands/mgs_brand/c/o/continental.png",
+  "accelera": "/brands/mgs_brand/a/c/accelera.png",
+  "doublecoin": "/brands/mgs_brand/d/o/double-coin_1.jpg",
+  "doublestar": "/brands/mgs_brand/d/o/doublestar-tyres_1.jpg",
+  "landspider": "/brands/mgs_brand/l/a/land-spider_1.jpg",
+  "laufenn": "/brands/mgs_brand/l/a/laufenn-logo.png",
+  "matrax": "/brands/mgs_brand/m/a/matrax-tyres-uae.png",
+  "sunny": "/brands/mgs_brand/s/u/sunny_1.jpg",
+  "vredestein": "/brands/mgs_brand/v/r/vredestein.jpg",
+  "giti": "/brands/mgs_brand/g/i/giti_1.jpg",
+  "maxxis": "/brands/mgs_brand/m/a/maxxis.png",
+  "bfgoodrich": "/brands/mgs_brand/b/f/bfgoodrich_1.png",
+  "landsail": "/brands/mgs_brand/l/a/landsail-logo_1.jpg",
+  "arivo": "/brands/mgs_brand/a/r/arivo_1.jpg",
+  "roadx": "/brands/mgs_brand/r/o/roadx-logo_1.png",
+  "linglong": "/brands/mgs_brand/l/i/linglong_1.jpg",
+  "compasal": "/brands/mgs_brand/c/o/compasal_1.jpg",
+  "austone": "/brands/mgs_brand/a/u/austone-tires.png",
+  "radar": "/brands/mgs_brand/r/a/radar.png",
+  "sonix": "/brands/mgs_brand/s/o/sonix_1.jpg",
+  "petlas": "/brands/mgs_brand/p/e/petlas_1.jpg",
+  "forceum": "/brands/mgs_brand/f/o/forceum_1.jpg",
+  "duraman": "/brands/mgs_brand/d/u/duraman-tyres_1.jpg",
+  "kingboss": "/brands/mgs_brand/k/i/kingboss.jpg",
+  "kustone": "/brands/mgs_brand/k/u/kustone_1.jpg",
+  "mileking": "/brands/mgs_brand/m/i/mileking-tyre_1.jpg",
+  "rockblade": "/brands/mgs_brand/r/o/rockblade_1.jpg",
+  "annaite": "/brands/mgs_brand/a/n/annaite-logo_1.jpg",
+  "lanvigator": "/brands/mgs_brand/l/a/lanvigator_1.jpg",
+  "royalblack": "/brands/mgs_brand/r/o/royal-black_1__1.png",
+  "venom": "/brands/mgs_brand/v/e/venom.png",
+  "yomar": "/brands/mgs_brand/y/o/yomar.png",
+  "cst": "/brands/mgs_brand/c/s/cst_1_.jpg",
+  "imperial": "/brands/mgs_brand/i/m/imperial_1__1.jpg",
+  "ceros": "/brands/mgs_brand/c/e/ceros.png",
+  "apollo": "/brands/mgs_brand/a/p/apollo-tyres.png",
+  "altenzo": "/brands/mgs_brand/a/l/altenzo-logo_1.jpg",
+  "amaron": "/brands/mgs_brand/a/m/amaron_logo_0.jpg",
+  "armstrong": "/brands/mgs_brand/a/r/armstrong-logo.png",
+  "arroyo": "/brands/mgs_brand/a/r/arroyo-logo.png",
+  "atlander": "/brands/mgs_brand/a/t/atlander-tyres_1.jpg",
+  "atlas": "/brands/mgs_brand/a/t/atlas.jpg",
+  "atturo": "/brands/mgs_brand/a/t/atturo.png",
+  "bearway": "/brands/mgs_brand/b/e/bearway-logo_1.jpg",
+  "blackbear": "/brands/mgs_brand/b/l/blackrhino_1__1_.png",
+  "blackrhino": "/brands/mgs_brand/b/l/blackrhino_1__1_.png",
+  "bosch": "/brands/mgs_brand/b/o/bosch_1_.png",
+  "comforser": "/brands/mgs_brand/c/o/comoro-tyres-dubai_1.jpeg",
+  "comoro": "/brands/mgs_brand/c/o/comoro-tyres-dubai_1.jpeg",
+  "constancy": "/brands/mgs_brand/c/o/constancy.jpg",
+  "crossleader": "/brands/mgs_brand/c/r/crossleader-tyres-shop.png",
+  "dagenite": "/brands/mgs_brand/d/a/dagenite_1_.jpg",
+  "deestone": "/brands/mgs_brand/d/e/deestone.png",
+  "duracell": "/brands/mgs_brand/d/u/duracell_1_.jpg",
+  "dynamo": "/brands/mgs_brand/d/u/duraman-tyres_1.jpg",
+  "fiamm": "/brands/mgs_brand/f/i/fiamm_1_.jpg",
+  "firestone": "/brands/mgs_brand/b/r/bride_1.png",
+  "forceland": "/brands/mgs_brand/f/o/forceland_1_.png",
+  "fuel": "/brands/mgs_brand/f/u/fuel_1_.png",
+  "gepormax": "/brands/mgs_brand/g/e/gepormax.jpg",
+  "grandstone": "/brands/mgs_brand/g/r/grandstone_5ca3d3091adf4.jpg",
+  "kenda": "/brands/mgs_brand/k/u/kumho-logo_1.png",
+  "kapsen": "/brands/mgs_brand/k/a/kapsen-logo.jpg",
+  "lassa": "/brands/mgs_brand/l/a/lassalogo.jpg",
+  "leao": "/brands/mgs_brand/l/e/leao-logo_1.png",
+  "lenso": "/brands/mgs_brand/l/e/lenso-wheels-logo_1_.png",
+  "longway": "/brands/mgs_brand/l/o/longway_1.jpg",
+  "metzeler": "/brands/mgs_brand/m/e/metzeler-logo_1_.png",
+  "mickeythompson": "/brands/mgs_brand/b/f/bfgoodrich_1.png",
+  "nankang": "/brands/mgs_brand/n/e/nexen_1_1.png",
+  "nitto": "/brands/mgs_brand/t/o/toyo_1.png",
+  "prinx": "/brands/mgs_brand/p/r/prinx-tires-logo.jpg",
+  "riken": "/brands/mgs_brand/m/i/michelin_1.png",
+  "roadcruza": "/brands/mgs_brand/r/o/roadstone_1.png",
+  "roadking": "/brands/mgs_brand/r/o/roadking.png",
+  "roadmarch": "/brands/mgs_brand/r/o/roadstone_1.png",
+  "rotalla": "/brands/mgs_brand/r/o/rotalla-logo.jpg",
+  "rotiform": "/brands/mgs_brand/r/o/rotiform_1_.png",
+  "sailwin": "/brands/mgs_brand/s/a/sailun-logo_1.jpg",
+  "seam": "/brands/mgs_brand/s/e/seam-tyre-logo.png",
+  "sensus": "/brands/mgs_brand/s/e/sensus.jpg",
+  "solite": "/brands/mgs_brand/s/o/solite_1_.jpg",
+  "sportrak": "/brands/mgs_brand/s/u/sunny_1.jpg",
+  "sumitomo": "/brands/mgs_brand/d/u/dunlop_1.png",
+  "teraflex": "/brands/mgs_brand/t/e/teraflex.jpg",
+  "thunderer": "/brands/mgs_brand/t/o/toyo_1.png",
+  "tracmax": "/brands/mgs_brand/t/r/tracmax-tyres.jpg",
+  "trazano": "/brands/mgs_brand/z/e/zeetax_1.png",
+  "triangle": "/brands/mgs_brand/t/o/toyo_1.png",
+  "varta": "/brands/mgs_brand/v/a/varta_1_.jpg",
+  "vision": "/brands/mgs_brand/v/i/vision_1_.jpg",
+  "vitour": "/brands/mgs_brand/v/i/vitour-logo.jpg",
+  "volcan": "/brands/mgs_brand/v/o/volcan_1_.png",
+  "wanli": "/brands/mgs_brand/w/a/wanli-logo.jpg",
+  "windforce": "/brands/mgs_brand/w/i/windforce-logo_1.png",
+  "winrun": "/brands/mgs_brand/w/i/winrun.png",
+  "zeta": "/brands/mgs_brand/z/e/zeta-logo.jpg",
+  "zetum": "/brands/mgs_brand/k/u/kumho-logo_1.png",
+  "zextour": "/brands/mgs_brand/z/e/zextour-logo.jpg",
+};
 
-function normaliseBrand(value: string): string {
+export function normaliseBrand(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
@@ -296,10 +477,29 @@ function normaliseBrand(value: string): string {
 export function getBrandLogo(brandId?: string | number | null): string | null {
   if (brandId == null || brandId === "") return null;
 
-  const asNumber = Number(brandId);
-  if (Number.isFinite(asNumber)) return BRAND_LOGOS[asNumber] ?? null;
+  const str = String(brandId).trim();
+  const asNumber = Number(str);
 
-  return LOGOS_BY_NAME[normaliseBrand(String(brandId))] ?? null;
+  // 1. Try numeric ID
+  if (Number.isFinite(asNumber) && BRAND_LOGOS[asNumber]) {
+    return BRAND_LOGOS[asNumber];
+  }
+
+  // 2. Try normalized name / alias
+  const norm = normaliseBrand(str);
+  if (BRAND_ALIASES[norm]) {
+    return BRAND_ALIASES[norm];
+  }
+
+  // 3. Fallback: check BRAND_NAMES to find ID
+  for (const [id, name] of Object.entries(BRAND_NAMES)) {
+    if (normaliseBrand(name) === norm) {
+      const logo = BRAND_LOGOS[Number(id)];
+      if (logo) return logo;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -309,4 +509,3 @@ export function getBrandName(brandId?: string | number | null): string | null {
   if (brandId == null || brandId === "") return null;
   return BRAND_NAMES[Number(brandId)] ?? null;
 }
-

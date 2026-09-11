@@ -52,7 +52,7 @@ export default function OffersSection() {
   const reducedMotion = usePrefersReducedMotion();
 
   return (
-    <section className="ptr-section py-12 lg:py-16 bg-white">
+    <section className="bg-white pt-6 sm:pt-8 pb-10 sm:pb-12">
       <div className="ptr-container">
         {/* ── Section Header ── */}
         <div className="mb-8">

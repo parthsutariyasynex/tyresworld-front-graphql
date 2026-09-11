@@ -21,6 +21,7 @@ import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import { Money } from "@/components/Price";
 import { MAIN_NAV, navHref, navLabel, isNavActive } from "@/src/config/navigation";
+import HomeSearchBar from "@/components/home/partora/HomeSearchBar";
 
 /* Icon-button styles live in app/globals.css (.header-icon-*) — the one
    stylesheet is the single source of truth for brand colours. */
@@ -35,6 +36,8 @@ export default function Header() {
   const locale = pathname.split("/")[1] === "ar" ? "ar" : "en";
   const nextLocale = locale === "ar" ? "en" : "ar";
   const switchLabel = locale === "en" ? "العربية" : "English";
+
+  const isHomePage = pathname === "/" || pathname === `/${locale}` || pathname === `/${locale}/` || pathname === "/en" || pathname === "/ar";
 
   function switchLocale() {
     const segments = pathname.split("/");
@@ -91,9 +94,76 @@ export default function Header() {
             />
           </Link>
 
+          {/* ── Homepage Search Bar (Centered on Homepage) ─────────────── */}
+          {isHomePage && (
+            <div className="hidden md:flex flex-1 max-w-[650px] mx-4 lg:mx-8">
+              <HomeSearchBar locale={locale} />
+            </div>
+          )}
 
+          {/* ── Primary nav (Shown on inner pages, hidden on homepage) ─── */}
+          {!isHomePage && (
+            <nav className="site-nav">
+              {MAIN_NAV.map((item) => {
+                const hasChildren = !!item.children?.length;
+                const isActive = isNavActive(item, pathname, locale);
+                const isOpen = openDropdown === item.id;
 
-            {/* ── Right actions ─────────────────────────────── */}
+                return (
+                  <div
+                    key={item.id}
+                    className="relative group h-full flex items-center"
+                    onMouseEnter={() => hasChildren && setOpenDropdown(item.id)}
+                    onMouseLeave={() => setOpenDropdown(null)}
+                  >
+                    <Link
+                      href={navHref(item, locale)}
+                      className="site-nav-link"
+                      data-active={isActive}
+                    >
+                      <span>{navLabel(item, locale)}</span>
+                      {hasChildren && (
+                        <ChevronDown
+                          size={13}
+                          className={`transition-transform duration-200 opacity-70 group-hover:opacity-100 ${
+                            isOpen ? "rotate-180 text-[#ed1c24]" : ""
+                          }`}
+                          aria-hidden="true"
+                        />
+                      )}
+                    </Link>
+
+                    {/* Dropdown panel for items with children */}
+                    {hasChildren && (
+                      <div
+                        className="site-nav-panel"
+                        data-open={isOpen}
+                        style={{
+                          [locale === "ar" ? "right" : "left"]: 0,
+                        }}
+                      >
+                        <div className="site-nav-panel-body rounded-b-xl shadow-2xl">
+                          {item.children!.map((child) => (
+                            <Link
+                              key={child.id}
+                              href={navHref(child, locale)}
+                              className="site-nav-sublink"
+                              data-active={isNavActive(child, pathname, locale)}
+                              onClick={() => setOpenDropdown(null)}
+                            >
+                              {navLabel(child, locale)}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </nav>
+          )}
+
+          {/* ── Right actions ─────────────────────────────── */}
             <div className="flex items-center gap-2 flex-shrink-0 ml-auto lg:ml-0 relative">
 
               {/* Language / store switcher (commented out - English only)
@@ -350,6 +420,8 @@ export default function Header() {
 
         </div>
       </header>
+
+
 
       {/* ══════════════════════════════════════════════════════════
           MOBILE DRAWER

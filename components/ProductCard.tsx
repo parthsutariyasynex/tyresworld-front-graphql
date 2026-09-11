@@ -30,7 +30,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const isOutOfStock = product.inStock === false || product.price <= 0;
   const unitPrice = product.price > 0 ? product.price : 0;
   const brandLabel = product.brandName ?? String(product.brand ?? "");
-  const brandLogo = product.brandLogoUrl ?? getBrandLogo(product.brand);
+  const brandLogo = product.brandLogoUrl ?? getBrandLogo(product.brand) ?? getBrandLogo(product.brandName);
   const brandSlug = product.brandName?.toLowerCase().replace(/[^a-z0-9]+/g, "").replace(/(^-|-$)/g, "");
   const brandHref = brandSlug ? `/${locale}/tyres/brand/${brandSlug}` : null;
 
@@ -204,7 +204,7 @@ export default function ProductCard({ product }: { product: Product }) {
               href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-[#ed1c24] hover:bg-[#111111] active:scale-[0.98] text-white text-[12px] sm:text-[13px] font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs whitespace-nowrap"
+              className="btn-slide-red active:scale-[0.98] text-white text-[12px] sm:text-[13px] font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-xs whitespace-nowrap"
             >
               <ShoppingCart size={14} className="stroke-[2.2]" />
               <span>{isAr ? "استفسار" : "Enquiry"}</span>
@@ -214,10 +214,8 @@ export default function ProductCard({ product }: { product: Product }) {
               type="button"
               onClick={handleAddToCart}
               disabled={adding}
-              className={`text-white text-[12px] sm:text-[13px] font-bold px-3.5 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-xs whitespace-nowrap cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed ${
-                cartAdded
-                  ? "bg-[#16a34a]"
-                  : "bg-[#ed1c24] hover:bg-[#111111] active:scale-[0.98]"
+              className={`btn-slide-red text-white text-[12px] sm:text-[13px] font-bold px-3.5 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 shadow-xs whitespace-nowrap cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed ${
+                cartAdded ? "!bg-[#16a34a]" : ""
               }`}
             >
               {adding ? (

@@ -57,33 +57,17 @@ export default function PartoraHero({ locale }: { locale: string }) {
   }, []);
 
   return (
-    <section className="ptr-hero">
-      {/* Dark band behind the toolbar row — Partora's `h-20 bg-myblack`. */}
-      <div className="ptr-hero-band" aria-hidden="true" />
-
+    <section className="ptr-hero pt-1 sm:pt-2">
       <div className="ptr-container">
-        {/* ── Toolbar row ─────────────────────────────────────────── */}
-        <div className="ptr-grid ptr-hero-toolbar">
-          <div className="col-span-12 hidden lg:block lg:col-span-3">
-            <div className="ptr-cat-head">
-              <span className="ptr-cat-head-bars" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </span>
-              {isAr ? "تصفح جميع الفئات" : "Browse All Categories"}
-            </div>
-          </div>
-
-          <div className="col-span-12 mb-3 lg:mb-0 lg:col-span-9">
-            <HomeSearchBar locale={locale} />
-          </div>
+        {/* Mobile Search Bar (Only visible on mobile screens) */}
+        <div className="md:hidden mb-3">
+          <HomeSearchBar locale={locale} />
         </div>
 
         {/* ── Hero grid ───────────────────────────────────────────── */}
-        <div className="ptr-grid items-stretch pt-2 sm:pt-4">
-          {/* Left — categories. */}
-          <div className="col-span-12 hidden lg:block lg:col-span-3 ptr-hero-col">
+        <div className="ptr-grid items-stretch">
+          {/* Left — categories */}
+          <div className="col-span-12 hidden lg:block lg:col-span-3 ptr-hero-col relative z-40">
             <CategoryRail locale={locale} />
           </div>
 

@@ -436,19 +436,87 @@
 
   .button-primary::before {
     content: "";
-    @apply absolute inset-0;
+    @apply absolute inset-0 z-0 pointer-events-none;
     background: var(--brand-ink);
-    transform: scaleX(0);
-    transform-origin: right center;
+    transform: scaleY(0);
+    transform-origin: bottom center;
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .button-primary:hover::before {
-    transform: scaleX(1);
+    transform: scaleY(1);
   }
 
-  .button-primary > span {
+  .button-primary > * {
     @apply relative z-10;
+  }
+
+  /* ── Black Base Button with Brand Red Slide-Up from Bottom ── */
+  .btn-slide-black,
+  .btn-black-slide {
+    @apply relative inline-flex items-center justify-center overflow-hidden
+           font-black uppercase tracking-wider text-white transition-colors cursor-pointer;
+    background: var(--brand-ink, #000000);
+    border-radius: var(--radius-sm, 6px);
+  }
+
+  .btn-slide-black::before,
+  .btn-black-slide::before {
+    content: "";
+    @apply absolute inset-0 z-0 pointer-events-none;
+    background: var(--brand-red, #ed1c24);
+    transform: scaleY(0);
+    transform-origin: bottom center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-slide-black:hover::before,
+  .btn-black-slide:hover::before {
+    transform: scaleY(1);
+  }
+
+  .btn-slide-black > *,
+  .btn-black-slide > * {
+    @apply relative z-10;
+  }
+
+  .btn-slide-black:disabled::before,
+  .btn-black-slide:disabled::before {
+    transform: scaleY(0);
+  }
+
+  /* ── Red Base Button with Ink/Black Slide-Up from Bottom ── */
+  .btn-slide-red,
+  .btn-red-slide {
+    @apply relative inline-flex items-center justify-center overflow-hidden
+           font-black uppercase tracking-wider text-white transition-colors cursor-pointer;
+    background: var(--brand-red, #ed1c24);
+    border-radius: var(--radius-sm, 6px);
+  }
+
+  .btn-slide-red::before,
+  .btn-red-slide::before {
+    content: "";
+    @apply absolute inset-0 z-0 pointer-events-none;
+    background: var(--brand-ink, #000000);
+    transform: scaleY(0);
+    transform-origin: bottom center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-slide-red:hover::before,
+  .btn-red-slide:hover::before {
+    transform: scaleY(1);
+  }
+
+  .btn-slide-red > *,
+  .btn-red-slide > * {
+    @apply relative z-10;
+  }
+
+  .btn-slide-red:disabled::before,
+  .btn-red-slide:disabled::before {
+    transform: scaleY(0);
   }
 
   /* ═════════════════════════════════════════════════════════════════
@@ -1984,7 +2052,7 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   padding: 0;
   overflow: visible;
-  height: 64px;
+  height: 72px;
   position: relative;
 }
 
@@ -1998,7 +2066,7 @@
   background-color: #353d41;
   border-radius: 50px 0 0 50px;
   border: none;
-  height: 52px;
+  height: 60px;
   column-gap: 6px;
   position: relative;
   padding-right: 18px;
@@ -2022,7 +2090,7 @@ html[lang="ar"] .nav-tabs {
   height: 100%;
   z-index: 5;
   top: 0;
-  right: -5px;
+  right: -3px;
   transform: skew(18deg);
   transform-origin: top;
 }
@@ -2051,8 +2119,8 @@ html[lang="ar"] .nav-tabs::before {
   border: none;
   margin-right: 0;
   border-radius: 50px;
-  font-weight: 600;
-  padding: 10px 20px;
+  font-weight: 700;
+  padding: 12px 22px;
   line-height: 1;
   text-align: center;
   cursor: pointer;
@@ -2077,7 +2145,7 @@ html[lang="ar"] .nav-tabs::before {
 /* Right inputs tab content — White Pill with red surround and light grey divider between steps */
 .tab-content {
   background-color: #ffffff;
-  height: 45px;
+  height: 56px;
   width: 65%;
   border-radius: 50px;
   display: flex;
@@ -2175,7 +2243,7 @@ html[lang="ar"] .tab-content {
     top: 50%;
     transform: translateY(-50%);
     width: 1px;
-    height: 24px;
+    height: 28px;
     background: rgba(0, 0, 0, 0.12);
   }
 }
@@ -2188,12 +2256,12 @@ html[lang="ar"] .tab-content {
   width: 100%;
   padding: 0 14px;
   height: 100%;
-  min-height: 44px;
+  min-height: 54px;
   background: transparent;
   border: 0;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 500;
   color: #000;
   transition: color 0.15s ease;
 }
@@ -3178,6 +3246,7 @@ body:has(.ptr-home) .site-header {
 body:has(.ptr-home) .site-header-inner {
   max-width: 1280px;
   padding-inline: 1rem;
+  height: 68px;
 }
 
 /* The default wordmark is black-on-white; on the dark home header the
@@ -3245,17 +3314,13 @@ body:has(.ptr-home) .header-icon:hover {
 }
 
 .ptr-hero-band {
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
-  height: 5rem;
-  background: rgb(var(--c-asphalt));
+  display: none;
 }
 
 .ptr-hero-toolbar {
   position: relative;
   z-index: 30;
-  padding-top: 1.5rem;
+  padding-top: 0.25rem;
 }
 
 .ptr-hero-cta {
@@ -3373,24 +3438,28 @@ html[lang="ar"] .ptr-search-input {
   border-radius: 0.75rem;
   border: 1px solid rgb(var(--c-line) / 0.7);
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
-  padding-block: 0.5rem;
+  padding-block: 0;
   overflow: visible;
   z-index: 40;
 }
 
 .ptr-cat-rail-body {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-block: 0.25rem;
   overflow: visible;
 }
 
 /* Row height is tuned so MAIN_NAV's ten entries plus the head and foot
-   fill the 420px hero column exactly, the way Partora's rail does. */
+   fill the 440px hero column exactly without stretching the banner. */
 .ptr-cat-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.65rem;
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 0.38rem 0.85rem;
 }
 
 .ptr-cat-link {
@@ -3405,8 +3474,8 @@ html[lang="ar"] .ptr-search-input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
   color: rgb(var(--c-gravel));
   transition: color 0.2s ease, transform 0.2s ease;
@@ -3418,8 +3487,8 @@ html[lang="ar"] .ptr-search-input {
 }
 
 .ptr-cat-icon {
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
 }
 
 .ptr-cat-label {
@@ -3471,6 +3540,12 @@ html[lang="ar"] .ptr-search-input {
 }
 
 @media (min-width: 1024px) {
+  .ptr-hero-stage {
+    height: 440px;
+  }
+}
+
+@media (min-width: 1280px) {
   .ptr-hero-stage {
     height: 440px;
   }
@@ -3636,7 +3711,7 @@ html[lang="ar"] .disable-sticky .nav-tabs {
 
 .ptr-finder-slot {
   position: relative;
-  min-height: 64px;
+  min-height: 72px;
 }
 
 @media (max-width: 767px) {

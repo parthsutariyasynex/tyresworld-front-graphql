@@ -59,10 +59,10 @@ export default function FinderShell({
   ];
 
   return (
-    <section id="ptr-hero-finder-section" className={`ptr-section ptr-finder pt-2 pb-8 sm:pt-3 sm:pb-10 lg:pt-4 lg:pb-12 ${className}`}>
+    <section id="ptr-hero-finder-section" className={`ptr-finder pt-1 pb-0 sm:pt-2 sm:pb-0 ${className}`}>
       <div className="ptr-container">
         {/* ── Outer Premium Hero Card ── */}
-        <div id="ptr-hero-finder-card" className="relative rounded-3xl bg-gradient-to-b from-[#181617] via-[#141213] to-[#0d0c0d] border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.35)] p-5 sm:p-7 lg:p-9 overflow-hidden">
+        <div id="ptr-hero-finder-card" className="relative rounded-3xl bg-gradient-to-b from-[#181617] via-[#141213] to-[#0d0c0d] border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.35)] py-12 sm:py-14 lg:py-16 px-5 sm:px-7 lg:px-8 overflow-hidden">
           {/* Ambient Red Glow Background Effects */}
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[250px] bg-[#ed1c24]/15 blur-[120px] pointer-events-none rounded-full"
@@ -74,9 +74,9 @@ export default function FinderShell({
           />
 
           {/* ── Section Header with Glowing Pill ── */}
-          <div className="relative z-10 text-center max-w-3xl mx-auto mb-5 sm:mb-7">
+          <div className="relative z-10 text-center max-w-3xl mx-auto mb-6 sm:mb-7">
             {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ed1c24]/15 border border-[#ed1c24]/40 text-[#ed1c24] text-[11px] font-bold uppercase tracking-widest mb-2 shadow-[0_0_15px_rgba(237,28,36,0.2)]">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ed1c24]/15 border border-[#ed1c24]/40 text-[#ed1c24] text-[11px] font-bold uppercase tracking-widest mb-2.5 shadow-[0_0_15px_rgba(237,28,36,0.2)]">
               <Sparkles size={12} className="text-[#ed1c24] animate-pulse" />
               <span>{isAr ? "محدد الإطارات الذكي" : "SMART TYRE FINDER"}</span>
             </div>
@@ -108,13 +108,13 @@ export default function FinderShell({
 
           {/* ── Bottom 4 Trust Feature Badges ── */}
           {showTrustFeatures && (
-            <div className="relative z-10 mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+            <div className="relative z-10 mt-7 sm:mt-8 pt-5 sm:pt-6 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
               {trustFeatures.map((feat, idx) => {
                 const Icon = feat.icon;
                 return (
                   <div
                     key={idx}
-                    className="flex items-center gap-3 p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/5 hover:border-[#ed1c24]/40 hover:bg-white/[0.07] transition-all duration-300 group"
+                    className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-white/[0.04] border border-white/5 hover:border-[#ed1c24]/40 hover:bg-white/[0.07] transition-all duration-300 group"
                   >
                     <div className="w-9 h-9 rounded-xl bg-[#ed1c24]/15 border border-[#ed1c24]/30 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-[#ed1c24] transition-all duration-300">
                       <Icon size={16} className="text-[#ed1c24] group-hover:text-white transition-colors" />

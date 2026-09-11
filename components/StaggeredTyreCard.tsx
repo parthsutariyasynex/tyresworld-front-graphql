@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2, Check } from "lucide-react";
+import FullyFittedPriceModal from "@/components/FullyFittedPriceModal";
 import ProductImage from "./ProductImage";
 import VehicleFitmentModal from "@/components/VehicleFitmentModal";
 import type { Product } from "@/lib/data";
@@ -88,12 +89,14 @@ function TyreHalfColumn({
   const warranty = product.warrantyPeriod ?? "";
   const origin = product.country ?? product.origin ?? "";
 
-  const brandLogo = product.brandLogoUrl ?? getBrandLogo(product.brand);
+  const brandLogo = product.brandLogoUrl ?? getBrandLogo(product.brand) ?? getBrandLogo(product.brandName);
   const brandSlug = product.brandName?.toLowerCase().replace(/[^a-z0-9]+/g, "").replace(/(^-|-$)/g, "");
   const brandHref = brandSlug ? `/${locale}/tyres/brand/${brandSlug}` : null;
 
   const unitPrice = product.price > 0 ? product.price : 0;
   const set2Price = unitPrice * 2;
+
+  const [priceInfoOpen, setPriceInfoOpen] = useState(false);
 
   return (
     <div className="flex flex-col flex-1 p-3.5 sm:p-4 bg-white">
@@ -163,9 +166,14 @@ function TyreHalfColumn({
 
       {/* ── Price Section ─────────────────────────────────────────── */}
       <div className="text-center px-1 mt-auto">
-        <span className="block text-[10.5px] font-medium text-gray-500">
+        <button
+          type="button"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
+          className="text-[10.5px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer"
+          aria-label="What's included in the fully fitted price"
+        >
           Fully Fitted Price per Item
-        </span>
+        </button>
         <div className="flex items-center justify-center gap-1 font-black text-gray-900 text-[19px] sm:text-[21px] leading-tight my-0.5">
           <Money value={unitPrice} digits={2} />
         </div>
@@ -173,6 +181,8 @@ function TyreHalfColumn({
           Set of 2: <Money value={set2Price} digits={2} />
         </div>
       </div>
+
+      <FullyFittedPriceModal isOpen={priceInfoOpen} onClose={() => setPriceInfoOpen(false)} />
     </div>
   );
 }
@@ -247,7 +257,7 @@ export default function StaggeredTyreCard({
             type="button"
             onClick={handleAddSetOf4}
             disabled={adding || isOutOfStock}
-            className={`py-3.5 px-3 bg-black text-white font-black text-[12px] sm:text-[13px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer hover:bg-gray-900 active:scale-[0.99] ${
+            className={`btn-slide-black py-3.5 px-3 text-[12px] sm:text-[13px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99] ${
               cartAdded ? "!bg-emerald-600" : ""
             }`}
           >
@@ -274,7 +284,7 @@ export default function StaggeredTyreCard({
             target="_blank"
             rel="noopener noreferrer"
             title="Make Enquiry"
-            className="py-3.5 px-3 bg-[#ed1c24] text-white font-black text-[12px] sm:text-[13px] uppercase tracking-wider flex items-center justify-center text-center transition-colors cursor-pointer hover:bg-[#d91920] active:scale-[0.99]"
+            className="btn-slide-red py-3.5 px-3 text-[12px] sm:text-[13px] font-black uppercase tracking-wider flex items-center justify-center text-center cursor-pointer active:scale-[0.99]"
           >
             <span>MAKE ENQUIRY</span>
           </a>
