@@ -13,6 +13,7 @@ import { useOfferLabels } from "@/lib/useOfferLabels";
 import { useCart } from "@/lib/cart-context";
 import { Money } from "@/components/Price";
 import { APP_CONFIG } from "@/src/config/app-config";
+import { isMotorcycleProduct } from "@/lib/magento";
 
 /** Tyre size from product fields, falling back to parsing the name. */
 function getTyreSize(p: Product): string {
@@ -54,15 +55,45 @@ function CarSprite() {
   );
 }
 
+/** Motorcycle icon — same /icons/sprite.png sheet, the "bike" region.
+    Values (48×25, background-size 1000% auto, position 44.6% 2.1%) are
+    copied verbatim from the live site's own computed style for
+    `.vehicle.sprite.bike`, not estimated — those percentages only resolve
+    correctly at this exact element size against this exact sprite file. */
+function BikeSprite() {
+  return (
+    <span
+      role="img"
+      aria-label="Motorcycle"
+      className="inline-block align-middle select-none"
+      style={{
+        width: "48px",
+        height: "25px",
+        backgroundImage: "url(/icons/sprite.png)",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "1000% auto",
+        backgroundPosition: "44.6% 2.1%",
+      }}
+    />
+  );
+}
+
 export default function TyreListingCard({
   product,
   locale = "en",
   enableHoverZoom = true,
+  vehicleIcon = "car",
 }: {
   product: Product;
   locale?: Locale;
   /** Image zoom-on-hover */
   enableHoverZoom?: boolean;
+  /** Which vehicle glyph + behaviour to show next to the origin — "car"
+      (default) is a clickable "which cars fit this size" trigger, matching
+      every non-motorcycle category on the live site; "bike" (only passed
+      for the motorcycle-tyre category) is the live site's plain, non-clickable
+      bike icon — motorcycle tyres have no vehicle-fitment lookup there. */
+  vehicleIcon?: "car" | "bike";
 }) {
   const href = product.urlKey ? `/${locale}/product/${product.urlKey}` : "#";
   const tyreSize = getTyreSize(product);
@@ -95,9 +126,11 @@ export default function TyreListingCard({
 
   const { addItem } = useCart();
 
-  const [qty, setQty] = useState(4);
+  const isBike = vehicleIcon === "bike" || isMotorcycleProduct(product);
+  const [qty, setQty] = useState(isBike ? 2 : 4);
   const [adding, setAdding] = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
   const [fitmentOpen, setFitmentOpen] = useState(false);
   const [qtyOpen, setQtyOpen] = useState(false);
   const [priceInfoOpen, setPriceInfoOpen] = useState(false);
@@ -113,16 +146,25 @@ export default function TyreListingCard({
     return () => document.removeEventListener("mousedown", onDown);
   }, [qtyOpen]);
 
-  const isOutOfStock = product.inStock === false || product.price <= 0;
+  /* The live site never offers Add to Cart for motorcycle tyres — every
+     one of dozens of checked products shows "Make Enquiry" regardless of
+     its real Magento stock_status (confirmed IN_STOCK for at least one),
+     so this isn't a stock check for bikes, it's a fixed category rule
+     (motorcycle fitting needs a staff consultation, unlike car tyres). */
+  const isOutOfStock = isBike || product.inStock === false || product.price <= 0;
   const unitPrice = product.price > 0 ? product.price : 0;
   const setPrice = unitPrice * qty;
 
   async function handleAddToCart() {
     if (adding || cartAdded || isOutOfStock) return;
     setAdding(true);
+    setAddError(null);
     try {
       const result = await addItem(product, qty);
-      if (!result.error) {
+      if (result.error) {
+        setAddError(result.error);
+        setTimeout(() => setAddError(null), 4000);
+      } else {
         setCartAdded(true);
         setTimeout(() => setCartAdded(false), 2000);
       }
@@ -204,7 +246,9 @@ export default function TyreListingCard({
 
           {/* ── Vehicle (search this size) + Origin ───────────────── */}
           <div className="border-t border-b border-gray-100 py-1.5 px-3 flex items-center justify-between my-2">
-            {width && height && rim ? (
+            {isBike ? (
+              <span><BikeSprite /></span>
+            ) : width && height && rim ? (
               <button
                 type="button"
                 onClick={() => setFitmentOpen(true)}
@@ -222,14 +266,20 @@ export default function TyreListingCard({
 
           {/* ── Price Section ────────────────────────────────────── */}
           <div className="text-center px-1">
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
-              className="text-[10.5px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer"
-              aria-label="What's included in the fully fitted price"
-            >
-              Fully Fitted Price per Item
-            </button>
+            {isBike ? (
+              <span className="text-[10.5px] font-medium text-gray-500 block cursor-default">
+                Fully Fitted Price per Item
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
+                className="text-[10.5px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer"
+                aria-label="What's included in the fully fitted price"
+              >
+                Fully Fitted Price per Item
+              </button>
+            )}
             <div className="flex items-center justify-center gap-1 font-black text-gray-900 text-[19px] sm:text-[21px] leading-tight my-0.5">
               <Money value={unitPrice} digits={2} />
             </div>
@@ -239,11 +289,13 @@ export default function TyreListingCard({
           </div>
 
           {/* ── Pay In Installments (Tabby / Tamara) ─────── */}
-          <div className="flex items-center gap-1.5 my-2 flex-wrap">
-            <span className="text-[10.5px] text-gray-500 font-medium">Pay In Installments</span>
-            <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tabby</span>
-            <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tamara</span>
-          </div>
+          {!isBike && (
+            <div className="flex items-center gap-1.5 my-2 flex-wrap">
+              <span className="text-[10.5px] text-gray-500 font-medium">Pay In Installments</span>
+              <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tabby</span>
+              <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tamara</span>
+            </div>
+          )}
 
           {/* ── Bottom Actions ────────────────────────────────────
                Out of stock: full-width red "MAKE ENQUIRY", no qty select.
@@ -263,6 +315,7 @@ export default function TyreListingCard({
               </a>
             </div>
           ) : (
+            <>
             <div className="flex items-center gap-2 pt-1 mt-auto">
               {/* Custom quantity dropdown — the native <select> popup
                   can't be styled (renders the OS dark menu). */}
@@ -316,6 +369,10 @@ export default function TyreListingCard({
                 )}
               </button>
             </div>
+            {addError && (
+              <p className="text-[11px] text-[#ed1c24] font-semibold mt-1.5 text-center line-clamp-2">{addError}</p>
+            )}
+            </>
           )}
 
         </div>

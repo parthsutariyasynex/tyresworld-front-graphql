@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useScrollLock } from "@/lib/useScrollLock";
 import { buildFilterParams } from "@/lib/filterBuilder";
+import { APP_CONFIG } from "@/src/config/app-config";
 
 /* ── types ───────────────────────────────────────────────────────── */
 type AttrOption = {
@@ -51,6 +52,7 @@ interface TyreFinderProps {
   categoryUid?: string;
   basePath?: string;
   disableSticky?: boolean;
+  sizeOnly?: boolean;
 }
 
 const SIZE_FIELDS = [
@@ -157,7 +159,7 @@ function VehicleLogo({ label, logoUrl }: { label: string; logoUrl?: string }) {
 }
 
 /* ────────────────────────────────────────────────────────────────── */
-export default function TyreFinder({ locale: localeProp, categoryUid, basePath, disableSticky }: TyreFinderProps) {
+export default function TyreFinder({ locale: localeProp, categoryUid, basePath, disableSticky, sizeOnly }: TyreFinderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const locale = localeProp ?? (pathname.split("/")[1] === "ar" ? "ar" : "en");
@@ -171,8 +173,13 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
   const [widths, setWidths] = useState<AttrOption[]>([]);
   const [widthLoading, setWidthLoad] = useState(true);
 
+  const isMotorcyclePage = pathname.includes("motorcycle") || pathname.includes("motorbike");
+  const effectiveCategoryUid =
+    categoryUid ?? (isMotorcyclePage ? APP_CONFIG.magento.motorcycleCategoryUid : undefined);
+  const isSizeOnly = Boolean(sizeOnly || isMotorcyclePage);
+
   /* ── category param included in every size request ─────────────── */
-  const catParam: Record<string, string> = categoryUid ? { category_uid: categoryUid } : {};
+  const catParam: Record<string, string> = effectiveCategoryUid ? { category_uid: effectiveCategoryUid } : {};
 
   /* ── selections ────────────────────────────────────────────────── */
   const [selWidth, setSelWidth] = useState("");
@@ -266,7 +273,10 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
 
   /* ── load width / height / rim option lists ────────────────────── */
   useEffect(() => {
-    fetch("/api/tyre-finder")
+    const endpoint = effectiveCategoryUid
+      ? `/api/tyre-finder?category_uid=${encodeURIComponent(effectiveCategoryUid)}`
+      : "/api/tyre-finder";
+    fetch(endpoint)
       .then((r) => r.json())
       .then((d) => {
         const map: Record<string, AttrOption[]> = {};
@@ -283,7 +293,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
         setWidthLoad(false);
       })
       .catch(() => setWidthLoad(false));
-  }, []);
+  }, [effectiveCategoryUid]);
 
   /* ── load vehicle makes from the partsfinder cascade ───────────── */
   useEffect(() => {
@@ -846,16 +856,20 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
 
               {/* Tab pills */}
               <div className="nav nav-tabs justify-content-center" role="tablist">
-                {([
-                  { id: "size", label: "Search Tyre Size" },
-                  { id: "vehicle", label: "Search By Vehicle" },
-                ] as { id: Tab; label: string }[]).map((t) => (
+                {(
+                  isSizeOnly
+                    ? [{ id: "size", label: "Search Tyre Size" }]
+                    : [
+                        { id: "size", label: "Search Tyre Size" },
+                        { id: "vehicle", label: "Search By Vehicle" },
+                      ]
+                ).map((t) => (
                   <button
                     key={t.id}
                     type="button"
                     role="tab"
                     aria-selected={tab === t.id}
-                    onClick={() => setTab(t.id)}
+                    onClick={() => setTab(t.id as Tab)}
                     className={`button ${tab === t.id ? "active" : ""}`}
                   >
                     <a>{t.label}</a>

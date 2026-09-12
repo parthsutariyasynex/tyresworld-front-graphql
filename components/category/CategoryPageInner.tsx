@@ -55,6 +55,10 @@ interface CategoryInfo {
   description?: string | null;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  /** The real on-page H1 (Magento's category_page_title field) — distinct
+      from `name` (breadcrumbs/nav) and `metaTitle` (<title> tag). Shown
+      verbatim, in its own casing, when Magento has it. */
+  pageTitle?: string | null;
 }
 
 /* ── FAQ parser ─────────────────────────────────────────────────── */
@@ -165,7 +169,12 @@ export default function CategoryPageInner({
   const basePath = `/${locale}/${urlKey}`;
   const isAr = locale === "ar";
 
-  const sort = searchParams.get("product_list_order") ?? searchParams.get("sort") ?? "";
+  // "low-to-high" is the real default — matches the live site's actual
+  // default ordering (Magento's own store-level "Default Sort By"), and
+  // matches what the toolbar button already displays as selected
+  // (SORT_OPTS.find(...) ?? SORT_OPTS[0], which is "Price: Low to High")
+  // even when no explicit sort param was ever set.
+  const sort = searchParams.get("product_list_order") ?? searchParams.get("sort") ?? "low-to-high";
   const page = Math.max(1, Number(searchParams.get("page") ?? 1));
 
   const [category, setCategory] = useState<CategoryInfo | null>(null);
@@ -261,9 +270,14 @@ export default function CategoryPageInner({
         if (requestUrlRef.current !== url) return;
         if (j.error && !j.products?.length) { setApiError(j.error); }
         if (j.category) setCategory(j.category);
-        let items: Product[] = j.products ?? [];
-        if (sort === "high-to-low") items = [...items].sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
-        else if (sort === "low-to-high") items = [...items].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+        // /api/category-page now does the real price sort itself (across
+        // the whole category, not just this page) when sort is low-to-high
+        // / high-to-low — Magento's GraphQL schema for this store has no
+        // sortable price field, so re-sorting only this page's 12 items
+        // client-side was cosmetic and could show cheaper items on later
+        // pages than on page 1. `products` already arrives correctly
+        // ordered and paginated.
+        const items: Product[] = j.products ?? [];
         setProducts(items);
         setTotal(j.total ?? 0);
         setTotalPages(j.totalPages ?? 1);
@@ -394,7 +408,59 @@ export default function CategoryPageInner({
   const isStaggeredDisplay = !!staggered && staggered.total > 0;
   const displayTotalPages = isStaggeredDisplay ? staggered.totalPages : totalPages;
 
-  const displayTitle = heroTitle ?? category?.name?.toUpperCase() ?? "";
+  // heroTitle (a manual per-slug override, src/config/routes.ts) wins when
+  // configured; otherwise use Magento's real category_page_title verbatim
+  // (it's already in the right display casing, e.g. "Buy Car Battery
+  // Online in UAE" — matches the live site's actual H1); only fall back to
+  // the uppercased category name when Magento has neither.
+  const displayTitle = heroTitle ?? category?.pageTitle ?? category?.name?.toUpperCase() ?? "";
+
+  const categoryBgImage = (function getCategoryHeroBanner(k: string, t: string) {
+    const key = (k || "").toLowerCase();
+    const title = (t || "").toLowerCase();
+    if (key.includes("ev") || key.includes("electric") || title.includes("ev") || title.includes("electric")) {
+      return "/images/bg/ev-tyres-banner.png";
+    }
+    if (key.includes("motorcycle") || key.includes("motorbike") || title.includes("motorbike") || title.includes("motorcycle")) {
+      return "/images/bg/motorbike-banner.png";
+    }
+    if (key.includes("insurance") || title.includes("insurance")) {
+      /* The real live-site asset (downloaded from the actual public,
+         unauthenticated theme static URL used on www1.tyresworld.ae —
+         confirmed pixel-identical), not the car-battery artwork that
+         was previously mislabeled car-insurance-banner.png. */
+      return "/images/bg/car-insurance-banner.webp";
+    }
+    if (key.includes("battery") || title.includes("battery")) {
+      return "/images/bg/car-battery-banner.png";
+    }
+    return null;
+  })(urlKey, displayTitle);
+
+  /* Only banners whose artwork has a title/tagline baked in need a
+     visually-hidden H1 — car battery and motorbike are plain photography
+     with no text in them, so hiding their H1 would leave the hero with no
+     visible title at all. Both the EV and insurance banners are also shot
+     at a much taller aspect ratio than the fixed py-16..py-36 hero padding
+     assumes, cropping their own baked-in ribbon text at that fixed height
+     — match each one's real ratio instead. */
+  const BAKED_IN_TITLE_BANNERS = new Set(["/images/bg/ev-tyres-banner.png"]);
+  const BANNER_ASPECT_RATIOS: Record<string, string> = {
+    "/images/bg/ev-tyres-banner.png": "1024 / 322",
+    "/images/bg/car-insurance-banner.webp": "1905 / 600",
+  };
+  const hasBakedInTitle = !!categoryBgImage && BAKED_IN_TITLE_BANNERS.has(categoryBgImage);
+  const bannerAspectRatio = categoryBgImage ? BANNER_ASPECT_RATIOS[categoryBgImage] : undefined;
+
+  const heroBannerStyle = categoryBgImage
+    ? {
+        backgroundImage: `url("${categoryBgImage}")`,
+        backgroundSize: "cover" as const,
+        backgroundPosition: "center" as const,
+        backgroundRepeat: "no-repeat" as const,
+        ...(bannerAspectRatio ? { aspectRatio: bannerAspectRatio } : {}),
+      }
+    : undefined;
 
   const productsLabel = isAr
     ? `${total.toLocaleString("ar-SA")} إطار`
@@ -406,8 +472,17 @@ export default function CategoryPageInner({
       {/* ── Page title ─────────────────────────────────────────────
            Mirrors the theme's .page-title-wrapper > .title > h1 > span.base */}
       {!hideHeroBanner && (
-        <div className="page-title-wrapper bg-cover-image">
-          <div className="container">
+        <div
+          className={`page-title-wrapper bg-cover-image ${
+            categoryBgImage
+              ? bannerAspectRatio
+                ? "shadow-inner"
+                : "!py-16 sm:!py-24 md:!py-28 lg:!py-36 shadow-inner"
+              : ""
+          }`}
+          style={heroBannerStyle}
+        >
+          <div className="container custom-width">
             <div className="title">
               {/* A configured heroTitle is known on the server, so render the
                   H1 straight away and only fall back to a skeleton when the
@@ -415,7 +490,7 @@ export default function CategoryPageInner({
               {catLoading && !displayTitle ? (
                 <span className="page-title-skeleton" aria-hidden="true" />
               ) : (
-                <h1 id="page-title-heading">
+                <h1 id="page-title-heading" className={hasBakedInTitle ? "sr-only" : ""}>
                   <span className="base" data-ui-id="page-title-wrapper">
                     {displayTitle}
                   </span>
@@ -696,7 +771,13 @@ export default function CategoryPageInner({
             return (
               <ul className="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5 list-none p-0 m-0">
                 {products.map(product => (
-                  <TyreListingCard key={product.id} product={product} locale={locale} enableHoverZoom />
+                  <TyreListingCard
+                    key={product.id}
+                    product={product}
+                    locale={locale}
+                    enableHoverZoom
+                    vehicleIcon={urlKey.includes("motorcycle") || urlKey.includes("motorbike") ? "bike" : "car"}
+                  />
                 ))}
               </ul>
             );

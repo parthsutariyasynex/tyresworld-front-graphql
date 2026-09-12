@@ -48,7 +48,7 @@ export default function AddToCartModal({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
-  if (!open || !mounted || typeof document === "undefined" || !productName) {
+  if (!open || !mounted || typeof document === "undefined") {
     return null;
   }
 

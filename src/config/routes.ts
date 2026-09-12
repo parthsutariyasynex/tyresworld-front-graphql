@@ -57,4 +57,13 @@ export const CATEGORY_HERO: Record<string, CategoryHero> = {
     heroTitle: "Buy Run-Flat Tyres Online in the UAE",
     showTyreFinder: true,
   },
+  /* No "car-battery" entry — that's a real Magento category (id 1118), so
+     its H1 correctly comes from the live category_page_title field
+     ("Buy Car Battery Online in UAE") via CategoryPageInner's displayTitle
+     fallback, not a hardcoded override. An override here previously shadowed
+     that real data with the wrong page's title ("Car Battery Replacement",
+     which belongs to the separate car-battery-replacement CMS page).
+     "car-battery-replacement" doesn't need an entry either — it's a CMS
+     page, rendered by the [...slug] route's CMS branch, which takes its H1
+     from Magento's own page.title field directly, not from this map. */
 };

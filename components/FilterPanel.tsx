@@ -139,16 +139,6 @@ function FilterGroupSection({
   );
 }
 
-const EXCLUDED_FILTER_CODES = new Set([
-  "height",
-  "width",
-  "rim",
-  "tyre_height",
-  "tyre_width",
-  "tyre_rim",
-  "rim_size",
-]);
-
 /* ── Main Drawer Panel ───────────────────────────────────────────── */
 export default function FilterPanel({
   open,
@@ -162,13 +152,13 @@ export default function FilterPanel({
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const visibleFilters = filters.filter(
-    (f) =>
-      !EXCLUDED_FILTER_CODES.has(f.code.toLowerCase()) &&
-      !["height", "width", "rim", "rim size", "aspect ratio", "section width"].includes(
-        f.label.toLowerCase().trim()
-      )
-  );
+  const SIZE_CODES = new Set([
+    "width", "height", "haight", "rim",
+    "width_rear", "rear_width", "rwidth",
+    "haight_rear", "height_rear", "rear_height", "rheight",
+    "rim_rear", "rear_rim", "rrim"
+  ]);
+  const visibleFilters = filters.filter(f => !SIZE_CODES.has(f.code.toLowerCase()));
 
   /* Close on Escape key */
   useEffect(() => {

@@ -45,6 +45,7 @@ export const PRODUCT_DETAIL_FRAGMENT = /* GraphQL */ `
     country
     origin
     warranty_period
+    bike_tyre_type
     description       { html }
     short_description { html }
     image         { url label }

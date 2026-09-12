@@ -255,6 +255,7 @@ export const CATEGORY_PAGE_QUERY = /* GraphQL */ `
         description
         meta_title
         meta_description
+        category_page_title
       }
     }
     products(
@@ -474,6 +475,29 @@ export const TYRE_FINDER_METADATA_QUERY = /* GraphQL */ `
         }
       }
       errors { type message }
+    }
+  }
+`;
+
+/** Resolves the raw numeric "Bike Tyre Type" option (e.g. product.bike_tyre_type
+    = 2095) to its real label (e.g. "Scooter / PitBike") — this select
+    attribute comes back as an option ID everywhere, PDP included, so the
+    PDP specs table needs this the same way brand names are resolved from
+    their own raw option ID. */
+export const BIKE_TYRE_TYPE_METADATA_QUERY = /* GraphQL */ `
+  query BikeTyreTypeMetadata {
+    customAttributeMetadataV2(
+      attributes: [{ entity_type: "catalog_product", attribute_code: "bike_tyre_type" }]
+    ) {
+      items {
+        code
+        ... on CatalogAttributeMetadata {
+          options {
+            label
+            value
+          }
+        }
+      }
     }
   }
 `;

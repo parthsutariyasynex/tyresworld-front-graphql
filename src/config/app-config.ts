@@ -43,6 +43,9 @@ export const APP_CONFIG = {
     } as Record<string, string>,
     /** Root UID for the "All Tyres" category — base64("18") */
     tyresCategoryUid: "MTg=",
+    /** UID for the "Motorcycle Tyres" category — base64("1116"), confirmed
+        via categoryList(filters: {url_key: {eq: "motorcycle-tyre"}}). */
+    motorcycleCategoryUid: "MTExNg==",
   },
 
   /** Root category UID for "All Products" */

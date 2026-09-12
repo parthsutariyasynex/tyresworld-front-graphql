@@ -54,6 +54,9 @@ export interface GqlProduct {
   origin?: string | null;
   country?: string | null;
   warranty_period?: string | null;
+  /** Raw select-attribute option ID (e.g. 2095), not a label — resolved to
+      text server-side in product.service.ts, same as brand IDs elsewhere. */
+  bike_tyre_type?: number | string | null;
 
   image?: GqlImage | null;
   small_image?: GqlImage | null;
@@ -271,17 +274,14 @@ export function parseGraphqlResponse(data: unknown): Product[] {
   return items.map(adaptGqlProduct);
 }
 
-/* Category facets and dimensions handled by top finder (height/width/rim) are excluded from sidebar */
+/* width/height/rim used to be excluded here on the assumption the sticky
+   "Search Tyre Size" finder made them redundant in the sidebar — but the
+   live site's own layered nav (checked on /en/tyres, /en/motorcycle-tyre)
+   shows them in the sidebar too, alongside that finder, not instead of it.
+   Only true non-facet fields stay excluded. */
 const EXCLUDED_AGGREGATIONS = new Set([
   "category_id",
   "category_uid",
-  "height",
-  "width",
-  "rim",
-  "tyre_height",
-  "tyre_width",
-  "tyre_rim",
-  "rim_size",
 ]);
 
 /**
@@ -321,6 +321,10 @@ export interface GqlProductDetailResponse {
 export interface ProductDetail extends Product {
   discountPercent?: number;
   gallery: { url: string; label: string }[];
+  /** Raw bike_tyre_type option ID, resolved to a real label
+      (bikeTyreType) by product.service.ts once it has network access. */
+  bikeTyreTypeId?: string;
+  bikeTyreType?: string;
 }
 
 export function parseProductDetail(data: unknown): ProductDetail | null {
@@ -339,7 +343,64 @@ export function parseProductDetail(data: unknown): ProductDetail | null {
     image: mainImage,
     gallery: gallery.length ? gallery : [{ url: mainImage, label: item.name ?? "" }],
     discountPercent: min?.discount?.percent_off ? Math.round(min.discount.percent_off) : undefined,
+    bikeTyreTypeId: item.bike_tyre_type != null ? String(item.bike_tyre_type) : undefined,
   };
+}
+
+export function isMotorcycleProduct(product?: {
+  name?: string;
+  categories?: Array<{ id?: number | string | null; uid?: string | null; name?: string | null; urlKey?: string | null }>;
+} | null): boolean {
+  if (!product) return false;
+
+  // Check URL pathname if client-side
+  if (typeof window !== "undefined") {
+    const path = window.location.pathname.toLowerCase();
+    if (path.includes("motorcycle") || path.includes("motorbike") || path.includes("scooter")) {
+      return true;
+    }
+  }
+
+  const nameLower = (product.name || "").toLowerCase();
+  if (
+    nameLower.includes("motorcycle") ||
+    nameLower.includes("motorbike") ||
+    nameLower.includes("scooter") ||
+    nameLower.includes("moped") ||
+    nameLower.includes("mitas") ||
+    nameLower.includes("metzeler") ||
+    nameLower.includes("terra force") ||
+    nameLower.includes("stone king") ||
+    nameLower.includes("sportec") ||
+    nameLower.includes("scorpion mx") ||
+    nameLower.includes("angel scooter") ||
+    nameLower.includes("diablo rosso")
+  ) {
+    return true;
+  }
+
+  if (
+    product.categories?.some((c) => {
+      const idStr = String(c.id ?? "");
+      const name = (c.name || "").toLowerCase();
+      const urlKey = (c.urlKey || "").toLowerCase();
+      return (
+        idStr === "1116" ||
+        c.uid === "MTExNg==" ||
+        name.includes("motorcycle") ||
+        name.includes("motorbike") ||
+        name.includes("scooter") ||
+        name.includes("moped") ||
+        urlKey.includes("motorcycle") ||
+        urlKey.includes("motorbike") ||
+        urlKey.includes("scooter") ||
+        urlKey.includes("moped")
+      );
+    })
+  ) {
+    return true;
+  }
+  return false;
 }
 
 /* ─────────────────────────────────────────────────────────────────

@@ -10,6 +10,7 @@ import {
   PRODUCTS_QUERY,
   PRODUCT_DETAIL_QUERY,
   PRODUCT_DETAIL_BY_URLKEY_QUERY,
+  BIKE_TYRE_TYPE_METADATA_QUERY,
 } from "@/lib/queries";
 import {
   parseGraphqlResponse,
@@ -96,6 +97,28 @@ export async function getProducts(params: {
   };
 }
 
+/** "Bike Tyre Type" (e.g. "Scooter / PitBike") comes back on the product
+    only as a raw select-attribute option ID — resolve it against the
+    attribute's own option list, same as brand names are resolved from
+    their raw IDs elsewhere. Cached hard: this attribute's option list is
+    catalog metadata that essentially never changes between deploys. */
+interface BikeTyreTypeMetadataResponse {
+  customAttributeMetadataV2?: {
+    items?: Array<{ code?: string; options?: Array<{ label?: string; value?: string }> }>;
+  };
+}
+
+async function resolveBikeTyreType(id: string, store?: string): Promise<string | undefined> {
+  const r = await magentoFetch<BikeTyreTypeMetadataResponse>(
+    BIKE_TYRE_TYPE_METADATA_QUERY,
+    undefined,
+    { store, revalidate: 86400 },
+  );
+  if (!r.ok || r.errors?.length) return undefined;
+  const options = r.data?.customAttributeMetadataV2?.items?.[0]?.options ?? [];
+  return options.find((o) => o.value === id)?.label ?? undefined;
+}
+
 /** Single product detail by SKU or url_key (PDP). */
 export async function getProductDetail(params: {
   sku?: string;
@@ -118,6 +141,10 @@ export async function getProductDetail(params: {
   const product = parseProductDetail({ data: r.data } as GqlProductDetailResponse);
   if (!product) {
     return { ok: true, status: 404, product: null, error: "Product not found" };
+  }
+
+  if (product.bikeTyreTypeId) {
+    product.bikeTyreType = await resolveBikeTyreType(product.bikeTyreTypeId, params.store);
   }
 
   return { ok: true, status: 200, product };

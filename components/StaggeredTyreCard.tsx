@@ -202,6 +202,7 @@ export default function StaggeredTyreCard({
   const { addItem } = useCart();
   const [adding, setAdding] = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
   const [activeFitmentProduct, setActiveFitmentProduct] = useState<Product | null>(null);
 
   const frontPrice = frontProduct.price > 0 ? frontProduct.price : 0;
@@ -217,11 +218,15 @@ export default function StaggeredTyreCard({
   async function handleAddSetOf4() {
     if (adding || cartAdded || isOutOfStock) return;
     setAdding(true);
+    setAddError(null);
     try {
       // Add 2 front tyres and 2 rear tyres
       const resFront = await addItem(frontProduct, 2);
       const resRear = await addItem(rearProduct, 2);
-      if (!resFront?.error && !resRear?.error) {
+      if (resFront?.error || resRear?.error) {
+        setAddError(resFront?.error || resRear?.error || "Could not add to cart.");
+        setTimeout(() => setAddError(null), 4000);
+      } else {
         setCartAdded(true);
         setTimeout(() => setCartAdded(false), 2500);
       }
@@ -289,6 +294,9 @@ export default function StaggeredTyreCard({
             <span>MAKE ENQUIRY</span>
           </a>
         </div>
+        {addError && (
+          <p className="text-[11px] text-[#ed1c24] font-semibold py-1.5 text-center line-clamp-2 border-t border-gray-100">{addError}</p>
+        )}
       </div>
 
       {/* Fitment modal if triggered */}

@@ -10,6 +10,7 @@ import { useOfferLabels } from "@/lib/useOfferLabels";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCart } from "@/lib/cart-context";
 import { Money } from "@/components/Price";
+import { isMotorcycleProduct } from "@/lib/magento";
 
 /* ── Brand styling ─────────────────────────────────────────────── */
 const BRAND_STYLE: Record<string, { bg: string; text: string; tagline?: string }> = {
@@ -307,11 +308,13 @@ export default function TyreCard({ product }: { product: Product }) {
         </div>
 
         {/* Installments */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10.5px] text-gray-500 font-medium">Pay In Installments</span>
-          <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tabby</span>
-          <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tamara</span>
-        </div>
+        {!isMotorcycleProduct(product) && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10.5px] text-gray-500 font-medium">Pay In Installments</span>
+            <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tabby</span>
+            <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tamara</span>
+          </div>
+        )}
 
         {/* CTA — Contact Us for OUT_OF_STOCK, qty + ADD TO CART for IN_STOCK */}
         {isOutOfStock ? (

@@ -34,7 +34,7 @@ export const MAIN_NAV: NavItem[] = [
   {
     id: "car-battery",
     label: "Car Battery",
-    slug: "car-battery",
+    slug: "car-battery-replacement",
   },
   {
     id: "car-insurance",

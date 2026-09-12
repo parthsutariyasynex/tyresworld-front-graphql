@@ -7,12 +7,17 @@ interface StickyBottomFinderProps {
   locale: string;
   categoryUid?: string;
   basePath?: string;
+  /** Force "Search Tyre Size" only, hiding "Search By Vehicle" — needed
+      wherever TyreFinder's own pathname-based motorcycle detection can't
+      see it (e.g. a product detail page URL has no "motorcycle" in it). */
+  sizeOnly?: boolean;
 }
 
 export default function StickyBottomFinder({
   locale,
   categoryUid,
   basePath,
+  sizeOnly,
 }: StickyBottomFinderProps) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -89,6 +94,7 @@ export default function StickyBottomFinder({
             disableSticky={true}
             categoryUid={categoryUid}
             basePath={basePath}
+            sizeOnly={sizeOnly}
           />
         </div>
       </div>

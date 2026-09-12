@@ -7,6 +7,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import type { ProductDetail } from "@/lib/magento";
+import { isMotorcycleProduct } from "@/lib/magento";
 import type { Product } from "@/lib/data";
 import type { ApiProductsResponse } from "@/lib/magento";
 import { useOfferLabels } from "@/lib/useOfferLabels";
@@ -49,7 +50,15 @@ function parseTyreProductName(name: string): TyreSpecs {
   const yearMatch = name.match(/\b(20\d{2})\b/);
   const year = yearMatch?.[1] ?? null;
 
-  const sizeMatch = name.match(/(\d{3}\/\d{2,3}\s*[Rr]\d{2})/);
+  /* Car sizes are always a 3-digit width ("165/70 R14"). Motorcycle sizes
+     aren't: widths are 1-3 digits and sometimes decimal, and small
+     scooter/pit-bike tyres carry no aspect-ratio segment at all — e.g.
+     "90/90 R14", "2.50 R10", "3.00-10". Try the strict car pattern first
+     (matches everything it always has, unchanged), then fall back to the
+     looser one instead of returning all-null for a real motorcycle name. */
+  const sizeMatch =
+    name.match(/(\d{3}\/\d{2,3}\s*[Rr]\d{2})/) ??
+    name.match(/(\d{1,3}(?:\.\d{1,2})?(?:[\/-]\d{2,3})?\s*[Rr]\d{2})/);
   if (!sizeMatch || sizeMatch.index === undefined) {
     return { size: null, loadIndex: null, pattern: null, oemMarking: null, year, isRunFlat: false, hasXL: false };
   }
@@ -190,7 +199,9 @@ function SpecsTable({
     },
     {
       left: { label: "Warranty Period", value: warranty },
-      right: specs.isRunFlat
+      right: isMotorcycleProduct(product)
+        ? { label: "Bike Tyre Type", value: product.bikeTyreType ?? null }
+        : specs.isRunFlat
         ? { label: "Run Flat", value: "Yes" }
         : specs.oemMarking
         ? { label: "OEM Marking", value: specs.oemMarking }
@@ -230,20 +241,22 @@ function SpecsTable({
       </div>
 
       {/* ── Check Vehicle Section ── */}
-      <div className="p-4 flex items-center gap-3 bg-[#f8f9fa] border-t border-gray-100 mt-2">
-        <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-[#5ac8d8]/20 shadow-2xs">
-          <svg className="w-5 h-5 text-[#ed1c24]" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M23.5 11.5L20 8.5C19.5 8 18.5 7.5 17.5 7.5H6.5C5.5 7.5 4.5 8 4 8.5L0.5 11.5C0.2 11.8 0 12.1 0 12.5V17C0 17.6 0.4 18 1 18H3C3 19.7 4.3 21 6 21C7.7 21 9 19.7 9 18H15C15 19.7 16.3 21 18 21C19.7 21 21 19.7 21 18H23C23.6 18 24 17.6 24 17V12.5C24 12.1 23.8 11.8 23.5 11.5ZM6 19.5C5.2 19.5 4.5 18.8 4.5 18C4.5 17.2 5.2 16.5 6 16.5C6.8 16.5 7.5 17.2 7.5 18C7.5 18.8 6.8 19.5 6 19.5ZM18 19.5C17.2 19.5 16.5 18.8 16.5 18C16.5 17.2 17.2 16.5 18 16.5C18.8 16.5 19.5 17.2 19.5 18C19.5 18.8 18.8 19.5 18 19.5ZM21.5 13.5H2.5V12.5L5.5 9.8C5.8 9.5 6.2 9.4 6.6 9.4H17.4C17.8 9.4 18.2 9.5 18.5 9.8L21.5 12.5V13.5Z" />
-          </svg>
+      {!isMotorcycleProduct(product) && (
+        <div className="p-4 flex items-center gap-3 bg-[#f8f9fa] border-t border-gray-100 mt-2">
+          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-[#5ac8d8]/20 shadow-2xs">
+            <svg className="w-5 h-5 text-[#ed1c24]" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23.5 11.5L20 8.5C19.5 8 18.5 7.5 17.5 7.5H6.5C5.5 7.5 4.5 8 4 8.5L0.5 11.5C0.2 11.8 0 12.1 0 12.5V17C0 17.6 0.4 18 1 18H3C3 19.7 4.3 21 6 21C7.7 21 9 19.7 9 18H15C15 19.7 16.3 21 18 21C19.7 21 21 19.7 21 18H23C23.6 18 24 17.6 24 17V12.5C24 12.1 23.8 11.8 23.5 11.5ZM6 19.5C5.2 19.5 4.5 18.8 4.5 18C4.5 17.2 5.2 16.5 6 16.5C6.8 16.5 7.5 17.2 7.5 18C7.5 18.8 6.8 19.5 6 19.5ZM18 19.5C17.2 19.5 16.5 18.8 16.5 18C16.5 17.2 17.2 16.5 18 16.5C18.8 16.5 19.5 17.2 19.5 18C19.5 18.8 18.8 19.5 18 19.5ZM21.5 13.5H2.5V12.5L5.5 9.8C5.8 9.5 6.2 9.4 6.6 9.4H17.4C17.8 9.4 18.2 9.5 18.5 9.8L21.5 12.5V13.5Z" />
+            </svg>
+          </div>
+          <button
+            type="button"
+            onClick={onCheckFitment}
+            className="btn-slide-black text-[11px] sm:text-xs font-black uppercase tracking-wider py-3 px-5 rounded-md text-center cursor-pointer shadow-2xs"
+          >
+            <span>CHECK IF THIS TYRE FITS IN YOUR VEHICLE</span>
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onCheckFitment}
-          className="btn-slide-black text-[11px] sm:text-xs font-black uppercase tracking-wider py-3 px-5 rounded-md text-center cursor-pointer shadow-2xs"
-        >
-          <span>CHECK IF THIS TYRE FITS IN YOUR VEHICLE</span>
-        </button>
-      </div>
+      )}
     </div>
   );
 }
@@ -260,13 +273,22 @@ function PricingCard({
   const hasPrice = product.price > 0;
   const fmt = (v: number) => <Money value={v} currency={currency} />;
 
+  /* A motorcycle only has 2 wheels, so its "set" is 2, not 4 — same real
+     distinction already applied to the fully-fitted-price wording above and
+     to the category listing cards (TyreListingCard's vehicleIcon="bike"). */
+  const setSize = isMotorcycleProduct(product) ? 2 : 4;
+
   const { addItem } = useCart();
-  const [qty, setQty] = useState(4);
+  const [qty, setQty] = useState(setSize);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
-  const isOutOfStock = product.inStock === false;
-  const setOf4Price = hasPrice ? product.price * 4 : 0;
+  /* The live site never offers Add to Cart for motorcycle tyres — every
+     product checked shows "Make Enquiry" regardless of its real Magento
+     stock_status (confirmed IN_STOCK for at least one), so this is a fixed
+     category rule, not a stock check, for bikes — same as the listing cards. */
+  const isOutOfStock = isMotorcycleProduct(product) || product.inStock === false;
+  const setOf4Price = hasPrice ? product.price * setSize : 0;
 
   async function handleAddToCart() {
     if (adding) return;
@@ -288,14 +310,20 @@ function PricingCard({
       {/* ── Main Pricing Box ── */}
       <div className="bg-white border border-gray-200/90 rounded-xl p-5 shadow-2xs">
         {/* Label */}
-        <button
-          type="button"
-          onClick={onPriceInfoClick}
-          className="text-xs text-gray-700 font-medium hover:text-gray-900 hover:underline cursor-pointer"
-          aria-label="What's included in the fully fitted price"
-        >
-          Fully Fitted Price per Item
-        </button>
+        {isMotorcycleProduct(product) ? (
+          <span className="text-xs text-gray-700 font-medium block cursor-default">
+            Fully Fitted Price per Item
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={onPriceInfoClick}
+            className="text-xs text-gray-700 font-medium hover:text-gray-900 hover:underline cursor-pointer"
+            aria-label="What's included in the fully fitted price"
+          >
+            Fully Fitted Price per Item
+          </button>
+        )}
 
         {/* Big Price */}
         {hasPrice ? (
@@ -303,9 +331,14 @@ function PricingCard({
             <p className="text-3xl font-black text-gray-950 tracking-tight">
               {fmt(product.price)}
             </p>
-            <p className="text-sm font-bold text-gray-900 mt-1">
-              Set of 4: <span className="font-extrabold">{fmt(setOf4Price)}</span>
-            </p>
+            {/* Live's motorcycle PDP never shows a "Set of N" line at all —
+                just the single unit price, unlike the car PDP and both
+                vehicles' own listing cards. */}
+            {!isMotorcycleProduct(product) && (
+              <p className="text-sm font-bold text-gray-900 mt-1">
+                Set of {setSize}: <span className="font-extrabold">{fmt(setOf4Price)}</span>
+              </p>
+            )}
           </div>
         ) : (
           <p className="text-xl font-bold text-gray-950 mt-1 mb-3">Price on Contact</p>
@@ -314,13 +347,13 @@ function PricingCard({
         {/* CTA & Quantity */}
         {isOutOfStock || !hasPrice ? (
           <a
-            href={`https://wa.me/${APP_CONFIG.contact.whatsapp}?text=${encodeURIComponent(`Hi, I'm interested in: ${product.name}`)}`}
+            href={`https://api.whatsapp.com/send/?phone=${APP_CONFIG.contact.whatsapp}&text=${encodeURIComponent(`Hi tyresworld.ae\n\nI would like to enquire about ${product.name}`)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 bg-[#049b43] hover:bg-[#038237] text-white font-bold text-sm py-3 rounded-md transition-colors w-full cursor-pointer"
+            className="btn-enquiry text-xs font-black uppercase tracking-wider h-10 flex items-center justify-center rounded-md cursor-pointer shadow-2xs w-full"
+            title="MAKE ENQUIRY"
           >
-            <WaIcon />
-            Contact Us
+            <span>MAKE ENQUIRY</span>
           </a>
         ) : (
           <div className="space-y-2">
@@ -346,17 +379,19 @@ function PricingCard({
         )}
 
         {/* Split in 4 Payment with Tabby & Tamara */}
-        <div className="mt-4 pt-3.5 border-t border-gray-100">
-          <p className="text-xs text-gray-600 font-medium mb-2">Split in 4 Payment with</p>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-xs font-black px-3 py-1 rounded-md leading-none select-none">
-              tabby
-            </span>
-            <span className="inline-flex items-center justify-center bg-black text-white text-xs font-bold px-3 py-1 rounded-md leading-none select-none">
-              tamara
-            </span>
+        {!isMotorcycleProduct(product) && (
+          <div className="mt-4 pt-3.5 border-t border-gray-100">
+            <p className="text-xs text-gray-600 font-medium mb-2">Split in 4 Payment with</p>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-xs font-black px-3 py-1 rounded-md leading-none select-none">
+                tabby
+              </span>
+              <span className="inline-flex items-center justify-center bg-black text-white text-xs font-bold px-3 py-1 rounded-md leading-none select-none">
+                tamara
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ── 3 Trust Badges Card ── */}
@@ -444,6 +479,7 @@ function RatingsSection({
   const specs = parseTyreProductName(product.name);
   const brandName = String(product.brandName ?? product.brand ?? "").toUpperCase();
   const patternName = (specs.pattern ?? "").toUpperCase();
+  const isMotorcycle = isMotorcycleProduct(product);
   const displayTitle = [brandName, patternName].filter(Boolean).join(" ") || product.name.toUpperCase();
 
   return (
@@ -626,14 +662,18 @@ function RelatedProductsSection({
   size,
   currentSku,
   locale = "en",
+  isMotorcycle = false,
 }: {
   size: string | null;
   currentSku?: string;
   locale?: string;
+  isMotorcycle?: boolean;
 }) {
   const swiperRef = useRef<SwiperType | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+
+  if (isMotorcycle) return null;
 
   useEffect(() => {
     if (!size) return;
@@ -826,7 +866,12 @@ export default function ProductDetailInner({
           <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap">
             <Link href={`/${locale}`} className="hover:text-gray-900 transition-colors">Home</Link>
             <span className="text-gray-300">›</span>
-            <Link href={`/${locale}/tyres`} className="hover:text-gray-900 transition-colors">Tyres</Link>
+            <Link
+              href={`/${locale}/${tyreCategory?.urlKey ?? "tyres"}`}
+              className="hover:text-gray-900 transition-colors"
+            >
+              {tyreCategory?.name ?? "Tyres"}
+            </Link>
             {specs.size && (
               <>
                 <span className="text-gray-300">›</span>
@@ -849,12 +894,20 @@ export default function ProductDetailInner({
             {/* ── LEFT: Image Card ─────────────────────────────────── */}
             <div className="w-full">
               <div className="group bg-white border border-gray-200 rounded-xl overflow-hidden shadow-2xs hover:shadow-md transition-shadow">
-                {/* Top Red Offer Banner */}
-                <div className="bg-[#ed1c24] py-3 px-4 text-center">
-                  <p className="text-white font-black text-sm sm:text-base uppercase tracking-wider">
-                    {offerLabel || "FREE Wheel Alignment"}
-                  </p>
-                </div>
+                {/* Top Red Offer Banner — only for a real Magento offer.
+                    This used to fall back to an invented "FREE Wheel
+                    Alignment" banner on every product that has no real
+                    offer (nonsensical for a motorcycle tyre, which has no
+                    wheel alignment service at all), unlike the listing
+                    cards which already correctly hide the whole banner
+                    when there's no real offerLabel. */}
+                {offerLabel && (
+                  <div className="bg-[#ed1c24] py-3 px-4 text-center">
+                    <p className="text-white font-black text-sm sm:text-base uppercase tracking-wider">
+                      {offerLabel}
+                    </p>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-center p-6 bg-white overflow-hidden" style={{ minHeight: 340 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1046,7 +1099,9 @@ export default function ProductDetailInner({
       )}
 
       {/* ── Related products ───────────────────────────────────────── */}
-      <RelatedProductsSection size={specs.size} currentSku={product.sku} locale={locale} />
+      {!isMotorcycleProduct(product) && (
+        <RelatedProductsSection size={specs.size} currentSku={product.sku} locale={locale} isMotorcycle={isMotorcycleProduct(product)} />
+      )}
 
       {/* ── Share Modal ────────────────────────────────────────────── */}
       <ShareModal
@@ -1069,7 +1124,21 @@ export default function ProductDetailInner({
       )}
 
       {/* ── Sticky Bottom Floating Search (Appears on scroll) ─────── */}
-      <StickyBottomFinder locale={locale} categoryUid={APP_CONFIG.magento.tyresCategoryUid} />
+      {/* This categoryUid used to be hardcoded to the car tyres category
+          for every product, so a motorcycle tyre's PDP showed car-tyre size
+          options and the "Search By Vehicle" tab that doesn't apply to it —
+          neither exists on the live motorcycle PDP. TyreFinder's own
+          motorcycle detection is pathname-based ("/motorcycle" in the URL),
+          which a PDP slug never contains, so it has to be told explicitly here. */}
+      <StickyBottomFinder
+        locale={locale}
+        categoryUid={
+          isMotorcycleProduct(product)
+            ? APP_CONFIG.magento.motorcycleCategoryUid
+            : APP_CONFIG.magento.tyresCategoryUid
+        }
+        sizeOnly={isMotorcycleProduct(product)}
+      />
     </>
   );
 }

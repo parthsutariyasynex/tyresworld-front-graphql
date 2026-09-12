@@ -16,6 +16,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const [cartAdded, setCartAdded] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const pathname = usePathname();
   const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
@@ -43,9 +44,13 @@ export default function ProductCard({ product }: { product: Product }) {
     e.stopPropagation();
     if (cartAdded || adding || isOutOfStock) return;
     setAdding(true);
+    setAddError(null);
     try {
       const result = await addItem(product, 1);
-      if (!result.error) {
+      if (result.error) {
+        setAddError(result.error);
+        setTimeout(() => setAddError(null), 4000);
+      } else {
         setCartAdded(true);
         setTimeout(() => setCartAdded(false), 2000);
       }
@@ -237,6 +242,9 @@ export default function ProductCard({ product }: { product: Product }) {
             </button>
           )}
         </div>
+        {addError && (
+          <p className="text-[11px] text-[#ed1c24] font-semibold mt-1.5 text-center line-clamp-2">{addError}</p>
+        )}
       </div>
     </div>
   );

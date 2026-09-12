@@ -17,6 +17,23 @@ type SortInput = Record<string, "ASC" | "DESC">;
 const STAGGERED_FETCH_CAP = 200;
 
 /**
+ * This store's Magento GraphQL schema exposes no price-sortable field —
+ * ProductAttributeSortInput only has mst_sort / position / relevance, no
+ * `price` (confirmed via introspection). So "Price: Low to High/High to
+ * Low" can't be delegated to Magento's `sort` argument at all; the old
+ * code silently dropped it (buildSort() returned undefined for anything
+ * but position/recommended) and the client only re-sorted whatever 12
+ * items happened to be on the current Magento-paginated (position-order)
+ * page — cosmetically ordered within that page, but page 1 wasn't
+ * actually the cheapest items site-wide, and page 2 could easily contain
+ * cheaper ones than page 1. Real fix: fetch a large batch in Magento's
+ * default order, sort the *real* results ourselves, then paginate the
+ * sorted set — same fetch-big-then-slice pattern the staggered branch
+ * below already uses for its own (different) reason.
+ */
+const PRICE_SORT_FETCH_CAP = 1000;
+
+/**
  * Pair each front tyre with an unused rear tyre of the same brand — same
  * pattern preferred, any pattern of that brand otherwise. Never crosses
  * brands. Mirrors the matching in StaggeredTyreCard's caller
@@ -96,7 +113,7 @@ function withBrandLogos<T extends { brandName?: unknown; brandLogoUrl?: string }
 }
 
 function buildCategoryMetadata(
-  cat: { uid: string; name: string; description?: string | null; meta_title?: string | null; meta_description?: string | null; url_key?: string } | undefined | null,
+  cat: { uid: string; name: string; description?: string | null; meta_title?: string | null; meta_description?: string | null; url_key?: string; category_page_title?: string | null } | undefined | null,
   urlKey: string,
 ) {
   if (urlKey === "electric-vehicle-tyres-uae" || urlKey === "ev-tyres" || urlKey === "ev-tires") {
@@ -126,6 +143,12 @@ function buildCategoryMetadata(
     description: cat.description ?? null,
     metaTitle: cat.meta_title ?? null,
     metaDescription: cat.meta_description ?? null,
+    // The on-page H1 — a dedicated Magento field distinct from both `name`
+    // (used in breadcrumbs/nav) and `meta_title` (used in <title>). e.g.
+    // Car Battery: name="Car Battery", meta_title="Buy High-Performance
+    // Car Batteries in UAE | TyresCart", category_page_title="Buy Car
+    // Battery Online in UAE" — the live site's real H1 text.
+    pageTitle: cat.category_page_title ?? null,
     urlKey: cat.url_key,
   };
 }
@@ -137,7 +160,9 @@ export async function GET(req: NextRequest) {
   const store       = searchParams.get("store") ?? "default";
   const pageSize    = Math.min(Number(searchParams.get("pageSize") ?? 12) || 12, 48);
   const currentPage = Math.max(Number(searchParams.get("page") ?? 1) || 1, 1);
-  const sort        = buildSort(searchParams.get("sort") ?? "");
+  const rawSort     = searchParams.get("sort") ?? "";
+  const sort        = buildSort(rawSort);
+  const isPriceSort = rawSort === "low-to-high" || rawSort === "high-to-low";
   const search      = searchParams.get("q") ?? searchParams.get("search") ?? "";
 
   if (!urlKey) {
@@ -392,6 +417,69 @@ export async function GET(req: NextRequest) {
           },
         },
         { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } }
+      );
+    }
+
+    /* ── Plain request, price sort ────────────────────────────────
+       Magento can't sort by price for this store (see PRICE_SORT_FETCH_CAP
+       above) — fetch a large batch in default order, sort the real result
+       set ourselves, then slice out the requested page. */
+    if (isPriceSort) {
+      const allVars: Record<string, unknown> = {
+        urlKey: leafUrlKey,
+        filters,
+        pageSize: PRICE_SORT_FETCH_CAP,
+        currentPage: 1,
+      };
+      if (search) allVars.search = search;
+
+      const allRes = await fetch(APP_CONFIG.magento.graphqlUrl, {
+        method: "POST",
+        headers: magentoHeaders(store),
+        body: JSON.stringify({ query: CATEGORY_PAGE_QUERY, variables: allVars }),
+        next: { revalidate: 300 },
+      });
+      const allJson = await allRes.json().catch(() => null);
+
+      if (!allRes.ok && !allJson?.data) {
+        return NextResponse.json(
+          { error: allJson?.errors?.[0]?.message ?? `HTTP ${allRes.status}` },
+          { status: allRes.status },
+        );
+      }
+      if (allJson && allJson.data === null) {
+        const msg = (allJson.errors as { message: string }[] | undefined)?.[0]?.message ?? "Magento query failed";
+        console.error("[category-page] Magento returned null data:", msg);
+        return NextResponse.json({ error: msg }, { status: 200 });
+      }
+      if (allJson?.errors?.length) {
+        console.warn("[category-page] GraphQL warnings:", (allJson.errors as { message: string }[]).map((e) => e.message));
+      }
+
+      const cat = allJson?.data?.categories?.items?.[0];
+      const pd = allJson?.data?.products;
+      const allProducts = withBrandLogos(parseGraphqlResponse({ data: { products: pd } }));
+
+      allProducts.sort((a, b) =>
+        rawSort === "high-to-low" ? (b.price ?? 0) - (a.price ?? 0) : (a.price ?? 0) - (b.price ?? 0),
+      );
+
+      // Never promise more pages than what was actually fetched and sorted.
+      const total = Math.min(pd?.total_count ?? allProducts.length, PRICE_SORT_FETCH_CAP);
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const pageStart = (currentPage - 1) * pageSize;
+
+      return NextResponse.json(
+        {
+          category: buildCategoryMetadata(cat, urlKey),
+          products: allProducts.slice(pageStart, pageStart + pageSize),
+          rearProducts: [],
+          filters: parseAggregations({ data: { products: pd } }),
+          total,
+          totalPages,
+          currentPage,
+        },
+        { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } },
       );
     }
 

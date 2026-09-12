@@ -31,9 +31,9 @@ function sortOptions(code: string, options: AttrOption[]): AttrOption[] {
   });
 }
 
-/** Width/height/rim options that products in the tyres category actually carry. */
-async function fetchSizeOptions(): Promise<Record<string, AttrOption[]>> {
-  const filter = { category_uid: { eq: APP_CONFIG.magento.tyresCategoryUid } };
+/** Width/height/rim options that products in the specified category actually carry. */
+async function fetchSizeOptions(catUid?: string): Promise<Record<string, AttrOption[]>> {
+  const filter = { category_uid: { eq: catUid || APP_CONFIG.magento.tyresCategoryUid } };
 
   const entries = await Promise.all(
     SIZE_FILTER_CODES.map(async (code) => {
@@ -63,7 +63,10 @@ async function fetchSizeOptions(): Promise<Record<string, AttrOption[]>> {
   return Object.fromEntries(entries);
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const catUid = searchParams.get("category_uid");
+
   try {
     const [res, sizeOptions] = await Promise.all([
       fetch(APP_CONFIG.magento.graphqlUrl, {
@@ -72,7 +75,7 @@ export async function GET() {
         body: JSON.stringify({ query: TYRE_FINDER_METADATA_QUERY }),
         next: { revalidate: APP_CONFIG.cache.filters },
       }),
-      fetchSizeOptions(),
+      fetchSizeOptions(catUid ?? undefined),
     ]);
 
     const raw = await res.json().catch(() => null);
