@@ -126,7 +126,13 @@ export default function TyreListingCard({
   const { addItem } = useCart();
 
   const isBike = vehicleIcon === "bike" || isMotorcycleProduct(product);
-  const [qty, setQty] = useState(product.qtyOptions?.defaultQty ?? (isBike ? 2 : 4));
+  const defaultCardQty =
+    product.qtyOptions?.defaultQty && product.qtyOptions.defaultQty > 0
+      ? product.qtyOptions.defaultQty
+      : isBike
+      ? 2
+      : 4;
+  const [qty, setQty] = useState(defaultCardQty);
   // Options come from Klever's kleverQtyOptions (per-SKU salable/max qty) —
   // no fallback list is fabricated when the API returns none.
   const qtyMenuOptions = Array.from(new Set([...(product.qtyOptions?.options ?? []), qty])).sort((a, b) => a - b);
@@ -288,7 +294,11 @@ export default function TyreListingCard({
             ) : width && height && rim ? (
               <button
                 type="button"
-                onClick={() => setFitmentOpen(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setFitmentOpen(true);
+                }}
                 aria-label={`Vehicles that fit ${tyreSize}`}
                 title="See which cars fit this size"
                 className="inline-flex items-center text-gray-900 hover:text-[#ed1c24] transition-colors cursor-pointer"

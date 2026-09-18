@@ -1,33 +1,42 @@
 import { useEffect } from "react";
 
+let lockCount = 0;
+let originalBodyOverflow = "";
+let originalBodyPaddingRight = "";
+
 /**
  * Locks page scroll while `locked` is true.
- *
- * `html` (not `body`) is the real scrolling box here — globals.css sets
- * `overflow-y: scroll` + `scrollbar-gutter: stable` on it, which reserves
- * the scrollbar's gutter permanently, whether or not a scrollbar is
- * actually drawn. That means toggling `overflow` between "scroll" and
- * "hidden" never changes `clientWidth` — zero-width delta, no JS padding
- * math needed (a prior version computed and applied a `paddingRight`
- * compensation here, which — now that the CSS gutter already reserves
- * that same space — double-compensated and was the actual source of a
- * visible shift every time a modal/drawer opened or closed).
+ * Preserves html scrollbar gutter to prevent any layout shift across the page,
+ * fixed headers, or centered wrappers.
  */
 export function useScrollLock(locked: boolean) {
   useEffect(() => {
-    if (!locked) return;
+    if (!locked || typeof document === "undefined") return;
 
-    const html = document.documentElement;
     const body = document.body;
-    const originalHtmlOverflow = html.style.overflow;
-    const originalBodyOverflow = body.style.overflow;
 
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
+    if (lockCount === 0) {
+      originalBodyOverflow = body.style.overflow;
+      originalBodyPaddingRight = body.style.paddingRight;
+
+      const prevClientWidth = document.documentElement.clientWidth;
+      body.style.overflow = "hidden";
+
+      const delta = document.documentElement.clientWidth - prevClientWidth;
+      if (delta > 0) {
+        body.style.paddingRight = `${delta}px`;
+      }
+    }
+    lockCount++;
 
     return () => {
-      html.style.overflow = originalHtmlOverflow;
-      body.style.overflow = originalBodyOverflow;
+      lockCount--;
+      if (lockCount <= 0) {
+        lockCount = 0;
+        body.style.overflow = originalBodyOverflow;
+        body.style.paddingRight = originalBodyPaddingRight;
+      }
     };
   }, [locked]);
 }
+

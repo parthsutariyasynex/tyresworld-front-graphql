@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ChevronRight, Check, ArrowLeft } from "lucide-react";
 import { buildFilterParams } from "@/lib/filterBuilder";
 import {
@@ -25,10 +25,12 @@ type Step = "model" | "year" | "trim";
 
 export default function VehicleMakeBrowserPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const locale = String(params.locale ?? "en");
   const isAr = locale === "ar";
   const make = String(params.make ?? "");
+  const modelParam = searchParams.get("model") ?? "";
 
   const [step, setStep] = useState<Step>("model");
 
@@ -83,6 +85,17 @@ export default function VehicleMakeBrowserPage() {
         if (!active) return;
         setModels(options);
         if (error && options.length === 0) setModelsError(error);
+
+        // Preselect model from query parameter if provided
+        if (modelParam && options.length > 0) {
+          const match = options.find(
+            (o) => o.value.toLowerCase() === modelParam.toLowerCase() || o.label.toLowerCase() === modelParam.toLowerCase(),
+          );
+          if (match) {
+            setSelModel(match);
+            setStep("year");
+          }
+        }
       })
       .catch((e) => {
         if (!active || ctrl.signal.aborted) return;
@@ -95,7 +108,7 @@ export default function VehicleMakeBrowserPage() {
       active = false;
       ctrl.abort();
     };
-  }, [make, locale]);
+  }, [make, locale, modelParam]);
 
   /* ── years once a model is picked ── */
   useEffect(() => {

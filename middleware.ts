@@ -30,6 +30,7 @@ export function middleware(req: NextRequest) {
   const segments = pathname.split("/").filter(Boolean);
   const locale = segments[0] === "ar" ? "ar" : "en";
   const lastSegment = segments[segments.length - 1];
+
   if (segments.length <= 2 && lastSegment && REMOVED_SYNTHETIC_SLUGS.has(lastSegment)) {
     const url = req.nextUrl.clone();
     url.pathname = `/${locale}/tyres`;

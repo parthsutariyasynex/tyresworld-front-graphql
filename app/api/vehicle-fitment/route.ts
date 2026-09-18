@@ -1,56 +1,91 @@
 import { NextRequest, NextResponse } from "next/server";
 import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
 import { vehicleLogoProxyUrl } from "@/lib/vehicleLogo";
+import { KLEVER_VEHICLES_BY_TYRE_SIZE_QUERY } from "@/lib/queries";
+import { searchByTyreSize } from "@/lib/wheel-service";
+import type { WheelFitmentMatch } from "@/lib/wheel-types";
 
 /**
- * Vehicle fitment for a tyre size — the data behind the theme's
- * "buy-tyre-search" modal (which cars a given size fits, grouped make →
- * model → year).
- *
- * Not exposed over GraphQL, so it can't come through the normal client. The
- * theme's JS POSTs to a Magento controller that returns JSON; this route
- * proxies it server-side (adding the staging Basic-auth header the browser
- * can't) and reshapes the payload for the modal. Nothing hardcoded — the
- * list is whatever Magento returns for the size.
- *
- * Contract taken verbatim from the live theme JS (fetchTyreData):
- *   POST {origin}/{store}/partsfinder/vehicle/buyTyreSearch
- *   body: form_key, width, height, rim, uenc(base64 of page url)
- *   → { status: "success", vehicles: [{ slug, name, logo_url,
- *        models: [{ slug, name, year_range, url }] }] }
+ * Vehicle fitment for a tyre size — the data behind the car icon fitment modal
+ * (which cars a given tyre size fits, grouped make → model → year).
+ * Fetches from Wheel API (wheel-api.klever.ae) with fallback to Magento GraphQL.
  */
-const FITMENT_PATH = "partsfinder/vehicle/buyTyreSearch";
+export type Model = { name: string; years: string; href: string };
+export type MakeGroup = { make: string; logo: string; models: Model[] };
 
-const MAGENTO_ORIGIN = APP_CONFIG.magento.graphqlUrl.replace(/\/graphql\/?$/, "");
+type GqlVehicleMatch = {
+  slug?: string;
+  name?: string;
+  name_en?: string;
+  make_slug?: string;
+  make_name?: string;
+  year_ranges?: string[];
+};
 
-/* The controller returns logo_url empty; build it from the make slug. The
-   theme's static logo folder sits behind staging Basic Auth, so we can't
-   point the modal's <img> straight at it — route it through
-   /api/vehicle-logo, which fetches server-side (with the Basic Auth header)
-   and streams the bytes back same-origin. See lib/vehicleLogo.ts. */
+function reshapeWheelApi(items: WheelFitmentMatch[], store: string): MakeGroup[] {
+  const byMake = new Map<string, { make: string; logo: string; models: Model[] }>();
 
-type UpstreamModel = { slug?: string; name?: string; year_range?: string; url?: string };
-type UpstreamMake = { slug?: string; name?: string; logo_url?: string; models?: UpstreamModel[] };
+  for (const item of items) {
+    const makeName = item.makeName?.trim();
+    const makeSlug = (item.makeSlug || item.makeName || "").trim().toLowerCase().replace(/\s+/g, "-");
+    if (!makeName || !makeSlug) continue;
 
-type Model = { name: string; years: string; href: string };
-type MakeGroup = { make: string; logo: string; models: Model[] };
+    const modelName = item.modelName?.trim();
+    const modelSlug = (item.modelSlug || item.modelName || "").trim().toLowerCase().replace(/\s+/g, "-");
+    if (!modelName || !modelSlug) continue;
 
-function reshape(vehicles: UpstreamMake[]): MakeGroup[] {
-  return vehicles
-    .map((v): MakeGroup | null => {
-      const make = v.name?.trim();
-      if (!make) return null;
-      const logo = v.slug ? vehicleLogoProxyUrl(v.slug) : (v.logo_url?.trim() || "");
-      const models = (v.models ?? [])
-        .map((m): Model | null => {
-          const name = m.name?.trim();
-          if (!name || !m.url) return null;
-          return { name, years: (m.year_range ?? "").trim(), href: m.url };
-        })
-        .filter((m): m is Model => m !== null);
-      return { make, logo, models };
-    })
-    .filter((g): g is MakeGroup => g !== null && g.models.length > 0);
+    const years = (item.yearRanges ?? []).join(", ");
+    const href = `/${store}/tyres/cars/${encodeURIComponent(makeSlug)}?model=${encodeURIComponent(modelSlug)}`;
+
+    let group = byMake.get(makeSlug);
+    if (!group) {
+      group = {
+        make: makeName,
+        logo: vehicleLogoProxyUrl(makeSlug),
+        models: [],
+      };
+      byMake.set(makeSlug, group);
+    }
+
+    if (!group.models.some((m) => m.name.toLowerCase() === modelName.toLowerCase())) {
+      group.models.push({ name: modelName, years, href });
+    }
+  }
+
+  return Array.from(byMake.values());
+}
+
+function reshapeGql(items: GqlVehicleMatch[], store: string): MakeGroup[] {
+  const byMake = new Map<string, { make: string; logo: string; models: Model[] }>();
+
+  for (const item of items) {
+    const makeName = item.make_name?.trim();
+    const makeSlug = item.make_slug?.trim();
+    if (!makeName || !makeSlug) continue;
+
+    const modelName = (store === "ar" && item.name ? item.name : item.name_en || item.name || "").trim();
+    const modelSlug = item.slug?.trim();
+    if (!modelName || !modelSlug) continue;
+
+    const years = (item.year_ranges ?? []).join(", ");
+    const href = `/${store}/tyres/cars/${encodeURIComponent(makeSlug)}?model=${encodeURIComponent(modelSlug)}`;
+
+    let group = byMake.get(makeSlug);
+    if (!group) {
+      group = {
+        make: makeName,
+        logo: vehicleLogoProxyUrl(makeSlug),
+        models: [],
+      };
+      byMake.set(makeSlug, group);
+    }
+
+    if (!group.models.some((m) => m.name.toLowerCase() === modelName.toLowerCase())) {
+      group.models.push({ name: modelName, years, href });
+    }
+  }
+
+  return Array.from(byMake.values());
 }
 
 export async function GET(req: NextRequest) {
@@ -64,55 +99,59 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "width, height and rim are required" }, { status: 400 });
   }
 
-  /* This controller isn't registered under a store-code URL prefix — a
-     request to /{store}/partsfinder/... 404s (Magento's own 404 page, not
-     ours), while the same request to /partsfinder/... succeeds with real
-     data. Store/locale selection for this endpoint goes through the real
-     Store header magentoHeaders() already sets below, not the URL path
-     (confirmed live: real vehicles/models/years come back correctly). */
-  const url = `${MAGENTO_ORIGIN}/${FITMENT_PATH}`;
-  const body = new URLSearchParams({
-    form_key: "",
-    width,
-    height,
-    rim,
-    // The controller reads uenc but doesn't validate it; the page URL is fine.
-    uenc: Buffer.from(`${MAGENTO_ORIGIN}/tyres`).toString("base64"),
-  });
+  const w = parseInt(width, 10);
+  const h = parseInt(height, 10);
+  const r = parseInt(rim, 10);
+
+  if (isNaN(w) || isNaN(h) || isNaN(r)) {
+    return NextResponse.json({ error: "Invalid dimensions", groups: [] }, { status: 400 });
+  }
 
   try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        ...(magentoHeaders(store) as Record<string, string>),
-        "Content-Type": "application/x-www-form-urlencoded",
-        "X-Requested-With": "XMLHttpRequest",
-        Accept: "application/json",
-      },
-      body: body.toString(),
-      next: { revalidate: 3600 },
-    });
-
-    if (!res.ok) {
-      return NextResponse.json({ error: `Upstream HTTP ${res.status}`, groups: [] }, { status: res.status });
+    // 1. Primary: Fetch from Wheel API (wheel-api.klever.ae)
+    const wheelRes = await searchByTyreSize(w, h, r);
+    if (wheelRes.data && wheelRes.data.length > 0) {
+      const groups = reshapeWheelApi(wheelRes.data, store);
+      return NextResponse.json(
+        { groups },
+        { headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=600" } },
+      );
     }
 
-    const data = (await res.json().catch(() => null)) as
-      | { status?: string; vehicles?: UpstreamMake[] }
-      | null;
+    // 2. Fallback: Query Magento GraphQL if Wheel API returned 0 results or had an issue
+    try {
+      const gqlRes = await fetch(APP_CONFIG.magento.graphqlUrl, {
+        method: "POST",
+        headers: magentoHeaders(store),
+        body: JSON.stringify({
+          query: KLEVER_VEHICLES_BY_TYRE_SIZE_QUERY,
+          variables: { width: w, height: h, rim: r },
+        }),
+        next: { revalidate: 3600 },
+      });
 
-    if (!data || data.status !== "success") {
-      return NextResponse.json({ groups: [] });
+      if (gqlRes.ok) {
+        const gqlData = await gqlRes.json();
+        const items: GqlVehicleMatch[] = gqlData?.data?.kleverVehiclesByTyreSize ?? [];
+        if (items.length > 0) {
+          return NextResponse.json(
+            { groups: reshapeGql(items, store) },
+            { headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=600" } },
+          );
+        }
+      }
+    } catch {
+      // Ignore fallback error
     }
 
     return NextResponse.json(
-      { groups: reshape(data.vehicles ?? []) },
+      { groups: [] },
       { headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=600" } },
     );
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Network error", groups: [] },
-      { status: 502 },
+      { error: err instanceof Error ? err.message : "Fitment error", groups: [] },
+      { status: 500 },
     );
   }
 }

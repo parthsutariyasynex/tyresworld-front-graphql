@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, CheckCircle2 } from "lucide-react";
 import { useScrollLock } from "@/lib/useScrollLock";
 
@@ -26,36 +28,90 @@ export default function FullyFittedPriceModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setVisible(true);
+        });
+      });
+      return () => cancelAnimationFrame(raf);
+    } else {
+      setVisible(false);
+      const timer = setTimeout(() => {
+        setMounted(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   useScrollLock(isOpen);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onClose]);
 
-  return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="absolute inset-0" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-150 max-w-md w-full p-6 sm:p-8 z-10 animate-in fade-in zoom-in-95 duration-200">
+  if (!mounted || typeof document === "undefined") return null;
+
+  const modalContent = (
+    <div
+      className={`fixed inset-0 z-[99999] flex items-center justify-center p-4 transition-opacity duration-200 ease-out ${
+        visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      }`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fully-fitted-price-title"
+    >
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-200"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Modal Dialog Card */}
+      <div
+        className={`relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 max-w-md w-full p-6 sm:p-8 z-10 transition-all duration-200 ease-out ${
+          visible ? "opacity-100 scale-100" : "opacity-0 scale-[0.97]"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-5 right-5 text-gray-900 hover:text-black transition-colors"
+          className="absolute top-5 right-5 text-gray-500 hover:text-black hover:scale-110 transition-all p-1 cursor-pointer"
           aria-label="Close"
         >
-          <X size={20} />
+          <X size={20} strokeWidth={2.2} />
         </button>
 
-        <h3 className="text-sm font-black uppercase tracking-wider text-gray-900 mb-5 pr-8">
+        <h3
+          id="fully-fitted-price-title"
+          className="text-sm sm:text-[15px] font-black uppercase tracking-wider text-gray-950 mb-5 pr-8"
+        >
           Fully Fitted Price per Tire Includes:
         </h3>
 
         <ul className="space-y-4">
           {INCLUSIONS.map((item, idx) => (
             <li key={idx} className="flex items-start gap-3">
-              <CheckCircle2 size={20} className="shrink-0 mt-0.5 text-[#ed1c24]/70" strokeWidth={2} />
-              <span className="text-sm text-gray-700 leading-snug">{item}</span>
+              <CheckCircle2 size={20} className="shrink-0 mt-0.5 text-[#ed1c24]" strokeWidth={2.2} />
+              <span className="text-xs sm:text-sm text-gray-700 leading-snug font-medium">{item}</span>
             </li>
           ))}
         </ul>
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

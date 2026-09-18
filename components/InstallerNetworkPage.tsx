@@ -216,7 +216,7 @@ function InstallerNetworkContent() {
 
           <div className="mb-6">
             <Link
-              href={`/${locale}/tyres/size`}
+              href={`/${locale}/tyres`}
               className="inline-flex items-center gap-2 bg-[#2a171a]/90 hover:bg-[#3d2024] border border-white/15 hover:border-white/30 text-white text-[12px] font-semibold px-4.5 py-2 rounded-full transition-all shadow-xs"
             >
               <Search size={13} className="text-white" />

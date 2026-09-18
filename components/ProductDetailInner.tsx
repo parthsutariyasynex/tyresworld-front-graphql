@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ChevronRight, ChevronLeft, ChevronDown, Info, X, Loader2, Check, ShoppingBag, Star, ArrowLeft, ArrowRight, CheckCircle, Gauge, Leaf } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -274,9 +275,12 @@ function PricingCard({
      distinction already applied to the fully-fitted-price wording above and
      to the category listing cards (TyreListingCard's vehicleIcon="bike"). */
   const setSize = isMotorcycleProduct(product) ? 2 : 4;
-
+  const defaultPdpQty =
+    product.qtyOptions?.defaultQty && product.qtyOptions.defaultQty > 0
+      ? product.qtyOptions.defaultQty
+      : setSize;
   const { addItem } = useCart();
-  const [qty, setQty] = useState(product.qtyOptions?.defaultQty ?? setSize);
+  const [qty, setQty] = useState(defaultPdpQty);
   const [qtyOpen, setQtyOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
@@ -285,7 +289,11 @@ function PricingCard({
 
   // Sync qty when product or defaultQty changes
   useEffect(() => {
-    setQty(product.qtyOptions?.defaultQty ?? setSize);
+    const defaultQty =
+      product.qtyOptions?.defaultQty && product.qtyOptions.defaultQty > 0
+        ? product.qtyOptions.defaultQty
+        : setSize;
+    setQty(defaultQty);
   }, [product.sku, product.qtyOptions?.defaultQty, setSize]);
 
   // Close quantity dropdown when clicking outside
@@ -947,8 +955,6 @@ export default function ProductDetailInner({
   const [isVehicleFitmentOpen, setIsVehicleFitmentOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<ProductTabKey>("overview");
 
-  useScrollLock(isPriceInfoOpen);
-
   const sizeMatch = specs.size?.match(/(\d{3})\/(\d{2,3})\s*R(\d{2})/i);
   const width = product.width ?? sizeMatch?.[1] ?? "";
   const height = product.height ?? sizeMatch?.[2] ?? "";
@@ -1136,123 +1142,10 @@ export default function ProductDetailInner({
       </div>
 
       {/* ── Inclusions Popup Modal ─────────────────────────────────── */}
-      {isPriceInfoOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={() => setIsPriceInfoOpen(false)}
-            aria-hidden="true"
-          />
-
-          {/* Modal card — same shape as VehicleFitmentModal */}
-          <div className="relative w-full max-w-[480px] max-h-[90vh] bg-white rounded-[22px] shadow-2xl overflow-hidden flex flex-col border border-gray-100 z-10">
-
-            {/* ── RED HEADER ── */}
-            <div
-              className="text-white p-[20px_20px_14px] relative rounded-t-[22px] flex-shrink-0"
-              style={{ background: "linear-gradient(#D52D27 0%, #D52D27 100%)" }}
-            >
-              {/* Close X */}
-              <button
-                type="button"
-                className="absolute top-4 right-5 text-white/90 hover:text-white hover:scale-110 transition-transform p-1 cursor-pointer z-10"
-                onClick={() => setIsPriceInfoOpen(false)}
-                aria-label="Close"
-              >
-                <X size={20} strokeWidth={2.5} />
-              </button>
-
-              {/* Title row + badge */}
-              <div className="flex items-start justify-between gap-2 mb-3.5 pr-8">
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-xl sm:text-2xl font-bold text-white leading-tight m-0 tracking-tight">
-                    Fully Fitted Price
-                  </h4>
-                  <p className="text-white/85 text-xs sm:text-[13px] font-normal mt-1 mb-0 leading-relaxed">
-                    Per tyre — everything included, no hidden fees.
-                  </p>
-                </div>
-                {/* Badge chip — same as TYRE SIZE box */}
-                <div className="bg-[#851214] rounded-xl px-4 py-2 text-center min-w-[90px] border border-white/10 shrink-0">
-                  <span className="text-[9px] uppercase font-bold tracking-wider text-white/70 block leading-tight">Price</span>
-                  <span className="text-sm font-bold text-white tracking-widest block mt-0.5 leading-tight">FITTED</span>
-                </div>
-              </div>
-
-              {/* Amber chips — WIDTH / HEIGHT / RIM style */}
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { icon: <CheckCircle size={18} strokeWidth={2.5} />, label: "VAT",       val: "Included" },
-                  { icon: <Gauge       size={18} strokeWidth={2.5} />, label: "Balancing", val: "Free" },
-                  { icon: <Leaf        size={18} strokeWidth={2.5} />, label: "Disposal",  val: "Eco-free" },
-                ].map((c) => (
-                  <div
-                    key={c.label}
-                    className="relative rounded-xl p-3 flex items-center gap-3 text-left bg-white/10 border border-white/20 select-none"
-                  >
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#f4a923] text-white">
-                      {c.icon}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
-                        {c.label}
-                      </span>
-                      <span className="text-xs sm:text-[13px] font-bold block leading-tight mt-0.5 truncate text-[#f4a923]">
-                        {c.val}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ── WHITE BODY ── */}
-            <div className="px-5 py-4 flex-1 overflow-y-auto finder-modal-scroll bg-white">
-              <ul className="space-y-3">
-                {[
-                  "VAT",
-                  "Professional tyre fitting (Beadlock wheels excluded)",
-                  "Wheel balancing",
-                  "New standard rubber valve",
-                  "Delivery to the installer",
-                  "Eco-friendly disposal of old tyres",
-                  "Bonus: When you buy 4 tyres, enjoy 1 FREE tyre rotation every 20,000 km (up to once per year)",
-                ].map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-sm text-gray-700">
-                    <span className="w-5 h-5 rounded-full border-2 border-[#ed1c24] flex items-center justify-center shrink-0 mt-0.5 text-[#ed1c24]">
-                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                        <path d="M1 4L3.5 6.5L9 1" stroke="#ed1c24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </span>
-                    <span className={idx === 6 ? "text-gray-500 text-xs leading-relaxed" : ""}>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* ── FOOTER — same as VehicleFitmentModal ── */}
-            <div className="px-6 py-3.5 border-t border-gray-100 flex items-center justify-between bg-white shrink-0 rounded-b-[22px]">
-              <button
-                type="button"
-                className="text-sm font-bold text-gray-900 hover:text-black flex items-center gap-1.5 transition-colors cursor-pointer"
-                onClick={() => setIsPriceInfoOpen(false)}
-              >
-                <ArrowLeft size={16} strokeWidth={2.5} />
-                <span>Cancel</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsPriceInfoOpen(false)}
-                className="bg-black hover:bg-gray-900 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-lg px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
-              >
-                <span>Done</span>
-                <ArrowRight size={16} strokeWidth={2.5} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PdpPriceInfoModal
+        isOpen={isPriceInfoOpen}
+        onClose={() => setIsPriceInfoOpen(false)}
+      />
 
       {/* ── Related products ───────────────────────────────────────── */}
       {!isMotorcycleProduct(product) && (
@@ -1296,6 +1189,180 @@ export default function ProductDetailInner({
         sizeOnly={isMotorcycleProduct(product)}
       />
     </>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PDP FULLY FITTED PRICE INFO MODAL
+   Rendered with smooth portal transition to avoid jerks on open/close
+══════════════════════════════════════════════════════════════════ */
+function PdpPriceInfoModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setVisible(true);
+        });
+      });
+      return () => cancelAnimationFrame(raf);
+    } else {
+      setVisible(false);
+      const timer = setTimeout(() => {
+        setMounted(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  useScrollLock(isOpen);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
+  if (!mounted || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      className={`fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 transition-opacity duration-200 ease-out ${
+        visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      }`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pdp-price-info-title"
+    >
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-200"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Modal card */}
+      <div
+        className={`relative w-full max-w-[480px] max-h-[90vh] bg-white rounded-[22px] shadow-2xl overflow-hidden flex flex-col border border-gray-100 z-10 transition-all duration-200 ease-out ${
+          visible ? "opacity-100 scale-100" : "opacity-0 scale-[0.97]"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ── RED HEADER ── */}
+        <div
+          className="text-white p-[20px_20px_14px] relative rounded-t-[22px] flex-shrink-0"
+          style={{ background: "linear-gradient(#D52D27 0%, #D52D27 100%)" }}
+        >
+          {/* Close X */}
+          <button
+            type="button"
+            className="absolute top-4 right-5 text-white/90 hover:text-white hover:scale-110 transition-transform p-1 cursor-pointer z-10"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <X size={20} strokeWidth={2.5} />
+          </button>
+
+          {/* Title row + badge */}
+          <div className="flex items-start justify-between gap-2 mb-3.5 pr-8">
+            <div className="min-w-0 flex-1">
+              <h4 id="pdp-price-info-title" className="text-xl sm:text-2xl font-bold text-white leading-tight m-0 tracking-tight">
+                Fully Fitted Price
+              </h4>
+              <p className="text-white/85 text-xs sm:text-[13px] font-normal mt-1 mb-0 leading-relaxed">
+                Per tyre — everything included, no hidden fees.
+              </p>
+            </div>
+            {/* Badge chip — same as TYRE SIZE box */}
+            <div className="bg-[#851214] rounded-xl px-4 py-2 text-center min-w-[90px] border border-white/10 shrink-0">
+              <span className="text-[9px] uppercase font-bold tracking-wider text-white/70 block leading-tight">Price</span>
+              <span className="text-sm font-bold text-white tracking-widest block mt-0.5 leading-tight">FITTED</span>
+            </div>
+          </div>
+
+          {/* Amber chips — WIDTH / HEIGHT / RIM style */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { icon: <CheckCircle size={18} strokeWidth={2.5} />, label: "VAT",       val: "Included" },
+              { icon: <Gauge       size={18} strokeWidth={2.5} />, label: "Balancing", val: "Free" },
+              { icon: <Leaf        size={18} strokeWidth={2.5} />, label: "Disposal",  val: "Eco-free" },
+            ].map((c) => (
+              <div
+                key={c.label}
+                className="relative rounded-xl p-3 flex items-center gap-3 text-left bg-white/10 border border-white/20 select-none"
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#f4a923] text-white">
+                  {c.icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
+                    {c.label}
+                  </span>
+                  <span className="text-xs sm:text-[13px] font-bold block leading-tight mt-0.5 truncate text-[#f4a923]">
+                    {c.val}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── WHITE BODY ── */}
+        <div className="px-5 py-4 flex-1 overflow-y-auto finder-modal-scroll bg-white">
+          <ul className="space-y-3">
+            {[
+              "VAT",
+              "Professional tyre fitting (Beadlock wheels excluded)",
+              "Wheel balancing",
+              "New standard rubber valve",
+              "Delivery to the installer",
+              "Eco-friendly disposal of old tyres",
+              "Bonus: When you buy 4 tyres, enjoy 1 FREE tyre rotation every 20,000 km (up to once per year)",
+            ].map((item, idx) => (
+              <li key={idx} className="flex items-start gap-3 text-sm text-gray-700">
+                <span className="w-5 h-5 rounded-full border-2 border-[#ed1c24] flex items-center justify-center shrink-0 mt-0.5 text-[#ed1c24]">
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                    <path d="M1 4L3.5 6.5L9 1" stroke="#ed1c24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </span>
+                <span className={idx === 6 ? "text-gray-500 text-xs leading-relaxed" : ""}>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* ── FOOTER — same as VehicleFitmentModal ── */}
+        <div className="px-6 py-3.5 border-t border-gray-100 flex items-center justify-between bg-white shrink-0 rounded-b-[22px]">
+          <button
+            type="button"
+            className="text-sm font-bold text-gray-900 hover:text-black flex items-center gap-1.5 transition-colors cursor-pointer"
+            onClick={onClose}
+          >
+            <ArrowLeft size={16} strokeWidth={2.5} />
+            <span>Cancel</span>
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="bg-black hover:bg-gray-900 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-lg px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
+          >
+            <span>Done</span>
+            <ArrowRight size={16} strokeWidth={2.5} />
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 

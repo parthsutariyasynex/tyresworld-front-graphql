@@ -1,19 +1,19 @@
 /* ─────────────────────────────────────────────────────────────────
-   WHEEL API — service layer
-   Call these functions from Server Components or Server Actions only.
-   They run with the WHEEL_USER_KEY secret on the server — they must
-   never be imported into "use client" components directly.
+ WHEEL API — service layer
+ Call these functions from Server Components or Server Actions only.
+ They run with the WHEEL_USER_KEY secret on the server — they must
+ never be imported into "use client" components directly.
 
-   Architecture:
-     Server Component / Server Action
-       → wheel-service  (this file — typed business logic)
-       → wheel-client   (wheelGql — raw fetch, appends ?user_key=)
-       → wheel-queries  (verified GraphQL query strings)
-       → wheel-types    (TypeScript interfaces)
+ Architecture:
+   Server Component / Server Action
+     → wheel-service  (this file — typed business logic)
+     → wheel-client   (wheelGql — raw fetch, appends ?user_key=)
+     → wheel-queries  (verified GraphQL query strings)
+     → wheel-types    (TypeScript interfaces)
 
-   The Wheel API is a vehicle fitment database:
-   - Browse: makes → models → years → modifications (engine trims)
-   - Reverse: search(width, height, rim) → vehicles that use that size
+ The Wheel API is a vehicle fitment database:
+ - Browse: makes → models → years → modifications (engine trims)
+ - Reverse: search(width, height, rim) → vehicles that use that size
 ───────────────────────────────────────────────────────────────── */
 
 import { wheelGql } from "@/lib/wheel-client";
@@ -39,8 +39,8 @@ import type {
 
 /* ── Cache TTLs ────────────────────────────────────────────────── */
 const TTL_CATALOG = 3600;   // makes / models / years — very stable
-const TTL_TRIMS   = 3600;   // modifications — stable
-const TTL_SEARCH  = 300;    // reverse fitment search — fresher
+const TTL_TRIMS = 3600;   // modifications — stable
+const TTL_SEARCH = 300;    // reverse fitment search — fresher
 
 /* ── Generic result wrapper ────────────────────────────────────── */
 export interface WheelResult<T> {
@@ -54,10 +54,10 @@ export interface WheelResult<T> {
    Result cached 1 h via Next.js ISR.
 ───────────────────────────────────────────────────────────────── */
 export interface GetMakesParams {
-  region?:   string;
+  region?: string;
   ordering?: string;
-  limit?:    number;
-  offset?:   number;
+  limit?: number;
+  offset?: number;
 }
 
 export async function getMakes(
@@ -88,10 +88,10 @@ export async function getMakes(
    Slugs — not numeric IDs — are the identifiers throughout this API.
 ───────────────────────────────────────────────────────────────── */
 export interface GetModelsParams {
-  make:      string;
+  make: string;
   ordering?: string;
-  limit?:    number;
-  offset?:   number;
+  limit?: number;
+  offset?: number;
 }
 
 export async function getModels(
@@ -163,12 +163,12 @@ export async function getModifications(
   }
 
   const data: WheelModificationOption[] = (res.data?.modifications?.data ?? []).map((m) => ({
-    slug:     m.slug     ?? "",
-    name:     m.name     ?? "",
-    trim:     m.trim     ?? null,
-    fuel:     m.engine?.fuel     ?? null,
+    slug: m.slug ?? "",
+    name: m.name ?? "",
+    trim: m.trim ?? null,
+    fuel: m.engine?.fuel ?? null,
     capacity: m.engine?.capacity ?? null,
-    hp:       m.engine?.power?.hp ?? null,
+    hp: m.engine?.power?.hp ?? null,
   }));
 
   return { data };
@@ -196,15 +196,26 @@ export async function searchByTyreSize(
   }
 
   const data: WheelFitmentMatch[] = (res.data?.search?.data ?? []).map((m) => ({
-    makeName:  m.makeName,
+    makeName: m.makeName,
     modelName: m.modelName,
-    makeSlug:  m.makeSlug  ?? "",
+    makeSlug: m.makeSlug ?? "",
     modelSlug: m.modelSlug ?? "",
     yearRanges: m.yearRanges
-      ? (() => { try { return JSON.parse(m.yearRanges as string); } catch { return []; } })()
+      ? (() => {
+        if (Array.isArray(m.yearRanges)) return m.yearRanges;
+        if (typeof m.yearRanges === "string") {
+          try {
+            const parsed = JSON.parse(m.yearRanges);
+            return Array.isArray(parsed) ? parsed : [String(parsed)];
+          } catch {
+            return [m.yearRanges];
+          }
+        }
+        return [];
+      })()
       : [],
     front: { width: m.frontWidth ?? null, height: m.frontHeight ?? null, rim: m.frontRim ?? null },
-    rear:  { width: m.rearWidth  ?? null, height: m.rearHeight  ?? null, rim: m.rearRim  ?? null },
+    rear: { width: m.rearWidth ?? null, height: m.rearHeight ?? null, rim: m.rearRim ?? null },
     isStock: m.isStock,
   }));
 
