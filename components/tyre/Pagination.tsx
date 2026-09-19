@@ -32,7 +32,7 @@ export default function Pagination({ current, total, onChange, locale = "en" }: 
   const NextIcon = isAr ? ChevronLeft : ChevronRight;
 
   return (
-    <div className="flex items-center justify-center gap-2 mt-12 mb-4">
+    <div className="flex items-center justify-center gap-2 mt-6 sm:mt-8 mb-2">
       {/* Previous Button */}
       <button
         onClick={() => onChange(current - 1)}

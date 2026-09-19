@@ -2,7 +2,7 @@ import TyreListingCardSkeleton from "./TyreListingCardSkeleton";
 
 export default function CategoryPageSkeleton() {
   return (
-    <div className="pb-[120px]">
+    <div>
       {/* Header Banner Skeleton */}
       <div className="bg-black py-14 lg:py-20 text-center relative">
         <div className="container">

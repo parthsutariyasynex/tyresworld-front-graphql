@@ -64,9 +64,9 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group relative flex flex-col h-full bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.09)] transition-all duration-300 overflow-hidden">
-      {/* ── Top Red Banner: Dynamic Offer (Only rendered when product has an offer) ── */}
+      {/* ── Top Banner: Dynamic Offer (Light Theme Red) ── */}
       {offerLabel && (
-        <div className="bg-[#ed1c24] text-white text-center py-2 px-2 font-black text-[14px] sm:text-[15px] uppercase tracking-wide shrink-0">
+        <div className="bg-[#fef2f2] text-[#ed1c24] border-b border-red-100 text-center py-1.5 px-2 font-black text-xs uppercase tracking-wider shrink-0">
           <span>{offerLabel}</span>
         </div>
       )}

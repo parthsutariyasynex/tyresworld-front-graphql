@@ -198,6 +198,20 @@ export default function TyreListingCard({
 
   const setPrice = realSetPrice ?? unitPrice * qty;
 
+    const specParts: string[] = [];
+    if (warranty) {
+      specParts.push(warranty.toLowerCase().includes("warranty") ? warranty.toUpperCase() : `${warranty} WARRANTY`);
+    } else {
+      specParts.push("3 YEAR WARRANTY");
+    }
+    if (year) {
+      specParts.push(year);
+    }
+    if (origin) {
+      specParts.push(origin);
+    }
+    const specPillText = specParts.join(" | ");
+
   async function handleAddToCart() {
     if (adding || cartAdded || isOutOfStock) return;
     setAdding(true);
@@ -218,77 +232,69 @@ export default function TyreListingCard({
 
   return (
     <li className="list-none h-full">
-      <div className={`flex flex-col h-full bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow${enableHoverZoom ? " group" : ""}`}>
+      <div className={`flex flex-col h-full bg-white rounded-2xl border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-md transition-shadow${enableHoverZoom ? " group" : ""}`}>
 
-        {/* ── Top Red Banner: Dynamic Offer (Only rendered when product has an offer) ── */}
+        {/* ── Top Banner: Dynamic Offer (Light Red Theme) ── */}
         {offerLabel && (
-          <div className="bg-[#ed1c24] text-white text-center py-2 px-2 font-black text-[14px] sm:text-[15px] uppercase tracking-wide shrink-0">
+          <div className="bg-[#fef2f2] text-[#ed1c24] text-center py-2 px-2 font-black text-xs uppercase tracking-wider flex items-center justify-center shrink-0 border-b border-red-100">
             <span>{offerLabel}</span>
           </div>
         )}
 
-        <div className="flex flex-col flex-1 p-3 pt-2">
+        <div className="flex flex-col flex-1 p-3.5 pt-2">
 
-          {/* ── Brand Logo ───────────────────────────────────────── */}
-          <div className="flex items-center justify-center h-8 my-2 px-2">
-            {brandHref ? (
-              <Link href={brandHref} aria-label={`${brandLabel} tyres`}>
-                {brandLogo ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={brandLogo} alt={brandLabel} className="max-h-7 max-w-[120px] w-auto object-contain" loading="lazy" />
-                ) : (
-                  <span className="text-[13px] font-black uppercase tracking-wider text-gray-900">{brandLabel}</span>
-                )}
-              </Link>
-            ) : brandLogo ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={brandLogo} alt={brandLabel} className="max-h-7 max-w-[120px] w-auto object-contain" loading="lazy" />
-            ) : (
-              <span className="text-[13px] font-black uppercase tracking-wider text-gray-900">{brandLabel}</span>
-            )}
-          </div>
+          {/* ── 1. Tyre Image Section (with Top-Right Corner Brand Logo overlay) ── */}
+          <div className="relative w-full pb-1">
+            {/* Top-Right Corner Brand Logo */}
+            <div className="absolute right-0 top-0.5 z-10 flex items-center justify-end">
+              {brandHref ? (
+                <Link href={brandHref} aria-label={`${brandLabel} tyres`}>
+                  {brandLogo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={brandLogo} alt={brandLabel} className="max-h-7 sm:max-h-8 max-w-[110px] sm:max-w-[125px] w-auto object-contain" loading="lazy" />
+                  ) : (
+                    <span className="text-xs sm:text-[13px] font-black uppercase tracking-tight text-gray-900">{brandLabel}</span>
+                  )}
+                </Link>
+              ) : brandLogo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={brandLogo} alt={brandLabel} className="max-h-7 sm:max-h-8 max-w-[110px] sm:max-w-[125px] w-auto object-contain" loading="lazy" />
+              ) : (
+                <span className="text-xs sm:text-[13px] font-black uppercase tracking-tight text-gray-900">{brandLabel}</span>
+              )}
+            </div>
 
-          {/* ── Image + Overlays (Warranty & Year) ────────────────── */}
-          <div className="relative w-full my-1">
-            <Link href={href} className="block relative w-full h-[145px] sm:h-[155px]" aria-label={product.name}>
+            <Link href={href} className="block relative w-full h-[160px] sm:h-[175px]" aria-label={product.name}>
               <ProductImage
                 src={product.image}
                 alt={product.name}
                 fill
-                className={`object-contain p-1${enableHoverZoom ? " group-hover:scale-105 transition-transform duration-300 ease-out" : ""}`}
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"
+                className={`object-contain p-0.5 drop-shadow-xs${enableHoverZoom ? " group-hover:scale-105 transition-transform duration-300 ease-out" : ""}`}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 260px"
               />
             </Link>
-
-            {/* Bottom-left warranty */}
-            {warranty && (
-              <span className="absolute left-0.5 bottom-0.5 z-10 text-[10.5px] font-black uppercase text-gray-900 leading-none">
-                {warranty}
-              </span>
-            )}
-
-            {/* Bottom-right year */}
-            {year && (
-              <span className="absolute right-0.5 bottom-0.5 z-10 text-[11px] font-black text-gray-900 leading-none">
-                {year}
-              </span>
-            )}
           </div>
 
-          {/* ── Pattern & Tyre Size ──────────────────────────────── */}
-          <div className="text-center mt-2.5 px-1">
-            <Link href={href} className="block text-[14px] sm:text-[15px] font-black text-gray-900 hover:text-[#ed1c24] transition-colors leading-tight line-clamp-1">
+          {/* ── 2. Warranty | Year | Origin Pill ──────────────────── */}
+          <div className="flex justify-center my-1.5">
+            <span className="bg-[#f0f2f5] text-gray-700 text-[11px] sm:text-[11.5px] font-bold px-3.5 py-0.5 rounded-full inline-flex items-center text-center shadow-2xs">
+              {specPillText}
+            </span>
+          </div>
+
+          {/* ── 3. Pattern / Model Name ──────────────────────────── */}
+          <div className="text-center mt-1 mb-2.5 px-1">
+            <Link href={href} className="text-[14.5px] sm:text-[15.5px] font-black text-gray-900 hover:text-[#ed1c24] transition-colors leading-tight truncate block">
               {pattern}
             </Link>
-            {tyreSize && (
-              <span className="block text-[13px] sm:text-[13.5px] font-bold text-gray-800 mt-0.5">
-                {tyreSize}
-              </span>
-            )}
           </div>
 
-          {/* ── Vehicle (search this size) + Origin ───────────────── */}
-          <div className="border-t border-b border-gray-100 py-1.5 px-3 flex items-center justify-between my-2">
+          {/* ── 4. Tyre Size & Compatible Vehicle Box ─────────────── */}
+          <div className="border border-gray-200/90 rounded-lg h-[40px] px-3.5 flex items-center justify-between mb-3 bg-white shadow-2xs">
+            <span className="text-[13px] sm:text-[13.5px] font-extrabold text-gray-900">
+              {tyreSize || "Standard Fitment"}
+            </span>
+
             {isBike ? (
               <span><BikeSprite /></span>
             ) : width && height && rim ? (
@@ -308,49 +314,46 @@ export default function TyreListingCard({
             ) : (
               <span><CarSprite /></span>
             )}
-            {origin && <span className="text-[11px] font-bold text-gray-800">{origin}</span>}
           </div>
 
-          {/* ── Price Section ────────────────────────────────────── */}
-          <div className="text-center px-1">
+          {/* ── 5. Price Section ─────────────────────────────────── */}
+          <div className="text-center px-1 mb-1">
             {isBike ? (
-              <span className="text-[10.5px] font-medium text-gray-500 block cursor-default">
+              <span className="text-[11px] font-medium text-gray-500 block cursor-default mb-0.5">
                 Fully Fitted Price per Item
               </span>
             ) : (
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
-                className="text-[10.5px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer"
+                className="text-[11px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer block mx-auto mb-0.5"
                 aria-label="What's included in the fully fitted price"
               >
                 Fully Fitted Price per Item
               </button>
             )}
-            <div className="flex items-center justify-center gap-1 font-black text-gray-900 text-[19px] sm:text-[21px] leading-tight my-0.5">
+            <div className="flex items-center justify-center gap-1 font-black text-gray-900 text-[23px] sm:text-[25px] leading-tight my-0.5">
               <Money value={unitPrice} digits={2} />
             </div>
-            <div className="text-[11.5px] font-bold text-gray-700">
+            <div className="text-xs font-bold text-gray-700 mt-0.5">
               Set of {qty}: <Money value={setPrice} digits={2} />
             </div>
           </div>
 
-          {/* ── Pay In Installments (Tabby / Tamara) ─────── */}
+          {/* ── 6. Pay In Installments (Tabby / Tamara) ──────────── */}
           {!isBike && (
-            <div className="flex items-center gap-1.5 my-2 flex-wrap">
-              <span className="text-[10.5px] text-gray-500 font-medium">Pay In Installments</span>
-              <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tabby</span>
-              <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[9.5px] font-black px-2 py-0.5 rounded-md leading-none select-none">tamara</span>
+            <div className="flex items-center justify-center gap-1.5 my-2.5 flex-wrap">
+              <span className="text-[11px] text-gray-600 font-medium">Pay In Installments</span>
+              <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[9.5px] font-black px-2 py-0.5 rounded-sm leading-none select-none">tabby</span>
+              <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[9.5px] font-black px-2 py-0.5 rounded-sm leading-none select-none">tamara</span>
             </div>
           )}
 
-          {/* ── Bottom Actions ────────────────────────────────────
-               Out of stock: full-width red "MAKE ENQUIRY", no qty select.
-               In stock: qty select + black/red Add to Cart. */}
+          {/* ── 7. Bottom Actions ───────────────────────────────── */}
           {isOutOfStock ? (
             <div className="pt-1 mt-auto">
               <a
-                className="btn-enquiry"
+                className="btn-enquiry h-10"
                 href={`https://api.whatsapp.com/send/?phone=${APP_CONFIG.contact.whatsapp}&text=${encodeURIComponent(
                   `Hi tyresworld.ae\n\nI would like to enquire about ${product.name}`,
                 )}`}
@@ -364,19 +367,18 @@ export default function TyreListingCard({
           ) : (
             <>
             <div className="flex items-center gap-2 pt-1 mt-auto">
-              {/* Custom quantity dropdown — the native <select> popup
-                  can't be styled (renders the OS dark menu). */}
+              {/* Quantity dropdown */}
               <div className="qty-select" ref={qtyRef}>
                 <button
                   type="button"
-                  className="qty-trigger"
+                  className="qty-trigger h-10 px-3"
                   disabled={!qtySelectable}
                   onClick={() => setQtyOpen(o => !o)}
                   aria-haspopup="listbox"
                   aria-expanded={qtyOpen}
                   aria-label={`Quantity: ${qty}`}
                 >
-                  <span>{qty}</span>
+                  <span className="font-bold text-sm">{qty}</span>
                   <ChevronDown size={13} className={`qty-caret ${qtyOpen ? "rotate-180" : ""}`} />
                 </button>
 
@@ -397,13 +399,12 @@ export default function TyreListingCard({
                   </ul>
                 )}
 
-                {/* Keep the value in the DOM for form/accessibility parity. */}
                 <input type="hidden" name="qty" value={qty} readOnly />
               </div>
 
               <button
                 type="button"
-                className={`btn-tocart ${cartAdded ? "is-added" : ""}`}
+                className={`btn-tocart h-10 px-4 ${cartAdded ? "is-added" : ""}`}
                 onClick={handleAddToCart}
                 disabled={adding}
                 title="Add to Cart"

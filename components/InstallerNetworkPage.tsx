@@ -180,7 +180,7 @@ function InstallerNetworkContent() {
   }, [filteredStores, selectedStoreId]);
 
   return (
-    <div dir={isAr ? "rtl" : "ltr"} className="bg-white min-h-screen pb-16">
+    <div dir={isAr ? "rtl" : "ltr"} className="bg-white pb-8 sm:pb-12">
       {/* ── Page Hero Title Banner with Radiant Red Glow, Dot Mesh & Exact Curved Wave ── */}
       <div
         className="relative overflow-hidden text-white pt-12 pb-20 sm:pt-16 sm:pb-28"

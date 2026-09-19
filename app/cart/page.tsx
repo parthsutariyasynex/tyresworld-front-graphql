@@ -233,7 +233,7 @@ export default function CartPage() {
   /* ── Empty Cart View ─────────────────────────────────────────── */
   if (items.length === 0) {
     return (
-      <div className="bg-[#f8f9fa] min-h-[70vh] pb-12" dir={isAr ? "rtl" : "ltr"}>
+      <div className="bg-[#f8f9fa] pb-8 sm:pb-12" dir={isAr ? "rtl" : "ltr"}>
         {/* ── Page Hero Title Banner ── */}
         <div
           className="page-title-wrapper py-9 sm:py-11 text-center bg-black"

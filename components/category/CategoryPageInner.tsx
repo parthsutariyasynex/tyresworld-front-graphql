@@ -519,7 +519,7 @@ export default function CategoryPageInner({
     : `${total.toLocaleString()} Tyres`;
 
   return (
-    <div dir={dir} className="pb-[160px]">
+    <div dir={dir}>
 
       {/* ── Page title ─────────────────────────────────────────────
            Mirrors the theme's .page-title-wrapper > .title > h1 > span.base */}
@@ -623,7 +623,7 @@ export default function CategoryPageInner({
       )}
 
       {/* ── Product grid ───────────────────────────────────────────── */}
-      <div className="bg-gray-50 min-h-[600px]">
+      <div className="bg-gray-50">
         <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
 
           {/* ── Active Filters Bar (Matches reference screenshot) ───── */}

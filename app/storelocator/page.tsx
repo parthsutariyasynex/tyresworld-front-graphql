@@ -999,7 +999,7 @@ function StoreLocatorContent() {
               onClick={handleConfirmFreeShipping}
               className="w-full bg-black hover:bg-[#ed1c24] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider py-4 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
             >
-              <span>{isAr ? "المتابعة إلى عنوان الشحن والدفع" : "Proceed to Shipping Address & Checkout"}</span>
+              <span>{isAr ? "متابعة الدفع" : "PROCEED TO CHECKOUT"}</span>
               <ArrowRight size={16} className="rtl:rotate-180" />
             </button>
           </div>

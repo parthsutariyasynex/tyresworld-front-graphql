@@ -123,7 +123,7 @@ export default function CarServicesPage() {
   const isAr = locale === "ar";
 
   return (
-    <div className="bg-white min-h-screen" dir={isAr ? "rtl" : "ltr"}>
+    <div className="bg-white pb-8 sm:pb-12" dir={isAr ? "rtl" : "ltr"}>
       {/* ── Breadcrumb Bar ── */}
       <div className="bg-[#f4f4f5] border-b border-gray-200">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">

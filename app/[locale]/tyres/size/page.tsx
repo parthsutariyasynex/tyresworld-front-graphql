@@ -115,7 +115,17 @@ export default function TyreSizeBrowserPage() {
   };
 
   return (
-    <div className="bg-[#f5f6f8] min-h-[calc(100vh-320px)] pb-12 sm:pb-16 flex flex-col justify-start" dir={isAr ? "rtl" : "ltr"}>
+    <div className="bg-[#f5f6f8] pb-8 sm:pb-12 flex flex-col justify-start" dir={isAr ? "rtl" : "ltr"}>
+      {/* ── Hero (same dark tyre-tread banner used site-wide, e.g. every
+             /tyres/cars/[make] page) ── */}
+      <div className="page-title-wrapper bg-cover-image py-9 sm:py-11 text-center">
+        <div className="container mx-auto px-4">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-wider text-center drop-shadow-md">
+            {isAr ? "جميع المقاسات" : "All Size"}
+          </h1>
+        </div>
+      </div>
+
       {/* ── Breadcrumb Bar ─────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-200/60 py-2.5 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex items-center gap-2 text-xs sm:text-[13px] text-gray-500 font-medium">

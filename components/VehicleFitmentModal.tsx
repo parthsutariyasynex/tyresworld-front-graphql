@@ -163,7 +163,7 @@ export default function VehicleFitmentModal({
                   className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6"
                 >
                   {/* Left: Make Brand Box */}
-                  <div className="w-full sm:w-[170px] h-[46px] border border-gray-300/90 rounded-md bg-white px-3.5 flex items-center justify-start gap-2.5 shrink-0 select-none shadow-2xs">
+                  <div className="w-full sm:w-[170px] h-[46px] border border-gray-200 rounded-md bg-[#f3f4f6] px-3.5 flex items-center justify-start gap-2.5 shrink-0 select-none shadow-2xs">
                     {g.logo ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
@@ -187,7 +187,8 @@ export default function VehicleFitmentModal({
                       <Link
                         key={`${m.name}-${idx}`}
                         href={m.href}
-                        onClick={onClose}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="h-[46px] border border-gray-300/90 rounded-md px-4 bg-white text-gray-900 hover:border-[#ed1c24] hover:text-[#ed1c24] hover:shadow-2xs transition-all duration-150 active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer shadow-2xs"
                       >
                         <span className="text-[14px] sm:text-[15px] font-bold text-gray-900">{m.name}</span>

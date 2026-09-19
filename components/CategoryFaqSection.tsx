@@ -30,23 +30,12 @@ function FaqSkeleton() {
 export default function CategoryFaqSection({ faqs, loading, dir = "ltr" }: Props) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  if (loading) {
-    return (
-      <section className="bg-white py-16 border-t border-gray-100" dir={dir}>
-        <div className="container max-w-5xl">
-          <div className="h-7 w-24 bg-gray-200 rounded mx-auto mb-10 animate-pulse" />
-          <FaqSkeleton />
-        </div>
-      </section>
-    );
-  }
-
-  if (!faqs.length) return null;
+  if (loading || !faqs || faqs.length === 0) return null;
 
   return (
-    <section className="bg-white py-16 border-t border-gray-100" dir={dir}>
+    <section className="bg-white py-8 border-t border-gray-100" dir={dir}>
       <div className="container max-w-5xl">
-        <h2 className="text-xl font-black uppercase tracking-widest text-center mb-10">
+        <h2 className="text-xl font-black uppercase tracking-widest text-center mb-8">
           FAQ&acute;S
         </h2>
 

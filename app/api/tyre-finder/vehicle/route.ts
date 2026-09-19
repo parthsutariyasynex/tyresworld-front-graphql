@@ -115,18 +115,31 @@ export async function GET(req: NextRequest) {
       kleverVehicleYears?: { slug: string; name: string }[];
     }>(KLEVER_VEHICLE_YEARS_QUERY, { make, model }, { store, revalidate: 86400 });
 
-    if (!res.ok || !res.data?.kleverVehicleYears?.length) {
-      return fail(res.errors?.[0]?.message || "Years unavailable");
+    if (res.ok && res.data?.kleverVehicleYears?.length) {
+      const options: Option[] = res.data.kleverVehicleYears
+        .filter((y) => y.slug && y.name)
+        .map((y) => ({
+          label: y.name.trim(),
+          value: y.slug.trim(),
+        }));
+
+      return ok({ options });
     }
 
-    const options: Option[] = res.data.kleverVehicleYears
-      .filter((y) => y.slug && y.name)
-      .map((y) => ({
-        label: y.name.trim(),
-        value: y.slug.trim(),
-      }));
+    // Fallback: Wheel API years
+    try {
+      const { getYears } = await import("@/lib/wheel-service");
+      const wheelYears = await getYears(make, model);
+      if (wheelYears.data?.length) {
+        const options: Option[] = wheelYears.data.map((y) => ({
+          label: String(y.year),
+          value: String(y.year),
+        }));
+        return ok({ options });
+      }
+    } catch {}
 
-    return ok({ options });
+    return fail(res.errors?.[0]?.message || "Years unavailable");
   }
 
   // 4. TRIMS / MODIFICATIONS
@@ -145,20 +158,35 @@ export async function GET(req: NextRequest) {
       }[];
     }>(KLEVER_VEHICLE_MODIFICATIONS_QUERY, { make, model, year }, { store, revalidate: 86400 });
 
-    if (!res.ok || !res.data?.kleverVehicleModifications?.length) {
-      return fail(res.errors?.[0]?.message || "Trims unavailable");
+    if (res.ok && res.data?.kleverVehicleModifications?.length) {
+      const options: Option[] = res.data.kleverVehicleModifications
+        .filter((m) => m.slug && (m.name || m.trim))
+        .map((m) => ({
+          label: (m.name || m.trim || m.slug).trim(),
+          value: m.slug.trim(),
+          fuel: m.fuel?.trim() || null,
+          hp: m.power_hp ?? null,
+        }));
+
+      return ok({ options });
     }
 
-    const options: Option[] = res.data.kleverVehicleModifications
-      .filter((m) => m.slug && (m.name || m.trim))
-      .map((m) => ({
-        label: (m.name || m.trim || m.slug).trim(),
-        value: m.slug.trim(),
-        fuel: m.fuel?.trim() || null,
-        hp: m.power_hp ?? null,
-      }));
+    // Fallback: Wheel API modifications
+    try {
+      const { getModifications } = await import("@/lib/wheel-service");
+      const wheelMods = await getModifications(make, model, year);
+      if (wheelMods.data?.length) {
+        const options: Option[] = wheelMods.data.map((m) => ({
+          label: (m.name || m.trim || m.slug).trim(),
+          value: m.slug.trim(),
+          fuel: m.fuel || null,
+          hp: m.hp || null,
+        }));
+        return ok({ options });
+      }
+    } catch {}
 
-    return ok({ options });
+    return fail(res.errors?.[0]?.message || "Trims unavailable");
   }
 
   // 5. SIZES / FITMENT

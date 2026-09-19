@@ -3,65 +3,74 @@
 import { useEffect } from "react";
 
 /**
- * Minimal behaviour for the Bootstrap-accordion markup that shows up in
- * Magento Page Builder CMS content (e.g. the FAQ section on car-insurance
- * and similar service pages). The project ships no Bootstrap JS, so
- * `data-bs-toggle="collapse"` buttons are otherwise inert — clicking a
- * question never reveals its answer.
- *
- * This wires up exactly what that markup expects: clicking a
- * `[data-bs-toggle="collapse"]` button toggles `.show` on its
- * `data-bs-target` and `.collapsed` + `aria-expanded` on the button
- * itself; if the target sits under a `data-bs-parent`, every open sibling
- * in that group closes first (standard Bootstrap "accordion" behaviour).
- *
- * Scoped to `.cms-content` so it only ever touches CMS-authored
- * accordions, never an unrelated component that happens to reuse
- * Bootstrap's class names.
+ * Robust FAQ / Accordion behaviour for Bootstrap 4 & 5 CMS markup.
+ * Handles [data-bs-toggle="collapse"], [data-toggle="collapse"], and .accordion-button.
+ * Overrides Tailwind CSS's default `.collapse { visibility: collapse; }` conflict.
  */
 export default function CmsAccordion() {
   useEffect(() => {
-    const buttons = Array.from(
-      document.querySelectorAll<HTMLButtonElement>('.cms-content [data-bs-toggle="collapse"]'),
-    );
+    function handleClick(e: MouseEvent) {
+      const targetEl = e.target as HTMLElement | null;
+      if (!targetEl) return;
 
-    const handlers: { btn: HTMLButtonElement; handler: () => void }[] = [];
+      const btn = targetEl.closest<HTMLElement>(
+        '.cms-content [data-bs-toggle="collapse"], .cms-content [data-toggle="collapse"], .cms-content .accordion-button'
+      );
+      if (!btn) return;
 
-    buttons.forEach((btn) => {
-      const targetSelector = btn.getAttribute("data-bs-target") || btn.getAttribute("href");
+      e.preventDefault();
+
+      const targetSelector =
+        btn.getAttribute("data-bs-target") ||
+        btn.getAttribute("data-target") ||
+        btn.getAttribute("href");
       if (!targetSelector) return;
+
       const target = document.querySelector<HTMLElement>(targetSelector);
       if (!target) return;
 
-      const handler = () => {
-        const opening = !target.classList.contains("show");
+      const isAlreadyOpen = target.classList.contains("show") || target.classList.contains("in");
+      const opening = !isAlreadyOpen;
 
-        const parentSelector = target.getAttribute("data-bs-parent");
-        if (opening && parentSelector) {
-          const parent = document.querySelector(parentSelector);
-          if (parent) {
-            parent.querySelectorAll(".accordion-collapse.show").forEach((sibling) => {
-              if (sibling === target) return;
-              sibling.classList.remove("show");
-              const siblingBtn = parent.querySelector<HTMLButtonElement>(
-                `[data-bs-target="#${sibling.id}"]`,
+      const parentSelector =
+        target.getAttribute("data-bs-parent") || target.getAttribute("data-parent");
+      if (opening && parentSelector) {
+        const parent = document.querySelector(parentSelector);
+        if (parent) {
+          parent.querySelectorAll<HTMLElement>(".accordion-collapse.show, .collapse.show, .collapse.in").forEach((sibling) => {
+            if (sibling === target) return;
+            sibling.classList.remove("show", "in");
+            sibling.style.display = "none";
+            sibling.style.visibility = "hidden";
+            const siblingId = sibling.id;
+            if (siblingId) {
+              const siblingBtn = parent.querySelector<HTMLElement>(
+                `[data-bs-target="#${siblingId}"], [data-target="#${siblingId}"], [href="#${siblingId}"]`
               );
               siblingBtn?.classList.add("collapsed");
               siblingBtn?.setAttribute("aria-expanded", "false");
-            });
-          }
+            }
+          });
         }
+      }
 
-        target.classList.toggle("show", opening);
-        btn.classList.toggle("collapsed", !opening);
-        btn.setAttribute("aria-expanded", String(opening));
-      };
+      if (opening) {
+        target.classList.add("show", "in");
+        target.style.display = "block";
+        target.style.visibility = "visible";
+        btn.classList.remove("collapsed");
+        btn.setAttribute("aria-expanded", "true");
+      } else {
+        target.classList.remove("show", "in");
+        target.style.display = "none";
+        target.style.visibility = "hidden";
+        btn.classList.add("collapsed");
+        btn.setAttribute("aria-expanded", "false");
+      }
+    }
 
-      btn.addEventListener("click", handler);
-      handlers.push({ btn, handler });
-    });
-
-    return () => handlers.forEach(({ btn, handler }) => btn.removeEventListener("click", handler));
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
   }, []);
 
   return null;

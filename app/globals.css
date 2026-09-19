@@ -504,14 +504,16 @@ html {
   /* ── 2. Black Buttons -> Red Sweep-Up from Bottom ── */
   .btn-slide-black,
   .btn-black-slide,
-  .btn-sweep-black {
+  .btn-sweep-black,
+  .btn-enquiry {
     background-color: var(--brand-ink, #000000);
     color: #ffffff;
   }
 
   .btn-slide-black::before,
   .btn-black-slide::before,
-  .btn-sweep-black::before {
+  .btn-sweep-black::before,
+  .btn-enquiry::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -525,13 +527,15 @@ html {
 
   .btn-slide-black:hover::before,
   .btn-black-slide:hover::before,
-  .btn-sweep-black:hover::before {
+  .btn-sweep-black:hover::before,
+  .btn-enquiry:hover::before {
     transform: scaleY(1);
   }
 
   .btn-slide-black:hover,
   .btn-black-slide:hover,
-  .btn-sweep-black:hover {
+  .btn-sweep-black:hover,
+  .btn-enquiry:hover {
     color: #ffffff !important;
   }
 
@@ -541,7 +545,6 @@ html {
   .btn-sweep-red,
   .btn-cta,
   .btn-tocart,
-  .btn-enquiry,
   .button-primary {
     background-color: #ed1c24;
     color: #ffffff;
@@ -552,7 +555,6 @@ html {
   .btn-sweep-red::before,
   .btn-cta::before,
   .btn-tocart::before,
-  .btn-enquiry::before,
   .button-primary::before {
     content: "";
     position: absolute;
@@ -570,7 +572,6 @@ html {
   .btn-sweep-red:hover::before,
   .btn-cta:hover::before,
   .btn-tocart:hover::before,
-  .btn-enquiry:hover::before,
   .button-primary:hover::before {
     transform: scaleY(1);
   }
@@ -580,7 +581,6 @@ html {
   .btn-sweep-red:hover,
   .btn-cta:hover,
   .btn-tocart:hover,
-  .btn-enquiry:hover,
   .button-primary:hover {
     color: #ffffff !important;
   }
@@ -680,10 +680,9 @@ html {
      Racing Red base; on hover an Ink fill wipes UP from the bottom.
      Small size for the product-card action row. */
   .btn-tocart {
-    @apply relative inline-flex items-center justify-center gap-1.5 flex-1 h-9 overflow-hidden
-           text-[11.5px] font-black uppercase tracking-wider text-white transition-colors;
+    @apply relative inline-flex items-center justify-center gap-1.5 flex-1 h-10 overflow-hidden
+           text-xs sm:text-[13px] font-black uppercase tracking-wider text-white transition-colors cursor-pointer rounded-lg;
     background: var(--brand-red);
-    border-radius: var(--radius-sm);
   }
 
   .btn-tocart::before {
@@ -711,18 +710,17 @@ html {
     transform: scaleY(0);
   }
 
-  /* Full-width red enquiry button for out-of-stock items (exact slide-up wipe like btn-tocart) */
+  /* Full-width enquiry button: base black, red slide-up wipe on hover */
   .btn-enquiry {
-    @apply relative flex w-full h-9 items-center justify-center overflow-hidden
-           text-[12px] font-black uppercase tracking-wider text-white transition-colors cursor-pointer;
-    background: var(--brand-red);
-    border-radius: var(--radius-sm);
+    @apply relative flex w-full h-10 items-center justify-center overflow-hidden
+           text-xs sm:text-[13px] font-black uppercase tracking-wider text-white transition-colors cursor-pointer rounded-lg;
+    background: var(--brand-ink);
   }
 
   .btn-enquiry::before {
     content: "";
     @apply absolute inset-0 z-0;
-    background: var(--brand-ink);
+    background: var(--brand-red);
     transform: scaleY(0);
     transform-origin: bottom center;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1232,31 +1230,27 @@ html {
   }
 
   .qty-trigger {
-    @apply flex items-center justify-center gap-1 w-12 h-9 px-1
-           bg-[#f3f4f6] hover:bg-[#e8e9eb] text-ink font-bold text-[13px]
-           cursor-pointer transition-colors
-           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#f3f4f6];
-    border: 1px solid rgb(var(--c-line) / 0.8);
-    border-radius: var(--radius-sm);
+    @apply flex items-center justify-between gap-1 w-[56px] sm:w-[60px] h-10 px-2.5
+           bg-white hover:bg-gray-50 text-ink font-bold text-sm
+           cursor-pointer transition-colors rounded-lg shadow-sm
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white;
+    border: 1px solid rgb(var(--c-line) / 0.9);
   }
 
   .qty-trigger .qty-caret {
-    @apply text-ink/45 transition-transform duration-200;
+    @apply text-ink/60 transition-transform duration-200 shrink-0;
   }
 
   /* The popup — white, rounded, opens above the trigger. */
   .qty-menu {
-    @apply absolute left-0 bottom-full mb-1.5 z-30 w-14 max-h-56 overflow-y-auto
-           list-none p-1 m-0 bg-white;
+    @apply absolute left-0 bottom-full mb-1.5 z-30 w-[56px] sm:w-[60px] max-h-56 overflow-y-auto
+           list-none p-1 m-0 bg-white rounded-lg shadow-md;
     border: 1px solid rgb(var(--c-line) / 0.9);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-hover);
   }
 
   .qty-option {
     @apply flex items-center justify-center gap-1 w-full h-8 text-[13px] font-bold
-           text-ink cursor-pointer transition-colors;
-    border-radius: calc(var(--radius-sm) - 2px);
+           text-ink cursor-pointer transition-colors rounded-md;
   }
 
   .qty-option:hover {
@@ -3772,19 +3766,42 @@ html[lang="ar"] .tab-content {
   transform: rotate(-135deg);
 }
 
-.cms-content .accordion-collapse {
-  display: none;
+.cms-content .accordion-collapse,
+.cms-content .collapse {
+  visibility: visible;
 }
 
-.cms-content .accordion-collapse.show {
-  display: block;
+.cms-content .accordion-collapse:not(.show),
+.cms-content .collapse:not(.show):not(.in) {
+  display: none !important;
+}
+
+.cms-content .accordion-collapse.show,
+.cms-content .collapse.show,
+.cms-content .collapse.in {
+  display: block !important;
+  visibility: visible !important;
 }
 
 .cms-content .accordion-body {
+  display: block !important;
+  visibility: visible !important;
   padding: 16px 20px;
-  font-size: 1.125rem;
-  line-height: 1.4;
-  color: #212529;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #374151 !important;
+  background: #ffffff;
+}
+
+.cms-content .accordion-body p {
+  color: #374151 !important;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}
+
+.cms-content .accordion-body p:last-child {
+  margin-bottom: 0;
 }
 
 /* ── Product Single Price Modal Inclusions ── */

@@ -79,17 +79,10 @@ export default function CarsBrandBrowserPage() {
   }, [makes, letter, query]);
 
   return (
-    <div className="bg-white min-h-screen pb-16">
-      {/* ── Hero ── */}
-      <div
-        className="page-title-wrapper py-9 sm:py-11 text-center bg-black"
-        style={{
-          backgroundImage: "url('/img/shopping-cart-banner.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
+    <div className="bg-white pb-8 sm:pb-12">
+      {/* ── Hero (same dark tyre-tread banner used site-wide, e.g. every
+             /tyres/cars/[make] page) ── */}
+      <div className="page-title-wrapper bg-cover-image py-9 sm:py-11 text-center">
         <div className="container mx-auto px-4">
           <div className="title">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase text-white tracking-wider font-sans">

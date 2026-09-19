@@ -1063,8 +1063,8 @@ export default function ProductDetailInner({
                     cards which already correctly hide the whole banner
                     when there's no real offerLabel. */}
                 {offerLabel && (
-                  <div className="bg-[#ed1c24] py-3 px-4 text-center">
-                    <p className="text-white font-black text-sm sm:text-base uppercase tracking-wider">
+                  <div className="bg-[#fef2f2] text-[#ed1c24] border-b border-red-100 py-2.5 px-4 text-center">
+                    <p className="font-black text-sm sm:text-base uppercase tracking-wider">
                       {offerLabel}
                     </p>
                   </div>

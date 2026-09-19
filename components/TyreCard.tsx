@@ -164,10 +164,10 @@ export default function TyreCard({ product }: { product: Product }) {
   return (
     <article className="bg-white border border-gray-200 overflow-hidden flex flex-col h-full">
 
-      {/* ── Offer banner — dynamic from Magento ─────────────── */}
+      {/* ── Offer banner — dynamic from Magento (Light Theme Red) ── */}
       {offerLabel && (
-        <div className="bg-[#ed1c24] text-center py-2.5 px-3">
-          <p className="text-white font-black text-[13px] leading-tight">{offerLabel}</p>
+        <div className="bg-[#fef2f2] text-[#ed1c24] border-b border-red-100 text-center py-2 px-3">
+          <p className="font-black text-xs uppercase tracking-wider leading-tight">{offerLabel}</p>
         </div>
       )}
 

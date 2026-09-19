@@ -126,7 +126,7 @@ export default function BrandsPageInner() {
   const tabLabel = (cat: string) => (isAr ? CATEGORY_LABELS_AR[cat] ?? cat : cat);
 
   return (
-    <div dir={isAr ? "rtl" : "ltr"} className="bg-white min-h-screen pt-8 pb-20 font-sans">
+    <div dir={isAr ? "rtl" : "ltr"} className="bg-white pt-6 sm:pt-8 pb-8 sm:pb-12 font-sans">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6">
 
         {/* ── 1. Category Switcher — built from whichever real brand_category

@@ -8,7 +8,7 @@ export default function TyreGuideSeoContent({ locale = "en" }: TyreGuideSeoConte
   const isAr = locale === "ar";
 
   return (
-    <section className="bg-white py-8 border-t border-gray-100" dir={isAr ? "rtl" : "ltr"}>
+    <section className="bg-white py-6 sm:py-8 border-t border-gray-100" dir={isAr ? "rtl" : "ltr"}>
       <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 text-left">
         
         {/* Intro Paragraphs */}
@@ -77,7 +77,7 @@ export default function TyreGuideSeoContent({ locale = "en" }: TyreGuideSeoConte
         <p className="text-[13px] sm:text-[14px] text-gray-800 leading-relaxed mb-3">
           Order your car tyres online UAE, and our team will deliver and fit your new tires at your convenience—bringing safety and comfort right to your doorstep! We also offer on-site installation services to make your tyre shopping seamless.
         </p>
-        <p className="text-[13px] sm:text-[14px] text-gray-800 leading-relaxed mb-6">
+        <p className="text-[13px] sm:text-[14px] text-gray-800 leading-relaxed mb-0">
           If you want to know more about any discounts and offers on car tyre prices, you can Call us on{" "}
           <a href="tel:+971505069575" className="text-black hover:text-[#ed1c24] font-medium transition-colors">
             +971 50 506 9575
