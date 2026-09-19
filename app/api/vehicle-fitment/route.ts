@@ -8,9 +8,7 @@ import { vehicleLogoProxyUrl } from "@/lib/vehicleLogo";
  * Fetches directly from Magento partsfinder/vehicle/buyTyreSearch.
  */
 const FITMENT_PATH = "partsfinder/vehicle/buyTyreSearch";
-const MAGENTO_ORIGIN =
-  (APP_CONFIG.magento.graphqlUrl || "https://www1.tyresworld.ae/graphql").replace(/\/graphql\/?$/, "") ||
-  "https://www1.tyresworld.ae";
+const MAGENTO_ORIGIN = "https://www1.tyresworld.ae";
 
 type UpstreamModel = { slug?: string; name?: string; year_range?: string; url?: string };
 type UpstreamMake = { slug?: string; name?: string; logo_url?: string; models?: UpstreamModel[] };
