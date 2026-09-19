@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
 import { vehicleLogoProxyUrl } from "@/lib/vehicleLogo";
-import { searchByTyreSize } from "@/lib/wheel-service";
-import type { WheelFitmentMatch } from "@/lib/wheel-types";
 
 /**
  * Vehicle fitment for a tyre size — the data behind the car fitment modal
  * (which cars a given tyre size fits, grouped make → model → year).
- * Fetches from Magento partsfinder/vehicle/buyTyreSearch with Wheel API fallback.
+ * Fetches directly from Magento partsfinder/vehicle/buyTyreSearch.
  */
 const FITMENT_PATH = "partsfinder/vehicle/buyTyreSearch";
-const MAGENTO_ORIGIN = APP_CONFIG.magento.graphqlUrl.replace(/\/graphql\/?$/, "");
+const MAGENTO_ORIGIN =
+  (APP_CONFIG.magento.graphqlUrl || "https://www1.tyresworld.ae/graphql").replace(/\/graphql\/?$/, "") ||
+  "https://www1.tyresworld.ae";
 
 type UpstreamModel = { slug?: string; name?: string; year_range?: string; url?: string };
 type UpstreamMake = { slug?: string; name?: string; logo_url?: string; models?: UpstreamModel[] };
@@ -43,39 +43,6 @@ function reshapeMagento(vehicles: UpstreamMake[], store: string): MakeGroup[] {
     .filter((g): g is MakeGroup => g !== null && g.models.length > 0);
 }
 
-function reshapeWheelApi(items: WheelFitmentMatch[], store: string): MakeGroup[] {
-  const byMake = new Map<string, MakeGroup>();
-
-  for (const item of items) {
-    const makeName = item.makeName?.trim();
-    const makeSlug = (item.makeSlug || item.makeName || "").trim().toLowerCase().replace(/\s+/g, "-");
-    if (!makeName || !makeSlug) continue;
-
-    const modelName = item.modelName?.trim();
-    const modelSlug = (item.modelSlug || item.modelName || "").trim().toLowerCase().replace(/\s+/g, "-");
-    if (!modelName || !modelSlug) continue;
-
-    const years = (item.yearRanges ?? []).join(", ");
-    const href = `/${store}/tyres/cars/${encodeURIComponent(makeSlug)}?model=${encodeURIComponent(modelSlug)}`;
-
-    let group = byMake.get(makeSlug);
-    if (!group) {
-      group = {
-        make: makeName,
-        logo: vehicleLogoProxyUrl(makeSlug),
-        models: [],
-      };
-      byMake.set(makeSlug, group);
-    }
-
-    if (!group.models.some((m) => m.name.toLowerCase() === modelName.toLowerCase())) {
-      group.models.push({ name: modelName, years, href });
-    }
-  }
-
-  return Array.from(byMake.values());
-}
-
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const rawWidth = searchParams.get("width") ?? "";
@@ -91,11 +58,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "width, height and rim are required", groups: [] }, { status: 400 });
   }
 
-  const w = parseInt(width, 10);
-  const h = parseInt(height, 10);
-  const r = parseInt(rim, 10);
-
-  // 1. First: Try Magento buyTyreSearch API (contains complete TyresWorld catalogue fitments)
+  // Fetch directly from Magento buyTyreSearch API
   try {
     const url = `${MAGENTO_ORIGIN}/${FITMENT_PATH}`;
     const body = new URLSearchParams({
@@ -113,54 +76,51 @@ export async function GET(req: NextRequest) {
         "Content-Type": "application/x-www-form-urlencoded",
         "X-Requested-With": "XMLHttpRequest",
         Accept: "application/json",
+        Origin: MAGENTO_ORIGIN,
+        Referer: `${MAGENTO_ORIGIN}/tyres`,
       },
       body: body.toString(),
-      next: { revalidate: 3600 },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
     });
 
     if (res.ok) {
-      const data = (await res.json().catch(() => null)) as
-        | { status?: string; vehicles?: UpstreamMake[] }
-        | null;
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = (await res.json().catch(() => null)) as
+          | { status?: string; vehicles?: UpstreamMake[] }
+          | null;
 
-      if (data && data.status === "success" && data.vehicles && data.vehicles.length > 0) {
-        const groups = reshapeMagento(data.vehicles, store);
-        if (groups.length > 0) {
-          return NextResponse.json(
-            { groups },
-            { headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=600" } },
-          );
+        if (data && data.status === "success" && data.vehicles && data.vehicles.length > 0) {
+          const groups = reshapeMagento(data.vehicles, store);
+          if (groups.length > 0) {
+            return NextResponse.json(
+              { groups },
+              { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=600" } },
+            );
+          }
         }
       }
     }
-  } catch {
-    // Continue to Wheel API fallback
-  }
 
-  // 2. Fallback: Try Wheel API GraphQL
-  try {
-    if (!isNaN(w) && !isNaN(h) && !isNaN(r)) {
-      const wheelRes = await searchByTyreSize(w, h, r);
-      if (wheelRes.data && wheelRes.data.length > 0) {
-        const groups = reshapeWheelApi(wheelRes.data, store);
-        return NextResponse.json(
-          { groups },
-          { headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=600" } },
-        );
-      }
-    }
-
+    // Never cache empty results so CDN does not get stuck
     return NextResponse.json(
       { groups: [] },
-      { headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate=600" } },
+      { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } },
     );
   } catch (err) {
+    console.error("Magento fitment error:", err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Fitment error", groups: [] },
-      { status: 500 },
+      {
+        status: 500,
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+      },
     );
   }
 }
+
+
 
 
 
