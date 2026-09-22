@@ -94,9 +94,9 @@ export const MAIN_NAV: NavItem[] = [
   */
 ];
 
-/** Locale-prefixed href for a nav item. */
-export function navHref(item: NavItem, locale: string): string {
-  return item.slug ? `/${locale}/${item.slug}` : `/${locale}`;
+/** Href for a nav item — English-only storefront, no locale prefix. */
+export function navHref(item: NavItem, _locale?: string): string {
+  return item.slug ? `/${item.slug}` : "/";
 }
 
 /** Label for the active locale. */
@@ -107,7 +107,7 @@ export function navLabel(item: NavItem, _locale?: string): string {
 /** True when `pathname` is on `item` (or one of its children). */
 export function isNavActive(item: NavItem, pathname: string, locale: string): boolean {
   const href = navHref(item, locale);
-  if (!item.slug) return pathname === `/${locale}` || pathname === "/";
+  if (!item.slug) return pathname === href || pathname === `/${locale}` || pathname === "/";
   if (pathname === href || pathname.startsWith(`${href}/`)) return true;
   return !!item.children?.some((c) => isNavActive(c, pathname, locale));
 }

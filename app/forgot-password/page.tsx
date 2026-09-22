@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -32,21 +33,11 @@ export default function ForgotPassword() {
 
   return (
     <div className="bg-[#f8f9fa]">
-      {/* ── Banner ── */}
-      <div
-        className="py-10 sm:py-14 text-center"
-        style={{
-          backgroundImage: "url('/img/shopping-cart-banner.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="container mx-auto px-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase text-white tracking-wider">
-            FORGOT YOUR PASSWORD?
-          </h1>
-        </div>
-      </div>
+      <PageHeroBanner
+        title="Forgot Your Password?"
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "Forgot Password" }]}
+        showCta={false}
+      />
 
       {/* ── Card ── */}
       <div className="container max-w-6xl mx-auto px-4 py-10 flex justify-center">

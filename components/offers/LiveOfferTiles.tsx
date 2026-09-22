@@ -16,7 +16,6 @@ type Offer = { label: string; value: string; count: number };
  * tile deep-links into the filtered listing.
  */
 export default function LiveOfferTiles({ locale }: { locale: string }) {
-  const isAr = locale === "ar";
   const [offers, setOffers] = useState<Offer[] | null>(null);
 
   useEffect(() => {
@@ -42,9 +41,7 @@ export default function LiveOfferTiles({ locale }: { locale: string }) {
 
   return (
     <section className="so-live">
-      <h2 className="so-h2">
-        {isAr ? "العروض النشطة الآن" : "Offers running right now"}
-      </h2>
+      <h2 className="so-h2">Offers running right now</h2>
 
       <div className="so-live-grid">
         {offers === null
@@ -56,11 +53,9 @@ export default function LiveOfferTiles({ locale }: { locale: string }) {
                 className="so-live-card"
               >
                 <span className="so-live-label">{o.label}</span>
-                <span className="so-live-count">
-                  {isAr ? `${o.count} إطاراً مؤهل` : `${o.count} tyres qualify`}
-                </span>
+                <span className="so-live-count">{o.count} tyres qualify</span>
                 <span className="so-live-go">
-                  {isAr ? "تسوق العرض" : "Shop this offer"}
+                  Shop this offer
                   <ArrowRight size={14} strokeWidth={2.4} />
                 </span>
               </Link>

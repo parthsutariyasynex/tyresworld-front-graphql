@@ -5,8 +5,7 @@ import { APP_CONFIG, magentoHeaders } from "@/src/config/app-config";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const urlKey = searchParams.get("urlKey");
-  const locale = searchParams.get("locale") ?? "en";
-  const store = searchParams.get("store") ?? (locale === "ar" ? "ar" : "default");
+  const store = searchParams.get("store") ?? "default";
 
   try {
     if (urlKey) {

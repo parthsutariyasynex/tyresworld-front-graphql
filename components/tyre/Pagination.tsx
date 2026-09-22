@@ -12,7 +12,6 @@ type Props = {
 export default function Pagination({ current, total, onChange, locale = "en" }: Props) {
   if (total <= 1) return null;
 
-  const isAr = locale === "ar";
   const pages: (number | "…")[] = [];
 
   if (total <= 7) {
@@ -27,10 +26,6 @@ export default function Pagination({ current, total, onChange, locale = "en" }: 
     pages.push(total);
   }
 
-  // Icons based on layout direction
-  const PrevIcon = isAr ? ChevronRight : ChevronLeft;
-  const NextIcon = isAr ? ChevronLeft : ChevronRight;
-
   return (
     <div className="flex items-center justify-center gap-2 mt-6 sm:mt-8 mb-2">
       {/* Previous Button */}
@@ -38,9 +33,9 @@ export default function Pagination({ current, total, onChange, locale = "en" }: 
         onClick={() => onChange(current - 1)}
         disabled={current === 1}
         className="w-9 h-9 rounded-full flex items-center justify-center border border-gray-250/60 text-gray-500 hover:text-black hover:border-gray-400 disabled:opacity-30 disabled:cursor-not-allowed bg-white transition-colors duration-200"
-        aria-label={isAr ? "الصفحة السابقة" : "Previous page"}
+        aria-label="Previous page"
       >
-        <PrevIcon size={16} />
+        <ChevronLeft size={16} />
       </button>
 
       {/* Pages */}
@@ -69,9 +64,9 @@ export default function Pagination({ current, total, onChange, locale = "en" }: 
         onClick={() => onChange(current + 1)}
         disabled={current === total}
         className="w-9 h-9 rounded-full flex items-center justify-center border border-gray-250/60 text-gray-500 hover:text-black hover:border-gray-400 disabled:opacity-30 disabled:cursor-not-allowed bg-white transition-colors duration-200"
-        aria-label={isAr ? "الصفحة التالية" : "Next page"}
+        aria-label="Next page"
       >
-        <NextIcon size={16} />
+        <ChevronRight size={16} />
       </button>
     </div>
   );

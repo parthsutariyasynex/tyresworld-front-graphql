@@ -18,36 +18,29 @@ const STEP_IMAGES: Record<string, string> = {
 };
 
 export default function HowItWorks({ locale = "en" }: HowItWorksProps) {
-  const isAr = locale === "ar";
   const [stepsData, setStepsData] = useState<KleverHomeSteps | null>(null);
 
   const defaultSteps = [
     {
       number: "01",
       img: "/media/images/find-your-tyres.webp",
-      alt: isAr ? "ابحث عن إطاراتك" : "Find Your Tyres",
-      title: isAr ? "ابحث عن إطاراتك" : "Find Your Tyres",
-      desc: isAr
-        ? "استكشف إطارات عالية الجودة من أفضل الماركات المصممة لسيارتك."
-        : "Explore high-quality tyres from top brands designed for your vehicle.",
+      alt: "Find Your Tyres",
+      title: "Find Your Tyres",
+      desc: "Explore high-quality tyres from top brands designed for your vehicle.",
     },
     {
       number: "02",
       img: "/media/images/set-up-installation.webp",
-      alt: isAr ? "حدد موعد التركيب" : "Set Up Installation",
-      title: isAr ? "حدد موعد التركيب" : "Set Up Installation",
-      desc: isAr
-        ? "اختر الوقت والموقع المناسبين للتركيب من شبكة مراكزنا المعتمدة."
-        : "Pick a time and location for installation from our expert network of installers.",
+      alt: "Set Up Installation",
+      title: "Set Up Installation",
+      desc: "Pick a time and location for installation from our expert network of installers.",
     },
     {
       number: "03",
       img: "/media/images/secure-payment-quick-install.webp",
-      alt: isAr ? "دفع آمن وتركيب سريع" : "Secure Payment, Quick Install",
-      title: isAr ? "دفع آمن، وتركيب سريع" : "Secure Payment, Quick Install",
-      desc: isAr
-        ? "ادفع عبر الإنترنت بأمان واستمتع بتركيب سهل للإطارات في موقعك المختار."
-        : "Pay online securely and enjoy easy tyre fitting at your chosen location.",
+      alt: "Secure Payment, Quick Install",
+      title: "Secure Payment, Quick Install",
+      desc: "Pay online securely and enjoy easy tyre fitting at your chosen location.",
     },
   ];
 
@@ -74,10 +67,8 @@ export default function HowItWorks({ locale = "en" }: HowItWorksProps) {
       <div className="container custom-width max-w-7xl mx-auto px-4">
         <div className="section-title mb-10 text-center heading-styel1">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-wider text-white m-0">
-            {isAr ? "كيف يعمل " : "HOW TYRESWORLD.AE "}
-            <span className="text-[#ed1c24] theme_color">
-              {isAr ? "TYRESWORLD.AE" : "WORKS"}
-            </span>
+            {"HOW TYRESWORLD.AE "}
+            <span className="text-[#ed1c24] theme_color">WORKS</span>
           </h2>
         </div>
 

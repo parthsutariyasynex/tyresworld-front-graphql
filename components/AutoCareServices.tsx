@@ -166,7 +166,6 @@ const DEFAULT_CATEGORIES: AutoCareCategory[] = [
 ];
 
 export default function AutoCareServices({ locale = "en" }: AutoCareServicesProps) {
-  const isAr = locale === "ar";
   const swiperRef = useRef<SwiperType | null>(null);
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
@@ -186,7 +185,7 @@ export default function AutoCareServices({ locale = "en" }: AutoCareServicesProp
         const key = (tile.title ?? "").trim().toLowerCase();
         const fallback = DEFAULT_CATEGORIES[idx % DEFAULT_CATEGORIES.length];
         const presentation = PRESENTATION[key] ?? fallback;
-        const cleanSlug = (tile.url ?? "").replace(/^\/(en|ar)\//, "").replace(/^\//, "").split("?")[0];
+        const cleanSlug = (tile.url ?? "").replace(/^\/en\//, "").replace(/^\//, "").split("?")[0];
         return {
           id: key || `tile-${idx}`,
           slug: cleanSlug || fallback.slug,
@@ -209,20 +208,18 @@ export default function AutoCareServices({ locale = "en" }: AutoCareServicesProp
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#ed1c24]/10 border border-[#ed1c24]/20 text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] text-[#ed1c24] mb-3">
             <span className="w-2 h-2 rounded-full bg-[#ed1c24] animate-pulse" />
-            {isAr ? "عناية متكاملة بالسيارات" : "ONE-STOP AUTO CARE"}
+            {"ONE-STOP AUTO CARE"}
           </div>
 
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-gray-950 font-sans uppercase">
-            {isAr ? "وجهتك الموثوقة الأولى " : "YOUR TRUSTED ONE-STOP "}{" "}
+            {"YOUR TRUSTED ONE-STOP "}{" "}
             <span className="text-[#ed1c24]">
-              {isAr ? "لخدمات وصيانة السيارات" : "SHOP FOR AUTO CARE"}
+              {"SHOP FOR AUTO CARE"}
             </span>
           </h2>
 
           <p className="text-xs sm:text-sm text-gray-600 mt-2.5 leading-relaxed font-normal">
-            {isAr
-              ? "في تايرز وورلد، نوفر مجموعة واسعة من إطارات السيارات والدراجات النارية في جميع أنحاء الإمارات. يستخدم فنيونا ذوو الخبرة أحدث المعدات للحفاظ على سلامة سيارتك."
-              : "At TyresWorld, we provide a wide range of car and motorcycle tyres across the UAE. Our experienced technicians use modern equipment and quality products to keep your vehicle safe and road-ready."}
+            {"At TyresWorld, we provide a wide range of car and motorcycle tyres across the UAE. Our experienced technicians use modern equipment and quality products to keep your vehicle safe and road-ready."}
           </p>
         </div>
 

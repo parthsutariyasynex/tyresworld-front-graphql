@@ -1,12 +1,13 @@
 /** Internal route builders — always include locale prefix for [locale] pages */
 
 export const ROUTES = {
-  home:      (locale = "en") => `/${locale}`,
-  tyres:     (locale = "en") => `/${locale}/tyres`,
-  evTires:   (locale = "en") => `/${locale}/ev-tires`,
-  runFlat:   (locale = "en") => `/${locale}/run-flat-tires`,
-  category:  (locale = "en", slug: string) => `/${locale}/${slug}`,
-  product:   (locale = "en", urlKey: string) => `/${locale}/product/${urlKey}`,
+  home:      () => "/",
+  tyres:     () => "/tyres",
+  brand:     (slug = "") => `/tyres/brand/${slug}`,
+  evTires:   () => "/ev-tires",
+  runFlat:   () => "/run-flat-tires",
+  category:  (slug = "") => `/${slug}`,
+  product:   (urlKey = "") => `/product/${urlKey}`,
   shop:      () => "/shop",
   cart:      () => "/cart",
   checkout:  () => "/checkout",

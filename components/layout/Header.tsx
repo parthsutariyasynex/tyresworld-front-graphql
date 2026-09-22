@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Search,
   ShoppingCart,
@@ -30,23 +30,12 @@ const ICON_BTN = "header-icon-dark";
 
 export default function Header({ menu = [] }: { menu?: NavItem[] }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { count: cartCount, items, currency, removeItem, updateQty, cart } = useCart();
 
-  const locale = pathname.split("/")[1] === "ar" ? "ar" : "en";
-  const nextLocale = locale === "ar" ? "en" : "ar";
-  const switchLabel = locale === "en" ? "العربية" : "English";
+  const locale = "en";
 
-  const isHomePage = pathname === "/" || pathname === `/${locale}` || pathname === `/${locale}/` || pathname === "/en" || pathname === "/ar";
-
-  function switchLocale() {
-    const segments = pathname.split("/");
-    segments[1] = nextLocale;
-    const nextPath = segments.join("/");
-    const qs = searchParams.toString();
-    router.push(`${nextPath}${qs ? `?${qs}` : ""}`);
-  }
+  const isHomePage = pathname === "/" || pathname === `/${locale}` || pathname === `/${locale}/`;
 
   const [mobileOpen, setMobileOpen] = useState(false);
   useScrollLock(mobileOpen);
@@ -141,9 +130,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                       <div
                         className="site-nav-panel"
                         data-open={isOpen}
-                        style={{
-                          [locale === "ar" ? "right" : "left"]: 0,
-                        }}
+                        style={{ left: 0 }}
                       >
                         <div className="site-nav-panel-body rounded-b-xl shadow-2xl">
                           {item.children!.map((child) => (
@@ -200,7 +187,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                       <div className="flex flex-col gap-2.5">
                         <div className="border-b border-gray-100 pb-2">
                           <p className="text-[10px] uppercase font-bold text-gray-400">
-                            {locale === "ar" ? "مرحباً" : "Welcome"}
+                            Welcome
                           </p>
                           <p className="text-[13px] font-bold text-gray-900 truncate">
                             {customer?.firstname} {customer?.lastname}
@@ -211,14 +198,14 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                           onClick={() => setAccountDropdownOpen(false)}
                           className="text-[12px] font-bold text-gray-700 hover:text-[#ed1c24] transition-colors"
                         >
-                          {locale === "ar" ? "حسابي" : "MY ACCOUNT"}
+                          MY ACCOUNT
                         </Link>
                         <Link
                           href="/account?tab=wishlist"
                           onClick={() => setAccountDropdownOpen(false)}
                           className="text-[12px] font-bold text-gray-700 hover:text-[#ed1c24] transition-colors"
                         >
-                          {locale === "ar" ? "قائمة أمنياتي" : "MY WISHLIST"}
+                          MY WISHLIST
                         </Link>
                         <button
                           onClick={async () => {
@@ -228,7 +215,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                           }}
                           className="w-full text-left text-[12px] font-bold text-gray-500 hover:text-[#ed1c24] transition-colors pt-2 border-t border-gray-100 cursor-pointer"
                         >
-                          {locale === "ar" ? "تسجيل الخروج" : "SIGN OUT"}
+                          SIGN OUT
                         </button>
                       </div>
                     </div>
@@ -268,7 +255,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                                 <ShoppingBag size={14} strokeWidth={2.5} />
                               </div>
                               <span className="font-black text-xs sm:text-[13px] text-gray-950 tracking-tight">
-                                {cartCount} {cartCount === 1 ? (locale === "ar" ? "منتج في السلة" : "Item in Cart") : (locale === "ar" ? "منتجات في السلة" : "Items in Cart")}
+                                {cartCount} {cartCount === 1 ? "Item in Cart" : "Items in Cart"}
                               </span>
                             </div>
                             <button
@@ -284,7 +271,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                           {/* Subtotal */}
                           <div className="flex justify-between items-center px-4 sm:px-5 py-2.5 bg-gray-50/80 border-b border-gray-100 text-xs">
                             <span className="font-semibold text-gray-500">
-                              {locale === "ar" ? "المجموع الجزئي" : "Cart Subtotal"}
+                              Cart Subtotal
                             </span>
                             <span className="font-black text-sm text-gray-950 tabular-nums">
                               {fmtMoney(subtotalExclTax)}
@@ -367,7 +354,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                                         onClick={() => setItemToRemove(item.uid)}
                                         className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                                         aria-label="Remove item"
-                                        title={locale === "ar" ? "حذف" : "Remove"}
+                                        title="Remove"
                                       >
                                         <Trash2 size={13} strokeWidth={2.2} />
                                       </button>
@@ -385,8 +372,8 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                               onClick={() => setCartDropdownOpen(false)}
                               className="btn-cta w-full text-xs py-3.5 rounded-xl shadow-md"
                             >
-                              <span>{locale === "ar" ? "عرض وتعديل السلة" : "VIEW AND EDIT CART"}</span>
-                              <ArrowRight size={14} strokeWidth={2.5} className={locale === "ar" ? "rotate-180" : ""} />
+                              <span>VIEW AND EDIT CART</span>
+                              <ArrowRight size={14} strokeWidth={2.5} />
                             </Link>
                           </div>
                         </>
@@ -397,17 +384,17 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                             <ShoppingBag size={24} strokeWidth={1.75} />
                           </div>
                           <p className="text-sm font-black text-gray-900 mb-1">
-                            {locale === "ar" ? "سلة التسوق فارغة" : "Your cart is empty"}
+                            Your cart is empty
                           </p>
                           <p className="text-xs text-gray-500 max-w-[200px] mb-4">
-                            {locale === "ar" ? "لم تقم بإضافة أي إطارات بعد." : "Browse our catalogue and find the best tyres."}
+                            Browse our catalogue and find the best tyres.
                           </p>
                           <Link
                             href={`/${locale}/tyres`}
                             onClick={() => setCartDropdownOpen(false)}
                             className="btn-cta text-xs font-bold px-5 py-2.5 rounded-lg"
                           >
-                            {locale === "ar" ? "تصفح الإطارات" : "START SHOPPING"}
+                            START SHOPPING
                           </Link>
                         </div>
                       )}
@@ -452,16 +439,8 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
 
         {/* Slide-in panel */}
         <div
-          className={`drawer-panel fixed top-0 bottom-0 h-full w-[300px] sm:w-[340px] max-w-[85vw] flex flex-col z-10 ${
-            locale === "ar" ? "left-0" : "right-0"
-          } transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform ${
-            locale === "ar"
-              ? mobileOpen
-                ? "translate-x-0"
-                : "-translate-x-full"
-              : mobileOpen
-              ? "translate-x-0"
-              : "translate-x-full"
+          className={`drawer-panel fixed top-0 bottom-0 h-full w-[300px] sm:w-[340px] max-w-[85vw] flex flex-col z-10 right-0 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform ${
+            mobileOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
           {/* Panel header */}
@@ -494,9 +473,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
               className="w-full flex items-center gap-3 bg-white/10 hover:bg-white/15 rounded-xl px-4 py-3 border border-white/10 text-white text-xs font-semibold transition-colors cursor-pointer text-start"
             >
               <Search size={16} className="text-[#ed1c24] flex-shrink-0" />
-              <span className="text-white/70">
-                {locale === "ar" ? "ابحث عن مقاس الإطار، السيارة، أو الماركة…" : "Search tyre size, vehicle or brand…"}
-              </span>
+              <span className="text-white/70">Search tyre size, vehicle or brand…</span>
             </button>
           </div>
 
@@ -537,7 +514,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
 
                   {/* Sub-menu accordion */}
                   {hasChildren && isExpanded && (
-                    <ul className={`pb-2 ${locale === "ar" ? "pr-3 border-r-2" : "pl-3 border-l-2"} border-white/10`}>
+                    <ul className="pb-2 pl-3 border-l-2 border-white/10">
                       {item.children!.map((child) => (
                         <li key={child.id}>
                           <Link
@@ -584,12 +561,12 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
 
       {/* Item Removal Confirmation Modal */}
       {itemToRemove && (
-        <div className="fixed inset-0 bg-black/65 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 animate-in fade-in duration-200" dir={locale === "ar" ? "rtl" : "ltr"}>
+        <div className="fixed inset-0 bg-black/65 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl max-w-[480px] w-full p-6 sm:p-7 relative overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100 text-center">
             {/* Close button X */}
             <button
               onClick={() => setItemToRemove(null)}
-              className={`absolute top-4 ${locale === "ar" ? "left-4" : "right-4"} w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer`}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
               aria-label="Close dialog"
             >
               <X size={18} strokeWidth={2.5} />
@@ -602,12 +579,10 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
 
             {/* Modal title & body */}
             <h3 className="text-base sm:text-lg font-black text-gray-950 mb-2">
-              {locale === "ar" ? "إزالة المنتج من السلة؟" : "Remove Item from Cart?"}
+              Remove Item from Cart?
             </h3>
             <p className="text-xs sm:text-sm font-medium text-gray-600 leading-relaxed max-w-[360px] mx-auto mb-6">
-              {locale === "ar"
-                ? "هل أنت متأكد من رغبتك في إزالة هذا المنتج من عربة التسوق؟"
-                : "Are you sure you want to remove this item from your shopping cart?"}
+              Are you sure you want to remove this item from your shopping cart?
             </p>
 
             {/* Modal footer / Actions */}
@@ -617,7 +592,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                 onClick={() => setItemToRemove(null)}
                 className="flex-1 py-3 px-5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
               >
-                {locale === "ar" ? "إلغاء" : "Cancel"}
+                Cancel
               </button>
               <button
                 type="button"
@@ -629,7 +604,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                 }}
                 className="btn-cta flex-1 py-3 px-5 rounded-xl shadow-md text-xs"
               >
-                <span>{locale === "ar" ? "حذف" : "Remove"}</span>
+                <span>Remove</span>
               </button>
             </div>
           </div>

@@ -21,13 +21,13 @@ export const OFFER_BANNERS = [
     id: "matrax-3plus1",
     image: "/offers/buy3-get1-free-matrax-tyres-uae.webp",
     alt: "Buy 3 Matrax tyres and get 1 free in the UAE",
-    href: "/tyres?mgs_brand=Matrax&offers=Buy+3+Get+1+Free",
+    href: "/tyres/brand/matrax?offers=Buy+3+Get+1+Free",
   },
   {
     id: "vredestein-3plus1",
     image: "/offers/buy3-get1-free-vredestein-tyres-uae.webp",
     alt: "Buy 3 Vredestein tyres and get 1 free in the UAE",
-    href: "/tyres?mgs_brand=Vredestein&offers=Buy+3+Get+1+Free",
+    href: "/tyres/brand/vredestein?offers=Buy+3+Get+1+Free",
   },
   {
     id: "free-wheel-alignment",

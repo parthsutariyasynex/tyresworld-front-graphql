@@ -43,7 +43,7 @@ export function categoryMeta(opts: {
     openGraph: {
       title,
       description,
-      locale: opts.locale === "ar" ? "ar_SA" : "en_SA",
+      locale: "en_SA",
     },
   };
 }

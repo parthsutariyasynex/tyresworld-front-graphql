@@ -10,6 +10,7 @@ import type { Product } from "@/lib/data";
 import { type Locale } from "@/lib/i18n";
 import { useOfferLabels } from "@/lib/useOfferLabels";
 import { useCart } from "@/lib/cart-context";
+import { buildTyreSizeSlug, buildBrandSlug } from "@/lib/filterBuilder";
 import { Money } from "@/components/Price";
 import { APP_CONFIG } from "@/src/config/app-config";
 import { isMotorcycleProduct } from "@/lib/magento";
@@ -110,17 +111,17 @@ export default function TyreListingCard({
   const rim = product.rim ?? sizeMatch?.[3];
   const sizeSearchHref =
     width && height && rim
-      ? `/${locale}/tyres?width=${width}&height=${height}&rim=${rim}`
+      ? buildTyreSizeSlug({ width, height, rim })
       : null;
 
   const brandLabel = product.brandName ?? String(product.brand ?? "");
   const brandLogo = product.brandLogoUrl;
-  const brandSlug = product.brandName?.toLowerCase().replace(/[^a-z0-9]+/g, "").replace(/(^-|-$)/g, "");
+  const brandSlug = buildBrandSlug(product.brandName || brandLabel);
   const brandHref = brandSlug
-    ? `/${locale}/tyres/brand/${brandSlug}`
+    ? `/tyres/brand/${brandSlug}`
     : null;
 
-  const offerLabels = useOfferLabels(locale === "ar" ? "ar" : "default");
+  const offerLabels = useOfferLabels("default");
   const offerLabel = product.offersId ? offerLabels[product.offersId] : undefined;
 
   const { addItem } = useCart();
@@ -198,20 +199,6 @@ export default function TyreListingCard({
 
   const setPrice = realSetPrice ?? unitPrice * qty;
 
-    const specParts: string[] = [];
-    if (warranty) {
-      specParts.push(warranty.toLowerCase().includes("warranty") ? warranty.toUpperCase() : `${warranty} WARRANTY`);
-    } else {
-      specParts.push("3 YEAR WARRANTY");
-    }
-    if (year) {
-      specParts.push(year);
-    }
-    if (origin) {
-      specParts.push(origin);
-    }
-    const specPillText = specParts.join(" | ");
-
   async function handleAddToCart() {
     if (adding || cartAdded || isOutOfStock) return;
     setAdding(true);
@@ -231,40 +218,49 @@ export default function TyreListingCard({
   }
 
   return (
-    <li className="list-none h-full">
-      <div className={`flex flex-col h-full bg-white rounded-2xl border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-md transition-shadow${enableHoverZoom ? " group" : ""}`}>
+    <li className="list-none self-end w-full flex flex-col">
+      
+      {/* ── Top Banner: Dynamic Offer (Light Red Theme) ── */}
+      {offerLabel && (
+        <div className="bg-[#fef2f2] text-[#ed1c24] text-center py-2 px-2 font-black text-xs uppercase tracking-wider flex items-center justify-center shrink-0 border border-b-0 border-red-100 rounded-t-2xl">
+          <span>{offerLabel}</span>
+        </div>
+      )}
 
-        {/* ── Top Banner: Dynamic Offer (Light Red Theme) ── */}
-        {offerLabel && (
-          <div className="bg-[#fef2f2] text-[#ed1c24] text-center py-2 px-2 font-black text-xs uppercase tracking-wider flex items-center justify-center shrink-0 border-b border-red-100">
-            <span>{offerLabel}</span>
-          </div>
-        )}
+      <div className={`flex flex-col bg-white border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-md transition-shadow ${offerLabel ? "rounded-b-2xl border-t-0" : "rounded-2xl"}${enableHoverZoom ? " group" : ""}`}>
 
-        <div className="flex flex-col flex-1 p-3.5 pt-2">
+        <div className="flex flex-col flex-1 p-2.5 sm:p-3 pt-1">
 
-          {/* ── 1. Tyre Image Section (with Top-Right Corner Brand Logo overlay) ── */}
-          <div className="relative w-full pb-1">
-            {/* Top-Right Corner Brand Logo */}
-            <div className="absolute right-0 top-0.5 z-10 flex items-center justify-end">
-              {brandHref ? (
-                <Link href={brandHref} aria-label={`${brandLabel} tyres`}>
-                  {brandLogo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={brandLogo} alt={brandLabel} className="max-h-7 sm:max-h-8 max-w-[110px] sm:max-w-[125px] w-auto object-contain" loading="lazy" />
-                  ) : (
-                    <span className="text-xs sm:text-[13px] font-black uppercase tracking-tight text-gray-900">{brandLabel}</span>
-                  )}
-                </Link>
-              ) : brandLogo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={brandLogo} alt={brandLabel} className="max-h-7 sm:max-h-8 max-w-[110px] sm:max-w-[125px] w-auto object-contain" loading="lazy" />
-              ) : (
-                <span className="text-xs sm:text-[13px] font-black uppercase tracking-tight text-gray-900">{brandLabel}</span>
-              )}
+          {/* ── 1. Tyre Image Section (with Top-Left Warranty & Top-Right Brand Logo) ── */}
+          <div className="relative w-full pb-0.5">
+            {/* Top-Left Warranty Badge & Top-Right Brand Logo */}
+            <div className="absolute inset-x-0 top-0.5 z-10 flex items-center justify-between px-0.5 pointer-events-none">
+              {/* Warranty Badge (Top Left, opposite Logo) */}
+              <span className="inline-block bg-[#f0f2f5] text-gray-800 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs pointer-events-auto max-w-[50%] truncate">
+                {warranty.toLowerCase().includes("warranty") ? warranty.toUpperCase() : warranty ? `${warranty} WARRANTY` : "3 YEAR WARRANTY"}
+              </span>
+
+              {/* Brand Logo (Top Right) */}
+              <div className="flex items-center justify-end pointer-events-auto max-w-[50%]">
+                {brandHref ? (
+                  <Link href={brandHref} aria-label={`${brandLabel} tyres`}>
+                    {brandLogo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={brandLogo} alt={brandLabel} className="max-h-5 sm:max-h-5.5 max-w-[80px] sm:max-w-[100px] w-auto object-contain" loading="lazy" />
+                    ) : (
+                      <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
+                    )}
+                  </Link>
+                ) : brandLogo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={brandLogo} alt={brandLabel} className="max-h-5 sm:max-h-5.5 max-w-[80px] sm:max-w-[100px] w-auto object-contain" loading="lazy" />
+                ) : (
+                  <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
+                )}
+              </div>
             </div>
 
-            <Link href={href} className="block relative w-full h-[160px] sm:h-[175px]" aria-label={product.name}>
+            <Link href={href} className="block relative w-full h-[110px] sm:h-[125px] pt-3.5" aria-label={product.name}>
               <ProductImage
                 src={product.image}
                 alt={product.name}
@@ -275,85 +271,98 @@ export default function TyreListingCard({
             </Link>
           </div>
 
-          {/* ── 2. Warranty | Year | Origin Pill ──────────────────── */}
-          <div className="flex justify-center my-1.5">
-            <span className="bg-[#f0f2f5] text-gray-700 text-[11px] sm:text-[11.5px] font-bold px-3.5 py-0.5 rounded-full inline-flex items-center text-center shadow-2xs">
-              {specPillText}
-            </span>
-          </div>
+          {/* ── 2. Two-Column Information Section ── */}
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2 my-1 flex-1">
+            {/* Left Column: Name, Year & Country, Size + Car Icon */}
+            <div className="flex flex-col justify-between">
+              <div>
+                {/* Pattern / Model Name */}
+                <Link href={href} className="text-[12px] sm:text-[13.5px] font-black text-gray-900 hover:text-[#ed1c24] transition-colors leading-tight block truncate" title={pattern}>
+                  {pattern}
+                </Link>
 
-          {/* ── 3. Pattern / Model Name ──────────────────────────── */}
-          <div className="text-center mt-1 mb-2.5 px-1">
-            <Link href={href} className="text-[14.5px] sm:text-[15.5px] font-black text-gray-900 hover:text-[#ed1c24] transition-colors leading-tight truncate block">
-              {pattern}
-            </Link>
-          </div>
+                {/* Year & Origin */}
+                {(year || origin) && (
+                  <div className="text-[9.5px] sm:text-[10.5px] font-medium text-gray-500 mt-0.5 truncate">
+                    {[year, origin].filter(Boolean).join(" | ")}
+                  </div>
+                )}
+              </div>
 
-          {/* ── 4. Tyre Size & Compatible Vehicle Box ─────────────── */}
-          <div className="border border-gray-200/90 rounded-lg h-[40px] px-3.5 flex items-center justify-between mb-3 bg-white shadow-2xs">
-            <span className="text-[13px] sm:text-[13.5px] font-extrabold text-gray-900">
-              {tyreSize || "Standard Fitment"}
-            </span>
+              {/* Tyre Size & Compatible Vehicle Box */}
+              <div className="border border-gray-200/90 rounded-md h-[28px] sm:h-[30px] px-1.5 sm:px-2 flex items-center justify-between mt-1 bg-white shadow-2xs">
+                <span className="text-[10px] sm:text-[11px] font-extrabold text-gray-900 truncate">
+                  {tyreSize || "Standard"}
+                </span>
 
-            {isBike ? (
-              <span><BikeSprite /></span>
-            ) : width && height && rim ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setFitmentOpen(true);
-                }}
-                aria-label={`Vehicles that fit ${tyreSize}`}
-                title="See which cars fit this size"
-                className="inline-flex items-center text-gray-900 hover:text-[#ed1c24] transition-colors cursor-pointer"
-              >
-                <CarSprite />
-              </button>
-            ) : (
-              <span><CarSprite /></span>
-            )}
-          </div>
-
-          {/* ── 5. Price Section ─────────────────────────────────── */}
-          <div className="text-center px-1 mb-1">
-            {isBike ? (
-              <span className="text-[11px] font-medium text-gray-500 block cursor-default mb-0.5">
-                Fully Fitted Price per Item
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
-                className="text-[11px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer block mx-auto mb-0.5"
-                aria-label="What's included in the fully fitted price"
-              >
-                Fully Fitted Price per Item
-              </button>
-            )}
-            <div className="flex items-center justify-center gap-1 font-black text-gray-900 text-[23px] sm:text-[25px] leading-tight my-0.5">
-              <Money value={unitPrice} digits={2} />
+                {isBike ? (
+                  <span><BikeSprite /></span>
+                ) : width && height && rim ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setFitmentOpen(true);
+                    }}
+                    aria-label={`Vehicles that fit ${tyreSize}`}
+                    title="See which cars fit this size"
+                    className="inline-flex items-center text-gray-900 hover:text-[#ed1c24] transition-colors cursor-pointer shrink-0 ml-1"
+                  >
+                    <CarSprite />
+                  </button>
+                ) : (
+                  <span className="shrink-0 ml-1"><CarSprite /></span>
+                )}
+              </div>
             </div>
-            <div className="text-xs font-bold text-gray-700 mt-0.5">
-              Set of {qty}: <Money value={setPrice} digits={2} />
+
+            {/* Right Column: Price, Set of Price, Fully Fitted, Installments */}
+            <div className="flex flex-col justify-between text-right">
+              <div>
+                {/* Price */}
+                <div className="font-black text-gray-900 text-[16px] sm:text-[18px] leading-tight">
+                  <Money value={unitPrice} digits={2} />
+                </div>
+
+                {/* Set of X Price */}
+                <div className="text-[9.5px] sm:text-[10.5px] font-bold text-gray-700">
+                  Set of {qty}: <Money value={setPrice} digits={2} />
+                </div>
+
+                {/* Fully Fitted Price per item popup */}
+                {isBike ? (
+                  <span className="text-[9px] sm:text-[9.5px] font-medium text-gray-500 block mt-0.5">
+                    Fully Fitted Price
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
+                    className="text-[9px] sm:text-[9.5px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer block ml-auto mt-0.5"
+                    aria-label="What's included in the fully fitted price"
+                  >
+                    Fully Fitted Price
+                  </button>
+                )}
+
+                {/* Pay in Installments (Tabby & Tamara) */}
+                {!isBike && (
+                  <div className="flex items-center justify-end gap-1 mt-0.5 flex-wrap">
+                    <span className="text-[8.5px] text-gray-500 font-medium">Pay In</span>
+                    <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[7.5px] font-black px-1.5 py-0.5 rounded-xs leading-none select-none">tabby</span>
+                    <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[7.5px] font-black px-1.5 py-0.5 rounded-xs leading-none select-none">tamara</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* ── 6. Pay In Installments (Tabby / Tamara) ──────────── */}
-          {!isBike && (
-            <div className="flex items-center justify-center gap-1.5 my-2.5 flex-wrap">
-              <span className="text-[11px] text-gray-600 font-medium">Pay In Installments</span>
-              <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[9.5px] font-black px-2 py-0.5 rounded-sm leading-none select-none">tabby</span>
-              <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[9.5px] font-black px-2 py-0.5 rounded-sm leading-none select-none">tamara</span>
-            </div>
-          )}
-
-          {/* ── 7. Bottom Actions ───────────────────────────────── */}
+          {/* ── 3. Bottom Actions ───────────────────────────────── */}
           {isOutOfStock ? (
             <div className="pt-1 mt-auto">
               <a
-                className="btn-enquiry h-10"
+                className="btn-enquiry h-8 sm:h-8.5 text-xs"
                 href={`https://api.whatsapp.com/send/?phone=${APP_CONFIG.contact.whatsapp}&text=${encodeURIComponent(
                   `Hi tyresworld.ae\n\nI would like to enquire about ${product.name}`,
                 )}`}
@@ -366,20 +375,20 @@ export default function TyreListingCard({
             </div>
           ) : (
             <>
-            <div className="flex items-center gap-2 pt-1 mt-auto">
+            <div className="flex items-center gap-1.5 pt-1 mt-auto">
               {/* Quantity dropdown */}
               <div className="qty-select" ref={qtyRef}>
                 <button
                   type="button"
-                  className="qty-trigger h-10 px-3"
+                  className="qty-trigger h-8 sm:h-8.5 px-2.5 text-xs"
                   disabled={!qtySelectable}
                   onClick={() => setQtyOpen(o => !o)}
                   aria-haspopup="listbox"
                   aria-expanded={qtyOpen}
                   aria-label={`Quantity: ${qty}`}
                 >
-                  <span className="font-bold text-sm">{qty}</span>
-                  <ChevronDown size={13} className={`qty-caret ${qtyOpen ? "rotate-180" : ""}`} />
+                  <span className="font-bold text-xs sm:text-sm">{qty}</span>
+                  <ChevronDown size={12} className={`qty-caret ${qtyOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {qtyOpen && qtySelectable && (
@@ -392,7 +401,7 @@ export default function TyreListingCard({
                           onClick={() => { setQty(n); setQtyOpen(false); }}
                         >
                           {n}
-                          {n === qty && <Check size={13} className="qty-check" />}
+                          {n === qty && <Check size={12} className="qty-check" />}
                         </button>
                       </li>
                     ))}
@@ -404,22 +413,22 @@ export default function TyreListingCard({
 
               <button
                 type="button"
-                className={`btn-tocart h-10 px-4 ${cartAdded ? "is-added" : ""}`}
+                className={`btn-tocart h-8 sm:h-8.5 px-3 text-xs ${cartAdded ? "is-added" : ""}`}
                 onClick={handleAddToCart}
                 disabled={adding}
                 title="Add to Cart"
               >
                 {adding ? (
-                  <><Loader2 size={13} className="animate-spin mr-1.5" /><span>Adding…</span></>
+                  <><Loader2 size={12} className="animate-spin mr-1" /><span>Adding…</span></>
                 ) : cartAdded ? (
-                  <><Check size={13} className="mr-1.5" /><span>Added</span></>
+                  <><Check size={12} className="mr-1" /><span>Added</span></>
                 ) : (
                   <span>ADD TO CART</span>
                 )}
               </button>
             </div>
             {addError && (
-              <p className="text-[11px] text-[#ed1c24] font-semibold mt-1.5 text-center line-clamp-2">{addError}</p>
+              <p className="text-[10px] text-[#ed1c24] font-semibold mt-1 text-center line-clamp-2">{addError}</p>
             )}
             </>
           )}

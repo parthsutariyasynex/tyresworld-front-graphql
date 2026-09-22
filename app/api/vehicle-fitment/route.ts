@@ -34,7 +34,8 @@ function reshapeMagento(vehicles: UpstreamMake[], store: string): MakeGroup[] {
           if (!name || !modelSlug) return null;
 
           // 👉 Internal website URL using make and model slugs
-          const href = `/${store}/tyres/cars/${encodeURIComponent(makeSlug)}?model=${encodeURIComponent(modelSlug)}`;
+          const prefix = store === "ar" ? "/ar" : "";
+          const href = `${prefix}/tyres/cars/${encodeURIComponent(makeSlug)}?model=${encodeURIComponent(modelSlug)}`;
           return { name, years: (m.year_range ?? "").trim(), href };
         })
         .filter((m): m is Model => m !== null);
@@ -46,6 +47,7 @@ function reshapeMagento(vehicles: UpstreamMake[], store: string): MakeGroup[] {
 
 function reshapeWheelApi(items: WheelFitmentMatch[], store: string): MakeGroup[] {
   const byMake = new Map<string, MakeGroup>();
+  const prefix = store === "ar" ? "/ar" : "";
 
   for (const item of items) {
     const makeName = item.makeName?.trim();
@@ -57,7 +59,7 @@ function reshapeWheelApi(items: WheelFitmentMatch[], store: string): MakeGroup[]
     if (!modelName || !modelSlug) continue;
 
     const years = (item.yearRanges ?? []).join(", ");
-    const href = `/${store}/tyres/cars/${encodeURIComponent(makeSlug)}?model=${encodeURIComponent(modelSlug)}`;
+    const href = `${prefix}/tyres/cars/${encodeURIComponent(makeSlug)}?model=${encodeURIComponent(modelSlug)}`;
 
     let group = byMake.get(makeSlug);
     if (!group) {

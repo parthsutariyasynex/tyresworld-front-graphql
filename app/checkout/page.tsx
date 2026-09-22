@@ -18,6 +18,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Money } from "@/components/Price";
 import Footer from "@/components/layout/Footer";
 import { useScrollLock } from "@/lib/useScrollLock";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 type Agreement = {
   agreement_id: number;
@@ -93,7 +94,6 @@ function CheckoutContent() {
   const router = useRouter();
   const pathname = usePathname();
   const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
-  const isAr = locale === "ar";
 
   const { customer } = useAuth();
   const {
@@ -278,7 +278,7 @@ function CheckoutContent() {
       .then((r) => r.json())
       .then((d) => {
         if (d.cities?.length) {
-          const cleanCities = d.cities.filter((c: string) => c !== "All" && c !== "الكل");
+          const cleanCities = d.cities.filter((c: string) => c !== "All");
           setCities(cleanCities);
         }
       })
@@ -556,42 +556,28 @@ function CheckoutContent() {
   // Order Confirmed View (Exact match with user screenshot)
   if (orderNumber) {
     return (
-      <div dir={isAr ? "rtl" : "ltr"} className="bg-[#f8f9fa] min-h-screen text-gray-900 font-sans flex flex-col justify-between">
+      <div dir={"ltr"} className="bg-[#f8f9fa] min-h-screen text-gray-900 font-sans flex flex-col justify-between">
         <div>
-          {/* ── Page Hero Title Banner ── */}
-          <div
-            className="page-title-wrapper py-8 sm:py-10 text-center bg-black mb-10"
-            style={{
-              backgroundImage: "url('/img/shopping-cart-banner.png')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }}
-          >
-            <div className="container mx-auto px-4">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-black uppercase text-white tracking-wider font-sans">
-                {isAr ? "شكراً لشرائك!" : "THANK YOU FOR YOUR PURCHASE!"}
-              </h1>
-            </div>
-          </div>
+          <PageHeroBanner
+            title="Thank You For Your Purchase!"
+            breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Order Confirmed" }]}
+          />
 
-          <div className="max-w-4xl mx-auto px-4 mb-16">
+          <div className="max-w-4xl mx-auto px-4 mt-10 mb-16">
             <div className="border border-emerald-400 bg-white rounded-xl p-8 sm:p-12 text-center shadow-xs space-y-3.5">
               <p className="text-sm sm:text-base text-gray-800 font-medium">
-                {isAr ? "رقم طلبك هو: " : "Your order number is: "}
+                {"Your order number is: "}
                 <span className="font-extrabold text-gray-950">{orderNumber}</span>.
               </p>
               <p className="text-xs sm:text-sm text-gray-600">
-                {isAr
-                  ? "سنرسل لك تأكيد الطلب بالبريد الإلكتروني مع التفاصيل ومعلومات التتبع."
-                  : "We'll email you an order confirmation with details and tracking info."}
+                {"We'll email you an order confirmation with details and tracking info."}
               </p>
               <div className="pt-3">
                 <Link
                   href={`/${locale}`}
                   className="inline-block bg-black hover:bg-[#ed1c24] text-white font-bold text-xs uppercase px-8 py-3 rounded-md transition-colors shadow-2xs"
                 >
-                  {isAr ? "متابعة التسوق" : "Continue Shopping"}
+                  {"Continue Shopping"}
                 </Link>
               </div>
             </div>
@@ -628,27 +614,13 @@ function CheckoutContent() {
   const hasSavedAddress = savedAddresses.length > 0 && form.firstname && form.street;
 
   return (
-    <div dir={isAr ? "rtl" : "ltr"} className="bg-[#f8f9fa] min-h-screen pb-12 text-gray-900 font-sans">
-      {/* ── Page Hero Title Banner ── */}
-      <div
-        className="page-title-wrapper py-7 sm:py-9 text-center bg-black mb-6"
-        style={{
-          backgroundImage: "url('/img/shopping-cart-banner.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
-        <div className="container mx-auto px-4">
-          <div className="title">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-black uppercase text-white tracking-wider font-sans">
-              <span className="base">{isAr ? "الدفع" : "CHECKOUT"}</span>
-            </h1>
-          </div>
-        </div>
-      </div>
+    <div dir={"ltr"} className="bg-[#f8f9fa] min-h-screen pb-12 text-gray-900 font-sans">
+      <PageHeroBanner
+        title="Checkout"
+        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Checkout" }]}
+      />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-4 font-medium">
             {error}
@@ -663,7 +635,7 @@ function CheckoutContent() {
               <div className="bg-[#f2f3f5] px-5 py-3.5 border-b border-gray-200 flex items-center gap-2.5">
                 <CreditCard className="w-4 h-4 text-gray-700 shrink-0" />
                 <h2 className="font-extrabold text-xs uppercase tracking-wider text-gray-900">
-                  {isAr ? "عنوان الفاتورة" : "BILLING ADDRESS"}
+                  {"BILLING ADDRESS"}
                 </h2>
               </div>
 
@@ -698,7 +670,7 @@ function CheckoutContent() {
                     }}
                     className="bg-black hover:bg-[#ed1c24] text-white text-xs font-bold px-4 py-2 rounded-md transition-colors cursor-pointer shadow-2xs"
                   >
-                    {isAr ? "عنوان جديد" : "New Address"}
+                    {"New Address"}
                   </button>
                 </div>
 
@@ -730,9 +702,7 @@ function CheckoutContent() {
                       className="w-4 h-4 rounded text-black accent-black cursor-pointer"
                     />
                     <span className="text-xs text-gray-700 font-medium">
-                      {isAr
-                        ? "هذا العنوان هو أيضاً عنوان الشحن الخاص بي"
-                        : "This address is also my shipping address"}
+                      {"This address is also my shipping address"}
                     </span>
                   </label>
                 </div>
@@ -773,7 +743,7 @@ function CheckoutContent() {
                         {addr.firstname} {addr.lastname}, {addr.street}, {addr.city}, United Arab Emirates
                       </option>
                     ))}
-                    <option value="new">{isAr ? "عنوان جديد" : "New Address"}</option>
+                    <option value="new">{"New Address"}</option>
                   </select>
                   <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 top-3 pointer-events-none" />
                 </div>
@@ -786,7 +756,7 @@ function CheckoutContent() {
                 <div className="bg-[#f2f3f5] px-5 py-3.5 border-b border-gray-200 flex items-center gap-2.5">
                   <Truck className="w-4 h-4 text-gray-700 shrink-0" />
                   <h2 className="font-extrabold text-xs uppercase tracking-wider text-gray-900">
-                    {isAr ? "عنوان الشحن" : "SHIPPING ADDRESS"}
+                    {"SHIPPING ADDRESS"}
                   </h2>
                 </div>
 
@@ -794,7 +764,7 @@ function CheckoutContent() {
                   {/* Dynamic Shipping Address Form (Exact match with Image 1) */}
                   <div>
                     <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                      {isAr ? "الاسم الأول" : "First Name"}
+                      {"First Name"}
                     </label>
                     <input
                       type="text"
@@ -806,7 +776,7 @@ function CheckoutContent() {
 
                   <div>
                     <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                      {isAr ? "اسم العائلة" : "Last Name"}
+                      {"Last Name"}
                     </label>
                     <input
                       type="text"
@@ -818,7 +788,7 @@ function CheckoutContent() {
 
                   <div>
                     <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                      {isAr ? "الشركة" : "Company"}
+                      {"Company"}
                     </label>
                     <input
                       type="text"
@@ -830,7 +800,7 @@ function CheckoutContent() {
 
                   <div>
                     <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                      {isAr ? "عنوان الشارع" : "Street Address"} <span className="text-red-500">*</span>
+                      {"Street Address"} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -842,7 +812,7 @@ function CheckoutContent() {
 
                   <div>
                     <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                      {isAr ? "المدينة" : "City"}
+                      {"City"}
                     </label>
                     <input
                       type="text"
@@ -854,7 +824,7 @@ function CheckoutContent() {
 
                   <div>
                     <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                      {isAr ? "الرمز البريدي" : "Zip/Postal Code"}
+                      {"Zip/Postal Code"}
                     </label>
                     <input
                       type="text"
@@ -866,7 +836,7 @@ function CheckoutContent() {
 
                   <div>
                     <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                      {isAr ? "الدولة" : "Country"}
+                      {"Country"}
                     </label>
                     <div className="relative">
                       <select
@@ -874,7 +844,7 @@ function CheckoutContent() {
                         onChange={(e) => setShippingForm((prev) => ({ ...prev, country_code: e.target.value }))}
                         className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 outline-none focus:border-black transition-all appearance-none pr-9 cursor-pointer bg-white"
                       >
-                        <option value="AE">{isAr ? "الإمارات العربية المتحدة" : "United Arab Emirates"}</option>
+                        <option value="AE">{"United Arab Emirates"}</option>
                       </select>
                       <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 top-3.5 pointer-events-none" />
                     </div>
@@ -882,7 +852,7 @@ function CheckoutContent() {
 
                   <div>
                     <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                      {isAr ? "رقم الهاتف" : "Phone Number"}
+                      {"Phone Number"}
                     </label>
                     <input
                       type="tel"
@@ -901,7 +871,7 @@ function CheckoutContent() {
                         className="w-4 h-4 rounded text-black accent-black cursor-pointer"
                       />
                       <span className="text-xs text-gray-800 font-medium">
-                        {isAr ? "حفظ في دفتر العناوين" : "Save in address book"}
+                        {"Save in address book"}
                       </span>
                     </label>
                   </div>
@@ -915,18 +885,18 @@ function CheckoutContent() {
                 <div className="bg-[#f2f3f5] px-5 py-3.5 border-b border-gray-200 flex items-center gap-2.5">
                   <Car className="w-4 h-4 text-gray-700 shrink-0" />
                   <h2 className="font-extrabold text-xs uppercase tracking-wider text-gray-900">
-                    {isAr ? "معلومات المركبة" : "VEHICLE INFORMATION"}
+                    {"VEHICLE INFORMATION"}
                   </h2>
                 </div>
 
                 <div className="p-5 space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                      {isAr ? "رقم لوحة المركبة" : "Vehicle Plate"}
+                      {"Vehicle Plate"}
                     </label>
                     <input
                       type="text"
-                      placeholder={isAr ? "مثال: 12345 دبي" : "e.g. 12345 Dubai"}
+                      placeholder={"e.g. 12345 Dubai"}
                       value={vehiclePlate}
                       onChange={(e) => setVehiclePlate(e.target.value)}
                       className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 outline-none focus:border-black transition-all bg-white"
@@ -936,7 +906,7 @@ function CheckoutContent() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                        {isAr ? "الشركة المصنعة" : "Make"}
+                        {"Make"}
                       </label>
                       <div className="relative">
                         <select
@@ -944,7 +914,7 @@ function CheckoutContent() {
                           onChange={(e) => setSelectedMake(e.target.value)}
                           className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 outline-none focus:border-black transition-all appearance-none pr-9 cursor-pointer bg-white"
                         >
-                          <option value="">{isAr ? "اختر الشركة" : "Select Make"}</option>
+                          <option value="">{"Select Make"}</option>
                           {makes.map((m) => (
                             <option key={m.value} value={m.label}>
                               {m.label}
@@ -957,7 +927,7 @@ function CheckoutContent() {
 
                     <div>
                       <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                        {isAr ? "الموديل" : "Model"}
+                        {"Model"}
                       </label>
                       <div className="relative">
                         <select
@@ -966,7 +936,7 @@ function CheckoutContent() {
                           disabled={!selectedMake || models.length === 0}
                           className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 outline-none focus:border-black transition-all appearance-none pr-9 disabled:bg-gray-50 disabled:cursor-not-allowed cursor-pointer bg-white"
                         >
-                          <option value="">{isAr ? "اختر الموديل" : "Select Model"}</option>
+                          <option value="">{"Select Model"}</option>
                           {models.map((m) => (
                             <option key={m.value} value={m.label}>
                               {m.label}
@@ -979,7 +949,7 @@ function CheckoutContent() {
 
                     <div>
                       <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                        {isAr ? "سنة الصنع" : "Year"}
+                        {"Year"}
                       </label>
                       <div className="relative">
                         <select
@@ -988,7 +958,7 @@ function CheckoutContent() {
                           disabled={!selectedModel || years.length === 0}
                           className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 outline-none focus:border-black transition-all appearance-none pr-9 disabled:bg-gray-50 disabled:cursor-not-allowed cursor-pointer bg-white"
                         >
-                          <option value="">{isAr ? "اختر السنة" : "Select Year"}</option>
+                          <option value="">{"Select Year"}</option>
                           {years.map((y) => (
                             <option key={y.value} value={y.label}>
                               {y.label}
@@ -1009,7 +979,7 @@ function CheckoutContent() {
                 <div className="flex items-center gap-2.5">
                   <Truck className="w-4 h-4 text-gray-700 shrink-0" />
                   <h2 className="font-extrabold text-xs uppercase tracking-wider text-gray-900">
-                    {isAr ? "طرق الشحن والتركيب" : "SHIPPING METHODS"}
+                    {"SHIPPING METHODS"}
                   </h2>
                 </div>
                 {installation?.type !== "free_shipping" && (
@@ -1017,7 +987,7 @@ function CheckoutContent() {
                     href={`/${locale}/storelocator`}
                     className="text-xs font-bold text-red-600 hover:underline cursor-pointer"
                   >
-                    {isAr ? "تغيير" : "Change"}
+                    {"Change"}
                   </Link>
                 )}
               </div>
@@ -1025,40 +995,38 @@ function CheckoutContent() {
               <div className="p-4 sm:p-5">
                 <div className="border border-emerald-400 bg-[#eefaf2] rounded-xl py-3.5 px-4 text-center">
                   <div className="font-extrabold text-xs tracking-wider text-emerald-950 uppercase mb-1">
-                    {installation?.type === "free_shipping"
-                      ? isAr ? "طريقة الشحن المختارة" : "SELECTED INSTALLER"
-                      : isAr ? "مركز التركيب المختار" : "SELECTED INSTALLER"}
+                    SELECTED INSTALLER
                   </div>
                   <div className="text-xs text-gray-800 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 font-medium">
                     {installation?.type === "free_shipping" ? (
                       <span>
-                        <span className="font-medium text-gray-900">{isAr ? "النوع:" : "Mode:"}</span>{" "}
-                        {isAr ? "شحن مجاني" : "Free Shipping"}
+                        <span className="font-medium text-gray-900">{"Mode:"}</span>{" "}
+                        {"Free Shipping"}
                       </span>
                     ) : (
                       <>
                         <span>
-                          <span className="font-medium text-gray-900">{isAr ? "النوع:" : "Mode:"}</span>{" "}
+                          <span className="font-medium text-gray-900">{"Mode:"}</span>{" "}
                           {installation?.type === "mobile_van"
-                            ? isAr ? "خدمة الفان المتنقل" : "Mobile Van Service"
-                            : isAr ? "التركيب في المركز" : "Install at Outlet"}
+                            ? "Mobile Van Service"
+                            : "Install at Outlet"}
                         </span>
 
                         <span>
-                          <span className="font-bold text-gray-900">{isAr ? "المركز:" : "Installer:"}</span>{" "}
+                          <span className="font-bold text-gray-900">{"Installer:"}</span>{" "}
                           {installation?.branch?.name || installation?.vanName || ""}
                         </span>
 
                         {installation?.date && (
                           <span>
-                            <span className="font-bold text-gray-900">{isAr ? "التاريخ:" : "Date:"}</span>{" "}
+                            <span className="font-bold text-gray-900">{"Date:"}</span>{" "}
                             {installation.date}
                           </span>
                         )}
 
                         {installation?.time && (
                           <span>
-                            <span className="font-bold text-gray-900">{isAr ? "الوقت:" : "Time:"}</span>{" "}
+                            <span className="font-bold text-gray-900">{"Time:"}</span>{" "}
                             {installation.time}
                           </span>
                         )}
@@ -1074,7 +1042,7 @@ function CheckoutContent() {
               <div className="bg-[#f2f3f5] px-5 py-3.5 border-b border-gray-200 flex items-center gap-2.5">
                 <CreditCard className="w-4 h-4 text-gray-700 shrink-0" />
                 <h2 className="font-extrabold text-xs uppercase tracking-wider text-gray-900">
-                  {isAr ? "طريقة الدفع" : "PAYMENT METHOD"}
+                  {"PAYMENT METHOD"}
                 </h2>
               </div>
 
@@ -1183,7 +1151,7 @@ function CheckoutContent() {
               <div className="px-5 py-3.5 bg-[#f2f3f5] border-b border-gray-200 flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-gray-700 shrink-0" />
                 <h2 className="font-extrabold text-xs uppercase tracking-wider text-gray-900">
-                  {isAr ? "ملخص الطلب" : "ORDER SUMMARY"}
+                  {"ORDER SUMMARY"}
                 </h2>
               </div>
 
@@ -1194,7 +1162,7 @@ function CheckoutContent() {
                   onClick={() => setIsItemsListOpen(!isItemsListOpen)}
                   className="w-full flex items-center justify-between px-5 py-3.5 text-xs font-bold text-gray-800 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
                 >
-                  <span>{totalCount} {isAr ? "منتجات في السلة" : "Items in Cart"}</span>
+                  <span>{totalCount} {"Items in Cart"}</span>
                   {isItemsListOpen ? (
                     <ChevronUp className="w-4 h-4 text-gray-500" />
                   ) : (
@@ -1240,14 +1208,14 @@ function CheckoutContent() {
               {/* Price Breakdown */}
               <div className="bg-white px-5 py-4 border-t border-gray-100 space-y-2.5 text-xs">
                 <div className="flex justify-between text-gray-700 font-medium">
-                  <span>{isAr ? "المجموع الفرعي للسلة" : "Cart Subtotal"}</span>
+                  <span>{"Cart Subtotal"}</span>
                   <span className="font-bold text-gray-900">
                     <Money value={subtotalExclTax} currency={currency || "AED"} digits={2} />
                   </span>
                 </div>
 
                 <div className="flex justify-between text-gray-700 font-medium">
-                  <span>{isAr ? "رسوم إضافية" : "Additional Charge"}</span>
+                  <span>{"Additional Charge"}</span>
                   <span className="font-bold text-gray-900">
                     <Money value={shippingAmount} currency={currency || "AED"} digits={2} />
                   </span>
@@ -1255,7 +1223,7 @@ function CheckoutContent() {
 
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-[#ed1c24] font-bold">
-                    <span>{isAr ? "الخصم" : "Discount"}</span>
+                    <span>{"Discount"}</span>
                     <span>− <Money value={discountAmount} currency={currency || "AED"} digits={2} /></span>
                   </div>
                 )}
@@ -1268,7 +1236,7 @@ function CheckoutContent() {
                 </div>
 
                 <div className="flex justify-between text-sm font-black text-gray-900 border-t border-gray-100 pt-3">
-                  <span>{isAr ? "إجمالي الطلب" : "Order Total"}</span>
+                  <span>{"Order Total"}</span>
                   <span className="font-black text-gray-900">
                     <Money value={grandTotalValue} currency={currency || "AED"} digits={2} />
                   </span>
@@ -1283,7 +1251,7 @@ function CheckoutContent() {
                 onClick={() => setIsCouponOpen(!isCouponOpen)}
                 className="w-full flex items-center justify-between px-5 py-3.5 text-xs font-bold text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <span>{isAr ? "استخدم كود الخصم" : "Use Coupon Code"}</span>
+                <span>{"Use Coupon Code"}</span>
                 {isCouponOpen ? (
                   <ChevronUp className="w-4 h-4 text-gray-500" />
                 ) : (
@@ -1296,7 +1264,7 @@ function CheckoutContent() {
                   {appliedCoupon ? (
                     <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
                       <div>
-                        <p className="text-[11px] text-gray-500 font-medium">{isAr ? "الكود المطبق" : "Applied Code"}</p>
+                        <p className="text-[11px] text-gray-500 font-medium">{"Applied Code"}</p>
                         <p className="text-xs font-bold text-emerald-800">{appliedCoupon}</p>
                       </div>
                       <button
@@ -1305,14 +1273,14 @@ function CheckoutContent() {
                         disabled={couponLoading}
                         className="text-[11px] font-bold text-red-600 hover:underline cursor-pointer disabled:opacity-50"
                       >
-                        {couponLoading ? "Removing..." : isAr ? "إزالة" : "Remove"}
+                        {couponLoading ? "Removing..." : "Remove"}
                       </button>
                     </div>
                   ) : (
                     <form onSubmit={handleApplyCoupon} className="flex gap-2">
                       <input
                         type="text"
-                        placeholder={isAr ? "أدخل كود الخصم" : "Enter coupon code"}
+                        placeholder={"Enter coupon code"}
                         value={couponInput}
                         onChange={(e) => setCouponInput(e.target.value)}
                         disabled={couponLoading}
@@ -1324,12 +1292,12 @@ function CheckoutContent() {
                         className="bg-black text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#ed1c24] transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                       >
                         {couponLoading && <Loader2 size={12} className="animate-spin" />}
-                        <span>{isAr ? "تطبيق" : "Apply"}</span>
+                        <span>{"Apply"}</span>
                       </button>
                     </form>
                   )}
                   {couponError && <p className="text-[11px] text-red-600 font-medium mt-1.5">{couponError}</p>}
-                  {couponSuccess && <p className="text-[11px] text-emerald-600 font-medium mt-1.5">{isAr ? "تم تطبيق الخصم!" : "Coupon applied!"}</p>}
+                  {couponSuccess && <p className="text-[11px] text-emerald-600 font-medium mt-1.5">{"Coupon applied!"}</p>}
                 </div>
               )}
             </div>
@@ -1341,7 +1309,7 @@ function CheckoutContent() {
                 onClick={() => setIsCommentsOpen(!isCommentsOpen)}
                 className="w-full flex items-center justify-between px-5 py-3.5 text-xs font-bold text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <span>{isAr ? "هل لديك أي ملاحظات حول الطلب؟" : "Do you have any comments regarding the order?"}</span>
+                <span>{"Do you have any comments regarding the order?"}</span>
                 {isCommentsOpen ? (
                   <ChevronUp className="w-4 h-4 text-gray-500" />
                 ) : (
@@ -1353,7 +1321,7 @@ function CheckoutContent() {
                 <div className="p-4 bg-gray-50/70 border-t border-gray-100">
                   <textarea
                     rows={3}
-                    placeholder={isAr ? "أدخل أي ملاحظات خاصة بالطلب هنا..." : "Enter notes or special requests..."}
+                    placeholder={"Enter notes or special requests..."}
                     value={orderComments}
                     onChange={(e) => setOrderComments(e.target.value)}
                     className="w-full border border-gray-300 rounded-lg p-3 text-xs text-gray-900 outline-none focus:border-black resize-none bg-white"
@@ -1372,10 +1340,10 @@ function CheckoutContent() {
               {busy ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  <span>{isAr ? "جاري إتمام الطلب..." : "Placing Order…"}</span>
+                  <span>{"Placing Order…"}</span>
                 </>
               ) : (
-                <span>{isAr ? "إتمام الطلب" : "PLACE ORDER"}</span>
+                <span>{"PLACE ORDER"}</span>
               )}
             </button>
           </div>
@@ -1389,7 +1357,7 @@ function CheckoutContent() {
             {/* Modal Header */}
             <div className="relative bg-[#f2f3f5] px-6 py-3.5 border-b border-gray-200">
               <h3 className="font-black text-sm uppercase text-gray-900 tracking-wider text-center">
-                {isAr ? "عنوان الفاتورة" : "BILLING ADDRESS"}
+                {"BILLING ADDRESS"}
               </h3>
               <button
                 type="button"
@@ -1405,7 +1373,7 @@ function CheckoutContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    {isAr ? "الاسم الأول" : "First Name"}
+                    {"First Name"}
                   </label>
                   <input
                     type="text"
@@ -1416,7 +1384,7 @@ function CheckoutContent() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    {isAr ? "اسم العائلة" : "Last Name"}
+                    {"Last Name"}
                   </label>
                   <input
                     type="text"
@@ -1430,7 +1398,7 @@ function CheckoutContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    {isAr ? "الشركة" : "Company"}
+                    {"Company"}
                   </label>
                   <input
                     type="text"
@@ -1441,7 +1409,7 @@ function CheckoutContent() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    {isAr ? "عنوان الشارع" : "Street Address"} <span className="text-red-500">*</span>
+                    {"Street Address"} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -1455,7 +1423,7 @@ function CheckoutContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    {isAr ? "رقم الهاتف المتحرك" : "Mobile Number"}
+                    {"Mobile Number"}
                   </label>
                   <input
                     type="tel"
@@ -1467,7 +1435,7 @@ function CheckoutContent() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    {isAr ? "المدينة" : "City"}
+                    {"City"}
                   </label>
                   <div className="relative">
                     <select
@@ -1475,7 +1443,7 @@ function CheckoutContent() {
                       onChange={(e) => setModalAddress((prev) => ({ ...prev, city: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 outline-none focus:border-black transition-all appearance-none pr-9 cursor-pointer bg-white"
                     >
-                      <option value="">{isAr ? "اختر المدينة" : "Select City"}</option>
+                      <option value="">{"Select City"}</option>
                       {(cities.length > 0
                         ? cities
                         : [
@@ -1507,7 +1475,7 @@ function CheckoutContent() {
                     className="w-4 h-4 rounded text-black accent-black cursor-pointer"
                   />
                   <span className="text-xs text-gray-800 font-medium">
-                    {isAr ? "حفظ في دفتر العناوين" : "Save in address book"}
+                    {"Save in address book"}
                   </span>
                 </label>
               </div>
@@ -1518,7 +1486,7 @@ function CheckoutContent() {
                   type="button"
                   onClick={() => {
                     if (!modalAddress.firstname || !modalAddress.street || !modalAddress.city) {
-                      alert(isAr ? "يرجى ملء الاسم وعنوان الشارع والمدينة." : "Please fill in First Name, Street Address, and City.");
+                      alert("Please fill in First Name, Street Address, and City.");
                       return;
                     }
                     setForm(modalAddress);
@@ -1534,14 +1502,14 @@ function CheckoutContent() {
                   }}
                   className="bg-black hover:bg-[#ed1c24] text-white text-xs font-bold px-7 py-2.5 rounded-md transition-colors cursor-pointer"
                 >
-                  {isAr ? "الشحن إلى هنا" : "Ship Here"}
+                  {"Ship Here"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowNewAddressModal(false)}
                   className="bg-black hover:bg-neutral-800 text-white text-xs font-bold px-7 py-2.5 rounded-md transition-colors cursor-pointer"
                 >
-                  {isAr ? "إلغاء" : "Cancel"}
+                  {"Cancel"}
                 </button>
               </div>
             </div>

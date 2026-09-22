@@ -19,7 +19,7 @@ import {
   Gauge,
 } from "lucide-react";
 import { useScrollLock } from "@/lib/useScrollLock";
-import { buildFilterParams } from "@/lib/filterBuilder";
+import { buildFilterParams, buildTyreSizeSlug } from "@/lib/filterBuilder";
 import { APP_CONFIG } from "@/src/config/app-config";
 
 /* ── types ───────────────────────────────────────────────────────── */
@@ -180,6 +180,12 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
   const effectiveCategoryUid =
     categoryUid ?? (isMotorcyclePage ? APP_CONFIG.magento.motorcycleCategoryUid : undefined);
   const isSizeOnly = Boolean(sizeOnly || isMotorcyclePage);
+  // The root "Tyres" category's own uid (passed down on every /tyres page
+  // once its category data loads) isn't a real scope — only a genuinely
+  // different category (e.g. motorcycle) should keep the query-string
+  // fallback instead of the canonical size-slug URL.
+  const isScopedCategory =
+    !!effectiveCategoryUid && effectiveCategoryUid !== APP_CONFIG.magento.tyresCategoryUid;
 
   /* ── category param included in every size request ─────────────── */
   const catParam: Record<string, string> = effectiveCategoryUid ? { category_uid: effectiveCategoryUid } : {};
@@ -551,9 +557,17 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
       filterObj.rear_height = selRearHeight;
       filterObj.rear_rim = selRearRim;
     }
-    router.push(
-      `${dest}?${appendCategory(buildFilterParams(filterObj, [...SIZE_FIELDS]))}`
-    );
+    // Plain, unscoped tyres search → the canonical SEO size URL. A
+    // brand/category-scoped instance (basePath or effectiveCategoryUid set)
+    // keeps the existing query-string behavior — no slug route exists for
+    // those scoped contexts.
+    if (!isScopedCategory) {
+      router.push(buildTyreSizeSlug(filterObj));
+    } else {
+      router.push(
+        `${dest}?${appendCategory(buildFilterParams(filterObj, [...SIZE_FIELDS]))}`
+      );
+    }
   };
 
   const handleVehicleSearch = (e: React.FormEvent) => {
@@ -570,11 +584,15 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
       filterObj.rear_height = selSize.rear.height;
       filterObj.rear_rim = selSize.rear.rim;
     }
-    router.push(
-      `${dest}?${appendCategory(
-        buildFilterParams(filterObj, [...SIZE_FIELDS])
-      )}`
-    );
+    if (!isScopedCategory) {
+      router.push(buildTyreSizeSlug(filterObj));
+    } else {
+      router.push(
+        `${dest}?${appendCategory(
+          buildFilterParams(filterObj, [...SIZE_FIELDS])
+        )}`
+      );
+    }
   };
 
   /* ── size modal helpers ────────────────────────────────────────── */
@@ -785,11 +803,15 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
       filterObj.rear_height = s.rear.height;
       filterObj.rear_rim = s.rear.rim;
     }
-    router.push(
-      `${dest}?${appendCategory(
-        buildFilterParams(filterObj, [...SIZE_FIELDS])
-      )}`
-    );
+    if (!isScopedCategory) {
+      router.push(buildTyreSizeSlug(filterObj));
+    } else {
+      router.push(
+        `${dest}?${appendCategory(
+          buildFilterParams(filterObj, [...SIZE_FIELDS])
+        )}`
+      );
+    }
     closeVeh();
   };
 

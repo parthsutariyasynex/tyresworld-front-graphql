@@ -31,7 +31,6 @@ type Slide = {
  * same `banners` shape the previous hero used.
  */
 export default function PartoraHero({ locale }: { locale: string }) {
-  const isAr = locale === "ar";
   const swiperRef = useRef<SwiperType | null>(null);
   const reducedMotion = usePrefersReducedMotion();
 

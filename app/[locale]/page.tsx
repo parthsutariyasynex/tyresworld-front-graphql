@@ -11,9 +11,9 @@ import AutomotiveBlog from "@/components/AutomotiveBlog";
 
 export const dynamic = "force-dynamic";
 
-// Pre-generate the home page for supported locales
+// Pre-generate the home page — English-only storefront
 export function generateStaticParams() {
-  return [{ locale: "en" }, { locale: "ar" }];
+  return [{ locale: "en" }];
 }
 
 /**
@@ -24,7 +24,7 @@ export default function LocaleHomePage({
 }: {
   params?: { locale?: string };
 }) {
-  const locale = params?.locale === "ar" ? "ar" : "en";
+  const locale = "en";
 
   return (
     <div className="ptr-home">

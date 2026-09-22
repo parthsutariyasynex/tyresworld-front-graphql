@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 import StickyBottomFinder from "@/components/home/partora/StickyBottomFinder";
+import PageHeroBanner from "@/components/PageHeroBanner";
+import { buildBrandSlug } from "@/lib/filterBuilder";
 
 /** One entry as /api/brands returns it (real Magento kleverBrands data). */
 type Brand = {
@@ -14,6 +16,7 @@ type Brand = {
   category: string;
   isFeatured: boolean;
   sortOrder: number;
+  urlKey?: string;
 };
 
 /* Real brand_category values (confirmed live) → the real product-listing
@@ -30,20 +33,10 @@ const CATEGORY_SLUGS: Record<string, string> = {
   "Wheel Alignment": "rim-protectors",
 };
 const CATEGORY_ORDER = Object.keys(CATEGORY_SLUGS);
-const CATEGORY_LABELS_AR: Record<string, string> = {
-  "Tyres": "الإطارات",
-  "Battery": "البطاريات",
-  "Wheels": "الجنوط",
-  "Motorcycle Tyres": "إطارات الدراجات",
-  "Wheel Alignment": "محاذاة العجلات",
-  "Other": "أخرى",
-};
 
 export default function BrandsPageInner() {
   const router = useRouter();
-  const pathname = usePathname();
-  const locale = (pathname.split("/")[1] === "ar" ? "ar" : "en") as Locale;
-  const isAr = locale === "ar";
+  const locale = "en" as Locale;
 
   const [allBrands, setAllBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,15 +112,27 @@ export default function BrandsPageInner() {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
   const handleBrandClick = (brand: Brand) => {
-    const slug = activeTab && CATEGORY_SLUGS[activeTab] ? CATEGORY_SLUGS[activeTab] : "tyres";
-    router.push(`/${locale}/${slug}?mgs_brand=${encodeURIComponent(brand.filterValue)}`);
+    const isTyres = !activeTab || activeTab === "Tyres" || activeTab === "Other";
+    if (isTyres) {
+      const brandSlug = buildBrandSlug({ name: brand.name, url_key: brand.urlKey });
+      router.push(`/tyres/brand/${brandSlug}`);
+    } else {
+      const slug = activeTab && CATEGORY_SLUGS[activeTab] ? CATEGORY_SLUGS[activeTab] : "tyres";
+      router.push(`/${slug}?mgs_brand=${encodeURIComponent(brand.filterValue)}`);
+    }
   };
 
-  const tabLabel = (cat: string) => (isAr ? CATEGORY_LABELS_AR[cat] ?? cat : cat);
+  const tabLabel = (cat: string) => cat;
 
   return (
-    <div dir={isAr ? "rtl" : "ltr"} className="bg-white pt-6 sm:pt-8 pb-8 sm:pb-12 font-sans">
-      <div className="container mx-auto max-w-7xl px-4 sm:px-6">
+    <div dir="ltr" className="bg-white pb-8 sm:pb-12 font-sans">
+      <PageHeroBanner
+        title="Shop by Brand"
+        description="Choose from trusted tyre brands, exact fitment, and great deals across the UAE."
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "Brands" }]}
+      />
+
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 pt-6 sm:pt-8">
 
         {/* ── 1. Category Switcher — built from whichever real brand_category
               values kleverBrands actually returns, not a hardcoded pair ── */}
@@ -163,18 +168,14 @@ export default function BrandsPageInner() {
             <div className="relative">
               <input
                 type="text"
-                placeholder={
-                  isAr
-                    ? "ابدأ بكتابة اسم العلامة التجارية..."
-                    : "Start typing brand name.."
-                }
+                placeholder="Start typing brand name.."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-white border border-gray-200 rounded-xl px-4 pr-12 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#ed1c24] focus:ring-1 focus:ring-[#ed1c24] transition-all shadow-xs"
               />
               <Search
                 size={20}
-                className={`absolute ${isAr ? "left-4" : "right-4"} top-1/2 -translate-y-1/2 text-[#ed1c24]`}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#ed1c24]"
               />
             </div>
 
@@ -189,7 +190,7 @@ export default function BrandsPageInner() {
                     : "bg-white text-gray-700 border border-gray-200 hover:border-gray-400 hover:text-black shadow-2xs"
                 }`}
               >
-                {isAr ? "الكل" : "ALL"}
+                {"ALL"}
               </button>
 
               {alphabet.map((letter) => {
@@ -219,12 +220,10 @@ export default function BrandsPageInner() {
         {/* ── 3. Section Title ───────────────────────────────────────── */}
         <div className="text-center mb-10">
           <p className="text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-widest mb-1.5">
-            {activeTab ? `${tabLabel(activeTab)} ${isAr ? "" : "Brands"}` : ""}
+            {activeTab ? `${tabLabel(activeTab)} Brands` : ""}
           </p>
           <h1 className="text-xl sm:text-2xl md:text-[28px] font-black uppercase tracking-tight text-gray-950">
-            {isAr
-              ? "مجموعة واسعة من العلامات التجارية الموثوقة"
-              : `WIDE RANGE OF TRUSTED ${activeTab ? activeTab.toUpperCase() : ""} BRANDS`}
+            {`WIDE RANGE OF TRUSTED ${activeTab ? activeTab.toUpperCase() : ""} BRANDS`}
           </h1>
         </div>
 
@@ -241,7 +240,7 @@ export default function BrandsPageInner() {
         ) : filteredBrands.length === 0 ? (
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-12 text-center max-w-md mx-auto shadow-xs">
             <p className="text-gray-500 text-sm font-bold">
-              {isAr ? "لا توجد علامات تجارية مطابقة" : "No matching brands found."}
+              {"No matching brands found."}
             </p>
           </div>
         ) : (

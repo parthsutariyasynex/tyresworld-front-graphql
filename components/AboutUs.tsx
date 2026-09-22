@@ -38,32 +38,6 @@ const DEFAULT_CONTENT_EN: ContentItem[] = [
   },
 ];
 
-const DEFAULT_CONTENT_AR: ContentItem[] = [
-  {
-    text: "تايرز وورلد (TyresWorld.ae) هو سوق إلكتروني رائد للإطارات مع شبكة مراكز تركيب شريكة في جميع أنحاء الإمارات. نساعدك في اختيار الإطارات التي تناسب سيارتك وعادات قيادتك وميزانيتك، سواء كنت تقود على الطرق السريعة أو الطرق الوعرة.",
-  },
-  {
-    prefix: "تصفح حسب المقاس والماركة ونوع السيارة:",
-    text: "لست متأكداً من الإطارات المناسبة لسيارتك؟ تصفح خيارات الإطارات باستخدام فلاتر البحث حسب مقاس الإطار، وأكثر من 50 ماركة عالمية وأنواع السيارات المختلفة سواء كانت سيارة صالون أو دفع رباعي أو SUV مع مطابقة دقيقة وتجربة شراء سلسة.",
-  },
-  {
-    prefix: "إطارات مصممة لظروف الإمارات الخاصة:",
-    text: "يمكن للإطار العادي أن يفقد تماسكه ويتعرض للتلف عند ارتفاع درجات الحرارة. لهذا السبب نقدم في تايرز وورلد إطارات مصممة خصيصاً لمناخ وطرق الإمارات بمواد مقاومة للحرارة ونقشات مداس متينة لضمان أمانك في كافة الظروف.",
-  },
-  {
-    prefix: "تسوق وفقاً لاحتياجات قيادتك:",
-    text: "إذا كنت تقود في الغالب داخل المدينة، فإن الإطارات العادية لجميع المواسم هي الخيار الأنسب. أما إذا كنت تفضل الطرق الوعرة والقيادة الحماسية، فنحن هنا لمساعدتك. تواصل معنا لمساعدتك في اختيار وشراء الإطارات عبر الإنترنت بسهولة.",
-  },
-  {
-    prefix: "احصل على أفضل جودة بأنسب الأسعار:",
-    text: "نحن ملتزمون بتزويدك بإطارات عالية الجودة من أفضل ماركات الإطارات في الإمارات بأسعار تنافسية للغاية. مع عروضنا الحصرية، يمكنك شراء إطارات ممتازة دون المساومة على الجودة أو السعر.",
-  },
-  {
-    prefix: "إرشادات متخصصة للعناية بالإطارات:",
-    text: "في تايرز وورلد، هدفنا هو تزويدك بالمشورة والدعم المستمر للحفاظ على إطاراتك لفترة أطول وضمان أفضل أداء وسلامة على الطريق.",
-  },
-];
-
 function parseParagraph(raw: string): ContentItem {
   const cleaned = raw
     .replace(/TyresCart\.ae/gi, "TyresWorld.ae")
@@ -83,7 +57,6 @@ function parseParagraph(raw: string): ContentItem {
 }
 
 export default function AboutUs({ locale = "en" }: AboutUsProps) {
-  const isAr = locale === "ar";
   const [aboutData, setAboutData] = useState<KleverHomeAbout | null>(null);
 
   useEffect(() => {
@@ -101,12 +74,10 @@ export default function AboutUs({ locale = "en" }: AboutUsProps) {
     };
   }, [locale]);
 
-  const defaultContent = isAr ? DEFAULT_CONTENT_AR : DEFAULT_CONTENT_EN;
-
   const contentItems: ContentItem[] =
     aboutData?.paragraphs && aboutData.paragraphs.length > 0
       ? aboutData.paragraphs.map(parseParagraph)
-      : defaultContent;
+      : DEFAULT_CONTENT_EN;
 
   return (
     <section className="section section-padding site-details bg-[#f8f9fa] py-14 lg:py-16 border-t border-b border-gray-200/70">
@@ -114,15 +85,15 @@ export default function AboutUs({ locale = "en" }: AboutUsProps) {
         {/* Section Heading */}
         <div className="mb-7 text-center">
           <h2 className="font-sans text-2xl sm:text-3xl lg:text-[32px] font-black uppercase tracking-tight text-gray-950 m-0 leading-tight">
-            {isAr ? "الوجهة الأولى في الإمارات لشراء " : "THE UAE’S PREMIER DESTINATION FOR "}{" "}
+            {"THE UAE’S PREMIER DESTINATION FOR "}{" "}
             <span className="text-[#ed1c24] theme_color">
-              {isAr ? "الإطارات عبر الإنترنت" : "TYRES ONLINE"}
+              {"TYRES ONLINE"}
             </span>
           </h2>
         </div>
 
         {/* Text Content */}
-        <div className="text-content max-w-4xl mx-auto space-y-4 text-left rtl:text-right">
+        <div className="text-content max-w-4xl mx-auto space-y-4 text-left">
           {contentItems.map((item, i) => (
             <p
               key={i}

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { Money } from "@/components/Price";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 type OrderV2 = {
   number:        string;
@@ -78,11 +79,11 @@ function CheckoutCompleteInner() {
   if (state.phase === "loading") {
     return (
       <>
-        <div className="bg-black py-12 text-center">
-          <div className="container">
-            <h1 className="text-3xl font-black uppercase tracking-wider text-white">PROCESSING PAYMENT</h1>
-          </div>
-        </div>
+        <PageHeroBanner
+          title="Processing Payment"
+          breadcrumb={[{ label: "Home", href: "/" }, { label: "Checkout" }]}
+          showCta={false}
+        />
         <div className="container py-24 text-center max-w-sm mx-auto">
           <Loader2 size={40} className="animate-spin text-gray-300 mx-auto mb-6" />
           <p className="text-gray-500 text-sm font-medium">Confirming your payment, please wait…</p>
@@ -95,11 +96,11 @@ function CheckoutCompleteInner() {
   if (state.phase === "error") {
     return (
       <>
-        <div className="bg-black py-12 text-center">
-          <div className="container">
-            <h1 className="text-3xl font-black uppercase tracking-wider text-white">PAYMENT ISSUE</h1>
-          </div>
-        </div>
+        <PageHeroBanner
+          title="Payment Issue"
+          breadcrumb={[{ label: "Home", href: "/" }, { label: "Checkout" }]}
+          showCta={false}
+        />
         <div className="container py-20 text-center max-w-md mx-auto">
           <div className="w-20 h-20 rounded-full bg-red-50 border-2 border-red-200 flex items-center justify-center mx-auto mb-6">
             <AlertCircle size={36} className="text-[#ed1c24]" />
@@ -132,11 +133,10 @@ function CheckoutCompleteInner() {
 
   return (
     <>
-      <div className="bg-black py-12 text-center">
-        <div className="container">
-          <h1 className="text-3xl font-black uppercase tracking-wider text-white">ORDER CONFIRMED</h1>
-        </div>
-      </div>
+      <PageHeroBanner
+        title="Order Confirmed"
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "Order Confirmed" }]}
+      />
       <div className="container py-20 text-center max-w-md mx-auto">
         <div className="w-20 h-20 rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center mx-auto mb-6">
           <CheckCircle size={36} className="text-emerald-600" />

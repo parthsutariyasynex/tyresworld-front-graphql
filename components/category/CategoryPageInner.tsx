@@ -3,11 +3,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Home } from "lucide-react";
+import { SORT_OPTS } from "@/components/category/sortOptions";
 import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
 import StaggeredTyreCard from "@/components/StaggeredTyreCard";
 import TyreFinder from "@/components/TyreFinder";
+import CategoryFilterBar from "@/components/category/CategoryFilterBar";
 import StickyBottomFinder from "@/components/home/partora/StickyBottomFinder";
 import CategorySeoSection from "@/components/CategorySeoSection";
 import TyreGuideSeoContent from "@/components/TyreGuideSeoContent";
@@ -16,6 +18,7 @@ import { storeCode, type Locale } from "@/lib/i18n";
 import FilterPanel, { type FilterGroup } from "@/components/FilterPanel";
 import type { Product } from "@/lib/data";
 import Pagination from "@/components/tyre/Pagination";
+import { buildBrandSlug } from "@/lib/filterBuilder";
 
 const PAGE_SIZE = 12;
 
@@ -92,26 +95,12 @@ function parseFaqsFromHtml(html: string): FaqItem[] {
 }
 
 /* ── Sort dropdown (Exact Magento toolbar-sorter options) ──────── */
-const SORT_OPTS = [
-  { en: "PRICE: LOW TO HIGH", ar: "السعر: من الأدنى إلى الأعلى", value: "low-to-high" },
-  { en: "PRICE: HIGH TO LOW", ar: "السعر: من الأعلى إلى الأدنى", value: "high-to-low" },
-  { en: "Recommended",        ar: "موصى به",                     value: "recommended" },
-];
-
-function SortBar({ value, onChange, isAr }: { value: string; onChange: (v: string) => void; isAr: boolean }) {
+function SortBar({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const cur = SORT_OPTS.find(o => o.value === value) ?? SORT_OPTS[0];
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(v => !v)}
-        className="h-10 px-5 bg-[#eeeeee] hover:bg-[#e2e2e2] text-gray-900 font-black text-[12px] uppercase tracking-wider rounded-xl transition-colors cursor-pointer flex items-center justify-center shadow-2xs"
-        aria-label={isAr ? "ترتيب" : "Sort"}
-      >
-        <span>{isAr ? cur.ar : cur.en}</span>
-      </button>
 
       {open && (
         <>
@@ -125,7 +114,7 @@ function SortBar({ value, onChange, isAr }: { value: string; onChange: (v: strin
                   opt.value === value ? "text-[#ed1c24] bg-red-50" : "text-gray-800 hover:bg-gray-50"
                 }`}
               >
-                {isAr ? opt.ar : opt.en}
+                {opt.en}
               </button>
             ))}
           </div>
@@ -150,6 +139,23 @@ export interface CategoryPageInnerProps {
   hideHeroBanner?: boolean;
   /** Hide the breadcrumb bar */
   hideBreadcrumbs?: boolean;
+  /** Custom base path for pagination/sort/filter URL updates */
+  basePath?: string;
+  /** Fixed brand filter to apply to all queries (e.g. "Kumho") */
+  brandFilter?: string;
+  /** Brand logo URL to display in hero banner if applicable */
+  brandLogo?: string;
+  /** Brand description from API */
+  brandDescription?: string | null;
+  /** Tyre-size filters parsed from a canonical /tyres/<w-h-r> slug URL —
+      seeded into `selected` the same way `brandFilter` already is, so the
+      existing filter/fetch logic below needs no changes at all. */
+  sizeFilters?: Record<string, string>;
+  /** Non-size filters (year, pattern, etc.) parsed from a canonical
+      /tyres/<code>/<value> slug URL — same seeding mechanism as
+      `sizeFilters`, kept as its own prop so the size-URL wiring above is
+      never touched by this. */
+  pathFilters?: Record<string, string>;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -162,13 +168,18 @@ export default function CategoryPageInner({
   showTyreFinder,
   hideHeroBanner,
   hideBreadcrumbs,
+  basePath: basePathProp,
+  brandFilter,
+  brandLogo,
+  brandDescription,
+  sizeFilters,
+  pathFilters,
 }: CategoryPageInnerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const dir = locale === "ar" ? "rtl" : "ltr";
+  const dir = "ltr";
   const store = storeCode(locale);
-  const basePath = `/${locale}/${urlKey}`;
-  const isAr = locale === "ar";
+  const basePath = basePathProp ?? `/${urlKey}`;
 
   // "low-to-high" is the real default — matches the live site's actual
   // default ordering (Magento's own store-level "Default Sort By"), and
@@ -214,6 +225,19 @@ export default function CategoryPageInner({
       if (SYSTEM_PARAMS.has(key)) continue;
       if (val) initial[key] = val.split(",").filter(Boolean);
     }
+    if (brandFilter && !initial.mgs_brand) {
+      initial.mgs_brand = [brandFilter];
+    }
+    if (sizeFilters) {
+      for (const [key, val] of Object.entries(sizeFilters)) {
+        if (val && !initial[key]) initial[key] = [val];
+      }
+    }
+    if (pathFilters) {
+      for (const [key, val] of Object.entries(pathFilters)) {
+        if (val && !initial[key]) initial[key] = [val];
+      }
+    }
     return initial;
   });
 
@@ -226,7 +250,20 @@ export default function CategoryPageInner({
         initial[key] = val.split(",").filter(Boolean);
       }
     }
-    
+    if (brandFilter && !initial.mgs_brand && basePath.startsWith("/tyres/brand/")) {
+      initial.mgs_brand = [brandFilter];
+    }
+    if (sizeFilters) {
+      for (const [key, val] of Object.entries(sizeFilters)) {
+        if (val && !initial[key]) initial[key] = [val];
+      }
+    }
+    if (pathFilters) {
+      for (const [key, val] of Object.entries(pathFilters)) {
+        if (val && !initial[key]) initial[key] = [val];
+      }
+    }
+
     setSelected(prev => {
       const prevKeys = Object.keys(prev).filter(k => prev[k]?.length > 0).sort();
       const newKeys = Object.keys(initial).filter(k => initial[k]?.length > 0).sort();
@@ -243,7 +280,7 @@ export default function CategoryPageInner({
       if (same) return prev;
       return initial;
     });
-  }, [searchParams]);
+  }, [searchParams, brandFilter, basePath, sizeFilters, pathFilters]);
 
   const [cmsContent, setCmsContent] = useState<string | null>(null);
   const [cmsLoading, setCmsLoading] = useState(true);
@@ -270,6 +307,9 @@ export default function CategoryPageInner({
     if (query) p.set("q", query);
     for (const [code, values] of Object.entries(selected)) {
       if (values.length) p.set(code, values.join(","));
+    }
+    if (brandFilter && !selected.mgs_brand?.length && basePath.startsWith("/tyres/brand/")) {
+      p.set("mgs_brand", brandFilter);
     }
 
     const url = `/api/category-page?${p}`;
@@ -361,7 +401,7 @@ export default function CategoryPageInner({
         setFiltersLoading(false);
         setFilterGroups([]);
       });
-  }, [urlKey, sort, page, store, selected, searchParams]);
+  }, [urlKey, sort, page, store, selected, searchParams, brandFilter, basePath]);
 
   /* ── Filters ─────────────────────────────────────────────────────
      No separate request: the layered-nav aggregations arrive with the
@@ -384,10 +424,11 @@ export default function CategoryPageInner({
     }
   }, [category]);
 
-  /* ── SEO / FAQ from category description ─────────────────────── */
+  /* ── SEO / FAQ from category or brand description ─────────────── */
   useEffect(() => {
-    if (!category?.description) { setCmsLoading(false); setFaqLoading(false); return; }
-    const raw = category.description
+    const desc = brandDescription || category?.description;
+    if (!desc) { setCmsLoading(false); setFaqLoading(false); return; }
+    const raw = desc
       .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
       .replace(/&amp;/g, "&").replace(/\\"/g, '"')
       .replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n");
@@ -399,7 +440,7 @@ export default function CategoryPageInner({
 
     setCmsContent(seoHtml.trim() || null); setCmsLoading(false);
     setFaqs(parseFaqsFromHtml(raw)); setFaqLoading(false);
-  }, [category]);
+  }, [category, brandDescription]);
 
   /* ── URL helpers ──────────────────────────────────────────────── */
   const setSort = useCallback((v: string) => {
@@ -417,6 +458,46 @@ export default function CategoryPageInner({
   }, [router, searchParams, basePath]);
 
   const handleFilterChange = (code: string, values: string[]) => {
+    setSelected((prev) => {
+      const next = { ...prev };
+      if (values.length) {
+        next[code] = values;
+      } else {
+        delete next[code];
+      }
+      return next;
+    });
+    requestUrlRef.current = null;
+
+    const isBrand = code === "mgs_brand" || code === "brand";
+
+    // When a brand is selected on general /tyres or brand page, always route to the canonical /tyres/brand/{brand-slug} SEO URL
+    if (isBrand && values.length === 1 && (basePath === "/tyres" || basePath.startsWith("/tyres/brand/"))) {
+      const brandGroup = filterGroups.find((g) => g.code === code || g.code === "mgs_brand" || g.code === "brand");
+      const opt = brandGroup?.options.find((o) => o.value === values[0] || o.label === values[0]);
+      const brandName = opt?.label || values[0];
+      const brandSlug = buildBrandSlug(brandName);
+      if (brandSlug) {
+        const p = new URLSearchParams(searchParams.toString());
+        p.delete("mgs_brand");
+        p.delete("brand");
+        p.delete("page");
+        const query = p.toString() ? `?${p}` : "";
+        router.replace(`/tyres/brand/${brandSlug}${query}`, { scroll: false });
+        return;
+      }
+    }
+
+    // If on a brand sub-route and brand is cleared, navigate back to /tyres preserving other filters
+    if (isBrand && !values.length && basePath.startsWith("/tyres/brand/")) {
+      const p = new URLSearchParams(searchParams.toString());
+      p.delete("mgs_brand");
+      p.delete("brand");
+      p.delete("page");
+      router.replace(p.toString() ? `/tyres?${p}` : "/tyres", { scroll: false });
+      return;
+    }
+
     const p = new URLSearchParams(searchParams.toString());
     if (values.length) {
       p.set(code, values.join(","));
@@ -427,17 +508,17 @@ export default function CategoryPageInner({
     router.replace(`${basePath}?${p}`, { scroll: false });
   };
 
-  /* Remove every applied filter in a single navigation. Looping
-     handleFilterChange raced on the same stale searchParams snapshot, so
-     only the last code was dropped — this is why "Clear All" left filters
-     behind. Keep the system params (sort, search); drop page. */
+  /* Remove every applied filter in a single navigation. */
   const clearAllFilters = () => {
+    setSelected({});
+    requestUrlRef.current = null;
     const p = new URLSearchParams();
     const order = searchParams.get("product_list_order") ?? searchParams.get("sort");
     const q = searchParams.get("q");
     if (order) p.set("product_list_order", order);
     if (q) p.set("q", q);
-    router.replace(p.toString() ? `${basePath}?${p}` : basePath, { scroll: false });
+    const targetBase = basePath.startsWith("/tyres/brand/") ? "/tyres" : basePath;
+    router.replace(p.toString() ? `${targetBase}?${p}` : targetBase, { scroll: false });
   };
 
   const sidebarFilterCount = Object.entries(selected)
@@ -514,94 +595,235 @@ export default function CategoryPageInner({
       }
     : undefined;
 
-  const productsLabel = isAr
-    ? `${total.toLocaleString("ar-SA")} إطار`
-    : `${total.toLocaleString()} Tyres`;
+  const productsLabel = `${total.toLocaleString()} Tyres`;
 
   return (
     <div dir={dir}>
 
-      {/* ── Page title ─────────────────────────────────────────────
-           Mirrors the theme's .page-title-wrapper > .title > h1 > span.base */}
+      {/* ── PLP Hero Banner (Dark-to-Light Red Gradient Card) ─────────────── */}
       {!hideHeroBanner && (
-        <div
-          className={`page-title-wrapper bg-cover-image ${
-            categoryBgImage
-              ? bannerAspectRatio
-                ? "shadow-inner"
-                : "!py-16 sm:!py-24 md:!py-28 lg:!py-36 shadow-inner"
-              : ""
-          }`}
-          style={heroBannerStyle}
-        >
-          <div className="container custom-width">
-            <div className="title">
-              {/* A configured heroTitle is known on the server, so render the
-                  H1 straight away and only fall back to a skeleton when the
-                  title has to come from the category name we're still loading. */}
-              {catLoading && !displayTitle ? (
-                <span className="page-title-skeleton" aria-hidden="true" />
-              ) : (
-                <h1 id="page-title-heading" className={hasBakedInTitle ? "sr-only" : ""}>
-                  <span className="base" data-ui-id="page-title-wrapper">
-                    {displayTitle}
-                  </span>
-                </h1>
+        <div className="bg-gray-50 pt-2 pb-0.5">
+          <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#780a0f] via-[#b31219] to-[#ed1c24] p-3.5 sm:p-4 md:p-5 shadow-md border border-red-900/15">
+              {/* Background ambient lighting and subtle decorative wave */}
+              <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 rounded-full bg-black/25 blur-3xl pointer-events-none" />
+              
+              {/* ── Main Banner Content (Centered) ── */}
+              <div className="relative z-10 flex flex-col items-center justify-center text-center">
+                {/* Banner Content */}
+                <div className="max-w-5xl mx-auto text-center flex flex-col items-center justify-center">
+                  {catLoading && !displayTitle ? (
+                    <div className="space-y-2 w-full flex flex-col items-center">
+                      <div className="h-7 sm:h-8 bg-white/20 rounded-lg w-3/4 animate-pulse mx-auto" />
+                      <div className="h-3.5 bg-white/10 rounded w-1/2 animate-pulse mx-auto" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-center text-center w-full">
+                        <h1
+                          id="page-title-heading"
+                          className="text-lg sm:text-2xl md:text-[26px] font-black text-white tracking-tight leading-tight drop-shadow-sm text-center"
+                        >
+                          <span className="base relative z-10" data-ui-id="page-title-wrapper">
+                            {displayTitle}
+                          </span>
+                        </h1>
+                      </div>
+
+                      <p className="mt-1 sm:mt-1.5 text-[11px] sm:text-xs md:text-[13px] text-white/95 leading-relaxed font-normal max-w-4xl mx-auto text-center md:whitespace-nowrap">
+                        {brandFilter
+                          ? `Shop genuine ${brandFilter} tyres online in UAE at TyresWorld. Free mobile tyre fitting in Dubai, Abu Dhabi & Sharjah, manufacturer warranty, and best prices.`
+                          : "Shop premium tyres in UAE with free mobile fitting, manufacturer warranty, and best prices across Dubai, Abu Dhabi, and UAE."}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Breadcrumb Inside Banner (Centered Connected Ribbon Style) ── */}
+              {!hideBreadcrumbs && (
+                <div className="relative z-10 flex justify-center w-full mt-3 sm:mt-4">
+                  <nav className="inline-flex items-center gap-1 p-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-full shadow-lg max-w-full overflow-x-auto custom-scrollbar">
+                    <Link
+                      href="/"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold shrink-0 group"
+                    >
+                      <span className="w-4 h-4 rounded-full bg-white/15 flex items-center justify-center text-white group-hover:bg-white group-hover:text-red-600 transition-colors">
+                        <Home size={10} />
+                      </span>
+                      <span>{"Home"}</span>
+                    </Link>
+                    {brandFilter ? (
+                      <>
+                        <ChevronRight size={11} className="shrink-0 text-white/40 -mx-0.5" />
+                        <Link
+                          href="/tyres"
+                          className="inline-flex items-center px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold shrink-0"
+                        >
+                          {"Tyres"}
+                        </Link>
+                        <ChevronRight size={11} className="shrink-0 text-white/40 -mx-0.5" />
+                        <Link
+                          href="/brands"
+                          className="inline-flex items-center px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold shrink-0"
+                        >
+                          {"Brands"}
+                        </Link>
+                        <ChevronRight size={11} className="shrink-0 text-white/40 -mx-0.5" />
+                        <span className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 bg-white text-gray-950 font-black text-xs uppercase tracking-wide rounded-full shadow-md border border-white shrink-0">
+                          <span className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                          </span>
+                          <span>{brandFilter}</span>
+                        </span>
+                      </>
+                    ) : (
+                      (() => {
+                        const segments = urlKey.split("/").filter(Boolean);
+                        let acc = "";
+                        return segments.map((seg, idx) => {
+                          const isLast = idx === segments.length - 1;
+                          acc += (acc ? `/${seg}` : seg);
+                          const segLower = seg.toLowerCase();
+
+                          let label = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
+                          let href = `/${acc}`;
+
+                          if (segLower === "tyres") {
+                            label = "Tyres";
+                            href = "/tyres";
+                          } else if (segLower === "brand" || segLower === "brands") {
+                            label = "Brand";
+                            href = "/brands";
+                          } else if (isLast && category?.name) {
+                            label = category.name;
+                          }
+
+                          return (
+                            <React.Fragment key={acc}>
+                              <ChevronRight size={11} className="shrink-0 text-white/40 -mx-0.5" />
+                              {isLast ? (
+                                <span className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 bg-white text-gray-950 font-black text-xs uppercase tracking-wide rounded-full shadow-md border border-white shrink-0">
+                                  <span className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                  </span>
+                                  <span>
+                                    {catLoading && !category?.name ? (
+                                      <span className="inline-block bg-gray-300 rounded animate-pulse w-14 h-3 align-middle" />
+                                    ) : (
+                                      label
+                                    )}
+                                  </span>
+                                </span>
+                              ) : (
+                                <Link
+                                  href={href}
+                                  className="inline-flex items-center px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold shrink-0"
+                                >
+                                  {label}
+                                </Link>
+                              )}
+                            </React.Fragment>
+                          );
+                        });
+                      })()
+                    )}
+                  </nav>
+                </div>
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Breadcrumb (Home > Tyres > Brand > Sailun) ─────────────── */}
-      {!hideBreadcrumbs && (
+      {/* ── Breadcrumb fallback (when hero banner is hidden) ─────────── */}
+      {hideHeroBanner && !hideBreadcrumbs && (
         <div className="bg-white border-b border-gray-100">
-          <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
-            <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap font-medium">
-              <Link href={`/${locale}`} className="hover:text-black transition-colors">
-                {isAr ? "الرئيسية" : "Home"}
-              </Link>
-              {(() => {
-                const segments = urlKey.split("/").filter(Boolean);
-                let acc = "";
-                return segments.map((seg, idx) => {
-                  const isLast = idx === segments.length - 1;
-                  acc += (acc ? `/${seg}` : seg);
-                  const segLower = seg.toLowerCase();
-                  
-                  let label = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
-                  let href = `/${locale}/${acc}`;
+          <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <nav className="flex justify-center w-full">
+              <div className="inline-flex items-center gap-1 p-1 bg-gray-100/90 border border-gray-200/80 rounded-full shadow-2xs text-xs font-medium max-w-full overflow-x-auto custom-scrollbar">
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-gray-600 hover:text-gray-950 hover:bg-white transition-all text-xs font-semibold shrink-0 group"
+                >
+                  <span className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
+                    <Home size={10} />
+                  </span>
+                  <span>{"Home"}</span>
+                </Link>
+                {brandFilter ? (
+                  <>
+                    <ChevronRight size={11} className="shrink-0 text-gray-400 -mx-0.5" />
+                    <Link
+                      href="/tyres"
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-gray-600 hover:text-gray-950 hover:bg-white transition-all text-xs font-semibold shrink-0"
+                    >
+                      {"Tyres"}
+                    </Link>
+                    <ChevronRight size={11} className="shrink-0 text-gray-400 -mx-0.5" />
+                    <Link
+                      href="/brands"
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-gray-600 hover:text-gray-950 hover:bg-white transition-all text-xs font-semibold shrink-0"
+                    >
+                      {"Brands"}
+                    </Link>
+                    <ChevronRight size={11} className="shrink-0 text-gray-400 -mx-0.5" />
+                    <span className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 bg-white text-gray-900 font-bold text-xs uppercase tracking-wide rounded-full border border-gray-200 shadow-2xs shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#ed1c24]" />
+                      <span>{brandFilter}</span>
+                    </span>
+                  </>
+                ) : (
+                  (() => {
+                    const segments = urlKey.split("/").filter(Boolean);
+                    let acc = "";
+                    return segments.map((seg, idx) => {
+                      const isLast = idx === segments.length - 1;
+                      acc += (acc ? `/${seg}` : seg);
+                      const segLower = seg.toLowerCase();
 
-                  if (segLower === "tyres") {
-                    label = isAr ? "الإطارات" : "Tyres";
-                    href = `/${locale}/tyres`;
-                  } else if (segLower === "brand" || segLower === "brands") {
-                    label = isAr ? "الماركة" : "Brand";
-                    href = `/${locale}/brands`;
-                  } else if (isLast && category?.name) {
-                    label = category.name;
-                  }
+                      let label = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
+                      let href = `/${acc}`;
 
-                  return (
-                    <React.Fragment key={acc}>
-                      <ChevronRight size={12} className="shrink-0 text-gray-400" />
-                      {isLast ? (
-                        <span className="text-black font-semibold">
-                          {catLoading && !category?.name ? (
-                            <span className="inline-block bg-gray-200 rounded animate-pulse w-16 h-3 align-middle" />
+                      if (segLower === "tyres") {
+                        label = "Tyres";
+                        href = "/tyres";
+                      } else if (segLower === "brand" || segLower === "brands") {
+                        label = "Brand";
+                        href = "/brands";
+                      } else if (isLast && category?.name) {
+                        label = category.name;
+                      }
+
+                      return (
+                        <React.Fragment key={acc}>
+                          <ChevronRight size={11} className="shrink-0 text-gray-400 -mx-0.5" />
+                          {isLast ? (
+                            <span className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 bg-white text-gray-900 font-bold text-xs uppercase tracking-wide rounded-full border border-gray-200 shadow-2xs shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#ed1c24]" />
+                              <span>
+                                {catLoading && !category?.name ? (
+                                  <span className="inline-block bg-gray-200 rounded animate-pulse w-14 h-3 align-middle" />
+                                ) : (
+                                  label
+                                )}
+                              </span>
+                            </span>
                           ) : (
-                            label
+                            <Link
+                              href={href}
+                              className="inline-flex items-center px-2.5 py-1 rounded-full text-gray-600 hover:text-gray-950 hover:bg-white transition-all text-xs font-semibold shrink-0"
+                            >
+                              {label}
+                            </Link>
                           )}
-                        </span>
-                      ) : (
-                        <Link href={href} className="hover:text-black transition-colors">
-                          {label}
-                        </Link>
-                      )}
-                    </React.Fragment>
-                  );
-                });
-              })()}
+                        </React.Fragment>
+                      );
+                    });
+                  })()
+                )}
+              </div>
             </nav>
           </div>
         </div>
@@ -624,169 +846,34 @@ export default function CategoryPageInner({
 
       {/* ── Product grid ───────────────────────────────────────────── */}
       <div className="bg-gray-50">
-        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
+        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-1 sm:pt-1.5 pb-8 sm:pb-12">
 
-          {/* ── Active Filters Bar (Matches reference screenshot) ───── */}
-          {showActiveFiltersBar && (() => {
-            const hasSize = hasActiveSizeFilter;
-            const otherFilters = Object.entries(selected).filter(([code]) => !SIZE_KEYS.has(code) && !SYSTEM_PARAMS.has(code));
+          {/* ── Horizontal Search Filter Bar (Matches reference screenshot) ── */}
+          <CategoryFilterBar
+            selected={selected}
+            filterGroups={filterGroups}
+            onOpenMoreFilters={() => setFilterOpen(true)}
+            onChange={handleFilterChange}
+            onClearAll={clearAllFilters}
+            brandFilter={brandFilter}
+            basePath={basePath}
+            categoryUid={category?.uid}
+            total={total}
+            sort={sort}
+            onSortChange={setSort}
+          />
 
-            const widthVal = selected.width?.[0];
-            const heightVal = selected.height?.[0] ?? selected.haight?.[0];
-            const rimVal = selected.rim?.[0];
+          {/* ── Toolbar: Total Count + Sort & Filter Controls ─ */}
+          <div className="flex items-center justify-between gap-2 mb-2 sm:mb-2.5 flex-wrap">
+            <div className="text-sm font-black text-gray-900">
+            </div>
 
-            const rearWidthVal =
-              selected.width_rear?.[0] ??
-              selected.rear_width?.[0] ??
-              selected.rwidth?.[0];
-            const rearHeightVal =
-              selected.haight_rear?.[0] ??
-              selected.height_rear?.[0] ??
-              selected.rear_height?.[0] ??
-              selected.rheight?.[0];
-            const rearRimVal =
-              selected.rim_rear?.[0] ??
-              selected.rear_rim?.[0] ??
-              selected.rrim?.[0];
-
-            const widthOpt = filterGroups.find((g) => g.code === "width")?.options.find((o) => o.value === widthVal || o.label === widthVal)?.label ?? widthVal;
-            const heightOpt = filterGroups.find((g) => g.code === "height" || g.code === "haight")?.options.find((o) => o.value === heightVal || o.label === heightVal)?.label ?? heightVal;
-            const rimOpt = filterGroups.find((g) => g.code === "rim")?.options.find((o) => o.value === rimVal || o.label === rimVal)?.label ?? rimVal;
-
-            const rearWidthOpt = filterGroups.find((g) => g.code === "width_rear" || g.code === "rear_width" || g.code === "rwidth" || g.code === "width")?.options.find((o) => o.value === rearWidthVal || o.label === rearWidthVal)?.label ?? rearWidthVal;
-            const rearHeightOpt = filterGroups.find((g) => g.code === "haight_rear" || g.code === "height_rear" || g.code === "rear_height" || g.code === "rheight" || g.code === "height")?.options.find((o) => o.value === rearHeightVal || o.label === rearHeightVal)?.label ?? rearHeightVal;
-            const rearRimOpt = filterGroups.find((g) => g.code === "rim_rear" || g.code === "rear_rim" || g.code === "rrim" || g.code === "rim")?.options.find((o) => o.value === rearRimVal || o.label === rearRimVal)?.label ?? rearRimVal;
-
-            let frontFormatted = "";
-            if (widthOpt && heightOpt && rimOpt) {
-              const cleanRim = rimOpt.replace(/^R/i, "");
-              frontFormatted = `${widthOpt}/${heightOpt} R${cleanRim}`;
-            } else if (widthOpt && heightOpt) {
-              frontFormatted = `${widthOpt}/${heightOpt}`;
-            } else if (widthOpt && rimOpt) {
-              const cleanRim = rimOpt.replace(/^R/i, "");
-              frontFormatted = `${widthOpt} R${cleanRim}`;
-            } else if (widthOpt) {
-              frontFormatted = `${widthOpt}`;
-            } else if (heightOpt) {
-              frontFormatted = `/${heightOpt}`;
-            } else if (rimOpt) {
-              const cleanRim = rimOpt.replace(/^R/i, "");
-              frontFormatted = `R${cleanRim}`;
-            }
-
-            let rearFormatted = "";
-            if (rearWidthOpt && rearHeightOpt && rearRimOpt) {
-              const cleanRearRim = rearRimOpt.replace(/^R/i, "");
-              rearFormatted = `${rearWidthOpt}/${rearHeightOpt} R${cleanRearRim}`;
-            } else if (rearWidthOpt && rearHeightOpt) {
-              rearFormatted = `${rearWidthOpt}/${rearHeightOpt}`;
-            } else if (rearWidthOpt && rearRimOpt) {
-              const cleanRearRim = rearRimOpt.replace(/^R/i, "");
-              rearFormatted = `${rearWidthOpt} R${cleanRearRim}`;
-            } else if (rearWidthOpt) {
-              rearFormatted = `${rearWidthOpt}`;
-            }
-
-            let sizeFormatted = frontFormatted;
-            if (frontFormatted && rearFormatted) {
-              sizeFormatted = `${frontFormatted} – ${rearFormatted}`;
-            } else if (!frontFormatted && rearFormatted) {
-              sizeFormatted = rearFormatted;
-            }
-
-            const handleRemoveSizeFilter = () => {
-              const p = new URLSearchParams(searchParams.toString());
-              SIZE_KEYS.forEach((k) => p.delete(k));
-              p.delete("page");
-              router.replace(p.toString() ? `${basePath}?${p}` : basePath, { scroll: false });
-            };
-
-            return (
-              <div className="bg-white border border-gray-200 rounded-lg p-2.5 sm:p-3 mb-4 flex items-center justify-between flex-wrap gap-2.5 shadow-2xs">
-                <div className="flex items-center flex-wrap gap-2">
-                  {/* Single Combined Size Pill: "✕ 255/50 R20" */}
-                  {hasSize && sizeFormatted && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveSizeFilter}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-gray-300 rounded-md text-[13px] font-bold text-gray-900 transition-colors shadow-2xs group cursor-pointer"
-                      title={isAr ? "إزالة مقاس الإطار" : `Remove ${sizeFormatted}`}
-                    >
-                      <span className="text-[#ed1c24] font-black text-xs group-hover:scale-110 transition-transform">✕</span>
-                      <span>{sizeFormatted}</span>
-                    </button>
-                  )}
-
-                  {/* Other Selected Filters (Brand, Season, etc.) */}
-                  {otherFilters.map(([code, values]) => {
-                    const group = filterGroups.find((g) => g.code === code);
-                    return values.map((val) => {
-                      const opt = group?.options.find((o) => o.value === val || o.label.toLowerCase() === val.toLowerCase());
-                      const label = opt?.label ?? val;
-                      return (
-                        <button
-                          key={`${code}-${val}`}
-                          type="button"
-                          onClick={() => {
-                            const next = values.filter((v) => v !== val);
-                            handleFilterChange(code, next);
-                          }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-gray-300 rounded-md text-[13px] font-bold text-gray-900 transition-colors shadow-2xs group cursor-pointer"
-                          title={isAr ? "إزالة الفلتر" : `Remove ${label}`}
-                        >
-                          <span className="text-[#ed1c24] font-black text-xs group-hover:scale-110 transition-transform">✕</span>
-                          <span>{label}</span>
-                        </button>
-                      );
-                    });
-                  })}
-                </div>
-
-                {/* Clear All Button */}
-                <button
-                  type="button"
-                  onClick={clearAllFilters}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-md text-[13px] font-bold text-gray-900 transition-colors shadow-2xs ml-auto cursor-pointer"
-                >
-                  <span className="text-[#ed1c24] font-black text-xs">✕</span>
-                  <span>{isAr ? "مسح الكل" : "Clear All"}</span>
-                </button>
-              </div>
-            );
-          })()}
-
-          {/* ── Sort & Filter Controls (Matches reference screenshot) ─ */}
-          <div className="flex items-center justify-end gap-2.5 mb-5">
-            <SortBar value={sort} onChange={setSort} isAr={isAr} />
-            {(hasVisibleFilters || sidebarFilterCount > 0) && (
-              <button
-                onClick={() => setFilterOpen(true)}
-                className="relative w-10 h-10 flex items-center justify-center bg-[#ed1c24] hover:bg-[#c6181d] text-white rounded-xl transition-colors shrink-0 cursor-pointer shadow-2xs"
-                aria-label={isAr ? "تصفية" : "Filter"}
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-                </svg>
-                {sidebarFilterCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center">
-                    {sidebarFilterCount}
-                  </span>
-                )}
-              </button>
-            )}
+            <div className="flex items-center gap-2 ml-auto">
+              <SortBar value={sort} onChange={setSort} />
+            </div>
           </div>
 
-          {isLoading ? (
+          {catLoading && products.length === 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
               {Array.from({ length: PAGE_SIZE }).map((_, i) => <TyreListingCardSkeleton key={i} />)}
             </div>
@@ -795,53 +882,54 @@ export default function CategoryPageInner({
               <p className="text-4xl mb-4">⚠️</p>
               <p className="text-gray-500 font-medium">{apiError}</p>
             </div>
-          ) : products.length === 0 ? (
+          ) : products.length === 0 && !loading ? (
             <div className="text-center py-28">
               <p className="text-4xl mb-4">🔍</p>
               <p className="text-gray-400 text-lg font-medium">
-                {isAr ? "لا توجد إطارات." : "No tyres found."}
+                {"No tyres found."}
               </p>
               <p className="text-gray-400 text-sm mt-1">
-                {isAr ? "جرّب بحثاً مختلفاً." : "Try a different search or check back later."}
+                {"Try a different search or check back later."}
               </p>
             </div>
-          ) : (() => {
-            // Pairing + its pagination are computed server-side in
-            // /api/category-page (staggered.total/.totalPages) so the page
-            // control never promises more pairs than will actually render.
-            if (isStaggeredDisplay) {
-              return (
-                <ul className="products-grid grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 list-none p-0 m-0">
-                  {staggered.products.map((front, idx) => (
-                    <StaggeredTyreCard
-                      key={`${front.id}-${staggered.rearProducts[idx]?.id}-${idx}`}
-                      frontProduct={front}
-                      rearProduct={staggered.rearProducts[idx]}
-                      bundlePrice={staggered.bundlePrices[idx]}
-                      frontSet2Price={staggered.frontSet2Prices[idx]}
-                      rearSet2Price={staggered.rearSet2Prices[idx]}
-                      locale={locale}
-                    />
-                  ))}
-                </ul>
-              );
-            }
+          ) : (
+            <div className={`relative transition-opacity duration-200 ${loading ? "opacity-50 pointer-events-none" : "opacity-100"}`}>
+              {(() => {
+                if (isStaggeredDisplay) {
+                  return (
+                    <ul className="products-grid grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 list-none p-0 m-0">
+                      {staggered.products.map((front, idx) => (
+                        <StaggeredTyreCard
+                          key={`${front.id}-${staggered.rearProducts[idx]?.id}-${idx}`}
+                          frontProduct={front}
+                          rearProduct={staggered.rearProducts[idx]}
+                          bundlePrice={staggered.bundlePrices[idx]}
+                          frontSet2Price={staggered.frontSet2Prices[idx]}
+                          rearSet2Price={staggered.rearSet2Prices[idx]}
+                          locale={locale}
+                        />
+                      ))}
+                    </ul>
+                  );
+                }
 
-            return (
-              <ul className="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5 list-none p-0 m-0">
-                {products.map(product => (
-                  <TyreListingCard
-                    key={product.id}
-                    product={product}
-                    locale={locale}
-                    enableHoverZoom
-                    vehicleIcon={urlKey.includes("motorcycle") || urlKey.includes("motorbike") ? "bike" : "car"}
-                  />
-                ))}
-              </ul>
-            );
-          })()}
-          <Pagination current={page} total={displayTotalPages} onChange={setPage} locale={locale} />
+                return (
+                  <ul className="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5 list-none p-0 m-0 items-end">
+                    {products.map(product => (
+                      <TyreListingCard
+                        key={product.id}
+                        product={product}
+                        locale={locale}
+                        enableHoverZoom
+                        vehicleIcon={urlKey.includes("motorcycle") || urlKey.includes("motorbike") ? "bike" : "car"}
+                      />
+                    ))}
+                  </ul>
+                );
+              })()}
+              <Pagination current={page} total={displayTotalPages} onChange={setPage} locale={locale} />
+            </div>
+          )}
         </div>
       </div>
 

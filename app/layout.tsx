@@ -8,7 +8,6 @@ import { CartProvider } from "@/lib/cart-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
 import CartAuthSync from "@/components/CartAuthSync";
-import LocaleDirectionSetter from "@/components/LocaleDirectionSetter";
 import { StoreConfigProvider } from "@/lib/store-config-context";
 import { getStoreConfig } from "@/lib/services/store.service";
 import { getMainMenu } from "@/lib/services/menu.service";
@@ -87,14 +86,12 @@ export default async function RootLayout({
           crossOrigin=""
         />
         <link
-          /* Cairo carries Arabic, Kanit provides full hinted weights for Latin */
-          href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap"
           rel="stylesheet"
         />
         <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
       </head>
       <body className="antialiased">
-        <LocaleDirectionSetter />
         <StoreConfigProvider value={storeConfig}>
           <AuthProvider>
             <CartProvider>

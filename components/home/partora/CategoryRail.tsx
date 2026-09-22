@@ -56,7 +56,6 @@ import { type NavItem, navHref, navLabel } from "@/src/config/navigation";
 export default function CategoryRail({ locale, initialMenu }: { locale: string; initialMenu?: NavItem[] }) {
   const [menu, setMenu] = useState<NavItem[]>(initialMenu ?? []);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const isAr = locale === "ar";
 
   useEffect(() => {
     if (initialMenu && initialMenu.length > 0) return;
@@ -75,7 +74,7 @@ export default function CategoryRail({ locale, initialMenu }: { locale: string; 
       {/* Category Rail Header */}
       <div className="bg-[#ed1c24] text-white font-black text-[11px] uppercase px-3.5 py-2.5 flex items-center gap-2 tracking-wider select-none shrink-0 rounded-t-xl">
         <Menu size={15} className="stroke-[2.5]" />
-        <span>{isAr ? "جميع الفئات" : "ALL CATEGORIES"}</span>
+        <span>ALL CATEGORIES</span>
       </div>
 
       <div className="ptr-cat-rail-body">
@@ -110,9 +109,7 @@ export default function CategoryRail({ locale, initialMenu }: { locale: string; 
               {/* Sub-menu flyout for items with children (Car Services & Tyres) */}
               {hasChildren && isHovered && (
                 <div
-                  className={`absolute top-0 ${
-                    locale === "ar" ? "right-full -mr-1" : "left-full -ml-1"
-                  } z-[100] min-w-[250px] max-w-[300px] bg-white rounded-xl shadow-2xl border border-gray-200 border-t-2 border-t-[#ed1c24] py-1 divide-y divide-gray-100 animate-in fade-in zoom-in-95 duration-150`}
+                  className="absolute top-0 left-full -ml-1 z-[100] min-w-[250px] max-w-[300px] bg-white rounded-xl shadow-2xl border border-gray-200 border-t-2 border-t-[#ed1c24] py-1 divide-y divide-gray-100 animate-in fade-in zoom-in-95 duration-150"
                 >
                   {item.children!.map((child) => {
                     const ChildIcon = getCategoryIcon(child.id, child.slug);

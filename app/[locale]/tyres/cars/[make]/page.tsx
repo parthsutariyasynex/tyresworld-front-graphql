@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ChevronRight, Check, ArrowLeft } from "lucide-react";
-import { buildFilterParams } from "@/lib/filterBuilder";
+import { Check, ArrowLeft } from "lucide-react";
+import { buildTyreSizeSlug } from "@/lib/filterBuilder";
+import PageHeroBanner, { type BreadcrumbItem } from "@/components/PageHeroBanner";
 import {
   fetchMakes,
   fetchModels,
@@ -15,8 +15,6 @@ import {
   type VehicleSize,
 } from "@/lib/vehicleFinderApi";
 
-const SIZE_FIELDS = ["width", "height", "rim", "rear_width", "rear_height", "rear_rim"];
-
 type Step = "model" | "year" | "trim";
 
 export default function VehicleMakeBrowserPage() {
@@ -24,7 +22,6 @@ export default function VehicleMakeBrowserPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const locale = String(params.locale ?? "en");
-  const isAr = locale === "ar";
   const make = String(params.make ?? "");
   const modelParam = searchParams.get("model") ?? "";
 
@@ -287,88 +284,46 @@ export default function VehicleMakeBrowserPage() {
       filterObj.rear_height = size.rear.height;
       filterObj.rear_rim = size.rear.rim;
     }
-    router.push(`/${locale}/tyres?${buildFilterParams(filterObj, SIZE_FIELDS)}`);
+    router.push(buildTyreSizeSlug(filterObj));
   }
 
   const makeLabel =
     makeInfo?.label ?? (make ? make.charAt(0).toUpperCase() + make.slice(1).replace(/-/g, " ") : "");
 
   const heroTitle = selModel
-    ? isAr
-      ? `${makeLabel} ${selModel.label} إطارات وخدمات السيارات في الإمارات`
-      : `${makeLabel} ${selModel.label} Tyres and Car Services in UAE`
-    : isAr
-      ? `${makeLabel} إطارات وخدمات السيارات في الإمارات`
-      : `${makeLabel} Tyres and Car Services in UAE`;
+    ? `${makeLabel} ${selModel.label} Tyres and Car Services in UAE`
+    : `${makeLabel} Tyres and Car Services in UAE`;
+
+  const makeModelBreadcrumb: BreadcrumbItem[] = [
+    { label: "Home", href: `/${locale}` },
+    { label: "Tyres", href: `/${locale}/tyres` },
+    { label: "Cars", href: `/${locale}/tyres/cars` },
+    selModel
+      ? { label: makeLabel, onClick: backToModel }
+      : { label: makeLabel },
+    ...(selModel
+      ? [selYear ? { label: selModel.label, onClick: backToYear } : { label: selModel.label }]
+      : []),
+    ...(selYear ? [{ label: selYear }] : []),
+  ];
 
   return (
     <div className="bg-white">
-      {/* ── 0. Top Hero Title Banner (Dark patterned tyre-tread header,
-             matching every other category/product/CMS page site-wide) ── */}
-      <div className="page-title-wrapper bg-cover-image py-6 sm:py-8 text-center">
-        <div className="container">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-wider text-center drop-shadow-md">
-            {heroTitle}
-          </h1>
-        </div>
-      </div>
-
-      {/* ── 1. Top Breadcrumb Bar ── */}
-      <div className="bg-white border-b border-gray-100 py-2.5">
-        <div className="container mx-auto px-4">
-          <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap font-medium">
-            <Link href={`/${locale}`} className="hover:text-black transition-colors">
-              {isAr ? "الرئيسية" : "Home"}
-            </Link>
-            <ChevronRight size={12} className="shrink-0 text-gray-400" />
-            <Link href={`/${locale}/tyres`} className="hover:text-black transition-colors">
-              {isAr ? "الإطارات" : "Tyres"}
-            </Link>
-            <ChevronRight size={12} className="shrink-0 text-gray-400" />
-            <Link href={`/${locale}/tyres/cars`} className="hover:text-black transition-colors">
-              {isAr ? "السيارات" : "Cars"}
-            </Link>
-            <ChevronRight size={12} className="shrink-0 text-gray-400" />
-            {selModel ? (
-              <button onClick={backToModel} className="hover:text-black transition-colors font-semibold cursor-pointer">
-                {makeLabel}
-              </button>
-            ) : (
-              <span className="text-black font-bold">{makeLabel}</span>
-            )}
-            {selModel && (
-              <>
-                <ChevronRight size={12} className="shrink-0 text-gray-400" />
-                {selYear ? (
-                  <button onClick={backToYear} className="hover:text-black transition-colors font-semibold cursor-pointer">
-                    {selModel.label}
-                  </button>
-                ) : (
-                  <span className="text-black font-bold">{selModel.label}</span>
-                )}
-              </>
-            )}
-            {selYear && (
-              <>
-                <ChevronRight size={12} className="shrink-0 text-gray-400" />
-                <span className="text-black font-bold">{selYear}</span>
-              </>
-            )}
-          </nav>
-        </div>
-      </div>
+      <PageHeroBanner
+        title={heroTitle}
+        description={`Shop genuine ${makeLabel} tyres online in UAE at TyresWorld. Free mobile tyre fitting in Dubai, Abu Dhabi & Sharjah, manufacturer warranty, and best prices.`}
+        breadcrumb={makeModelBreadcrumb}
+      />
 
       {/* ── MODEL SELECTION VIEW (when no model selected yet) ── */}
       {!selModel && (
         <div className="container mx-auto px-4 py-8 sm:py-10 max-w-5xl">
           <div className="text-center mb-8">
             <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-gray-900">
-              {isAr ? `موديلات سيارات ${makeLabel}` : `Select ${makeLabel} Model`}
+              {`Select ${makeLabel} Model`}
             </h1>
             <p className="text-gray-500 text-sm mt-1.5 font-medium">
-              {isAr
-                ? "اختر موديل سيارتك لعرض المقاسات والسنوات المتوافقة"
-                : "Choose your vehicle model to view compatible tyre sizes and years"}
+              {"Choose your vehicle model to view compatible tyre sizes and years"}
             </p>
           </div>
 
@@ -379,13 +334,11 @@ export default function VehicleMakeBrowserPage() {
               ))}
             </div>
           ) : modelsError && (models ?? []).length === 0 ? (
-            <EmptyState text={isAr ? "تعذر تحميل الموديلات." : "Couldn't load models."} />
+            <EmptyState text={"Couldn't load models."} />
           ) : (models ?? []).length === 0 ? (
             <EmptyState
               text={
-                isAr
-                  ? `لا توجد موديلات متاحة لـ ${makeLabel}.`
-                  : `No models available for ${makeLabel}.`
+                `No models available for ${makeLabel}.`
               }
             />
           ) : (
@@ -413,7 +366,7 @@ export default function VehicleMakeBrowserPage() {
             <div className="container mx-auto px-4 max-w-4xl">
               <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-black text-center mb-8 uppercase tracking-tight">
                 <span className="text-gray-900">{makeLabel} {selModel.label} </span>
-                <span className="text-[#ed1c24]">{isAr ? "متجر الإطارات" : "TYRES SHOP"}</span>
+                <span className="text-[#ed1c24]">{"TYRES SHOP"}</span>
               </h1>
 
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 max-w-3xl mx-auto">
@@ -439,14 +392,10 @@ export default function VehicleMakeBrowserPage() {
                 {/* Info Text */}
                 <div className="flex-1 text-center sm:text-left pt-1">
                   <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1.5 leading-snug">
-                    {isAr
-                      ? `شراء إطارات ${makeLabel} ${selModel.label} أونلاين في الإمارات`
-                      : `Buy Tyres for ${makeLabel} ${selModel.label} Online in the UAE`}
+                    {`Buy Tyres for ${makeLabel} ${selModel.label} Online in the UAE`}
                   </h2>
                   <p className="text-xs sm:text-[13.5px] text-gray-600 leading-relaxed font-normal m-0">
-                    {isAr
-                      ? `اعثر على الإطارات المثالية لسيارتك ${makeLabel} ${selModel.label} في تايرز كارت. نحن نوفر أفضل ماركات الإطارات الموثوقة والمصممة لسيارتك لضمان تجربة قيادة آمنة ومريحة.`
-                      : `Find the perfect tyres for your ${makeLabel.toLowerCase()} ${selModel.label.toLowerCase()} at TyresWorld. We stock trusted tyre brands tailored for your car, ensuring smooth handling, long-lasting durability, and a safer, more comfortable drive every time.`}
+                    {`Find the perfect tyres for your ${makeLabel.toLowerCase()} ${selModel.label.toLowerCase()} at TyresWorld. We stock trusted tyre brands tailored for your car, ensuring smooth handling, long-lasting durability, and a safer, more comfortable drive every time.`}
                   </p>
                 </div>
               </div>
@@ -457,24 +406,22 @@ export default function VehicleMakeBrowserPage() {
           <section className="py-10 sm:py-14 bg-[#f0f2f5] border-y border-gray-200/70">
             <div className="container mx-auto px-4 max-w-5xl">
               <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black text-center uppercase tracking-tight">
-                <span className="text-gray-900">{isAr ? "أهم الأسباب لشراء " : "TOP REASONS TO BUY "}</span>
-                <span className="text-[#ed1c24]">{isAr ? "الإطارات منا" : "TYRES FROM US"}</span>
+                <span className="text-gray-900">{"TOP REASONS TO BUY "}</span>
+                <span className="text-[#ed1c24]">{"TYRES FROM US"}</span>
               </h2>
               <p className="text-gray-900 text-center text-xs sm:text-sm mt-2 mb-8 sm:mb-10 font-bold">
-                {isAr
-                  ? "استمتع بقيمة رائعة، جودة موثوقة، وخدمات إطارات سلسة في كل مرة."
-                  : "Enjoy great value, trusted quality, and seamless tyre services every time."}
+                {"Enjoy great value, trusted quality, and seamless tyre services every time."}
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-8 lg:gap-12 items-center">
                 {/* Left Column: Bullet Points with Red Checks */}
                 <div className="space-y-4">
                   {[
-                    isAr ? "خدمات إطارات سريعة وموثوقة" : "Quick and reliable tyre services",
-                    isAr ? "ضمان أفضل الأسعار على جميع الإطارات" : "Best price guarantee on all tyres",
-                    isAr ? "ضمان الشركة المصنعة مشمول على كل إطار" : "Brand warranty included on every tyres",
-                    isAr ? "تركيب احترافي في شبكة مراكز الخدمة المعتمدة" : "Professional fitment at partner installer locations",
-                    isAr ? "توصيل مجاني حتى باب منزلك في جميع أنحاء الإمارات" : "Free doorstep delivery across the UAE",
+                    "Quick and reliable tyre services",
+                    "Best price guarantee on all tyres",
+                    "Brand warranty included on every tyres",
+                    "Professional fitment at partner installer locations",
+                    "Free doorstep delivery across the UAE",
                   ].map((text, idx) => (
                     <div key={idx} className="flex items-center gap-3.5">
                       <div className="w-5 h-5 flex items-center justify-center shrink-0 text-[#ed1c24]">
@@ -516,13 +463,11 @@ export default function VehicleMakeBrowserPage() {
           <section className="py-10 sm:py-12 bg-white">
             <div className="container mx-auto px-4 max-w-5xl">
               <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black text-center uppercase tracking-tight">
-                <span className="text-gray-900">{isAr ? "ابحث عن إطارات لموديلات " : "FIND TYRES FOR "}</span>
-                <span className="text-[#ed1c24]">{makeLabel} {selModel.label} {isAr ? "" : "MODELS"}</span>
+                <span className="text-gray-900">{"FIND TYRES FOR "}</span>
+                <span className="text-[#ed1c24]">{makeLabel} {selModel.label} {"MODELS"}</span>
               </h2>
               <p className="text-gray-900 text-center text-xs sm:text-sm mt-2 mb-8 sm:mb-10 font-bold">
-                {isAr
-                  ? `اختر من الماركات الموثوقة، القياس الدقيق، والعروض الممتازة لسيارتك ${makeLabel}.`
-                  : `Choose from trusted brands, exact fitment, and great deals for your ${makeLabel}.`}
+                {`Choose from trusted brands, exact fitment, and great deals for your ${makeLabel}.`}
               </p>
 
               {/* Year Selection Row / Grid matching Reference */}
@@ -533,7 +478,7 @@ export default function VehicleMakeBrowserPage() {
                   ))}
                 </div>
               ) : (years ?? []).length === 0 ? (
-                <EmptyState text={isAr ? "لا توجد سنوات متاحة لهذا الموديل." : "No years available for this model."} />
+                <EmptyState text={"No years available for this model."} />
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 max-w-4xl mx-auto">
                   {(years ?? []).map((y) => {
@@ -562,14 +507,10 @@ export default function VehicleMakeBrowserPage() {
                   <div className="flex items-center justify-between gap-4 mb-6 border-b border-gray-100 pb-4">
                     <div>
                       <h3 className="text-lg sm:text-xl font-black text-gray-900 uppercase">
-                        {isAr
-                          ? `المقاسات والفئات المتوافقة — ${selModel.label} (${selYear})`
-                          : `Trim & Compatible Sizes — ${selModel.label} (${selYear})`}
+                        {`Trim & Compatible Sizes — ${selModel.label} (${selYear})`}
                       </h3>
                       <p className="text-xs text-gray-500 font-medium mt-1">
-                        {isAr
-                          ? "اختر الفئة أو مقاس الإطار للانتقال إلى المنتجات المتوفرة"
-                          : "Select trim or tyre size to view matching available tyres"}
+                        {"Select trim or tyre size to view matching available tyres"}
                       </p>
                     </div>
                     <button
@@ -578,7 +519,7 @@ export default function VehicleMakeBrowserPage() {
                       className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-black transition-colors cursor-pointer"
                     >
                       <ArrowLeft size={14} />
-                      <span>{isAr ? "تغيير السنة" : "Change Year"}</span>
+                      <span>{"Change Year"}</span>
                     </button>
                   </div>
 
@@ -591,7 +532,7 @@ export default function VehicleMakeBrowserPage() {
                   ) : (trims ?? []).length > 1 ? (
                     <div className="mb-6">
                       <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 block mb-2.5">
-                        {isAr ? "اختر الفئة / المحرك:" : "Select Trim / Engine Variant:"}
+                        {"Select Trim / Engine Variant:"}
                       </span>
                       <div className="flex flex-wrap gap-2.5">
                         {(trims ?? []).map((tr) => {
@@ -623,7 +564,7 @@ export default function VehicleMakeBrowserPage() {
                   {/* Sizes Grid */}
                   <div>
                     <span className="text-[11px] font-black uppercase tracking-wider text-gray-500 block mb-3">
-                      {isAr ? "مقاسات الإطارات المتوافقة (اضغط للتسوق):" : "Compatible Tyre Sizes (Click to shop):"}
+                      {"Compatible Tyre Sizes (Click to shop):"}
                     </span>
 
                     {trimsLoading || sizesLoading || sizes === null ? (
@@ -633,7 +574,7 @@ export default function VehicleMakeBrowserPage() {
                         ))}
                       </div>
                     ) : sizes.length === 0 ? (
-                      <EmptyState text={isAr ? "لا توجد مقاسات مسجلة لهذه الفئة." : "No tyre sizes found for this trim."} />
+                      <EmptyState text={"No tyre sizes found for this trim."} />
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                         {(sizes ?? []).map((sz, idx) => (
@@ -650,11 +591,11 @@ export default function VehicleMakeBrowserPage() {
                                 }`}
                               >
                                 {sz.isFactory
-                                  ? isAr ? "مقاس المصنع الأساسي" : "Factory Fitment"
-                                  : isAr ? "مقاس متوافق" : "Optional Fitment"}
+                                  ? "Factory Fitment"
+                                  : "Optional Fitment"}
                               </span>
                               <span className="text-xs font-bold text-[#ed1c24] opacity-0 group-hover:opacity-100 transition-opacity">
-                                {isAr ? "تسوق الآن ←" : "Shop now →"}
+                                {"Shop now →"}
                               </span>
                             </div>
 
@@ -665,7 +606,7 @@ export default function VehicleMakeBrowserPage() {
 
                             {sz.rearLabel && (
                               <div className="mt-1 text-xs font-bold text-gray-600">
-                                {isAr ? "خلفي: " : "Rear: "}
+                                {"Rear: "}
                                 {sz.rearLabel}
                                 {sz.rearSpeedIndex && (
                                   <span className="text-gray-400 font-bold ml-1">{sz.rearSpeedIndex}</span>

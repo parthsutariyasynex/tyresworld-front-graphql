@@ -37,7 +37,6 @@ export default function StoreLocatorMap({
   onSelectStore: (store: StoreLocation) => void;
   locale?: string;
 }) {
-  const isAr = locale === "ar";
   const [activeStore, setActiveStore] = useState<StoreLocation | null>(null);
   const [focusMode, setFocusMode] = useState<"store" | "user">("store");
 
@@ -88,13 +87,13 @@ export default function StoreLocatorMap({
           type="button"
           className="px-3.5 py-1.5 bg-white text-gray-900 font-bold hover:bg-gray-50 border-r border-gray-200"
         >
-          {isAr ? "خريطة" : "Map"}
+          {"Map"}
         </button>
         <button
           type="button"
           className="px-3.5 py-1.5 bg-white text-gray-600 hover:text-black hover:bg-gray-50 font-medium"
         >
-          {isAr ? "قمر صناعي" : "Satellite"}
+          {"Satellite"}
         </button>
       </div>
 

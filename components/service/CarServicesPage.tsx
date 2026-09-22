@@ -2,16 +2,13 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 interface ServiceItem {
   id: string;
   slug: string;
   title: string;
-  titleAr: string;
   description: string;
-  descriptionAr: string;
   image: string;
 }
 
@@ -20,159 +17,100 @@ const CAR_SERVICES: ServiceItem[] = [
     id: "tyre-service",
     slug: "car-tyre-service",
     title: "CAR TYRE SERVICE",
-    titleAr: "خدمة إطارات السيارات",
     description:
       "Ensure optimal grip and safety with professional tyre care. Maximise performance with expert tyre inspections..",
-    descriptionAr:
-      "ضمان الثبات والأمان الأمثل مع خدمة الإطارات الاحترافية. عزز الأداء بفحص دقيق للإطارات..",
     image: "/images/services/best-tyre-fitting-service-shop-abu-dhabi.webp",
   },
   {
     id: "battery-service",
     slug: "car-battery-service",
     title: "CAR BATTERY SERVICE",
-    titleAr: "خدمة بطاريات السيارات",
     description:
       "Power up your vehicle with reliable battery solutions. Get quick replacements and efficient diagnostics..",
-    descriptionAr:
-      "زوّد سيارتك بالطاقة مع حلول البطاريات الموثوقة. احصل على تبديل سريع وتشخيص دقيق..",
     image: "/images/services/car-battery-replacement-service-abu-dhabi.webp",
   },
   {
     id: "ac-service",
     slug: "car-ac-service",
     title: "CAR AC SERVICE",
-    titleAr: "خدمة مكيف السيارات",
     description:
       "Keep your car cool and comfortable with expert AC services. Ensure clean air and optimal cooling performance..",
-    descriptionAr:
-      "حافظ على برودة وراحة سيارتك مع خدمات التكييف المتخصصة. هواء نقي وأداء تبريد مثالي..",
     image: "/images/services/expert-car-ac-service-workshop-near-me.webp",
   },
   {
     id: "brake-service",
     slug: "car-brake-service",
     title: "CAR BRAKE SERVICE",
-    titleAr: "خدمة فرامل السيارات",
     description:
       "Drive confidently with brake inspections and repairs. Ensure safety with high-quality brake solutions..",
-    descriptionAr:
-      "قُد بثقة مع فحص وإصلاح الفرامل الاحترافي. نضمن سلامتك بأفضل قطع الفرامل الأصلية..",
     image: "/images/services/car-brake-pad-replacement-services-abu-dhabi.webp",
   },
   {
     id: "oil-change-service",
     slug: "car-oil-change-service",
     title: "CAR OIL CHANGE SERVICE",
-    titleAr: "خدمة تغيير زيت السيارة",
     description:
       "Extend engine life with timely and efficient oil changes. Reduce friction and improve engine performance..",
-    descriptionAr:
-      "أطل عمر المحرك بتغيير الزيت في الوقت المناسب وبكفاءة عالية لتحسين أداء المحرك..",
     image: "/images/services/car-engine-oil-change-abu-dhabi.webp",
   },
   {
     id: "mechanical-service",
     slug: "car-mechanical-service",
     title: "CAR MECHANICAL SERVICE",
-    titleAr: "خدمات الميكانيكا العامة",
     description:
       "Comprehensive mechanical solutions to keep your car running smoothly. From engine repairs to transmission fixes..",
-    descriptionAr:
-      "حلول ميكانيكية شاملة لتبقي سيارتك تعمل بأعلى كفاءة، من إصلاح المحركات إلى ناقل الحركة..",
     image: "/images/services/best-car-mechanical-services-abu-dhabi.webp",
   },
   {
     id: "wheel-alignment-service",
     slug: "car-wheel-alignment-service",
     title: "CAR WHEEL ALIGNMENT SERVICE",
-    titleAr: "خدمة ميزان وتوجيه العجلات",
     description:
       "Enhance tyre life and performance with accurate wheel alignment. Prevent uneven wear and improve steering control..",
-    descriptionAr:
-      "عزز عمر الإطارات وأداء القيادة مع ميزان ليزر دقيق لمنع تآكل الإطارات وتحسين التوجيه..",
     image: "/images/services/benefits-regular-wheel-alignment-service-uae.webp",
   },
   {
     id: "wheel-balancing-service",
     slug: "car-wheel-balancing-service",
     title: "CAR WHEEL BALANCING SERVICE",
-    titleAr: "خدمة ترصيص العجلات",
     description:
       "Achieve smoother rides with precision wheel balancing. Improve stability and eliminate vibrations..",
-    descriptionAr:
-      "احصل على قيادة أكثر سلاسة مع ترصيص العجلات الدقيق لتحسين الثبات ومنع الاهتزازات..",
     image: "/images/services/expert-car-wheel-balancing-service-abu-dhabi.webp",
   },
   {
     id: "rim-repair-service",
     slug: "car-rim-repair-service",
     title: "CAR RIM REPAIR SERVICE",
-    titleAr: "خدمة تصليح جنوط السيارات",
     description:
       "Restore your rims to a flawless finish with expert repairs. Fix cracks, bends, and scratches with precision..",
-    descriptionAr:
-      "أعد رونق جنوط سيارتك مع إصلاح احترافي للكسور والانحناءات والخدوش بدقة متناهية..",
     image: "/images/services/car-rim-repair-service-abu-dhabi.webp",
   },
 ];
 
 export default function CarServicesPage() {
-  const pathname = usePathname();
-  const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
-  const isAr = locale === "ar";
+  const locale = "en";
 
   return (
-    <div className="bg-white pb-8 sm:pb-12" dir={isAr ? "rtl" : "ltr"}>
-      {/* ── Breadcrumb Bar ── */}
-      <div className="bg-[#f4f4f5] border-b border-gray-200">
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
-          <nav className="flex items-center gap-2 text-xs font-medium text-gray-500">
-            <Link href={`/${locale}`} className="hover:text-black transition-colors">
-              {isAr ? "الرئيسية" : "Home"}
-            </Link>
-            <ChevronRight size={12} className="text-gray-400 rtl:rotate-180" />
-            <span className="text-gray-900 font-semibold">
-              {isAr ? "خدمات السيارات" : "Car Services"}
-            </span>
-          </nav>
-        </div>
-      </div>
+    <div className="bg-white pb-8 sm:pb-12">
+      <PageHeroBanner
+        title="Expert Car Repairs & Services in Abu Dhabi"
+        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Car Services" }]}
+      />
 
       {/* ── Main Section ── */}
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Intro Header */}
         <div className="mb-8 sm:mb-10">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-gray-950 uppercase mb-3 font-sans">
-            {isAr
-              ? "تصليح وصيانة السيارات المتخصصة في أبوظبي"
-              : "EXPERT CAR REPAIRS & SERVICES IN ABU DHABI"}
-          </h1>
-
           <p className="text-xs sm:text-[13.5px] text-gray-700 leading-relaxed mb-3">
-            {isAr ? (
-              <>
-                في{" "}
-                <span className="text-[#ed1c24] font-bold">
-                  Carolyn Auto Care – L.L.C – S.P.C
-                </span>
-                ، مركز الخدمة المعتمد لـ TyresWorld في أبوظبي، نفخر بتقديم أفضل خدمات تصليح وصيانة السيارات للحفاظ على سيارتك في أفضل حالاتها. مع فريق من الفنيين ذوي الخبرة والمعدات الحديثة والنهج المرتكز على العميل، نقدم مجموعة كاملة من حلول السيارات المصممة لتلبية جميع احتياجاتك.
-              </>
-            ) : (
-              <>
-                At{" "}
-                <span className="text-[#ed1c24] font-bold">
-                  Carolyn Auto Care – L.L.C – S.P.C
-                </span>
-                , the service hub of TyresWorld in Abu Dhabi, we take pride in delivering top-quality car repairs and maintenance to keep your vehicle in peak condition. With a team of experienced technicians, cutting-edge equipment, and a customer-focused approach, we provide a full range of automotive solutions designed to meet your every need.
-              </>
-            )}
+            At{" "}
+            <span className="text-[#ed1c24] font-bold">
+              Carolyn Auto Care – L.L.C – S.P.C
+            </span>
+            , the service hub of TyresWorld in Abu Dhabi, we take pride in delivering top-quality car repairs and maintenance to keep your vehicle in peak condition. With a team of experienced technicians, cutting-edge equipment, and a customer-focused approach, we provide a full range of automotive solutions designed to meet your every need.
           </p>
 
           <p className="text-xs sm:text-[13.5px] text-gray-700 leading-relaxed font-normal">
-            {isAr
-              ? "إليك نظرة عن قرب على الخدمات التي نقدمها لضمان أداء سيارتك الأمثل وسلامتك على الطريق:"
-              : "Here’s a closer look at the services we offer to ensure your car performs optimally and keeps you safe on the road:"}
+            Here’s a closer look at the services we offer to ensure your car performs optimally and keeps you safe on the road:
           </p>
         </div>
 
@@ -188,7 +126,7 @@ export default function CarServicesPage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={item.image}
-                  alt={isAr ? item.titleAr : item.title}
+                  alt={item.title}
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
@@ -212,12 +150,12 @@ export default function CarServicesPage() {
               <div className="p-5 sm:p-6 flex flex-col flex-1 bg-white">
                 <h2 className="text-sm sm:text-base font-black uppercase text-gray-950 tracking-tight mb-2.5 group-hover:text-[#ed1c24] transition-colors font-sans">
                   <Link href={`/${locale}/${item.slug}`} className="hover:underline">
-                    {isAr ? item.titleAr : item.title}
+                    {item.title}
                   </Link>
                 </h2>
 
                 <p className="text-xs sm:text-[13px] text-gray-600 leading-relaxed flex-1">
-                  {isAr ? item.descriptionAr : item.description}
+                  {item.description}
                 </p>
               </div>
             </div>

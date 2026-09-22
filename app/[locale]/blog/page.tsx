@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getBlogPosts, getBlogCategories, excerptFromHtml } from "@/lib/services/blog.service";
 import { storeCode } from "@/lib/i18n";
 import BlogSearchBar from "@/components/blog/BlogSearchBar";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 /**
  * Real blog listing — Magento's Klever module (kleverBlogPosts / kleverBlogCategories)
@@ -18,15 +19,10 @@ export async function generateMetadata({
   params: { locale: string };
   searchParams: { category?: string; search?: string };
 }): Promise<Metadata> {
-  const isAr = params.locale === "ar";
-  const title = isAr
-    ? "المدونة – نصائح الإطارات وصيانة السيارات | تايرز وورلد"
-    : "Explore Our Blog – Tyre Advice & Car Maintenance Tips | TyresWorld UAE";
+  const title = "Explore Our Blog – Tyre Advice & Car Maintenance Tips | TyresWorld UAE";
   return {
     title,
-    description: isAr
-      ? "نصائح لشراء الإطارات، صيانة السيارات، وإرشادات القيادة في الإمارات العربية المتحدة."
-      : "Tyre buying advice, car maintenance tips, and driving guides for the UAE.",
+    description: "Tyre buying advice, car maintenance tips, and driving guides for the UAE.",
   };
 }
 
@@ -38,9 +34,8 @@ export default async function BlogPage({
   searchParams: { category?: string; page?: string; search?: string };
 }) {
   const { locale } = params;
-  if (locale !== "en" && locale !== "ar") notFound();
-  const isAr = locale === "ar";
-  const store = storeCode(locale as "en" | "ar");
+  if (locale !== "en") notFound();
+  const store = storeCode(locale as "en");
 
   const currentPage = Math.max(1, Number(searchParams.page ?? 1));
   const categoryUrlKey = searchParams.category;
@@ -61,30 +56,11 @@ export default async function BlogPage({
   const activeCategory = categories?.find((c) => c.url_key === categoryUrlKey);
 
   return (
-    <div className="bg-white min-h-screen" dir={isAr ? "rtl" : "ltr"}>
-      {/* ── Top Hero Banner with Black Background (Matching Screenshot) ── */}
-      <div className="relative w-full py-10 sm:py-12 md:py-14 bg-black flex items-center justify-center px-4">
-        <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-[32px] font-black text-white uppercase tracking-wider text-center max-w-5xl leading-tight font-sans">
-          {isAr
-            ? "استكشف مدونتنا – نصائح الإطارات وصيانة السيارات"
-            : "EXPLORE OUR BLOG – TYRE ADVICE & CAR MAINTENANCE TIPS"}
-        </h1>
-      </div>
-
-      {/* ── Breadcrumb Bar (Matching Screenshot) ── */}
-      <div className="bg-[#f0f0f0] border-b border-gray-200/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
-          <nav className="flex items-center gap-2 text-xs font-semibold text-gray-500" aria-label="Breadcrumb">
-            <Link href={`/${locale}`} className="hover:text-black transition-colors">
-              {isAr ? "الرئيسية" : "Home"}
-            </Link>
-            <span className="text-gray-400 font-normal">&gt;</span>
-            <span className="text-gray-900 font-bold" aria-current="page">
-              {isAr ? "المدونة" : "Blog"}
-            </span>
-          </nav>
-        </div>
-      </div>
+    <div className="bg-white min-h-screen" dir="ltr">
+      <PageHeroBanner
+        title="Explore Our Blog – Tyre Advice & Car Maintenance Tips"
+        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Blog" }]}
+      />
 
       {/* ── Main Content Area ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -93,7 +69,7 @@ export default async function BlogPage({
           <BlogSearchBar
             locale={locale}
             initialQuery={searchQuery}
-            placeholder={isAr ? "ابحث في مقالات المدونة..." : "Search blog posts..."}
+            placeholder="Search blog posts..."
           />
         </div>
 
@@ -108,7 +84,7 @@ export default async function BlogPage({
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              {isAr ? "الكل" : "All"}
+              All
             </Link>
             {categories.map((c) => {
               const qs = new URLSearchParams();
@@ -135,14 +111,14 @@ export default async function BlogPage({
         {searchQuery && (
           <div className="flex items-center justify-between mb-8 pb-3 border-b border-gray-100">
             <p className="text-sm font-bold text-gray-800">
-              {isAr ? `نتائج البحث عن: "${searchQuery}"` : `Search results for: "${searchQuery}"`}{" "}
+              {`Search results for: "${searchQuery}"`}{" "}
               <span className="text-gray-500 font-normal">({total})</span>
             </p>
             <Link
               href={`/${locale}/blog${categoryUrlKey ? `?category=${categoryUrlKey}` : ""}`}
               className="text-xs font-bold text-[#ed1c24] hover:underline"
             >
-              {isAr ? "مسح البحث" : "Clear search"}
+              Clear search
             </Link>
           </div>
         )}
@@ -151,18 +127,16 @@ export default async function BlogPage({
         {posts.length === 0 ? (
           <div className="bg-gray-50 border border-gray-200/80 rounded-2xl p-12 text-center max-w-lg mx-auto my-8">
             <p className="text-gray-800 text-base font-bold mb-2">
-              {isAr ? "لا توجد مقالات مطابقة." : "No posts found."}
+              No posts found.
             </p>
             <p className="text-gray-500 text-xs mb-6">
-              {isAr
-                ? "جرب البحث بكلمات أخرى أو اختر قسماً مختلفاً."
-                : "Try searching with different keywords or select a different category."}
+              Try searching with different keywords or select a different category.
             </p>
             <Link
               href={`/${locale}/blog`}
               className="inline-block px-5 py-2.5 bg-[#ed1c24] text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-red-700 transition-colors"
             >
-              {isAr ? "عرض كل المقالات" : "View All Posts"}
+              View All Posts
             </Link>
           </div>
         ) : (
@@ -190,7 +164,7 @@ export default async function BlogPage({
                     {date && (
                       <time className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2.5 block">
                         {new Date(date.replace(" ", "T")).toLocaleDateString(
-                          isAr ? "ar-AE" : "en-US",
+                          "en-US",
                           { month: "short", day: "numeric", year: "numeric" },
                         )}
                       </time>
@@ -213,8 +187,8 @@ export default async function BlogPage({
                         href={href}
                         className="text-xs font-black uppercase tracking-wider text-[#ed1c24] group-hover:underline inline-flex items-center gap-1"
                       >
-                        <span>{isAr ? "اقرأ المزيد" : "Read More"}</span>
-                        <span className="text-sm rtl:rotate-180">→</span>
+                        <span>Read More</span>
+                        <span className="text-sm">→</span>
                       </Link>
                     </div>
                   </div>

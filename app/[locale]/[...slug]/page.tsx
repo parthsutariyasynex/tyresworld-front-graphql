@@ -14,6 +14,7 @@ import { CATEGORY_HERO } from "@/src/config/routes";
 import { storeCode, t, type Locale } from "@/lib/i18n";
 import { APP_CONFIG } from "@/src/config/app-config";
 import JsonLd from "@/components/JsonLd";
+import PageHeroBanner, { type BreadcrumbItem } from "@/components/PageHeroBanner";
 
 const SITE_URL = `https://${APP_CONFIG.brand.domain}`;
 
@@ -24,7 +25,7 @@ interface PageProps {
 }
 
 function asLocale(l?: string): Locale {
-  return l === "ar" ? "ar" : "en";
+  return "en";
 }
 
 function toSlug(s: string | string[]): string {
@@ -57,12 +58,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const slug = toSlug(params.slug);
   const store = storeCode(locale);
   const canonical = `/${locale}/${slug}`;
-  const languages = { en: `/en/${slug}`, ar: `/ar/${slug}` };
+  const languages = { en: `/en/${slug}` };
 
   if (EV_SLUGS.has(slug)) {
     const page = await getCmsPage(slug, store);
-    const title = page?.meta_title || page?.title || (locale === "ar" ? "إطارات السيارات الكهربائية في الإمارات" : "Electric Vehicle Tyres in UAE | Best EV Tyres for Tesla, BMW & More");
-    const description = page?.meta_description || (locale === "ar" ? "تسوق أفضل إطارات السيارات الكهربائية في الإمارات" : "Buy electric vehicle tyres in UAE. Best EV tyres for Tesla Model 3, Model Y, BMW iX, Hyundai IONIQ 5 & more. EV-specific, low noise & high efficiency tyres.");
+    const title = page?.meta_title || page?.title || "Electric Vehicle Tyres in UAE | Best EV Tyres for Tesla, BMW & More";
+    const description = page?.meta_description || "Buy electric vehicle tyres in UAE. Best EV tyres for Tesla Model 3, Model Y, BMW iX, Hyundai IONIQ 5 & more. EV-specific, low noise & high efficiency tyres.";
     return {
       title,
       description,
@@ -145,7 +146,7 @@ export default async function DynamicSlugPage({ params }: PageProps) {
       "@type": "BreadcrumbList",
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/${locale}` },
-        { "@type": "ListItem", position: 2, name: locale === "ar" ? "إطارات السيارات الكهربائية" : "EV Tyres", item: `${SITE_URL}/${locale}/${slug}` },
+        { "@type": "ListItem", position: 2, name: "EV Tyres", item: `${SITE_URL}/${locale}/${slug}` },
       ],
     };
     return (
@@ -201,7 +202,6 @@ export default async function DynamicSlugPage({ params }: PageProps) {
   if (route.type === "CMS_PAGE") {
     const page = await getCmsPage(route.identifier ?? slug, store);
     if (!page) notFound();
-    const isAr = locale === "ar";
     /* Magento's Page Builder wraps raw-HTML blocks HTML-entity-encoded
        (its editor needs the markup as text) — `&lt;div class="..."&gt;`
        instead of `<div class="...">`. The old PHP theme decoded this
@@ -333,20 +333,6 @@ export default async function DynamicSlugPage({ params }: PageProps) {
       if (key.includes("motorcycle") || key.includes("motorbike") || title.includes("motorbike") || title.includes("motorcycle")) {
         return "/images/bg/motorbike-banner.png";
       }
-      if (key.includes("insurance") || title.includes("insurance")) {
-        /* The real live-site asset (downloaded from the actual public,
-           unauthenticated theme static URL used on www1.tyresworld.ae —
-           confirmed pixel-identical), not the car-battery artwork that
-           was previously mislabeled car-insurance-banner.png. */
-        return "/images/bg/car-insurance-banner.webp";
-      }
-      if (key === "car-battery-replacement") {
-        /* Its own dedicated real live asset (Dubai skyline + 5 SUVs +
-           battery-brand boxes, "SHOP FROM PREMIUM CAR BATTERY BRANDS"
-           ribbon) — distinct from both the generic tyre-tread background
-           and the car-battery category's own banner (brand/parts photo). */
-        return "/images/bg/car-battery-replacement-banner.webp";
-      }
       /* No loose "battery" substring branch: that used to also wrongly catch
          the car-battery-service CMS page — confirmed on the live site that
          page actually uses the same generic tyre-tread background as every
@@ -382,48 +368,59 @@ export default async function DynamicSlugPage({ params }: PageProps) {
         }
       : undefined;
 
-    return (
-      <main dir={isAr ? "rtl" : "ltr"} className="bg-white">
-        {/* Same hero banner treatment as category pages (page-title-wrapper /
-            bg-cover-image in app/globals.css) — the CMS branch never used it
-            before, so these pages had no title banner at all. */}
-        <div
-          className={`page-title-wrapper bg-cover-image ${
-            cmsBgImage
-              ? cmsBannerAspectRatio
-                ? "shadow-inner"
-                : "!py-16 sm:!py-24 md:!py-28 lg:!py-36 shadow-inner"
-              : ""
-          }`}
-          style={cmsBannerStyle}
-        >
-          <div className="container custom-width">
-            <div className="title">
-              <h1 id="page-title-heading" className={cmsHasBakedInTitle ? "sr-only" : ""}>
-                <span className="base" data-ui-id="page-title-wrapper">
-                  {/* content_heading is the real on-page H1 field, distinct
-                      from title (used below for breadcrumb/<title> tag) —
-                      same pattern as category_page_title vs name. e.g. Car
-                      Insurance: title="Car Insurance", content_heading=
-                      "Car Insurance Service in UAE", the live page's real H1. */}
-                  {page.content_heading || page.title}
-                </span>
-              </h1>
-            </div>
-          </div>
-        </div>
+    const cmsBreadcrumb: BreadcrumbItem[] = [
+      { label: t(locale, "common.home"), href: `/${locale}` },
+      { label: page.title },
+    ];
 
-        <div className="bg-white border-b border-gray-100">
-          <div className="container py-2.5">
-            <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap font-medium">
-              <a href={`/${locale}`} className="hover:text-black transition-colors">
-                {t(locale, "common.home")}
-              </a>
-              <span>/</span>
-              <span className="text-black">{page.title}</span>
-            </nav>
-          </div>
-        </div>
+    return (
+      <main dir="ltr" className="bg-white">
+        {cmsBgImage ? (
+          /* Curated real photo banner for this specific page (EV, motorbike,
+             insurance, car-battery-replacement) — kept as its own deliberate
+             asset/aspect-ratio rather than folded into the generic banner. */
+          <>
+            <div
+              className={`page-title-wrapper bg-cover-image ${
+                cmsBannerAspectRatio ? "shadow-inner" : "!py-16 sm:!py-24 md:!py-28 lg:!py-36 shadow-inner"
+              }`}
+              style={cmsBannerStyle}
+            >
+              <div className="container custom-width">
+                <div className="title">
+                  <h1 id="page-title-heading" className={cmsHasBakedInTitle ? "sr-only" : ""}>
+                    <span className="base" data-ui-id="page-title-wrapper">
+                      {/* content_heading is the real on-page H1 field, distinct
+                          from title (used below for breadcrumb/<title> tag) —
+                          same pattern as category_page_title vs name. e.g. Car
+                          Insurance: title="Car Insurance", content_heading=
+                          "Car Insurance Service in UAE", the live page's real H1. */}
+                      {page.content_heading || page.title}
+                    </span>
+                  </h1>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border-b border-gray-100">
+              <div className="container py-2.5">
+                <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap font-medium">
+                  <a href={`/${locale}`} className="hover:text-black transition-colors">
+                    {t(locale, "common.home")}
+                  </a>
+                  <span>/</span>
+                  <span className="text-black">{page.title}</span>
+                </nav>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Same gradient hero used site-wide on every other inner page. */
+          <PageHeroBanner
+            title={page.content_heading || page.title}
+            breadcrumb={cmsBreadcrumb}
+          />
+        )}
 
         {((route.identifier ?? slug) === "car-battery-replacement" || (route.identifier ?? slug) === "car-battery") ? (
           /* Real page content — see CarBatteryReplacementLanding.tsx for why

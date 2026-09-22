@@ -11,6 +11,7 @@ import { type Locale } from "@/lib/i18n";
 import { useCart } from "@/lib/cart-context";
 import { Money } from "@/components/Price";
 import { APP_CONFIG } from "@/src/config/app-config";
+import { buildBrandSlug } from "@/lib/filterBuilder";
 
 /** Tyre size with speed/load index from product fields or name */
 function getTyreSizeWithIndex(p: Product): string {
@@ -94,8 +95,8 @@ function TyreHalfColumn({
   const origin = product.country ?? product.origin ?? "";
 
   const brandLogo = product.brandLogoUrl;
-  const brandSlug = product.brandName?.toLowerCase().replace(/[^a-z0-9]+/g, "").replace(/(^-|-$)/g, "");
-  const brandHref = brandSlug ? `/${locale}/tyres/brand/${brandSlug}` : null;
+  const brandSlug = buildBrandSlug(product.brandName || brandLabel);
+  const brandHref = brandSlug ? `/tyres/brand/${brandSlug}` : null;
 
   const unitPrice = product.price > 0 ? product.price : 0;
   const resolvedSet2Price = set2Price ?? (unitPrice * 2);

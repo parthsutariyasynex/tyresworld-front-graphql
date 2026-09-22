@@ -49,11 +49,28 @@ function FilterGroupSection({
     o.label.toLowerCase().includes(search.toLowerCase())
   );
 
-  const toggle = (value: string) => {
-    if (selected.includes(value)) {
-      onChange(selected.filter(v => v !== value));
+  const toggle = (opt: FilterOption) => {
+    const isSelected =
+      selected.includes(opt.value) ||
+      selected.includes(opt.label) ||
+      selected.some(
+        (v) =>
+          v.toLowerCase() === opt.value.toLowerCase() ||
+          v.toLowerCase() === opt.label.toLowerCase()
+      );
+
+    if (isSelected) {
+      onChange(
+        selected.filter(
+          (v) =>
+            v !== opt.value &&
+            v !== opt.label &&
+            v.toLowerCase() !== opt.value.toLowerCase() &&
+            v.toLowerCase() !== opt.label.toLowerCase()
+        )
+      );
     } else {
-      onChange([...selected, value]);
+      onChange([...selected, opt.value]);
     }
   };
 
@@ -112,7 +129,7 @@ function FilterGroupSection({
                   <input
                     type="checkbox"
                     checked={isChecked}
-                    onChange={() => toggle(opt.label || opt.value)}
+                    onChange={() => toggle(opt)}
                     className="w-4 h-4 rounded border-gray-300 text-[#ed1c24] focus:ring-[#ed1c24] accent-[#ed1c24] cursor-pointer"
                   />
                   <span
@@ -168,9 +185,16 @@ export default function FilterPanel({
     "haight_rear", "height_rear", "rear_height", "rheight",
     "rim_rear", "rear_rim", "rrim",
   ]);
-  const visibleFilters = filters.filter(
-    (f) => !SIZE_FILTER_CODES.has(f.code.toLowerCase()) && f.options && f.options.length > 0
-  );
+  const seenFilterLabels = new Set<string>();
+  const visibleFilters = filters.filter((f) => {
+    if (SIZE_FILTER_CODES.has(f.code.toLowerCase()) || !f.options || f.options.length === 0) {
+      return false;
+    }
+    const norm = f.label.trim().toLowerCase();
+    if (seenFilterLabels.has(norm)) return false;
+    seenFilterLabels.add(norm);
+    return true;
+  });
 
   /* Check only non-size filter selections */
   const activeFilterEntries = Object.entries(selected).filter(

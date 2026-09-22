@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import {
-  ChevronRight,
   CheckCircle,
   Loader2,
 } from "lucide-react";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 type ContactInfo = {
   address?: string | null;
@@ -86,32 +85,10 @@ export default function ContactPage() {
 
   return (
     <div className="bg-white">
-      {/* ── Top Hero Banner with Title ── */}
-      <div className="relative w-full h-32 sm:h-40 md:h-48 bg-black overflow-hidden flex items-center justify-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/contact-banner.png"
-          alt="Contact Us"
-          className="absolute inset-0 w-full h-full object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-black/25" />
-        <h1 className="relative z-10 text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-wider drop-shadow-md font-sans">
-          CONTACT US
-        </h1>
-      </div>
-
-      {/* ── Breadcrumb ── */}
-      <div className="bg-[#f0f0f0] border-b border-gray-200">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-2.5">
-          <nav className="flex items-center gap-2 text-xs font-medium text-gray-500">
-            <Link href="/" className="hover:text-black transition-colors">
-              Home
-            </Link>
-            <ChevronRight size={12} className="text-gray-400" />
-            <span className="text-gray-800 font-medium">Contact Us</span>
-          </nav>
-        </div>
-      </div>
+      <PageHeroBanner
+        title="Contact Us"
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "Contact Us" }]}
+      />
 
       {/* ── Main Content ── */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8 sm:py-12">

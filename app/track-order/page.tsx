@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Search, Package, Truck, CheckCircle, Clock, ArrowRight, MapPin, AlertCircle, Loader2 } from "lucide-react";
 import { Money } from "@/components/Price";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 type OrderItem = {
   id: string;
@@ -112,16 +113,10 @@ function TrackOrderInner() {
 
   return (
     <>
-      {/* Header */}
-      <div className="bg-black py-12 text-center">
-        <div className="container">
-          <p className="text-xs text-white/40 mb-2 uppercase tracking-widest font-medium">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
-            {" / "}Track Order
-          </p>
-          <h1 className="text-3xl font-black uppercase tracking-wider text-white">Track Your Order</h1>
-        </div>
-      </div>
+      <PageHeroBanner
+        title="Track Your Order"
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "Track Order" }]}
+      />
 
       <div className="container py-12 lg:py-16 max-w-2xl mx-auto">
 

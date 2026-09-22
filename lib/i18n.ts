@@ -1,28 +1,27 @@
 import enDict from "../public/locales/compiled-en.json";
-import arDict from "../public/locales/compiled-ar.json";
 
-export type Locale = "en" | "ar";
+/** English-only storefront — kept as a type so existing call sites
+    (27 of them) don't need touching. */
+export type Locale = "en";
 
 const dicts: Record<Locale, Record<string, string>> = {
   en: enDict as unknown as Record<string, string>,
-  ar: arDict as unknown as Record<string, string>,
 };
 
 /**
- * Look up a translation key for the given locale.
- * Falls back to English, then to the raw key if nothing is found.
+ * Look up a translation key. Falls back to the raw key if nothing is found.
  */
 export function t(locale: Locale, key: string): string {
-  return dicts[locale]?.[key] ?? dicts.en[key] ?? key;
+  return dicts.en[key] ?? key;
 }
 
-/** Format a products count string using the locale-appropriate template. */
+/** Format a products count string using the English template. */
 export function productsCount(locale: Locale, n: number): string {
   const pattern = t(locale, "listing.productsCount");
-  return pattern.replace("{n}", n.toLocaleString(locale === "ar" ? "ar-SA" : "en-US"));
+  return pattern.replace("{n}", n.toLocaleString("en-US"));
 }
 
-/** Magento store view code for a given locale. */
+/** Magento store view code — always the default (English) store. */
 export function storeCode(locale: Locale): string {
-  return locale === "ar" ? "ar" : "default";
+  return "default";
 }

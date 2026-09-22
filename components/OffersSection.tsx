@@ -13,7 +13,7 @@ const DEFAULT_OFFERS_SLIDES = [
     id: "buy-3-get-1",
     title: "Buy 3 Tyres Get 1 Free on Continental",
     image: "/offers/buy-3-get-1-free-continental.webp",
-    href: "/tyres?mgs_brand=Continental&offers=Buy+3+Get+1+Free",
+    href: "/tyres/brand/continental?offers=Buy+3+Get+1+Free",
   },
   {
     id: "2026-tyres",
@@ -26,7 +26,6 @@ const DEFAULT_OFFERS_SLIDES = [
 export default function OffersSection() {
   const pathname = usePathname();
   const locale = pathname?.split("/")[1] || "en";
-  const isAr = locale === "ar";
   const reducedMotion = usePrefersReducedMotion();
 
   const [offersData, setOffersData] = useState<KleverHomeOffers | null>(null);
@@ -80,14 +79,11 @@ export default function OffersSection() {
         <div className="mb-8">
           <div className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] text-[#ed1c24] mb-1.5 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#ed1c24]" />
-            {isAr ? "تخفيضات كبرى" : "FLASH SALE"}
+            FLASH SALE
           </div>
 
           <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black tracking-tight text-gray-950 font-sans uppercase">
-            {isAr ? "عروض لفترة " : "LIMITED TIME "}{" "}
-            <span className="text-[#ed1c24]">
-              {isAr ? "محدودة" : "OFFERS"}
-            </span>
+            LIMITED TIME <span className="text-[#ed1c24]">OFFERS</span>
           </h2>
         </div>
 
@@ -169,13 +165,11 @@ export default function OffersSection() {
             {/* Content */}
             <div className="relative z-10">
               <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow-md">
-                {isAr ? "خدمة سيارات احترافية" : "Professional Car Service"}
+                Professional Car Service
               </h3>
 
               <p className="text-xs sm:text-[13.5px] text-white/80 mt-2.5 leading-relaxed max-w-sm drop-shadow">
-                {isAr
-                  ? "احصل على صيانة احترافية للسيارات، فحص كمبيوتر وتغيير زيت في أبوظبي وجميع أنحاء الإمارات."
-                  : "Get expert car maintenance, diagnostics, and oil change services in Abu Dhabi and across the UAE."}
+                Get expert car maintenance, diagnostics, and oil change services in Abu Dhabi and across the UAE.
               </p>
 
               <div className="mt-6">
@@ -183,7 +177,7 @@ export default function OffersSection() {
                   href={`/${locale}/car-service`}
                   className="btn-cta text-xs sm:text-sm px-6 py-2.5 rounded-lg shadow-md group-hover:scale-105 duration-300"
                 >
-                  <span>{isAr ? "اعرف المزيد" : "Learn More"}</span>
+                  <span>Learn More</span>
                 </Link>
               </div>
             </div>
@@ -206,13 +200,11 @@ export default function OffersSection() {
             {/* Content */}
             <div className="relative z-10">
               <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight drop-shadow-md">
-                {isAr ? "ميزان ليزر مجاني للإطارات" : "Free Wheel Alignment"}
+                Free Wheel Alignment
               </h3>
 
               <p className="text-xs sm:text-[13.5px] text-white/80 mt-2.5 leading-relaxed max-w-sm drop-shadow">
-                {isAr
-                  ? "استمتع بميزان إلكتروني ثلاثي الأبعاد مجاناً وتركيب احترافي عند طلب إطاراتك عبر الإنترنت."
-                  : "Enjoy free 3D computerized laser wheel alignment and expert fitment when you order your tyres online."}
+                Enjoy free 3D computerized laser wheel alignment and expert fitment when you order your tyres online.
               </p>
 
               <div className="mt-6">
@@ -220,7 +212,7 @@ export default function OffersSection() {
                   href={`/${locale}/tyres?offers=Free+Wheel+Alignment`}
                   className="btn-cta text-xs sm:text-sm px-6 py-2.5 rounded-lg shadow-md group-hover:scale-105 duration-300"
                 >
-                  <span>{isAr ? "اعرف المزيد" : "Learn More"}</span>
+                  <span>Learn More</span>
                 </Link>
               </div>
             </div>

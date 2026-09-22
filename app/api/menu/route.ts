@@ -6,11 +6,8 @@ import { storeCode } from "@/lib/i18n";
     gets this server-side via app/layout.tsx; this route exists for any
     client-side caller that needs the same data (e.g. a future locale
     switcher) without duplicating the fetch/adapt logic. */
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const locale = searchParams.get("locale") ?? "en";
-
-  const menu = await getMainMenu(storeCode(locale === "ar" ? "ar" : "en"));
+export async function GET(_req: NextRequest) {
+  const menu = await getMainMenu(storeCode("en"));
 
   return NextResponse.json(
     { menu: menu ?? [], ...(menu ? {} : { error: "kleverMainMenu unavailable" }) },

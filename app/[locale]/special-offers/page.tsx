@@ -7,6 +7,7 @@ import LiveOfferTiles from "@/components/offers/LiveOfferTiles";
 import { getCmsPage } from "@/lib/services/cms.service";
 import { storeView } from "@/src/config/app-config";
 import { OFFER_BANNERS, SEO_INTRO, SEO_SECTIONS, FAQS } from "./content";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 /**
  * Special Offers.
@@ -39,7 +40,7 @@ export async function generateMetadata({
 }
 
 export function generateStaticParams() {
-  return [{ locale: "en" }, { locale: "ar" }];
+  return [{ locale: "en" }];
 }
 
 export default async function SpecialOffersPage({
@@ -48,13 +49,11 @@ export default async function SpecialOffersPage({
   params: { locale: string };
 }) {
   const { locale } = params;
-  if (locale !== "en" && locale !== "ar") notFound();
+  if (locale !== "en") notFound();
 
-  const isAr = locale === "ar";
   const page = await getCmsPage("special-offers", storeView(locale));
 
-  const heading =
-    page?.content_heading || page?.title || (isAr ? "العروض الخاصة" : "Special Offers");
+  const heading = page?.content_heading || page?.title || "Special Offers";
 
   /* Marked up so the FAQ block is eligible for rich results, the same
      way the Magento page is. */
@@ -72,21 +71,14 @@ export default async function SpecialOffersPage({
     <div className="so-page">
       <JsonLd data={faqJsonLd} />
 
-      {/* ── Page head ─────────────────────────────────────────── */}
-      <div className="so-hero">
-        <div className="so-container">
-          <nav className="so-crumbs" aria-label="Breadcrumb">
-            <Link href={`/${locale}`}>{isAr ? "الرئيسية" : "Home"}</Link>
-            <ChevronRight size={13} aria-hidden="true" />
-            <span aria-current="page">{isAr ? "العروض الخاصة" : "Special Offers"}</span>
-          </nav>
-          <h1 className="so-h1">{heading}</h1>
-        </div>
-      </div>
+      <PageHeroBanner
+        title={heading}
+        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Special Offers" }]}
+      />
 
       <div className="so-container so-body">
         {/* ── Offer banners ───────────────────────────────────── */}
-        <section aria-label={isAr ? "العروض" : "Offers"}>
+        <section aria-label="Offers">
           <div className="so-banners">
             {OFFER_BANNERS.map((b) => (
               <Link key={b.id} href={`/${locale}${b.href}`} className="so-banner">
@@ -103,7 +95,7 @@ export default async function SpecialOffersPage({
         {/* ── Prose ───────────────────────────────────────────── */}
         <section className="so-prose">
           <h2 className="so-h2">
-            {isAr ? "أفضل عروض الإطارات في " : "Best Tyre Deals at "}
+            Best Tyre Deals at
             <span className="so-accent">TyresWorld</span>
           </h2>
           <p className="so-lead">{SEO_INTRO}</p>
@@ -121,8 +113,8 @@ export default async function SpecialOffersPage({
         {/* ── FAQ ─────────────────────────────────────────────── */}
         <section className="so-faq">
           <h2 className="so-h2">
-            {isAr ? "أسئلة شائعة عن " : "FAQs About "}
-            <span className="so-accent">{isAr ? "العروض" : "Tyre Offers"}</span>
+            FAQs About{" "}
+            <span className="so-accent">Tyre Offers</span>
           </h2>
 
           <div className="so-faq-list">

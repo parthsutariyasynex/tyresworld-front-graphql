@@ -4,11 +4,13 @@
    the category's own metadata (name, description, SEO fields).
 ───────────────────────────────────────────────────────────────── */
 import { magentoFetch } from "@/lib/graphql/client";
-import { CATEGORY_PRODUCTS_BY_UID_QUERY, CATEGORY_PAGE_QUERY, CATEGORY_META_BY_URL_KEY_QUERY } from "@/lib/queries";
-import { parseGraphqlResponse, type GqlProductsResponse } from "@/lib/magento";
+import { CATEGORY_PRODUCTS_BY_UID_QUERY, CATEGORY_PAGE_QUERY, CATEGORY_META_BY_URL_KEY_QUERY, CATEGORY_FILTERS_QUERY } from "@/lib/queries";
+import { parseGraphqlResponse, parseAggregations, type GqlProductsResponse } from "@/lib/magento";
 import { resolveBrandInfo } from "@/lib/services/brands.service";
 import { APP_CONFIG } from "@/src/config/app-config";
 import type { Product } from "@/lib/data";
+import type { FilterGroup } from "@/components/FilterPanel";
+
 
 export type SortInput = Record<string, "ASC" | "DESC">;
 
@@ -61,6 +63,26 @@ export async function getCategoryMeta(urlKey: string, store?: string): Promise<C
     metaDescription: (cat.meta_description as string) ?? null,
     urlKey: String(cat.url_key ?? urlKey),
   };
+}
+
+/**
+ * Fetches available filter aggregations for a category UID.
+ */
+export async function getCategoryFilterGroups(
+  categoryUid: string,
+  store?: string,
+): Promise<FilterGroup[]> {
+  const r = await magentoFetch<{ products?: { aggregations?: unknown[] } }>(
+    CATEGORY_FILTERS_QUERY,
+    { categoryUid },
+    { store, revalidate: APP_CONFIG.cache.category },
+  );
+
+  if (!r.ok || !r.data) {
+    return [];
+  }
+
+  return parseAggregations({ data: r.data });
 }
 
 export async function getCategoryProducts(params: {

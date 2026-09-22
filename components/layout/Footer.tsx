@@ -39,12 +39,9 @@ export default function Footer({ forceShow }: { forceShow?: boolean } = {}) {
     !forceShow &&
     !isCheckoutSuccess &&
     (pathname === "/checkout" ||
-      pathname === "/ar/checkout" ||
-      pathname === "/en/checkout" ||
       pathname === "/checkout/" ||
       pathname?.endsWith("/checkout"));
-  const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
-  const isAr = locale === "ar";
+  const locale = "en";
 
   const [showTop, setShowTop] = useState(false);
   const [columns, setColumns] = useState<FooterColumn[]>([]);
@@ -126,10 +123,7 @@ export default function Footer({ forceShow }: { forceShow?: boolean } = {}) {
             <div className="widget_text widget">
               <div className="widget-title mb-3.5">
                 <h3 className="text-white text-base sm:text-[16px] font-black uppercase tracking-wider m-0">
-                  {isAr ? "تواصل " : "Get In "}
-                  <span className="text-[#ed1c24] theme_color">
-                    {isAr ? "معنا" : "Touch"}
-                  </span>
+                  Get In <span className="text-[#ed1c24] theme_color">Touch</span>
                 </h3>
               </div>
               <div className="textwidget custom-html-widget text-xs leading-relaxed">
@@ -146,7 +140,7 @@ export default function Footer({ forceShow }: { forceShow?: boolean } = {}) {
                             href={contact.map_url}
                             className="text-[#ed1c24] hover:underline font-semibold inline-block mt-0.5 text-xs"
                           >
-                            {isAr ? "عرض على الخريطة" : "View on Map"}
+                            View on Map
                           </a>
                         </>
                       )}

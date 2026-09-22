@@ -5,10 +5,8 @@ interface TyreGuideSeoContentProps {
 }
 
 export default function TyreGuideSeoContent({ locale = "en" }: TyreGuideSeoContentProps) {
-  const isAr = locale === "ar";
-
   return (
-    <section className="bg-white py-6 sm:py-8 border-t border-gray-100" dir={isAr ? "rtl" : "ltr"}>
+    <section className="bg-white py-6 sm:py-8 border-t border-gray-100">
       <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 text-left">
         
         {/* Intro Paragraphs */}

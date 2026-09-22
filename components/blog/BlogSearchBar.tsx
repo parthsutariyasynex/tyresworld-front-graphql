@@ -20,8 +20,7 @@ export default function BlogSearchBar({
   const [query, setQuery] = useState(initialQuery);
   const [isPending, startTransition] = useTransition();
 
-  const isAr = locale === "ar";
-  const defaultPlaceholder = isAr ? "ابحث في مقالات المدونة..." : "Search blog posts...";
+  const defaultPlaceholder = "Search blog posts...";
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -57,7 +56,7 @@ export default function BlogSearchBar({
     <form
       onSubmit={handleSearch}
       className="w-full relative bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-gray-100 hover:border-gray-200 transition-all p-2 flex items-center gap-3"
-      dir={isAr ? "rtl" : "ltr"}
+      dir="ltr"
     >
       <input
         type="text"
@@ -72,7 +71,7 @@ export default function BlogSearchBar({
           type="button"
           onClick={handleClear}
           className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full transition-colors cursor-pointer"
-          title={isAr ? "مسح" : "Clear search"}
+          title="Clear search"
         >
           <X className="w-4 h-4" />
         </button>
@@ -82,8 +81,8 @@ export default function BlogSearchBar({
         type="submit"
         disabled={isPending}
         className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl text-[#ed1c24] hover:bg-red-50 active:scale-95 transition-all cursor-pointer shrink-0"
-        title={isAr ? "بحث" : "Search"}
-        aria-label={isAr ? "بحث" : "Search"}
+        title="Search"
+        aria-label="Search"
       >
         {isPending ? (
           <Loader2 className="w-5 h-5 animate-spin text-[#ed1c24]" />

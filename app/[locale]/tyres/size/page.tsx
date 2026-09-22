@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronRight, Search, Loader2 } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import StickyBottomFinder from "@/components/home/partora/StickyBottomFinder";
 import type { TyreSizeItem } from "@/app/api/tyre-sizes/route";
+import PageHeroBanner from "@/components/PageHeroBanner";
+import { buildTyreSizeSlug } from "@/lib/filterBuilder";
 
 export default function TyreSizeBrowserPage() {
   const params = useParams();
   const router = useRouter();
   const locale = String(params.locale ?? "en");
-  const isAr = locale === "ar";
 
   const [sizes, setSizes] = useState<TyreSizeItem[]>([]);
   const [rims, setRims] = useState<string[]>([]);
@@ -103,52 +103,28 @@ export default function TyreSizeBrowserPage() {
   }, [sizes, selectedRim, searchQuery]);
 
   const handleSizeClick = (size: TyreSizeItem) => {
-    const params = new URLSearchParams();
-    if (size.width) params.set("width", size.width);
-    if (size.height) params.set("height", size.height);
-    if (size.rim) {
-      // Strip non-numeric like R or C if needed or pass exact rim number
-      const cleanRim = size.rim.replace(/^R/i, "");
-      params.set("rim", cleanRim);
-    }
-    router.push(`/${locale}/tyres?${params.toString()}`);
+    const cleanRim = size.rim ? size.rim.replace(/^R/i, "") : "";
+    router.push(buildTyreSizeSlug({ width: size.width ?? "", height: size.height ?? "", rim: cleanRim }));
   };
 
   return (
-    <div className="bg-[#f5f6f8] pb-8 sm:pb-12 flex flex-col justify-start" dir={isAr ? "rtl" : "ltr"}>
-      {/* ── Hero (same dark tyre-tread banner used site-wide, e.g. every
-             /tyres/cars/[make] page) ── */}
-      <div className="page-title-wrapper bg-cover-image py-9 sm:py-11 text-center">
-        <div className="container mx-auto px-4">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-wider text-center drop-shadow-md">
-            {isAr ? "جميع المقاسات" : "All Size"}
-          </h1>
-        </div>
-      </div>
-
-      {/* ── Breadcrumb Bar ─────────────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-200/60 py-2.5 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto flex items-center gap-2 text-xs sm:text-[13px] text-gray-500 font-medium">
-          <Link href={`/${locale}`} className="hover:text-black transition-colors">
-            {isAr ? "الرئيسية" : "Home"}
-          </Link>
-          <ChevronRight size={13} className="text-gray-400 rtl:rotate-180 shrink-0" />
-          <Link href={`/${locale}/tyres`} className="hover:text-black transition-colors">
-            {isAr ? "الإطارات" : "Tyres"}
-          </Link>
-          <ChevronRight size={13} className="text-gray-400 rtl:rotate-180 shrink-0" />
-          <span className="text-gray-900 font-bold">
-            {isAr ? "مقاس الإطار" : "Tyre Size"}
-          </span>
-        </div>
-      </div>
+    <div className="bg-[#f5f6f8] pb-8 sm:pb-12 flex flex-col justify-start" dir="ltr">
+      <PageHeroBanner
+        title="All Size"
+        description="Shop premium tyres in UAE with free mobile fitting, manufacturer warranty, and best prices across Dubai, Abu Dhabi, and UAE."
+        breadcrumb={[
+          { label: "Home", href: `/${locale}` },
+          { label: "Tyres", href: `/${locale}/tyres` },
+          { label: "Tyre Size" },
+        ]}
+      />
 
       {/* ── Main Content Container ─────────────────────────────────── */}
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 grow">
         {/* Page Heading */}
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-black text-black uppercase tracking-tight font-sans">
-            {isAr ? "جميع المقاسات" : "ALL SIZE"}
+            ALL SIZE
           </h1>
         </div>
 
@@ -160,16 +136,10 @@ export default function TyreSizeBrowserPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={isAr ? "ابحث هنا عن المقاس..." : "Search here..."}
-                className={`w-full bg-white hover:border-gray-300 focus:bg-white border border-gray-200 rounded-xl sm:rounded-2xl ${
-                  isAr ? "pl-12 pr-5 sm:pr-6" : "pr-12 pl-5 sm:pl-6"
-                } py-3.5 sm:py-4 text-sm sm:text-base font-bold text-gray-900 placeholder:text-gray-400 focus:outline-hidden focus:border-[#ed1c24] focus:ring-2 focus:ring-[#ed1c24]/10 shadow-2xs transition-all`}
+                placeholder="Search here..."
+                className="w-full bg-white hover:border-gray-300 focus:bg-white border border-gray-200 rounded-xl sm:rounded-2xl pr-12 pl-5 sm:pl-6 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-gray-900 placeholder:text-gray-400 focus:outline-hidden focus:border-[#ed1c24] focus:ring-2 focus:ring-[#ed1c24]/10 shadow-2xs transition-all"
               />
-              <div
-                className={`absolute ${
-                  isAr ? "left-4 sm:left-5" : "right-4 sm:right-5"
-                } top-1/2 -translate-y-1/2 text-[#ed1c24] pointer-events-none flex items-center justify-center`}
-              >
+              <div className="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-[#ed1c24] pointer-events-none flex items-center justify-center">
                 <Search size={20} strokeWidth={2.5} />
               </div>
             </div>
@@ -200,20 +170,20 @@ export default function TyreSizeBrowserPage() {
               <div className="py-20 flex flex-col items-center justify-center">
                 <Loader2 size={36} className="animate-spin text-[#ed1c24] mb-3" />
                 <span className="text-sm font-bold text-gray-500">
-                  {isAr ? "جاري تحميل المقاسات..." : "Loading tyre sizes..."}
+                  Loading tyre sizes...
                 </span>
               </div>
             ) : error && sizes.length === 0 ? (
               <div className="py-16 text-center text-sm font-medium text-gray-400">
-                {isAr ? "تعذر تحميل المقاسات." : "Couldn't load tyre sizes."}
+                Couldn&apos;t load tyre sizes.
               </div>
             ) : filteredSizes.length === 0 ? (
               <div className="py-16 text-center">
                 <p className="text-base font-bold text-gray-800 mb-1">
-                  {isAr ? "لم يتم العثور على مقاسات مطابقة" : "No matching tyre sizes found"}
+                  No matching tyre sizes found
                 </p>
                 <p className="text-xs text-gray-400">
-                  {isAr ? "حاول البحث عن مقاس آخر أو مسح خيارات التصفية" : "Try searching for a different size or clear filters."}
+                  Try searching for a different size or clear filters.
                 </p>
                 <button
                   type="button"
@@ -223,7 +193,7 @@ export default function TyreSizeBrowserPage() {
                   }}
                   className="mt-4 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-lg transition-colors cursor-pointer"
                 >
-                  {isAr ? "إعادة تعيين الفلاتر" : "Reset Filters"}
+                  Reset Filters
                 </button>
               </div>
             ) : (

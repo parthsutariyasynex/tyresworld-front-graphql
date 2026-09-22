@@ -14,11 +14,11 @@ export default function CategoryPageSkeleton() {
 
       {/* Breadcrumb Skeleton */}
       <div className="bg-white border-b border-gray-100">
-        <div className="container py-3">
-          <nav className="flex items-center gap-1.5 text-xs text-gray-400">
-            <span className="inline-block bg-gray-200 rounded animate-pulse w-12 h-3" />
-            <span>/</span>
-            <span className="inline-block bg-gray-200 rounded animate-pulse w-28 h-3" />
+        <div className="container py-2.5 flex justify-center">
+          <nav className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100/90 border border-gray-200/80 rounded-full shadow-2xs">
+            <span className="inline-block bg-gray-200 rounded-full animate-pulse w-14 h-4" />
+            <span className="inline-block bg-gray-200 rounded-full animate-pulse w-3 h-3" />
+            <span className="inline-block bg-gray-300 rounded-full animate-pulse w-24 h-5" />
           </nav>
         </div>
       </div>

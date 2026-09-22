@@ -14,6 +14,7 @@ import { useWishlist } from "@/lib/wishlist-context";
 import type { Product } from "@/lib/data";
 import DynamicAddressForm from "@/components/account/address";
 import { Money } from "@/components/Price";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 type Tab = "dashboard" | "orders" | "wishlist" | "addresses" | "profile" | "vault" | "reviews";
 
@@ -43,21 +44,11 @@ function AuthPanel() {
 
   return (
     <div className="bg-[#f8f9fa]">
-      {/* ── Banner ── */}
-      <div
-        className="py-10 sm:py-14 text-center"
-        style={{
-          backgroundImage: "url('/img/shopping-cart-banner.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="container mx-auto px-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase text-white tracking-wider">
-            {mode === "login" ? "LOGIN TO YOUR ACCOUNT" : "CREATE AN ACCOUNT"}
-          </h1>
-        </div>
-      </div>
+      <PageHeroBanner
+        title={mode === "login" ? "Login to Your Account" : "Create an Account"}
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "Account" }]}
+        showCta={false}
+      />
 
       {/* ── Cards ── */}
       <div className="container max-w-6xl mx-auto px-4 pt-6 pb-12">
@@ -531,8 +522,13 @@ function AccountDashboard() {
   const defaultShippingAddress = customer.addresses?.find((a) => a.default_shipping);
 
   return (
-    <div className="bg-white py-8 lg:py-10">
-      <div className="container max-w-6xl mx-auto px-4">
+    <div className="bg-white pb-8 lg:pb-10">
+      <PageHeroBanner
+        title="My Account"
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "My Account" }]}
+        showCta={false}
+      />
+      <div className="container max-w-6xl mx-auto px-4 pt-8 lg:pt-10">
         <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-8 items-start">
           {/* Sidebar */}
           <aside className="bg-[#f8f9fa] border border-gray-200 rounded-lg p-6 flex flex-col gap-6 lg:sticky lg:top-24">
@@ -1834,8 +1830,13 @@ function OrdersList({
 ───────────────────────────────────────────────────────────────── */
 function AccountPageSkeleton() {
   return (
-    <div className="bg-white py-8 lg:py-10">
-      <div className="container max-w-6xl mx-auto px-4">
+    <div className="bg-white pb-8 lg:pb-10">
+      <PageHeroBanner
+        title="My Account"
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "My Account" }]}
+        showCta={false}
+      />
+      <div className="container max-w-6xl mx-auto px-4 pt-8 lg:pt-10">
         <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-8 items-start">
           {/* Sidebar Skeleton */}
           <div className="bg-[#f8f9fa] border border-gray-200 rounded-lg p-6 flex flex-col gap-6 animate-pulse">

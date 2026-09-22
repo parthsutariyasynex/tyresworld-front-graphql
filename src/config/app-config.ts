@@ -36,10 +36,9 @@ export const APP_CONFIG = {
 
   magento: {
     graphqlUrl: process.env.MAGENTO_GRAPHQL_URL ?? "https://www1.tyresworld.ae/graphql",
-    /** Magento store view codes keyed by locale */
+    /** Magento store view codes keyed by locale — English only */
     storeViews: {
       en: "default",
-      ar: "ar",
     } as Record<string, string>,
     /** Root UID for the "All Tyres" category — base64("18") */
     tyresCategoryUid: "MTg=",
@@ -65,7 +64,7 @@ export const APP_CONFIG = {
   },
 
   pagination: {
-    defaultPageSize: 12,
+    defaultPageSize: 8,
     maxPageSize:     48,
   },
 

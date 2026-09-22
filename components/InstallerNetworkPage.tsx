@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   MapPin,
   Search,
@@ -12,6 +11,7 @@ import {
   Loader2,
   CheckCircle2,
   Check,
+  Home,
 } from "lucide-react";
 import StoreLocatorMap, { type StoreLocation } from "@/components/StoreLocatorMap";
 
@@ -59,15 +59,13 @@ export default function InstallerNetworkPage() {
 }
 
 function InstallerNetworkContent() {
-  const pathname = usePathname();
-  const locale = pathname.split("/")[1] === "ar" ? "ar" : "en";
-  const isAr = locale === "ar";
+  const locale = "en";
 
   const [cities, setCities] = useState<string[]>([]);
   const [branches, setBranches] = useState<StoreLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedCity, setSelectedCity] = useState<string>(isAr ? "الكل" : "All");
+  const [selectedCity, setSelectedCity] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -103,7 +101,7 @@ function InstallerNetworkContent() {
 
   const handleUseMyLocation = () => {
     if (!navigator.geolocation) {
-      alert(isAr ? "متصفحك لا يدعم تحديد الموقع الجغرافي." : "Geolocation is not supported by your browser.");
+      alert("Geolocation is not supported by your browser.");
       return;
     }
     setLocating(true);
@@ -112,7 +110,7 @@ function InstallerNetworkContent() {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         setUserCoords({ lat, lng });
-        setSelectedCity(isAr ? "الكل" : "All");
+        setSelectedCity("All");
 
         try {
           const res = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`);
@@ -147,7 +145,7 @@ function InstallerNetworkContent() {
       return { ...store, distanceKm: distance };
     });
 
-    if (selectedCity && selectedCity !== "All" && selectedCity !== "الكل") {
+    if (selectedCity && selectedCity !== "All") {
       result = result.filter(
         (s) =>
           s.city.toLowerCase() === selectedCity.toLowerCase() ||
@@ -180,91 +178,81 @@ function InstallerNetworkContent() {
   }, [filteredStores, selectedStoreId]);
 
   return (
-    <div dir={isAr ? "rtl" : "ltr"} className="bg-white pb-8 sm:pb-12">
-      {/* ── Page Hero Title Banner with Radiant Red Glow, Dot Mesh & Exact Curved Wave ── */}
-      <div
-        className="relative overflow-hidden text-white pt-12 pb-20 sm:pt-16 sm:pb-28"
-        style={{
-          backgroundColor: "#09090b",
-          backgroundImage: `
-            radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px),
-            radial-gradient(ellipse 70% 80% at 90% 50%, #9e141b 0%, #52090e 45%, transparent 80%),
-            linear-gradient(115deg, #070709 0%, #130406 40%, #3d070b 70%, #851216 100%)
-          `,
-          backgroundSize: "22px 22px, 100% 100%, 100% 100%",
-        }}
-      >
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-          <div className="inline-flex items-center gap-2 bg-[#251517]/90 backdrop-blur-xs border border-white/10 px-3.5 py-1 rounded-full text-[11.5px] font-medium text-white/90 mb-5 shadow-xs">
-            <CheckCircle2 size={13} className="text-[#ed1c24] shrink-0" />
-            <span>{isAr ? "شبكة شركاء التركيب المعتمدين في كافة أنحاء الإمارات" : "UAE-Wide Network of Trusted Installers Partner"}</span>
-          </div>
+    <div className="bg-white pb-8 sm:pb-12">
+      {/* ── Page Hero Banner — same dark-to-red gradient card used site-wide,
+             keeping this page's own richer content (badge, CTA, checklist). ── */}
+      <div className="bg-[#f8f9fa] py-1 sm:py-2">
+        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-[20px] sm:rounded-[28px] bg-gradient-to-r from-[#780a0f] via-[#b31219] to-[#ed1c24] p-6 sm:p-8 md:p-10 lg:p-12 shadow-lg border border-red-900/15">
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 rounded-full bg-black/25 blur-3xl pointer-events-none" />
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[46px] font-black uppercase text-white tracking-tight leading-none">
-            {isAr ? "احجز تركيب الإطارات" : "BOOK TYRE FITTING"}
-          </h1>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-black uppercase tracking-tight mt-1.5 mb-3.5 leading-tight">
-            <span className="text-[#ed1c24]">{isAr ? "بالقرب منك في أي مكان في " : "NEAR YOU ANYWHERE IN "}</span>
-            <span className="text-white">{isAr ? "الإمارات" : "THE UAE"}</span>
-          </h2>
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 bg-black/25 backdrop-blur-xs border border-white/10 px-3.5 py-1 rounded-full text-[11.5px] font-medium text-white/90 mb-5 shadow-xs">
+                <CheckCircle2 size={13} className="text-white shrink-0" />
+                <span>UAE-Wide Network of Trusted Installers Partner</span>
+              </div>
 
-          <p className="text-xs sm:text-sm text-gray-300 max-w-lg leading-relaxed mb-5 font-normal">
-            {isAr
-              ? "ابحث في شبكتنا من مراكز التركيب المعتمدة، واختر الموعد المناسب لك، وقم بتركيب إطاراتك في المركز أو في المكان الذي يناسبك."
-              : "Search our network of trusted installers, pick a slot that works for you, and get your tyres fitted at a workshop or wherever suits you best."}
-          </p>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[46px] font-black uppercase text-white tracking-tight leading-none drop-shadow-sm">
+                BOOK TYRE FITTING
+              </h1>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-black uppercase tracking-tight mt-1.5 mb-3.5 leading-tight text-white drop-shadow-sm">
+                NEAR YOU ANYWHERE IN THE UAE
+              </h2>
 
-          <div className="mb-6">
-            <Link
-              href={`/${locale}/tyres`}
-              className="inline-flex items-center gap-2 bg-[#2a171a]/90 hover:bg-[#3d2024] border border-white/15 hover:border-white/30 text-white text-[12px] font-semibold px-4.5 py-2 rounded-full transition-all shadow-xs"
-            >
-              <Search size={13} className="text-white" />
-              <span>{isAr ? "البحث عن الإطارات حسب المقاس" : "Search Tyres by Size"}</span>
-              <ChevronRight size={13} className="text-white/70 rtl:rotate-180" />
-            </Link>
-          </div>
+              <p className="text-xs sm:text-sm text-white/90 max-w-lg leading-relaxed mb-5 font-normal">
+                Search our network of trusted installers, pick a slot that works for you, and get your tyres fitted at a workshop or wherever suits you best.
+              </p>
 
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[11.5px] text-gray-200 font-medium">
-            <div className="flex items-center gap-1.5">
-              <Check size={13} className="text-[#25D366] stroke-[3]" />
-              <span>{isAr ? "مراكز تركيب معتمدة ومضمونة" : "Vetted, Quality Installers"}</span>
+              <div className="mb-6">
+                <Link
+                  href={`/${locale}/tyres`}
+                  className="inline-flex items-center gap-2 bg-black hover:bg-neutral-900 text-white text-[12px] font-semibold px-4.5 py-2 rounded-full transition-all shadow-md"
+                >
+                  <Search size={13} className="text-white" />
+                  <span>Search Tyres by Size</span>
+                  <ChevronRight size={13} className="text-white/70" />
+                </Link>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[11.5px] text-white/90 font-medium">
+                <div className="flex items-center gap-1.5">
+                  <Check size={13} className="text-white stroke-[3]" />
+                  <span>Vetted, Quality Installers</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Check size={13} className="text-white stroke-[3]" />
+                  <span>Contact Installers Directly</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Check size={13} className="text-white stroke-[3]" />
+                  <span>Workshop or Mobile Fitting</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Check size={13} className="text-[#25D366] stroke-[3]" />
-              <span>{isAr ? "تواصل معهم مباشرة عبر واتساب" : "Contact Installers Directly"}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Check size={13} className="text-[#25D366] stroke-[3]" />
-              <span>{isAr ? "تركيب في المركز أو عبر الفان المتنقل" : "Workshop or Mobile Fitting"}</span>
+
+            {/* ── Breadcrumb Inside Banner (Centered Connected Ribbon Style) ── */}
+            <div className="relative z-10 flex justify-center w-full mt-4 sm:mt-5">
+              <nav className="inline-flex items-center gap-1 p-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-full shadow-lg max-w-full overflow-x-auto custom-scrollbar">
+                <Link
+                  href={`/${locale}`}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold shrink-0 group"
+                >
+                  <span className="w-4 h-4 rounded-full bg-white/15 flex items-center justify-center text-white group-hover:bg-white group-hover:text-red-600 transition-colors">
+                    <Home size={10} />
+                  </span>
+                  <span>{"Home"}</span>
+                </Link>
+                <ChevronRight size={11} className="shrink-0 text-white/40 -mx-0.5" />
+                <span className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 bg-white text-gray-950 font-black text-xs uppercase tracking-wide rounded-full shadow-md border border-white shrink-0">
+                  <span className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  </span>
+                  <span>Installer Network</span>
+                </span>
+              </nav>
             </div>
           </div>
-        </div>
-
-        <div className="absolute -bottom-1 left-0 right-0 w-full overflow-hidden leading-none z-0 pointer-events-none">
-          <svg
-            className="relative block w-full h-8 sm:h-14 lg:h-18 text-white"
-            viewBox="0 0 1440 120"
-            preserveAspectRatio="none"
-            fill="currentColor"
-          >
-            <path d="M0,50 C320,95 720,85 1060,25 C1220,-5 1360,10 1440,25 L1440,120 L0,120 Z" />
-          </svg>
-        </div>
-      </div>
-
-      {/* ── Breadcrumb ── */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 py-3">
-          <nav className="flex items-center gap-2 text-xs text-gray-500 font-medium">
-            <Link href={`/${locale}`} className="hover:text-black transition-colors">
-              {isAr ? "الرئيسية" : "Home"}
-            </Link>
-            <span className="text-gray-400">/</span>
-            <span className="text-gray-900 font-semibold">
-              {isAr ? "شبكة مراكز التركيب" : "Installer Network"}
-            </span>
-          </nav>
         </div>
       </div>
 
@@ -272,12 +260,10 @@ function InstallerNetworkContent() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl sm:text-2xl font-black text-gray-950 uppercase tracking-tight font-sans">
-              {isAr ? "شركاء تركيب الإطارات بالقرب منك" : "TYRE FITTING PARTNERS NEAR YOU"}
+              TYRE FITTING PARTNERS NEAR YOU
             </h2>
             <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-              {isAr
-                ? "أدخل منطقتك أو مدينتك لعرض شركاء التركيب القريبين منك."
-                : "Enter your area or city to see nearby fitting partners."}
+              Enter your area or city to see nearby fitting partners.
             </p>
           </div>
 
@@ -315,7 +301,7 @@ function InstallerNetworkContent() {
                 setSearchQuery(e.target.value);
                 setIsGeoAddress(false);
               }}
-              placeholder={isAr ? "أدخل اسم المنطقة أو المدينة..." : "Enter area or city"}
+              placeholder="Enter area or city"
               className="w-full text-xs sm:text-sm text-gray-900 bg-transparent focus:outline-none placeholder:text-gray-400 font-medium"
             />
             {searchQuery && (
@@ -339,7 +325,7 @@ function InstallerNetworkContent() {
               className="btn-cta text-xs px-6 py-2.5 rounded-lg gap-1.5"
             >
               <Search size={14} strokeWidth={2.5} />
-              <span>{isAr ? "بحث" : "Search"}</span>
+              <span>Search</span>
             </button>
 
             <button
@@ -353,7 +339,7 @@ function InstallerNetworkContent() {
               ) : (
                 <Crosshair size={14} className="text-gray-700" />
               )}
-              <span>{isAr ? "استخدم موقعي" : "Use my location"}</span>
+              <span>Use my location</span>
             </button>
           </div>
         </div>
@@ -369,7 +355,7 @@ function InstallerNetworkContent() {
             ) : filteredStores.length === 0 ? (
               <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center">
                 <p className="text-gray-500 text-sm">
-                  {isAr ? "لم يتم العثور على شركاء تركيب في هذا النطاق." : "No fitting partners found for this search."}
+                  No fitting partners found for this search.
                 </p>
               </div>
             ) : (
@@ -382,7 +368,7 @@ function InstallerNetworkContent() {
                     onClick={() => setSelectedStoreId(store.id)}
                     className={`group bg-white rounded-xl border transition-all duration-200 overflow-hidden cursor-pointer ${
                       isSelected
-                        ? "border-gray-300 shadow-xs rtl:border-r-4 rtl:border-r-[#ed1c24] ltr:border-l-4 ltr:border-l-[#ed1c24]"
+                        ? "border-gray-300 shadow-xs border-l-4 border-l-[#ed1c24]"
                         : "border-gray-200/90 hover:border-gray-300 hover:shadow-2xs"
                     }`}
                   >
@@ -428,7 +414,7 @@ function InstallerNetworkContent() {
                             className="inline-flex items-center gap-1 text-gray-700 hover:text-black font-medium"
                           >
                             <Navigation size={12} className="text-gray-500" />
-                            <span>{isAr ? "الاتجاهات" : "Directions"}</span>
+                            <span>Directions</span>
                           </a>
                           <button
                             type="button"
@@ -438,16 +424,16 @@ function InstallerNetworkContent() {
                             }}
                             className="inline-flex items-center gap-1 text-gray-500 hover:text-[#ed1c24] cursor-pointer"
                           >
-                            <span>{isAr ? "عرض على الخريطة" : "See on Map"}</span>
+                            <span>See on Map</span>
                           </button>
                         </div>
 
                         {/* <Link
                           href={`/${locale}/storelocator`}
                           onClick={(e) => e.stopPropagation()}
-                          className="bg-[#ed1c24] hover:bg-[#c6181d] text-white font-bold text-xs px-4 py-2 rounded-lg transition-all shadow-xs flex items-center gap-1.5 cursor-pointer rtl:mr-auto ltr:ml-auto"
+                          className="bg-[#ed1c24] hover:bg-[#c6181d] text-white font-bold text-xs px-4 py-2 rounded-lg transition-all shadow-xs flex items-center gap-1.5 cursor-pointer ml-auto"
                         >
-                          <span>{isAr ? "احجز المركز" : "Book Installer"}</span>
+                          <span>Book Installer</span>
                           <span className="text-xs">→</span>
                         </Link> */}
                       </div>

@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ChevronRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { fetchMakes, type VehicleOption } from "@/lib/vehicleFinderApi";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 /**
  * /tyres/cars — "Buy Car Tyres Online: Select by Make & Model"
@@ -26,7 +27,6 @@ import { fetchMakes, type VehicleOption } from "@/lib/vehicleFinderApi";
 export default function CarsBrandBrowserPage() {
   const params = useParams();
   const locale = String(params.locale ?? "en");
-  const isAr = locale === "ar";
 
   const [makes, setMakes] = useState<VehicleOption[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,42 +80,19 @@ export default function CarsBrandBrowserPage() {
 
   return (
     <div className="bg-white pb-8 sm:pb-12">
-      {/* ── Hero (same dark tyre-tread banner used site-wide, e.g. every
-             /tyres/cars/[make] page) ── */}
-      <div className="page-title-wrapper bg-cover-image py-9 sm:py-11 text-center">
-        <div className="container mx-auto px-4">
-          <div className="title">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase text-white tracking-wider font-sans">
-              <span className="base">
-                {isAr
-                  ? "شراء إطارات السيارات أونلاين - اختر حسب الماركة والموديل"
-                  : "Buy Car Tyres Online – Select by Make & Model"}
-              </span>
-            </h1>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Breadcrumb ── */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="container py-2.5">
-          <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap font-medium">
-            <Link href={`/${locale}`} className="hover:text-black transition-colors">
-              {isAr ? "الرئيسية" : "Home"}
-            </Link>
-            <ChevronRight size={12} className="shrink-0 text-gray-400" />
-            <Link href={`/${locale}/tyres`} className="hover:text-black transition-colors">
-              {isAr ? "الإطارات" : "Tyres"}
-            </Link>
-            <ChevronRight size={12} className="shrink-0 text-gray-400" />
-            <span className="text-black font-semibold">{isAr ? "السيارات" : "Cars"}</span>
-          </nav>
-        </div>
-      </div>
+      <PageHeroBanner
+        title="Buy Car Tyres Online – Select by Make & Model"
+        description="Shop premium tyres in UAE with free mobile fitting, manufacturer warranty, and best prices across Dubai, Abu Dhabi, and UAE."
+        breadcrumb={[
+          { label: "Home", href: `/${locale}` },
+          { label: "Tyres", href: `/${locale}/tyres` },
+          { label: "Cars" },
+        ]}
+      />
 
       <div className="container py-8 lg:py-10">
         <h2 className="text-xl sm:text-2xl font-black uppercase tracking-wide text-gray-950 text-center mb-6">
-          {isAr ? "استكشف أفضل ماركات السيارات" : "Explore the Finest Car Brands"}
+          {"Explore the Finest Car Brands"}
         </h2>
 
         {/* ── Search + A–Z filter ── */}
@@ -125,7 +102,7 @@ export default function CarsBrandBrowserPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={isAr ? "ابدأ بكتابة ماركة السيارة..." : "Start typing car brand..."}
+              placeholder={"Start typing car brand..."}
               className="w-full bg-white border border-gray-200 rounded-xl pl-4 pr-11 py-3 text-sm text-gray-900 focus:outline-none focus:border-[#ed1c24]"
             />
             <Search size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -141,7 +118,7 @@ export default function CarsBrandBrowserPage() {
                   : "bg-white text-gray-700 border border-gray-200 hover:border-gray-400"
               }`}
             >
-              {isAr ? "الكل" : "All"}
+              {"All"}
             </button>
             {availableLetters.map((l) => (
               <button
@@ -175,15 +152,15 @@ export default function CarsBrandBrowserPage() {
         {!loading && error && (makes ?? []).length === 0 && (
           <div className="text-center py-16 text-gray-500">
             <p className="font-bold text-gray-900 mb-1">
-              {isAr ? "تعذر تحميل ماركات السيارات" : "Couldn't load car brands"}
+              {"Couldn't load car brands"}
             </p>
-            <p className="text-sm">{isAr ? "يرجى المحاولة مرة أخرى." : "Please try again shortly."}</p>
+            <p className="text-sm">{"Please try again shortly."}</p>
           </div>
         )}
 
         {!loading && !error && filteredMakes.length === 0 && (
           <div className="text-center py-16 text-gray-500">
-            {isAr ? "لا توجد ماركات مطابقة لبحثك." : "No car brands match your search."}
+            {"No car brands match your search."}
           </div>
         )}
 

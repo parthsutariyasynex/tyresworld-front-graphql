@@ -76,10 +76,8 @@ function parseSizeFromText(text: string): TyreSizeItem | null {
   };
 }
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const locale = searchParams.get("locale") ?? "en";
-  const store = locale === "ar" ? "ar" : "default";
+export async function GET(_req: Request) {
+  const store = "default";
 
   try {
     // 1. Fetch live rim options from viewMoreFilter

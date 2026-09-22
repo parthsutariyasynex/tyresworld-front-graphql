@@ -3,9 +3,7 @@ import { getHomepageData } from "@/lib/services/homepage.service";
 import { storeCode } from "@/lib/i18n";
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const locale = searchParams.get("locale") === "ar" ? "ar" : "en";
-  const store = storeCode(locale);
+  const store = storeCode("en");
 
   const homepage = await getHomepageData(store);
 

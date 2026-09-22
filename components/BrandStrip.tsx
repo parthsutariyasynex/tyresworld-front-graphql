@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { buildBrandSlug } from "@/lib/filterBuilder";
 
 const PREVIEW_COUNT = 20;
 
@@ -14,6 +15,7 @@ type Brand = {
   category: string;
   isFeatured: boolean;
   sortOrder: number;
+  urlKey?: string;
 };
 
 function toBrand(entry: Partial<Brand> | null | undefined): Brand | null {
@@ -29,6 +31,7 @@ function toBrand(entry: Partial<Brand> | null | undefined): Brand | null {
     category: entry?.category ?? "Other",
     isFeatured: entry?.isFeatured ?? false,
     sortOrder: entry?.sortOrder ?? 0,
+    urlKey: entry?.urlKey,
   };
 }
 
@@ -77,7 +80,6 @@ export default function BrandStrip() {
     };
   }, []);
 
-  const isAr = locale === "ar";
   const hasBrands = !!brands && brands.length > 0;
 
   return (
@@ -87,15 +89,13 @@ export default function BrandStrip() {
         {/* ── Section title ───────────────────────────────────── */}
         <div className="section-title mb-10 text-center max-w-3xl mx-auto">
           <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black uppercase tracking-wide text-black mb-3 leading-tight">
-            {isAr ? "تسوق حسب " : "Shop by "}{" "}
+            {"Shop by "}{" "}
             <span className="text-[#ed1c24] theme_color">
-              {isAr ? "ماركات الإطارات" : "Tyre Brands"}
+              {"Tyre Brands"}
             </span>
           </h2>
           <p className="text-gray-700 text-xs sm:text-[13.5px] leading-relaxed font-normal max-w-2xl mx-auto m-0 tracking-normal">
-            {isAr
-              ? "تصفح تشكيلة واسعة من أشهر ماركات الإطارات واشترِ عبر الإنترنت بأفضل الأسعار مع مراكز تركيب معتمدة في جميع أنحاء الإمارات."
-              : "Browse a wide selection of car tyre brands and purchase tyres online at the best prices. Our customer friendly fitment partners across the UAE are ready to provide you with exceptional service."}
+            {"Browse a wide selection of car tyre brands and purchase tyres online at the best prices. Our customer friendly fitment partners across the UAE are ready to provide you with exceptional service."}
           </p>
         </div>
 
@@ -116,11 +116,13 @@ export default function BrandStrip() {
           <div className="brands-list">
             <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4 list-none p-0 m-0">
               {brands!.map((brand) => {
+                const slug = buildBrandSlug({ name: brand.name, url_key: brand.urlKey });
+                const brandHref = `/tyres/brand/${slug}`;
                 return (
                   <li key={brand.filterValue}>
                     <div className="box h-[76px] bg-white rounded-xl border border-gray-200/80 hover:border-[#ed1c24] hover:shadow-md flex items-center justify-center p-2.5 transition-all duration-300 group">
                       <Link
-                        href={`/${locale}/tyres?mgs_brand=${encodeURIComponent(brand.filterValue)}`}
+                        href={brandHref}
                         className="brand-link w-full h-full flex items-center justify-center"
                         aria-label={`${brand.name} tyres`}
                       >

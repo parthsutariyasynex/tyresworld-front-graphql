@@ -106,11 +106,11 @@ async function fetchAllStores(locale: string): Promise<{
     for (const i of rawItems) {
       const lat = i.latitude != null ? Number(i.latitude) : NaN;
       const lng = i.longitude != null ? Number(i.longitude) : NaN;
-      const name = cleanText(locale === "ar" && i.name_ar ? i.name_ar : i.name);
+      const name = cleanText(i.name);
       if (!name || !Number.isFinite(lat) || !Number.isFinite(lng)) continue;
 
-      const rawAddress = locale === "ar" && i.address_ar ? i.address_ar : i.address;
-      const rawCity = locale === "ar" && i.city_ar ? i.city_ar : i.city;
+      const rawAddress = i.address;
+      const rawCity = i.city;
       const city = cleanText(rawCity);
       const address = cleanAddressString(rawAddress, city, i.country);
       const phone = cleanText(i.phone) || undefined;
@@ -120,8 +120,7 @@ async function fetchAllStores(locale: string): Promise<{
       const isMobile =
         i.delivery_mode === "mobilevan" ||
         i.is_mobilevan === 1 ||
-        name.toLowerCase().includes("mobile van") ||
-        name.toLowerCase().includes("فان متنقل");
+        name.toLowerCase().includes("mobile van");
 
       const storeId = i.stores_id != null ? String(i.stores_id) : `${name}-${lat}-${lng}`;
 
@@ -130,7 +129,7 @@ async function fetchAllStores(locale: string): Promise<{
         mobileVans.push({
           id: storeId,
           name,
-          city: city || name.replace(/^(Mobile Van Installation|فان متنقل)\s*-\s*/i, "").trim(),
+          city: city || name.replace(/^Mobile Van Installation\s*-\s*/i, "").trim(),
           address: address || city,
           lat,
           lng,
@@ -220,11 +219,9 @@ async function fetchAllStores(locale: string): Promise<{
   return { branches, mobileVans: [], cities };
 }
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const locale = searchParams.get("locale") === "ar" ? "ar" : "en";
-  const isAr = locale === "ar";
-  const allLabel = isAr ? "الكل" : "All";
+export async function GET(_req: NextRequest) {
+  const locale = "en";
+  const allLabel = "All";
 
   let timeSlots: string[] = [];
   try {
@@ -250,20 +247,20 @@ export async function GET(req: NextRequest) {
   const deliveryOptions = [
     {
       id: "install_outlet",
-      title: isAr ? "التركيب في الفرع" : "Install at Outlet",
-      description: isAr ? "قم بزيارة فرعنا للتركيب الاحترافي" : "Visit our outlet for professional installation",
+      title: "Install at Outlet",
+      description: "Visit our outlet for professional installation",
       icon: "store",
     },
     {
       id: "mobile_van",
-      title: isAr ? "خدمة الفان المتنقل" : "Mobile Van Service",
-      description: isAr ? "الفان المتنقل يصل إلى موقعك" : "Our mobile van comes to your location",
+      title: "Mobile Van Service",
+      description: "Our mobile van comes to your location",
       icon: "truck",
     },
     {
       id: "free_shipping",
-      title: isAr ? "شحن مجاني" : "Free Shipping",
-      description: isAr ? "توصيل بدون خدمة تركيب" : "Delivery without fitment service",
+      title: "Free Shipping",
+      description: "Delivery without fitment service",
       icon: "package",
     },
   ];

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import ProductImage from "./ProductImage";
 import { Loader2, Check, ShoppingCart, Truck, MapPin } from "lucide-react";
 import type { Product } from "@/lib/data";
@@ -10,6 +9,7 @@ import { useCart } from "@/lib/cart-context";
 import { useOfferLabels } from "@/lib/useOfferLabels";
 import { Money } from "@/components/Price";
 import { APP_CONFIG } from "@/src/config/app-config";
+import { buildBrandSlug } from "@/lib/filterBuilder";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
@@ -17,9 +17,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
-  const pathname = usePathname();
-  const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
-  const isAr = locale === "ar";
+  const locale = "en";
 
   const href = product.urlKey
     ? `/${locale}/product/${product.urlKey}`
@@ -31,10 +29,10 @@ export default function ProductCard({ product }: { product: Product }) {
   const unitPrice = product.price > 0 ? product.price : 0;
   const brandLabel = product.brandName ?? String(product.brand ?? "");
   const brandLogo = product.brandLogoUrl;
-  const brandSlug = product.brandName?.toLowerCase().replace(/[^a-z0-9]+/g, "").replace(/(^-|-$)/g, "");
-  const brandHref = brandSlug ? `/${locale}/tyres/brand/${brandSlug}` : null;
+  const brandSlug = buildBrandSlug(product.brandName || brandLabel);
+  const brandHref = brandSlug ? `/tyres/brand/${brandSlug}` : null;
 
-  const offerLabels = useOfferLabels(locale === "ar" ? "ar" : "default");
+  const offerLabels = useOfferLabels("default");
   const offerLabel = product.offersId ? offerLabels[product.offersId] : undefined;
   const badgeText = product.badge || (product.pattern ? "PERFORMANCE" : undefined);
 
@@ -170,7 +168,7 @@ export default function ProductCard({ product }: { product: Product }) {
           {unitPrice > 0 ? (
             <Money value={unitPrice} digits={2} />
           ) : (
-            <span className="text-base text-gray-800">{isAr ? "السعر عند الطلب" : "Price on Request"}</span>
+            <span className="text-base text-gray-800">{"Price on Request"}</span>
           )}
         </div>
 
@@ -182,10 +180,10 @@ export default function ProductCard({ product }: { product: Product }) {
         {/* Stock Status */}
         <p className={`text-[11px] font-semibold mt-1 ${isOutOfStock ? "text-[#ed1c24]" : "text-[#16a34a]"}`}>
           {isOutOfStock
-            ? isAr ? "غير متوفر" : "Out of stock"
+            ? "Out of stock"
             : product.quantity
             ? `${product.quantity} in stock`
-            : isAr ? "متوفر بالمخزون" : "In stock"}
+            : "In stock"}
         </p>
 
         {/* Bottom Actions Row */}
@@ -194,11 +192,11 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200/60 text-[10px] sm:text-[10.5px] font-medium">
               <Truck size={11} className="stroke-[2.2]" />
-              <span>{isAr ? "توصيل" : "Delivery"}</span>
+              <span>{"Delivery"}</span>
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200/60 text-[10px] sm:text-[10.5px] font-medium">
               <MapPin size={11} className="stroke-[2.2]" />
-              <span>{isAr ? "استلام" : "Pickup"}</span>
+              <span>{"Pickup"}</span>
             </span>
           </div>
 
@@ -211,7 +209,7 @@ export default function ProductCard({ product }: { product: Product }) {
               className="btn-slide-red active:scale-[0.98] text-white text-[12px] sm:text-[13px] font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-xs whitespace-nowrap"
             >
               <ShoppingCart size={14} className="stroke-[2.2]" />
-              <span>{isAr ? "استفسار" : "Enquiry"}</span>
+              <span>{"Enquiry"}</span>
             </a>
           ) : (
             <button
@@ -225,17 +223,17 @@ export default function ProductCard({ product }: { product: Product }) {
               {adding ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
-                  <span>{isAr ? "جاري الإضافة…" : "Adding…"}</span>
+                  <span>{"Adding…"}</span>
                 </>
               ) : cartAdded ? (
                 <>
                   <Check size={14} className="stroke-[2.5]" />
-                  <span>{isAr ? "تمત الإضافة" : "Added"}</span>
+                  <span>{"Added"}</span>
                 </>
               ) : (
                 <>
                   <ShoppingCart size={14} className="stroke-[2.2]" />
-                  <span>{isAr ? "أضف للسلة" : "Add to Cart"}</span>
+                  <span>{"Add to Cart"}</span>
                 </>
               )}
             </button>

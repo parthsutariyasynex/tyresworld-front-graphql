@@ -65,38 +65,7 @@ const DEFAULT_RIGHT_EN = [
   },
 ];
 
-const DEFAULT_LEFT_AR = [
-  {
-    title: "أفضل أسعار الإطارات",
-    desc: "اشترِ الإطارات عبر الإنترنت بأسعار تنافس صالات العرض مع ضمان أعلى مستويات الجودة.",
-  },
-  {
-    title: "إطارات تناسب جميع السيارات",
-    desc: "سواء كانت سيارة صالون أو دفع رباعي أو SUV، اعثر على المقاس والماركة المناسبة في ثوانٍ.",
-  },
-  {
-    title: "تركيب إطارات سهل بالقرب منك",
-    desc: "احجز تركيب الإطارات في مركز موثوق قريب منك أو احصل على الخدمة عند باب منزلك.",
-  },
-];
-
-const DEFAULT_RIGHT_AR = [
-  {
-    title: "توصيل مجاني للإطارات في الإمارات",
-    desc: "اطلب 4 إطارات أو أكثر واحصل على توصيل مجاني إلى أي مكان في دولة الإمارات.",
-  },
-  {
-    title: "تسوق آمن ومضمون عبر الإنترنت",
-    desc: "اشترِ إطاراتك بأمان تام مع بوابات دفع مشفرة لحماية بياناتك المالية بالكامل.",
-  },
-  {
-    title: "متجر إطارات إلكتروني موثوق",
-    desc: "نحن موزع إطارات معتمد في الإمارات العربية المتحدة، يحظى بثقة السائقين في جميع أنحاء الدولة.",
-  },
-];
-
 export default function WhyChooseUs({ locale = "en" }: WhyChooseUsProps) {
-  const isAr = locale === "ar";
   const [reasonsData, setReasonsData] = useState<KleverHomeReasons | null>(null);
 
   useEffect(() => {
@@ -108,14 +77,14 @@ export default function WhyChooseUs({ locale = "en" }: WhyChooseUsProps) {
     return () => { active = false; };
   }, [locale]);
 
-  const defaultLeft = isAr ? DEFAULT_LEFT_AR : DEFAULT_LEFT_EN;
-  const defaultRight = isAr ? DEFAULT_RIGHT_AR : DEFAULT_RIGHT_EN;
+  const defaultLeft = DEFAULT_LEFT_EN;
+  const defaultRight = DEFAULT_RIGHT_EN;
   const allDefaults = [...defaultLeft, ...defaultRight];
 
   const dynamicItems = (reasonsData?.items && reasonsData.items.length > 0)
     ? reasonsData.items.map((item, i) => ({
         title: item,
-        desc: allDefaults[i]?.desc ?? (isAr ? "تمتع بتركيب احترافي وضمان المصنع وراحة بال تامة." : "Enjoy expert fitting, manufacturer warranty and complete peace of mind."),
+        desc: allDefaults[i]?.desc ?? "Enjoy expert fitting, manufacturer warranty and complete peace of mind.",
       }))
     : null;
 
@@ -129,9 +98,9 @@ export default function WhyChooseUs({ locale = "en" }: WhyChooseUsProps) {
         {/* Section Title */}
         <div className="section-title mb-12 text-center heading-styel1 title-span-block">
           <h2 className="font-sans text-2xl sm:text-3xl lg:text-[34px] font-black uppercase tracking-wider text-white m-0">
-            {isAr ? "أهم أسباب " : "TOP REASONS TO "}{" "}
+            TOP REASONS TO{" "}
             <span className="text-[#ed1c24] theme_color">
-              {isAr ? "شراء الإطارات عبر الإنترنت" : "BUY ONLINE TYRES"}
+              BUY ONLINE TYRES
             </span>
           </h2>
         </div>

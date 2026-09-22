@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import PageHeroBanner from "@/components/PageHeroBanner";
 import { Money } from "@/components/Price";
 import ProductImage from "@/components/ProductImage";
 
@@ -108,7 +109,6 @@ function CartQtyDropdown({
 export default function CartPage() {
   const pathname = usePathname();
   const locale = pathname.split("/")[1] === "ar" ? "ar" : "en";
-  const isAr = locale === "ar";
 
   const {
     items,
@@ -139,7 +139,7 @@ export default function CartPage() {
         setCartError(res.error);
       }
     } catch {
-      setCartError(isAr ? "فشل تحديث الكمية" : "Failed to update quantity.");
+      setCartError("Failed to update quantity.");
     } finally {
       setUpdatingUid(null);
     }
@@ -180,7 +180,7 @@ export default function CartPage() {
     if (errMsg) {
       setCouponMsg({ text: errMsg, ok: false });
     } else {
-      setCouponMsg({ text: isAr ? "تم تطبيق الكوبون بنجاح" : "Coupon applied successfully!", ok: true });
+      setCouponMsg({ text: "Coupon applied successfully!", ok: true });
       setCouponInput("");
     }
     setCouponLoading(false);
@@ -196,25 +196,12 @@ export default function CartPage() {
   /* ── Loading Skeleton ────────────────────────────────────────── */
   if (!ready) {
     return (
-      <div className="bg-[#f8f9fa] pb-10" dir={isAr ? "rtl" : "ltr"}>
+      <div className="bg-[#f8f9fa] pb-10" dir="ltr">
         {/* ── Page Hero Title Banner ── */}
-        <div
-          className="page-title-wrapper py-9 sm:py-11 text-center bg-black"
-          style={{
-            backgroundImage: "url('/img/shopping-cart-banner.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-          }}
-        >
-          <div className="container mx-auto px-4">
-            <div className="title">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase text-white tracking-wider font-sans">
-                <span className="base">{isAr ? "سلة التسوق" : "SHOPPING CART"}</span>
-              </h1>
-            </div>
-          </div>
-        </div>
+        <PageHeroBanner
+          title="Shopping Cart"
+          breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Shopping Cart" }]}
+        />
 
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-6" />
@@ -233,56 +220,30 @@ export default function CartPage() {
   /* ── Empty Cart View ─────────────────────────────────────────── */
   if (items.length === 0) {
     return (
-      <div className="bg-[#f8f9fa] pb-8 sm:pb-12" dir={isAr ? "rtl" : "ltr"}>
+      <div className="bg-[#f8f9fa] pb-8 sm:pb-12" dir="ltr">
         {/* ── Page Hero Title Banner ── */}
-        <div
-          className="page-title-wrapper py-9 sm:py-11 text-center bg-black"
-          style={{
-            backgroundImage: "url('/img/shopping-cart-banner.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-          }}
-        >
-          <div className="container mx-auto px-4">
-            <div className="title">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase text-white tracking-wider font-sans">
-                <span className="base">{isAr ? "سلة التسوق" : "SHOPPING CART"}</span>
-              </h1>
-            </div>
-          </div>
-        </div>
+        <PageHeroBanner
+          title="Shopping Cart"
+          breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Shopping Cart" }]}
+        />
 
         <div className="max-w-7xl mx-auto px-4 pt-6">
-          {/* Breadcrumb */}
-          <div className="mb-6">
-            <p className="text-xs text-gray-500 font-medium">
-              <Link href={`/${locale}`} className="hover:text-gray-900 transition-colors">
-                {isAr ? "الرئيسية" : "Home"}
-              </Link>
-              {" / "}
-              <span className="text-gray-900 font-bold">{isAr ? "سلة التسوق" : "Shopping Cart"}</span>
-            </p>
-          </div>
-
           <div className="bg-white rounded-2xl border border-gray-200/80 p-10 sm:p-16 text-center max-w-xl mx-auto shadow-2xs">
             <div className="w-20 h-20 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-6 text-[#ed1c24]">
               <ShoppingBag size={34} strokeWidth={2.2} />
             </div>
             <h2 className="text-2xl font-black text-gray-950 uppercase tracking-tight mb-2 font-sans">
-              {isAr ? "سلة التسوق فارغة" : "Your cart is empty"}
+              Your cart is empty
             </h2>
             <p className="text-gray-500 text-sm mb-8 leading-relaxed max-w-sm mx-auto">
-              {isAr
-                ? "لم تضف أي إطارات إلى سلتك بعد. استكشف مجموعتنا الواسعة من الإطارات الممتازة."
-                : "You haven't added any tyres to your cart yet. Explore our wide range of premium tyres today."}
+              You haven't added any tyres to your cart yet. Explore our wide range of premium tyres today.
             </p>
             <Link
               href={`/${locale}/tyres`}
               className="inline-flex items-center justify-center gap-2 bg-[#ed1c24] hover:bg-[#c6181d] active:bg-[#aa1217] text-white font-black text-xs sm:text-sm uppercase tracking-wider py-4 px-8 rounded-xl shadow-md shadow-red-500/25 transition-all cursor-pointer"
             >
-              {isAr ? "استكشف الإطارات الآن" : "Browse Tyres"}
-              {!isAr && <ArrowRight size={16} strokeWidth={2.5} />}
+              Browse Tyres
+              <ArrowRight size={16} strokeWidth={2.5} />
             </Link>
           </div>
         </div>
@@ -292,38 +253,13 @@ export default function CartPage() {
 
   /* ── Cart with Items ─────────────────────────────────────────── */
   return (
-    <div className="bg-[#f8f9fa] pb-12" dir={isAr ? "rtl" : "ltr"}>
-      {/* ── Page Hero Title Banner ── */}
-      <div
-        className="page-title-wrapper py-9 sm:py-11 text-center bg-black"
-        style={{
-          backgroundImage: "url('/img/shopping-cart-banner.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
-        <div className="container mx-auto px-4">
-          <div className="title">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase text-white tracking-wider font-sans">
-              <span className="base">{isAr ? "سلة التسوق" : "SHOPPING CART"}</span>
-            </h1>
-          </div>
-        </div>
-      </div>
+    <div className="bg-[#f8f9fa] pb-12" dir="ltr">
+      <PageHeroBanner
+        title="Shopping Cart"
+        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Shopping Cart" }]}
+      />
 
       <div className="max-w-7xl mx-auto px-4 pt-5">
-        {/* Breadcrumb */}
-        <div className="mb-4">
-          <p className="text-xs text-gray-500 font-medium">
-            <Link href={`/${locale}`} className="hover:text-gray-900 transition-colors">
-              {isAr ? "الرئيسية" : "Home"}
-            </Link>
-            {" / "}
-            <span className="text-gray-900 font-bold">{isAr ? "سلة التسوق" : "Shopping Cart"}</span>
-          </p>
-        </div>
-
         {/* Layout Grid: Left Items + Right Order Summary */}
         <div
           className={`grid grid-cols-1 lg:grid-cols-[1fr_390px] gap-5 items-start ${
@@ -348,10 +284,10 @@ export default function CartPage() {
 
             {/* ── Table Header ── */}
             <div className="hidden sm:grid grid-cols-[1fr_auto_auto_auto] gap-x-6 px-4 py-3 bg-gray-100 border border-gray-200/70 rounded-xl text-[11px] font-bold uppercase tracking-wider text-gray-500 select-none">
-              <span>{isAr ? "المنتج" : "Item"}</span>
-              <span className="text-center w-20">{isAr ? "السعر" : "Price"}</span>
-              <span className="text-center w-12">{isAr ? "الكمية" : "Qty"}</span>
-              <span className="text-right w-24">{isAr ? "الإجمالي" : "Subtotal"}</span>
+              <span>Item</span>
+              <span className="text-center w-20">Price</span>
+              <span className="text-center w-12">Qty</span>
+              <span className="text-right w-24">Subtotal</span>
             </div>
 
             {/* Cart Items List */}
@@ -399,17 +335,17 @@ export default function CartPage() {
                           </Link>
                           <div className="flex items-center gap-1 text-[11px] text-gray-400 font-medium mt-0.5">
                             <Package size={11} className="shrink-0" />
-                            <span>{isAr ? "مركز تركيب تايرز وورلد المعتمد" : "TyresWorld Certified Fitment Center"}</span>
+                            <span>TyresWorld Certified Fitment Center</span>
                           </div>
                           {/* Remove button inline under name */}
                           <button
                             type="button"
                             onClick={() => removeItem(item.uid)}
                             className="mt-1 flex items-center gap-1 text-[11px] text-gray-400 hover:text-[#ed1c24] transition-colors cursor-pointer"
-                            aria-label={isAr ? "حذف المنتج" : "Remove item"}
+                            aria-label="Remove item"
                           >
                             <Trash2 size={11} strokeWidth={2.2} />
-                            <span>{isAr ? "حذف" : "Remove"}</span>
+                            <span>Remove</span>
                           </button>
                         </div>
                       </div>
@@ -472,7 +408,7 @@ export default function CartPage() {
                         type="button"
                         onClick={() => removeItem(item.uid)}
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#ed1c24] hover:bg-red-50 border border-transparent hover:border-red-100 transition-colors cursor-pointer shrink-0"
-                        aria-label={isAr ? "حذف المنتج" : "Remove item"}
+                        aria-label="Remove item"
                       >
                         <Trash2 size={15} strokeWidth={2.2} />
                       </button>
@@ -488,7 +424,7 @@ export default function CartPage() {
                 href={`/${locale}/tyres`}
                 className="btn-cta text-xs sm:text-sm py-3.5 px-8 rounded-lg shadow-md"
               >
-                <span>{isAr ? "مواصلة التسوق" : "CONTINUE SHOPPING"}</span>
+                <span>CONTINUE SHOPPING</span>
               </Link>
             </div>
           </div>
@@ -497,14 +433,14 @@ export default function CartPage() {
           <div className="lg:sticky lg:top-24 bg-white border border-gray-200/80 rounded-2xl p-5 sm:p-6 shadow-xs">
             {/* Header */}
             <h2 className="text-lg sm:text-xl font-black text-gray-950 tracking-tight leading-tight mb-4 font-sans">
-              {isAr ? "ملخص الطلب" : "Order Summary"}
+              Order Summary
             </h2>
 
             {/* Price Rows (Exact store fields: Subtotal, Additional Charge, VAT, Order Total) */}
             <div className="space-y-3.5">
               {/* Subtotal */}
               <div className="flex justify-between items-center text-sm text-gray-600 font-medium">
-                <span>{isAr ? "المجموع الجزئي" : "Subtotal"}</span>
+                <span>Subtotal</span>
                 <span className="font-bold text-gray-950 tabular-nums text-base">
                   {fmt(subtotalExclTax)}
                 </span>
@@ -512,7 +448,7 @@ export default function CartPage() {
 
               {/* Additional Charge */}
               <div className="flex justify-between items-center text-sm text-gray-600 font-medium">
-                <span>{isAr ? "رسوم إضافية" : "Additional Charge"}</span>
+                <span>Additional Charge</span>
                 <span className="font-bold text-gray-950 tabular-nums text-base">
                   {fmt(additionalCharge)}
                 </span>
@@ -529,7 +465,7 @@ export default function CartPage() {
               {/* Discount (if active) */}
               {discountAmount > 0 && (
                 <div className="flex justify-between items-center text-sm text-[#ed1c24] font-medium">
-                  <span className="font-bold">{isAr ? "الخصم" : "Discount"}</span>
+                  <span className="font-bold">Discount</span>
                   <span className="font-black tabular-nums text-base">
                     − {fmt(discountAmount)}
                   </span>
@@ -542,7 +478,7 @@ export default function CartPage() {
               {/* Order Total */}
               <div className="flex justify-between items-baseline mb-5">
                 <span className="text-lg sm:text-xl font-black text-gray-950">
-                  {isAr ? "إجمالي الطلب" : "Order Total"}
+                  Order Total
                 </span>
                 <span className="text-2xl sm:text-3xl font-black text-gray-950 tabular-nums">
                   {fmt(grandTotalValue)}
@@ -556,7 +492,7 @@ export default function CartPage() {
                 href={`/${locale}/storelocator/ref=cart`}
                 className="btn-cta w-full text-sm py-4 rounded-xl shadow-md"
               >
-                <span>{isAr ? "متابعة الدفع" : "PROCEED TO CHECKOUT"}</span>
+                <span>PROCEED TO CHECKOUT</span>
               </Link>
             </div>
           </div>

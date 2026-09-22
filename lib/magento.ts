@@ -360,30 +360,11 @@ const EXCLUDED_AGGREGATIONS = new Set([
  * Normalize Magento `aggregations` into UI-ready filter groups.
  * These are the ONLY source of shop filter options — nothing hardcoded.
  */
-/**
- * @param totalCount The result set's real total_count, when known. Enables
- * the same "hide a no-op facet" pruning Magento's own layered nav applies:
- * a group stays only if it has 2+ real options, OR exactly 1 option whose
- * count is LESS than totalCount (so checking it would still narrow the
- * current result set). A group whose only option's count equals totalCount
- * can never narrow anything — every currently-matching product already
- * carries that exact value — and Elasticsuite computes facet aggregations
- * with each attribute's OWN currently-applied filter excluded (multi-select
- * behaviour), so a genuinely narrowable attribute (Width, Brand, ...)
- * naturally comes back with 2+ sibling values even when only one product
- * matches overall; an attribute nobody is filtering by just reflects the
- * single value already present in the narrow result set. Confirmed live
- * (Puppeteer): a single-product filtered /tyres result showed only Width/
- * Height/Rim/Brand (each with 2+ options) — Pattern/Warranty/Year/Origin/
- * Tyres Category (each pinned to that one product's single value) were
- * absent from the sidebar; a keyword search showed "Filter by EV Tyre"
- * (1 option, count 3 of 150 — a real narrowing choice) but not "Filter by
- * Origin" (1 option, count 150 of 150 — a no-op). Purely count-driven, no
- * attribute-code allowlist/blocklist. Omit totalCount to skip pruning
- * entirely (existing callers that don't have a total in hand). */
 export function parseAggregations(data: unknown, totalCount?: number): FilterGroup[] {
   const aggs = (data as GqlProductsResponse)?.data?.products?.aggregations;
   if (!Array.isArray(aggs)) return [];
+
+  const seenLabels = new Set<string>();
 
   return aggs
     .filter((a) => a.attribute_code && !EXCLUDED_AGGREGATIONS.has(a.attribute_code))
@@ -400,9 +381,10 @@ export function parseAggregations(data: unknown, totalCount?: number): FilterGro
     }))
     .filter((g) => g.options.length > 0)
     .filter((g) => {
-      if (totalCount == null) return true;
-      if (g.options.length >= 2) return true;
-      return g.options[0].count < totalCount;
+      const norm = g.label.trim().toLowerCase();
+      if (seenLabels.has(norm)) return false;
+      seenLabels.add(norm);
+      return true;
     });
 }
 

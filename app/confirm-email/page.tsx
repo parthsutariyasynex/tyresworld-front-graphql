@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, AlertCircle, Loader2, Mail } from "lucide-react";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 function ConfirmEmailInner() {
   const params  = useSearchParams();
@@ -59,7 +60,13 @@ function ConfirmEmailInner() {
   }
 
   return (
-    <div className="container py-28 text-center max-w-sm mx-auto">
+    <>
+      <PageHeroBanner
+        title="Verify Your Email"
+        breadcrumb={[{ label: "Home", href: "/" }, { label: "Verify Email" }]}
+        showCta={false}
+      />
+      <div className="container py-28 text-center max-w-sm mx-auto">
       {status === "loading" && (
         <>
           <Loader2 size={40} className="animate-spin text-[#ed1c24] mx-auto mb-6" />
@@ -140,7 +147,8 @@ function ConfirmEmailInner() {
           )}
         </>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

@@ -23,6 +23,8 @@ import { useScrollLock } from "@/lib/useScrollLock";
 import { APP_CONFIG } from "@/src/config/app-config";
 import JsonLd from "@/components/JsonLd";
 import { useCurrencyCode } from "@/lib/store-config-context";
+import { buildBrandSlug } from "@/lib/filterBuilder";
+import PageHeroBanner, { type BreadcrumbItem } from "@/components/PageHeroBanner";
 import { Money } from "@/components/Price";
 
 
@@ -107,16 +109,24 @@ function parseTyreProductName(name: string): TyreSpecs {
  ══════════════════════════════════════════════════════════════════ */
 function BrandLogoDisplay({ brandLogoUrl, brandName }: { brandLogoUrl?: string | null; brandName?: string }) {
   const logo = brandLogoUrl;
-  if (logo) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={logo} alt={brandName ?? ""} className="h-12 w-auto object-contain" />
-    );
-  }
-  if (brandName) {
-    return <p className="text-xl font-black uppercase tracking-widest text-gray-900">{brandName}</p>;
-  }
-  return null;
+  const brandSlug = buildBrandSlug(brandName);
+  const brandHref = brandSlug ? `/tyres/brand/${brandSlug}` : null;
+
+  const content = logo ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={logo} alt={brandName ?? ""} className="h-12 w-auto object-contain" />
+  ) : brandName ? (
+    <p className="text-xl font-black uppercase tracking-widest text-gray-900">{brandName}</p>
+  ) : null;
+
+  if (!content) return null;
+  return brandHref ? (
+    <Link href={brandHref} className="inline-block hover:opacity-85 transition-opacity">
+      {content}
+    </Link>
+  ) : (
+    content
+  );
 }
 
 function SpecsRating({ rating, reviewCount }: { rating: number; reviewCount: number }) {
@@ -1008,44 +1018,18 @@ export default function ProductDetailInner({
     */
   };
 
+  const productBreadcrumb: BreadcrumbItem[] = [
+    { label: "Home", href: `/${locale}` },
+    { label: tyreCategory?.name ?? "Tyres", href: `/${locale}/${tyreCategory?.urlKey ?? "tyres"}` },
+    ...(specs.size ? [{ label: specs.size }] : []),
+    { label: product.name },
+  ];
+
   return (
     <>
       <JsonLd data={productJsonLd} />
 
-      {/* ── Top Hero Title Banner (Dark patterned tyre-tread header) ── */}
-      <div className="page-title-wrapper bg-cover-image py-9 sm:py-11 text-center">
-        <div className="container">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-wider text-center drop-shadow-md">
-            {product.name}
-          </h1>
-        </div>
-      </div>
-
-      {/* ── Breadcrumb ── */}
-      <div className="bg-white border-b border-gray-200/80">
-        <div className="container py-3">
-          <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap">
-            <Link href={`/${locale}`} className="hover:text-gray-900 transition-colors">Home</Link>
-            <span className="text-gray-300">›</span>
-            <Link
-              href={`/${locale}/${tyreCategory?.urlKey ?? "tyres"}`}
-              className="hover:text-gray-900 transition-colors"
-            >
-              {tyreCategory?.name ?? "Tyres"}
-            </Link>
-            {specs.size && (
-              <>
-                <span className="text-gray-300">›</span>
-                <span className="text-gray-600">{specs.size}</span>
-              </>
-            )}
-            <span className="text-gray-300">›</span>
-            <span className="text-gray-900 font-medium line-clamp-1 max-w-[260px] lg:max-w-none">
-              {product.name}
-            </span>
-          </nav>
-        </div>
-      </div>
+      <PageHeroBanner title={product.name} breadcrumb={productBreadcrumb} />
 
       {/* ── Main product section ────────────────────────────────────── */}
       <div className="bg-white py-6 lg:py-8">

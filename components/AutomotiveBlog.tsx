@@ -55,13 +55,12 @@ const DEFAULT_BLOG_POSTS: BlogPost[] = [
 function formatDate(raw: string, locale: string): string {
   const d = new Date(raw.replace(" ", "T"));
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(locale === "ar" ? "ar-AE" : "en-US", {
+  return d.toLocaleDateString("en-US", {
     month: "short", day: "numeric", year: "numeric",
   });
 }
 
 export default function AutomotiveBlog({ locale = "en" }: AutomotiveBlogProps) {
-  const isAr = locale === "ar";
   const [posts, setPosts] = useState<BlogPost[] | null>(null);
 
   useEffect(() => {
@@ -91,9 +90,9 @@ export default function AutomotiveBlog({ locale = "en" }: AutomotiveBlogProps) {
         {/* Section Title */}
         <div className="section-title mb-10 text-center">
           <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black uppercase tracking-wide text-black m-0">
-            {isAr ? "مدونة " : "Automotive "}{" "}
+            {"Automotive "}{" "}
             <span className="text-[#ed1c24] theme_color">
-              {isAr ? "السيارات" : "Blog"}
+              {"Blog"}
             </span>
           </h2>
         </div>
@@ -176,7 +175,7 @@ export default function AutomotiveBlog({ locale = "en" }: AutomotiveBlogProps) {
             href={`/${locale}/blog`}
             className="button button-primary inline-flex items-center justify-center px-8 py-3 rounded-lg bg-[#ed1c24] text-white text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-[#c6181d] transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer"
           >
-            <span>{isAr ? "جميع المقالات" : "All Blog"}</span>
+            <span>{"All Blog"}</span>
           </Link>
         </div>
 

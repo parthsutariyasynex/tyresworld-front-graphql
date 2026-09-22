@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
+import { parseTyreSizeInput, buildTyreSizeSlug } from "@/lib/filterBuilder";
 
 export default function HomeSearchBar({ locale }: { locale: string }) {
   const router = useRouter();
-  const isAr = locale === "ar";
   const [searchVal, setSearchVal] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
@@ -63,7 +63,8 @@ export default function HomeSearchBar({ locale }: { locale: string }) {
     if (e) e.preventDefault();
     const query = searchVal.trim();
     if (query) {
-      router.push(`/${locale}/tyres?q=${encodeURIComponent(query)}`);
+      const size = parseTyreSizeInput(query);
+      router.push(size ? buildTyreSizeSlug(size) : `/${locale}/tyres?q=${encodeURIComponent(query)}`);
       setSearchFocused(false);
     }
   }
@@ -80,12 +81,8 @@ export default function HomeSearchBar({ locale }: { locale: string }) {
           onBlur={() => {
             setTimeout(() => setSearchFocused(false), 200);
           }}
-          placeholder={
-            isAr
-              ? "ابحث عن مقاس الإطارات… مثال: 195/65 R15"
-              : "Search tyre size, brand or vehicle… e.g. 195/65 R15"
-          }
-          aria-label={isAr ? "بحث" : "Search"}
+          placeholder="Search tyre size, brand or vehicle… e.g. 195/65 R15"
+          aria-label="Search"
           className="ptr-search-input pr-12 pl-4 py-3 text-[13.5px] w-full bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#ed1c24] focus:ring-1 focus:ring-[#ed1c24] transition-colors shadow-sm"
         />
 
@@ -98,7 +95,7 @@ export default function HomeSearchBar({ locale }: { locale: string }) {
               setSuggestions([]);
               searchRef.current?.focus();
             }}
-            className={`absolute ${isAr ? "left-11" : "right-11"} top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 flex items-center justify-center transition-colors`}
+            className="absolute right-11 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 flex items-center justify-center transition-colors"
             aria-label="Clear"
           >
             <X size={12} strokeWidth={2.5} />
@@ -108,8 +105,8 @@ export default function HomeSearchBar({ locale }: { locale: string }) {
         {/* Search Submit Button */}
         <button
           type="submit"
-          className={`absolute ${isAr ? "left-3.5" : "right-3.5"} top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#ed1c24] transition-colors focus:outline-none`}
-          aria-label={isAr ? "بحث" : "Search"}
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#ed1c24] transition-colors focus:outline-none"
+          aria-label="Search"
         >
           <Search size={18} strokeWidth={2.2} />
         </button>
@@ -124,13 +121,12 @@ export default function HomeSearchBar({ locale }: { locale: string }) {
                 type="button"
                 onMouseDown={() => {
                   setSearchVal(suggestion);
-                  router.push(`/${locale}/tyres?q=${encodeURIComponent(suggestion)}`);
+                  const size = parseTyreSizeInput(suggestion);
+                  router.push(size ? buildTyreSizeSlug(size) : `/${locale}/tyres?q=${encodeURIComponent(suggestion)}`);
                   setSuggestions([]);
                   setSearchFocused(false);
                 }}
-                className={`w-full px-4 py-2.5 text-[13px] text-gray-700 hover:bg-red-50 hover:text-[#ed1c24] font-semibold transition-colors focus:outline-none ${
-                  isAr ? "text-right" : "text-left"
-                }`}
+                className="w-full px-4 py-2.5 text-[13px] text-gray-700 hover:bg-red-50 hover:text-[#ed1c24] font-semibold transition-colors focus:outline-none text-left"
               >
                 {suggestion}
               </button>

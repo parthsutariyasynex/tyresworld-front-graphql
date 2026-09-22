@@ -12,6 +12,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useScrollLock } from "@/lib/useScrollLock";
+import { parseTyreSizeInput, buildTyreSizeSlug } from "@/lib/filterBuilder";
 
 export type HeaderSearchModalProps = {
   open: boolean;
@@ -117,7 +118,6 @@ export default function HeaderSearchModal({
   locale = "en",
 }: HeaderSearchModalProps) {
   const router = useRouter();
-  const isAr = locale === "ar";
   const [activeTab, setActiveTab] = useState<TabType>("size");
   const [searchVal, setSearchVal] = useState("");
   const [apiSizes, setApiSizes] = useState<string[]>([]);
@@ -298,13 +298,15 @@ export default function HeaderSearchModal({
     const q = searchVal.trim();
     if (q) {
       onClose();
-      router.push(`/${locale}/tyres?q=${encodeURIComponent(q)}`);
+      const size = parseTyreSizeInput(q);
+      router.push(size ? buildTyreSizeSlug(size) : `/${locale}/tyres?q=${encodeURIComponent(q)}`);
     }
   }
 
   function handleSelectSize(size: string) {
     onClose();
-    router.push(`/${locale}/tyres?q=${encodeURIComponent(size)}`);
+    const parsed = parseTyreSizeInput(size);
+    router.push(parsed ? buildTyreSizeSlug(parsed) : `/${locale}/tyres?q=${encodeURIComponent(size)}`);
   }
 
   function handleTabClick(tab: TabType) {
@@ -353,7 +355,7 @@ export default function HeaderSearchModal({
 
   return (
     <div
-      dir={isAr ? "rtl" : "ltr"}
+      dir="ltr"
       className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-150"
       onClick={onClose}
     >
@@ -371,16 +373,16 @@ export default function HeaderSearchModal({
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="text-xl sm:text-2xl font-bold tracking-tight leading-snug">
-                    {isAr ? "ما هي السيارة التي تبحث عنها؟" : "Which vehicle are you looking for?"}
+                    {"Which vehicle are you looking for?"}
                   </h3>
                   <p className="text-xs sm:text-[13.5px] text-white/95 mt-1 font-normal leading-snug">
                     {vehStep === "make"
-                      ? isAr ? "اختر الشركة المصنعة لسيارتك." : "Select the make of your vehicle."
+                      ? "Select the make of your vehicle."
                       : vehStep === "model"
-                      ? isAr ? "اختر موديل سيارتك." : "Select the model of your vehicle."
+                      ? "Select the model of your vehicle."
                       : vehStep === "year"
-                      ? isAr ? "اختر سنة الصنع." : "Select the manufacture year."
-                      : isAr ? "اختر فئة المحرك أو مقاس الإطار." : "Select engine trim or tyre size."}
+                      ? "Select the manufacture year."
+                      : "Select engine trim or tyre size."}
                   </p>
                 </div>
 
@@ -428,7 +430,7 @@ export default function HeaderSearchModal({
                       MAKE
                     </span>
                     <span className="text-xs sm:text-[13px] font-bold text-white block truncate leading-tight">
-                      {selectedMake || (isAr ? "اختر" : "Select")}
+                      {selectedMake || ("Select")}
                     </span>
                   </div>
                 </button>
@@ -454,7 +456,7 @@ export default function HeaderSearchModal({
                       MODEL
                     </span>
                     <span className="text-xs sm:text-[13px] font-bold text-white block truncate leading-tight">
-                      {selectedModel || (isAr ? "اختر" : "Select")}
+                      {selectedModel || ("Select")}
                     </span>
                   </div>
                 </button>
@@ -480,7 +482,7 @@ export default function HeaderSearchModal({
                       YEAR
                     </span>
                     <span className="text-xs sm:text-[13px] font-bold text-white block truncate leading-tight">
-                      {selectedYear || (isAr ? "اختر" : "Select")}
+                      {selectedYear || ("Select")}
                     </span>
                   </div>
                 </button>
@@ -506,7 +508,7 @@ export default function HeaderSearchModal({
                       ENGINE
                     </span>
                     <span className="text-xs sm:text-[13px] font-bold text-white block truncate leading-tight">
-                      {selectedEngine || (isAr ? "اختر" : "Select")}
+                      {selectedEngine || ("Select")}
                     </span>
                   </div>
                 </button>
@@ -517,18 +519,16 @@ export default function HeaderSearchModal({
             <div className="bg-[#ed1c24] text-white px-6 py-5 sm:px-8 sm:py-6 flex items-start justify-between relative">
               <div>
                 <h3 className="text-xl sm:text-2xl font-bold tracking-tight leading-snug">
-                  {isAr ? "ما هو مقاس إطارات سيارتك؟" : "What size are your tyres?"}
+                  {"What size are your tyres?"}
                 </h3>
                 <p className="text-xs sm:text-[13.5px] text-white/95 mt-1 font-normal leading-snug">
-                  {isAr
-                    ? "اختر العرض — الرقم الأول المكتوب على جانب الإطار (مثال: 235)."
-                    : "Pick the width — it's the first number on your sidewall (e.g. 235)."}
+                  {"Pick the width — it's the first number on your sidewall (e.g. 235)."}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="text-white hover:text-white/80 p-1 transition-colors shrink-0 ml-4 rtl:mr-4 rtl:ml-0 cursor-pointer"
+                className="text-white hover:text-white/80 p-1 transition-colors shrink-0 ml-4 cursor-pointer"
                 aria-label="Close"
               >
                 <X size={22} strokeWidth={2.5} />
@@ -554,7 +554,7 @@ export default function HeaderSearchModal({
                     <circle cx="12" cy="12" r="4" />
                     <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
                   </svg>
-                  <span className="truncate">{isAr ? "مقاس الإطار" : "Search Tyre Size"}</span>
+                  <span className="truncate">{"Search Tyre Size"}</span>
                 </button>
 
                 {/* Tab 2: Search Vehicle */}
@@ -569,7 +569,7 @@ export default function HeaderSearchModal({
                     <path d="M9 17h6" />
                     <circle cx="17" cy="17" r="2" />
                   </svg>
-                  <span className="truncate">{isAr ? "نوع السيارة" : "Search Vehicle"}</span>
+                  <span className="truncate">{"Search Vehicle"}</span>
                 </button>
 
                 {/* Tab 3: Tyre Brands */}
@@ -581,7 +581,7 @@ export default function HeaderSearchModal({
                   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
-                  <span className="truncate">{isAr ? "ماركات الإطارات" : "Tyre Brands"}</span>
+                  <span className="truncate">{"Tyre Brands"}</span>
                 </button>
 
                 {/* Tab 4: EV Tyres */}
@@ -594,7 +594,7 @@ export default function HeaderSearchModal({
                     <circle cx="12" cy="12" r="10" />
                     <path d="M13 7l-3 5h4l-2 5" />
                   </svg>
-                  <span className="truncate">{isAr ? "إطارات EV" : "EV Tyres"}</span>
+                  <span className="truncate">{"EV Tyres"}</span>
                 </button>
               </div>
             )}
@@ -609,28 +609,22 @@ export default function HeaderSearchModal({
                     value={searchVal}
                     onChange={(e) => setSearchVal(e.target.value)}
                     placeholder={
-                      isAr
-                        ? "Search Tyre Size e.g 1956515 or 195/65 R15"
-                        : "Search Tyre Size e.g 1956515 or 195/65 R15"
+                      "Search Tyre Size e.g 1956515 or 195/65 R15"
                     }
-                    className="w-full bg-white border border-gray-200 focus:border-gray-300 rounded-xl px-4 py-3.5 pr-11 rtl:pr-4 rtl:pl-11 text-[13.5px] text-gray-800 placeholder:text-gray-400 focus:outline-none shadow-2xs"
+                    className="w-full bg-white border border-gray-200 focus:border-gray-300 rounded-xl px-4 py-3.5 pr-11 text-[13.5px] text-gray-800 placeholder:text-gray-400 focus:outline-none shadow-2xs"
                   />
                   {searchVal && (
                     <button
                       type="button"
                       onClick={() => setSearchVal("")}
-                      className={`absolute ${
-                        isAr ? "left-11" : "right-11"
-                      } top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 flex items-center justify-center transition-colors`}
+                      className="absolute right-11 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 flex items-center justify-center transition-colors"
                     >
                       <X size={11} strokeWidth={2.5} />
                     </button>
                   )}
                   <button
                     type="submit"
-                    className={`absolute ${
-                      isAr ? "left-3.5" : "right-3.5"
-                    } top-1/2 -translate-y-1/2 text-[#ed1c24] hover:opacity-80 transition-opacity focus:outline-none cursor-pointer`}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#ed1c24] hover:opacity-80 transition-opacity focus:outline-none cursor-pointer"
                     aria-label="Search"
                   >
                     <Search size={18} strokeWidth={2.2} />
@@ -660,7 +654,7 @@ export default function HeaderSearchModal({
               <div>
                 {/* Search Bar (Search here ...) */}
                 <div className="relative w-full mb-5">
-                  <div className="absolute left-3.5 rtl:right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
                     <Search size={16} />
                   </div>
                   <input
@@ -674,13 +668,13 @@ export default function HeaderSearchModal({
                         ? "Search model ..."
                         : "Search year ..."
                     }
-                    className="w-full bg-white border border-gray-200 focus:border-[#ed1c24] rounded-xl pl-10 pr-4 rtl:pr-10 rtl:pl-4 py-3 text-[13.5px] text-gray-800 placeholder:text-gray-400 focus:outline-none transition-colors shadow-2xs"
+                    className="w-full bg-white border border-gray-200 focus:border-[#ed1c24] rounded-xl pl-10 pr-4 py-3 text-[13.5px] text-gray-800 placeholder:text-gray-400 focus:outline-none transition-colors shadow-2xs"
                   />
                   {vehSearchVal && (
                     <button
                       type="button"
                       onClick={() => setVehSearchVal("")}
-                      className="absolute right-3.5 rtl:left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 flex items-center justify-center transition-colors"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 flex items-center justify-center transition-colors"
                     >
                       <X size={11} strokeWidth={2.5} />
                     </button>
@@ -776,7 +770,7 @@ export default function HeaderSearchModal({
                       onClick={() => handleFinishVehicle("Standard")}
                       className="btn-cta gap-2 text-xs sm:text-sm px-8 py-3 rounded-full shadow-md"
                     >
-                      <span>{isAr ? "البحث عن الإطارات المناسبة" : "SEARCH MATCHING TYRES"}</span>
+                      <span>{"SEARCH MATCHING TYRES"}</span>
                     </button>
                   </div>
                 )}
@@ -799,8 +793,8 @@ export default function HeaderSearchModal({
               }}
               className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-black transition-colors cursor-pointer"
             >
-              <ArrowLeft size={14} className="rtl:rotate-180" />
-              <span>{isAr ? "رجوع" : "Back"}</span>
+              <ArrowLeft size={14} className="" />
+              <span>{"Back"}</span>
             </button>
           ) : (
             <button
@@ -814,8 +808,8 @@ export default function HeaderSearchModal({
               }}
               className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-black transition-colors cursor-pointer"
             >
-              <ArrowLeft size={14} className="rtl:rotate-180" />
-              <span>{isAr ? "إلغاء" : "Cancel"}</span>
+              <ArrowLeft size={14} className="" />
+              <span>{"Cancel"}</span>
             </button>
           )}
 

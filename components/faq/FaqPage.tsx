@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { decodeBlogHtml } from "@/lib/services/blog.service";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 interface FaqItem {
   faq_id: number;
@@ -23,8 +23,7 @@ interface FaqGroup {
 
 export default function FaqPage() {
   const pathname = usePathname();
-  const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
-  const isAr = locale === "ar";
+  const locale = "en";
 
   const [groups, setGroups] = useState<FaqGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,28 +63,11 @@ export default function FaqPage() {
   };
 
   return (
-    <div className="bg-white min-h-screen" dir={isAr ? "rtl" : "ltr"}>
-      {/* ── Top Hero Banner with Black Background ── */}
-      <div className="relative w-full h-32 sm:h-36 md:h-44 bg-black flex items-center justify-center px-4">
-        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white uppercase tracking-wider text-center font-sans">
-          {isAr
-            ? "الأسئلة الشائعة | تايرز وورلد الإمارات"
-            : "FREQUENTLY ASKED QUESTIONS | TYRESWORLD UAE"}
-        </h1>
-      </div>
-
-      {/* ── Breadcrumb Bar ── */}
-      <div className="bg-[#f0f0f0] border-b border-gray-200">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-2.5">
-          <nav className="flex items-center gap-2 text-xs font-medium text-gray-500">
-            <Link href={`/${locale}`} className="hover:text-black transition-colors">
-              {isAr ? "الرئيسية" : "Home"}
-            </Link>
-            <ChevronRight size={12} className="text-gray-400 rtl:rotate-180" />
-            <span className="text-gray-900 font-semibold">{isAr ? "الأسئلة الشائعة" : "FAQ"}</span>
-          </nav>
-        </div>
-      </div>
+    <div className="bg-white min-h-screen" dir="ltr">
+      <PageHeroBanner
+        title="Frequently Asked Questions | TyresWorld UAE"
+        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "FAQ" }]}
+      />
 
       {/* ── Main Content ── */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-14">

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { useScrollLock } from "@/lib/useScrollLock";
 
@@ -19,9 +18,7 @@ export default function AddToCartModal({
   onClose,
 }: AddToCartModalProps) {
   const [mounted, setMounted] = useState(false);
-  const pathname = usePathname();
-  const locale = pathname?.split("/")[1] === "ar" ? "ar" : "en";
-  const isAr = locale === "ar";
+  const locale = "en";
 
   useScrollLock(open);
 
@@ -48,7 +45,7 @@ export default function AddToCartModal({
   const modalContent = (
     <div
       className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/65 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-      dir={isAr ? "rtl" : "ltr"}
+      dir="ltr"
     >
       {/* Click backdrop to close */}
       <div
@@ -63,13 +60,13 @@ export default function AddToCartModal({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label={isAr ? "تمت الإضافة إلى السلة" : "Added to Cart"}
+        aria-label="Added to Cart"
       >
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className={`absolute top-4 ${isAr ? "left-4" : "right-4"} w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer`}
+          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
           aria-label="Close"
         >
           <X size={20} strokeWidth={2.2} />
@@ -77,7 +74,7 @@ export default function AddToCartModal({
 
         {/* Modal Title */}
         <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-gray-950 mt-1 mb-3">
-          {isAr ? "تمت الإضافة إلى السلة" : "ADDED TO CART"}
+          {"ADDED TO CART"}
         </h3>
 
         {/* Product Name */}
@@ -92,7 +89,7 @@ export default function AddToCartModal({
             onClick={onClose}
             className="btn-cta w-full sm:w-auto min-w-[190px] text-[13px] py-3.5 px-6 rounded-lg shadow-md"
           >
-            <span>{isAr ? "توجه إلى عربة التسوق" : "PROCEED TO CART"}</span>
+            <span>{"PROCEED TO CART"}</span>
           </Link>
 
           <button
@@ -100,7 +97,7 @@ export default function AddToCartModal({
             onClick={onClose}
             className="btn-slide-black w-full sm:w-auto min-w-[190px] text-[13px] font-black uppercase tracking-wider py-3.5 px-6 rounded-lg shadow-md cursor-pointer"
           >
-            <span>{isAr ? "متابعة التسوق" : "CONTINUE SHOPPING"}</span>
+            <span>{"CONTINUE SHOPPING"}</span>
           </button>
         </div>
       </div>
