@@ -9,11 +9,9 @@ import {
   ChevronRight,
   Navigation,
   Loader2,
-  CheckCircle2,
-  Check,
-  Home,
 } from "lucide-react";
 import StoreLocatorMap, { type StoreLocation } from "@/components/StoreLocatorMap";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 // Haversine distance calculator
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -179,82 +177,14 @@ function InstallerNetworkContent() {
 
   return (
     <div className="bg-white pb-8 sm:pb-12">
-      {/* ── Page Hero Banner — same dark-to-red gradient card used site-wide,
-             keeping this page's own richer content (badge, CTA, checklist). ── */}
-      <div className="bg-[#f8f9fa] py-1 sm:py-2">
-        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-[20px] sm:rounded-[28px] bg-gradient-to-r from-[#780a0f] via-[#b31219] to-[#ed1c24] p-6 sm:p-8 md:p-10 lg:p-12 shadow-lg border border-red-900/15">
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 rounded-full bg-black/25 blur-3xl pointer-events-none" />
-
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 bg-black/25 backdrop-blur-xs border border-white/10 px-3.5 py-1 rounded-full text-[11.5px] font-medium text-white/90 mb-5 shadow-xs">
-                <CheckCircle2 size={13} className="text-white shrink-0" />
-                <span>UAE-Wide Network of Trusted Installers Partner</span>
-              </div>
-
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[46px] font-black uppercase text-white tracking-tight leading-none drop-shadow-sm">
-                BOOK TYRE FITTING
-              </h1>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-black uppercase tracking-tight mt-1.5 mb-3.5 leading-tight text-white drop-shadow-sm">
-                NEAR YOU ANYWHERE IN THE UAE
-              </h2>
-
-              <p className="text-xs sm:text-sm text-white/90 max-w-lg leading-relaxed mb-5 font-normal">
-                Search our network of trusted installers, pick a slot that works for you, and get your tyres fitted at a workshop or wherever suits you best.
-              </p>
-
-              <div className="mb-6">
-                <Link
-                  href={`/${locale}/tyres`}
-                  className="inline-flex items-center gap-2 bg-black hover:bg-neutral-900 text-white text-[12px] font-semibold px-4.5 py-2 rounded-full transition-all shadow-md"
-                >
-                  <Search size={13} className="text-white" />
-                  <span>Search Tyres by Size</span>
-                  <ChevronRight size={13} className="text-white/70" />
-                </Link>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[11.5px] text-white/90 font-medium">
-                <div className="flex items-center gap-1.5">
-                  <Check size={13} className="text-white stroke-[3]" />
-                  <span>Vetted, Quality Installers</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Check size={13} className="text-white stroke-[3]" />
-                  <span>Contact Installers Directly</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Check size={13} className="text-white stroke-[3]" />
-                  <span>Workshop or Mobile Fitting</span>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Breadcrumb Inside Banner (Centered Connected Ribbon Style) ── */}
-            <div className="relative z-10 flex justify-center w-full mt-4 sm:mt-5">
-              <nav className="inline-flex items-center gap-1 p-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-full shadow-lg max-w-full overflow-x-auto custom-scrollbar">
-                <Link
-                  href={`/${locale}`}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold shrink-0 group"
-                >
-                  <span className="w-4 h-4 rounded-full bg-white/15 flex items-center justify-center text-white group-hover:bg-white group-hover:text-red-600 transition-colors">
-                    <Home size={10} />
-                  </span>
-                  <span>{"Home"}</span>
-                </Link>
-                <ChevronRight size={11} className="shrink-0 text-white/40 -mx-0.5" />
-                <span className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 bg-white text-gray-950 font-black text-xs uppercase tracking-wide rounded-full shadow-md border border-white shrink-0">
-                  <span className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                  </span>
-                  <span>Installer Network</span>
-                </span>
-              </nav>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageHeroBanner
+        title="Book Tyre Fitting Near You Anywhere in the UAE"
+        description="Search our network of trusted installers, pick a slot that works for you, and get your tyres fitted at a workshop or wherever suits you best."
+        breadcrumb={[
+          { label: "Home", href: `/${locale}` },
+          { label: "Installer Network" },
+        ]}
+      />
 
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">

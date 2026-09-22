@@ -324,50 +324,6 @@ export default async function DynamicSlugPage({ params }: PageProps) {
           }
           return html.replace(/((?:src|href))="\/media\//g, `$1="/api/media/`);
         })();
-    const cmsBgImage = (function getCmsHeroBanner(k: string, t: string) {
-      const key = (k || "").toLowerCase();
-      const title = (t || "").toLowerCase();
-      if (key.includes("ev") || key.includes("electric") || title.includes("ev") || title.includes("electric")) {
-        return "/images/bg/ev-tyres-banner.png";
-      }
-      if (key.includes("motorcycle") || key.includes("motorbike") || title.includes("motorbike") || title.includes("motorcycle")) {
-        return "/images/bg/motorbike-banner.png";
-      }
-      /* No loose "battery" substring branch: that used to also wrongly catch
-         the car-battery-service CMS page — confirmed on the live site that
-         page actually uses the same generic tyre-tread background as every
-         other Car Services sub-page (car-tyre-service, car-ac-service,
-         etc.), not a battery banner. The car-battery CATEGORY's own banner
-         is handled separately by CategoryPageInner's getCategoryHeroBanner. */
-      return null;
-    })(route.identifier ?? slug, page.title);
-
-    /* Only banners whose artwork has a title/tagline baked in need a
-       visually-hidden H1 — car battery and motorbike are plain photography
-       with no text in them, so hiding their H1 would leave the hero with no
-       visible title at all. Both the EV and insurance banners are also shot
-       at a much taller aspect ratio than the fixed py-16..py-36 hero padding
-       assumes, cropping their own baked-in ribbon text at that fixed height
-       — match each one's real ratio instead. */
-    const BAKED_IN_TITLE_BANNERS = new Set(["/images/bg/ev-tyres-banner.png"]);
-    const BANNER_ASPECT_RATIOS: Record<string, string> = {
-      "/images/bg/ev-tyres-banner.png": "1024 / 322",
-      "/images/bg/car-insurance-banner.webp": "1905 / 600",
-      "/images/bg/car-battery-replacement-banner.webp": "1905 / 600",
-    };
-    const cmsHasBakedInTitle = !!cmsBgImage && BAKED_IN_TITLE_BANNERS.has(cmsBgImage);
-    const cmsBannerAspectRatio = cmsBgImage ? BANNER_ASPECT_RATIOS[cmsBgImage] : undefined;
-
-    const cmsBannerStyle = cmsBgImage
-      ? {
-          backgroundImage: `url("${cmsBgImage}")`,
-          backgroundSize: "cover" as const,
-          backgroundPosition: "center" as const,
-          backgroundRepeat: "no-repeat" as const,
-          ...(cmsBannerAspectRatio ? { aspectRatio: cmsBannerAspectRatio } : {}),
-        }
-      : undefined;
-
     const cmsBreadcrumb: BreadcrumbItem[] = [
       { label: t(locale, "common.home"), href: `/${locale}` },
       { label: page.title },
@@ -375,52 +331,10 @@ export default async function DynamicSlugPage({ params }: PageProps) {
 
     return (
       <main dir="ltr" className="bg-white">
-        {cmsBgImage ? (
-          /* Curated real photo banner for this specific page (EV, motorbike,
-             insurance, car-battery-replacement) — kept as its own deliberate
-             asset/aspect-ratio rather than folded into the generic banner. */
-          <>
-            <div
-              className={`page-title-wrapper bg-cover-image ${
-                cmsBannerAspectRatio ? "shadow-inner" : "!py-16 sm:!py-24 md:!py-28 lg:!py-36 shadow-inner"
-              }`}
-              style={cmsBannerStyle}
-            >
-              <div className="container custom-width">
-                <div className="title">
-                  <h1 id="page-title-heading" className={cmsHasBakedInTitle ? "sr-only" : ""}>
-                    <span className="base" data-ui-id="page-title-wrapper">
-                      {/* content_heading is the real on-page H1 field, distinct
-                          from title (used below for breadcrumb/<title> tag) —
-                          same pattern as category_page_title vs name. e.g. Car
-                          Insurance: title="Car Insurance", content_heading=
-                          "Car Insurance Service in UAE", the live page's real H1. */}
-                      {page.content_heading || page.title}
-                    </span>
-                  </h1>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border-b border-gray-100">
-              <div className="container py-2.5">
-                <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap font-medium">
-                  <a href={`/${locale}`} className="hover:text-black transition-colors">
-                    {t(locale, "common.home")}
-                  </a>
-                  <span>/</span>
-                  <span className="text-black">{page.title}</span>
-                </nav>
-              </div>
-            </div>
-          </>
-        ) : (
-          /* Same gradient hero used site-wide on every other inner page. */
-          <PageHeroBanner
-            title={page.content_heading || page.title}
-            breadcrumb={cmsBreadcrumb}
-          />
-        )}
+        <PageHeroBanner
+          title={page.content_heading || page.title}
+          breadcrumb={cmsBreadcrumb}
+        />
 
         {((route.identifier ?? slug) === "car-battery-replacement" || (route.identifier ?? slug) === "car-battery") ? (
           /* Real page content — see CarBatteryReplacementLanding.tsx for why
