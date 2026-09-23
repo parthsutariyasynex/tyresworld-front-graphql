@@ -11,7 +11,8 @@ export default function AboutUsPage() {
     <div className="bg-white" dir="ltr">
       <PageHeroBanner
         title="About Us"
-        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "About Us" }]}
+        breadcrumbLabel="About Us"
+        description="Learn more about TyresWorld — your trusted destination for genuine tyres, professional fitting, and automotive care in the UAE."
       />
 
       {/* ── Main Content ── */}

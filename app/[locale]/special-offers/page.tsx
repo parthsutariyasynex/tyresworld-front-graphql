@@ -73,7 +73,7 @@ export default async function SpecialOffersPage({
 
       <PageHeroBanner
         title={heading}
-        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Special Offers" }]}
+        breadcrumbLabel="Special Offers"
       />
 
       <div className="so-container so-body">

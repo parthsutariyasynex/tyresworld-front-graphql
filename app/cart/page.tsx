@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { useOverviewDrawer } from "@/lib/overview-drawer-context";
 import PageHeroBanner from "@/components/PageHeroBanner";
 import { Money } from "@/components/Price";
 import ProductImage from "@/components/ProductImage";
@@ -109,6 +110,7 @@ function CartQtyDropdown({
 export default function CartPage() {
   const pathname = usePathname();
   const locale = pathname.split("/")[1] === "ar" ? "ar" : "en";
+  const { openDrawer } = useOverviewDrawer();
 
   const {
     items,
@@ -200,7 +202,6 @@ export default function CartPage() {
         {/* ── Page Hero Title Banner ── */}
         <PageHeroBanner
           title="Shopping Cart"
-          breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Shopping Cart" }]}
         />
 
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -224,7 +225,6 @@ export default function CartPage() {
         {/* ── Page Hero Title Banner ── */}
         <PageHeroBanner
           title="Shopping Cart"
-          breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Shopping Cart" }]}
         />
 
         <div className="max-w-7xl mx-auto px-4 pt-6">
@@ -256,7 +256,6 @@ export default function CartPage() {
     <div className="bg-[#f8f9fa] pb-12" dir="ltr">
       <PageHeroBanner
         title="Shopping Cart"
-        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Shopping Cart" }]}
       />
 
       <div className="max-w-7xl mx-auto px-4 pt-5">
@@ -485,15 +484,15 @@ export default function CartPage() {
                 </span>
               </div>
 
-              {/* Checkout CTA Button — routes through delivery/installer
-                  selection first (storelocator), which then continues to
-                  the existing checkout flow. */}
-              <Link
-                href={`/${locale}/storelocator/ref=cart`}
-                className="btn-cta w-full text-sm py-4 rounded-xl shadow-md"
+              {/* Checkout CTA Button — opens in-drawer installer & checkout flow */}
+              <button
+                type="button"
+                onClick={() => openDrawer("fitting")}
+                className="btn-cta w-full text-sm py-4 rounded-xl shadow-md cursor-pointer flex items-center justify-center gap-2"
               >
                 <span>PROCEED TO CHECKOUT</span>
-              </Link>
+                <ArrowRight size={16} />
+              </button>
             </div>
           </div>
         </div>

@@ -153,8 +153,8 @@ export default function EvTyresLanding() {
     <div dir="ltr" className="bg-white text-gray-900 font-sans">
       <PageHeroBanner
         title="Electric Vehicle Tyres in UAE"
+        breadcrumbLabel="EV Tyres"
         description="Shop premium EV tyres in UAE with free mobile fitting, manufacturer warranty, and best prices across Dubai, Abu Dhabi, and UAE."
-        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "EV Tyres" }]}
       />
 
       {/* ── 3. Top Content: Shop EV Tyres + Description + What Makes EV Ready ── */}

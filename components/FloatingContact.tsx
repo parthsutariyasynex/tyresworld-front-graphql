@@ -76,7 +76,7 @@ export default function FloatingContact() {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3.5 items-center">
+      <div className="fixed bottom-28 sm:bottom-6 right-3 sm:right-6 z-50 flex flex-col gap-3 sm:gap-3.5 items-center">
         {/* ── Top Button: Black Request Callback ─────────────────── */}
         <button
           type="button"

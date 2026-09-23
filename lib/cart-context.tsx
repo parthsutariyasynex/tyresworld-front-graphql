@@ -302,6 +302,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       {children}
       <AddToCartModal
         open={Boolean(addedModalProduct)}
+        product={addedModalProduct}
         productName={addedModalProduct?.name ?? ""}
         onClose={closeAddedModal}
       />

@@ -36,27 +36,30 @@ type PaymentMethodItem = {
 };
 
 const DEFAULT_PAYMENT_METHODS: PaymentMethodItem[] = [
-  {
-    code: "payonline",
-    title: "Credit/Debit Card – Pay Online",
-    description: "You will be redirected to our partner's website where you can safely pay",
-    type: "standard",
-  },
-  {
-    code: "apple_pay",
-    title: "Apple Pay",
-    type: "standard",
-  },
-  {
-    code: "tabby_installments",
-    title: "Tabby – Pay in installments",
-    type: "tabby",
-  },
-  {
-    code: "tamara_installments",
-    title: "Tamara – Pay in installments",
-    type: "tamara",
-  },
+  // Only "Pay via Payment Link" should show for now — the other methods
+  // are commented out (not removed) so they're a one-line uncomment away
+  // when they need to come back.
+  // {
+  //   code: "payonline",
+  //   title: "Credit/Debit Card – Pay Online",
+  //   description: "You will be redirected to our partner's website where you can safely pay",
+  //   type: "standard",
+  // },
+  // {
+  //   code: "apple_pay",
+  //   title: "Apple Pay",
+  //   type: "standard",
+  // },
+  // {
+  //   code: "tabby_installments",
+  //   title: "Tabby – Pay in installments",
+  //   type: "tabby",
+  // },
+  // {
+  //   code: "tamara_installments",
+  //   title: "Tamara – Pay in installments",
+  //   type: "tamara",
+  // },
   {
     code: "payment_link",
     title: "Pay via Payment Link",
@@ -162,7 +165,9 @@ function CheckoutContent() {
 
   // Dynamic Payment Methods from Magento cart
   const [paymentMethods, setPaymentMethods] = useState(DEFAULT_PAYMENT_METHODS);
-  const [selPayment, setSelPayment] = useState("payonline");
+  // Defaults to the one method currently shown (see DEFAULT_PAYMENT_METHODS
+  // above) — was "payonline" before the other methods were commented out.
+  const [selPayment, setSelPayment] = useState("payment_link");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
@@ -391,6 +396,16 @@ function CheckoutContent() {
     }
   }, [cart?.available_payment_methods]);
 
+  // Ensure a valid payment method is always selected by default
+  useEffect(() => {
+    if (paymentMethods.length > 0) {
+      const match = paymentMethods.find((p) => p.code === selPayment || (p as any).id === selPayment);
+      if (!match || !selPayment) {
+        setSelPayment(paymentMethods[0].code);
+      }
+    }
+  }, [paymentMethods, selPayment]);
+
   // Refresh cart on mount
   useEffect(() => {
     refresh();
@@ -560,7 +575,6 @@ function CheckoutContent() {
         <div>
           <PageHeroBanner
             title="Thank You For Your Purchase!"
-            breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Order Confirmed" }]}
           />
 
           <div className="max-w-4xl mx-auto px-4 mt-10 mb-16">
@@ -592,6 +606,43 @@ function CheckoutContent() {
     );
   }
 
+  // Loading Skeleton — cart context not ready yet
+  if (!ready) {
+    return (
+      <div className="bg-[#f8f9fa] min-h-screen pb-12" dir="ltr">
+        <PageHeroBanner title="Checkout" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_390px] gap-6 items-start">
+            <div className="space-y-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-2xs">
+                  <div className="bg-[#f2f3f5] px-5 py-3.5 border-b border-gray-200">
+                    <div className="h-4 w-40 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                  <div className="p-5 space-y-3">
+                    <div className="h-10 bg-gray-100 rounded-lg animate-pulse" />
+                    <div className="h-10 bg-gray-100 rounded-lg animate-pulse w-5/6" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-2xs">
+              <div className="bg-[#f2f3f5] px-5 py-3.5 border-b border-gray-200">
+                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="p-5 space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-4 bg-gray-100 rounded animate-pulse" />
+                ))}
+                <div className="h-11 bg-gray-200 rounded-lg animate-pulse mt-4" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Empty Cart View
   if (ready && items.length === 0) {
     return (
@@ -617,7 +668,6 @@ function CheckoutContent() {
     <div dir={"ltr"} className="bg-[#f8f9fa] min-h-screen pb-12 text-gray-900 font-sans">
       <PageHeroBanner
         title="Checkout"
-        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Checkout" }]}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">

@@ -129,7 +129,6 @@ export default function BrandsPageInner() {
       <PageHeroBanner
         title="Shop by Brand"
         description="Choose from trusted tyre brands, exact fitment, and great deals across the UAE."
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "Brands" }]}
       />
 
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 pt-6 sm:pt-8">

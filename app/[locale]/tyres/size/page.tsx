@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Search, Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import StickyBottomFinder from "@/components/home/partora/StickyBottomFinder";
 import type { TyreSizeItem } from "@/app/api/tyre-sizes/route";
 import PageHeroBanner from "@/components/PageHeroBanner";
@@ -111,12 +111,8 @@ export default function TyreSizeBrowserPage() {
     <div className="bg-[#f5f6f8] pb-8 sm:pb-12 flex flex-col justify-start" dir="ltr">
       <PageHeroBanner
         title="All Size"
+        breadcrumbLabel="Tyre Sizes"
         description="Shop premium tyres in UAE with free mobile fitting, manufacturer warranty, and best prices across Dubai, Abu Dhabi, and UAE."
-        breadcrumb={[
-          { label: "Home", href: `/${locale}` },
-          { label: "Tyres", href: `/${locale}/tyres` },
-          { label: "Tyre Size" },
-        ]}
       />
 
       {/* ── Main Content Container ─────────────────────────────────── */}
@@ -167,11 +163,13 @@ export default function TyreSizeBrowserPage() {
 
             {/* Loading / Error / Empty States */}
             {loading ? (
-              <div className="py-20 flex flex-col items-center justify-center">
-                <Loader2 size={36} className="animate-spin text-[#ed1c24] mb-3" />
-                <span className="text-sm font-bold text-gray-500">
-                  Loading tyre sizes...
-                </span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                {Array.from({ length: 20 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-[50px] sm:h-[54px] bg-gray-100 border border-gray-200/90 rounded-lg sm:rounded-xl animate-pulse"
+                  />
+                ))}
               </div>
             ) : error && sizes.length === 0 ? (
               <div className="py-16 text-center text-sm font-medium text-gray-400">

@@ -35,7 +35,6 @@ export default function ForgotPassword() {
     <div className="bg-[#f8f9fa]">
       <PageHeroBanner
         title="Forgot Your Password?"
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "Forgot Password" }]}
         showCta={false}
       />
 

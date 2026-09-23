@@ -94,7 +94,8 @@ export default function CarServicesPage() {
     <div className="bg-white pb-8 sm:pb-12">
       <PageHeroBanner
         title="Expert Car Repairs & Services in Abu Dhabi"
-        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Car Services" }]}
+        breadcrumbLabel="Services"
+        description="Keep your car running smoothly with expert maintenance and repair solutions in Abu Dhabi."
       />
 
       {/* ── Main Section ── */}

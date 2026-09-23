@@ -238,7 +238,7 @@ export default function Footer({ forceShow }: { forceShow?: boolean } = {}) {
       </div>
 
       {/* Copyright strip */}
-      <div className="footer-copyright bg-[#1e1e20] py-4 sm:py-5 border-t border-white/5">
+      <div className="footer-copyright bg-[#1e1e20] py-4 sm:py-5 pb-28 sm:pb-5 border-t border-white/5">
         <div className="container custom-width max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col xl:flex-row items-center justify-between gap-4 xl:gap-6 text-center xl:text-left">
 
@@ -318,7 +318,7 @@ export default function Footer({ forceShow }: { forceShow?: boolean } = {}) {
       {/* Back to top */}
       <button
         type="button"
-        className={`fixed bottom-6 left-6 z-40 w-10 h-10 rounded-full bg-[#ed1c24] text-white flex items-center justify-center shadow-lg transition-all duration-300 hover:bg-[#c6181d] hover:scale-110 ${showTop ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        className={`fixed bottom-28 sm:bottom-6 left-4 sm:left-6 z-40 w-10 h-10 rounded-full bg-[#ed1c24] text-white flex items-center justify-center shadow-lg transition-all duration-300 hover:bg-[#c6181d] hover:scale-110 ${showTop ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
           }`}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         aria-label="Back to top"

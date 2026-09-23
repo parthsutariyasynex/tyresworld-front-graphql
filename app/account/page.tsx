@@ -46,7 +46,6 @@ function AuthPanel() {
     <div className="bg-[#f8f9fa]">
       <PageHeroBanner
         title={mode === "login" ? "Login to Your Account" : "Create an Account"}
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "Account" }]}
         showCta={false}
       />
 
@@ -525,7 +524,6 @@ function AccountDashboard() {
     <div className="bg-white pb-8 lg:pb-10">
       <PageHeroBanner
         title="My Account"
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "My Account" }]}
         showCta={false}
       />
       <div className="container max-w-6xl mx-auto px-4 pt-8 lg:pt-10">
@@ -1833,7 +1831,6 @@ function AccountPageSkeleton() {
     <div className="bg-white pb-8 lg:pb-10">
       <PageHeroBanner
         title="My Account"
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "My Account" }]}
         showCta={false}
       />
       <div className="container max-w-6xl mx-auto px-4 pt-8 lg:pt-10">

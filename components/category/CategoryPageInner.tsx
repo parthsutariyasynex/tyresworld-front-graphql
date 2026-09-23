@@ -2,8 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { ChevronRight, Home } from "lucide-react";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { SORT_OPTS } from "@/components/category/sortOptions";
 import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
@@ -597,14 +596,21 @@ export default function CategoryPageInner({
 
   const productsLabel = `${total.toLocaleString()} Tyres`;
 
+  const breadcrumbLabel =
+    brandFilter ||
+    category?.name ||
+    (basePath === "/tyres" || basePath.startsWith("/tyres") ? "Tyres" : undefined) ||
+    (urlKey ? urlKey.replace(/-/g, " ") : undefined) ||
+    displayTitle;
+
   return (
     <div dir={dir}>
 
       {/* ── PLP Hero Banner (Dark-to-Light Red Gradient Card) ─────────────── */}
       {!hideHeroBanner && (
         <div className="bg-gray-50 pt-2 pb-0.5">
-          <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#780a0f] via-[#b31219] to-[#ed1c24] p-3.5 sm:p-4 md:p-5 shadow-md border border-red-900/15">
+          <div className="max-w-[1600px] w-full mx-auto px-3 sm:px-6 lg:px-8">
+            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#780a0f] via-[#b31219] to-[#ed1c24] px-3.5 py-4 sm:p-5 md:p-6 shadow-md border border-red-900/15">
               {/* Background ambient lighting and subtle decorative wave */}
               <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/10 blur-3xl pointer-events-none" />
               <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 rounded-full bg-black/25 blur-3xl pointer-events-none" />
@@ -620,10 +626,10 @@ export default function CategoryPageInner({
                     </div>
                   ) : (
                     <>
-                      <div className="flex items-center justify-center text-center w-full">
+                      <div className="flex items-center justify-center text-center w-full px-1">
                         <h1
                           id="page-title-heading"
-                          className="text-lg sm:text-2xl md:text-[26px] font-black text-white tracking-tight leading-tight drop-shadow-sm text-center"
+                          className="text-base sm:text-xl md:text-2xl lg:text-[26px] font-black text-white tracking-tight leading-snug sm:leading-tight drop-shadow-sm text-center mx-auto"
                         >
                           <span className="base relative z-10" data-ui-id="page-title-wrapper">
                             {displayTitle}
@@ -631,7 +637,7 @@ export default function CategoryPageInner({
                         </h1>
                       </div>
 
-                      <p className="mt-1 sm:mt-1.5 text-[11px] sm:text-xs md:text-[13px] text-white/95 leading-relaxed font-normal max-w-4xl mx-auto text-center md:whitespace-nowrap">
+                      <p className="mt-1 sm:mt-1.5 text-[11px] sm:text-xs md:text-[13px] text-white/95 leading-relaxed font-normal max-w-3xl mx-auto text-center px-2">
                         {brandFilter
                           ? `Shop genuine ${brandFilter} tyres online in UAE at TyresWorld. Free mobile tyre fitting in Dubai, Abu Dhabi & Sharjah, manufacturer warranty, and best prices.`
                           : "Shop premium tyres in UAE with free mobile fitting, manufacturer warranty, and best prices across Dubai, Abu Dhabi, and UAE."}
@@ -642,94 +648,9 @@ export default function CategoryPageInner({
               </div>
 
               {/* ── Breadcrumb Inside Banner (Centered Connected Ribbon Style) ── */}
-              {!hideBreadcrumbs && (
-                <div className="relative z-10 flex justify-center w-full mt-3 sm:mt-4">
-                  <nav className="inline-flex items-center gap-1 p-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-full shadow-lg max-w-full overflow-x-auto custom-scrollbar">
-                    <Link
-                      href="/"
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold shrink-0 group"
-                    >
-                      <span className="w-4 h-4 rounded-full bg-white/15 flex items-center justify-center text-white group-hover:bg-white group-hover:text-red-600 transition-colors">
-                        <Home size={10} />
-                      </span>
-                      <span>{"Home"}</span>
-                    </Link>
-                    {brandFilter ? (
-                      <>
-                        <ChevronRight size={11} className="shrink-0 text-white/40 -mx-0.5" />
-                        <Link
-                          href="/tyres"
-                          className="inline-flex items-center px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold shrink-0"
-                        >
-                          {"Tyres"}
-                        </Link>
-                        <ChevronRight size={11} className="shrink-0 text-white/40 -mx-0.5" />
-                        <Link
-                          href="/brands"
-                          className="inline-flex items-center px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold shrink-0"
-                        >
-                          {"Brands"}
-                        </Link>
-                        <ChevronRight size={11} className="shrink-0 text-white/40 -mx-0.5" />
-                        <span className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 bg-white text-gray-950 font-black text-xs uppercase tracking-wide rounded-full shadow-md border border-white shrink-0">
-                          <span className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
-                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                          </span>
-                          <span>{brandFilter}</span>
-                        </span>
-                      </>
-                    ) : (
-                      (() => {
-                        const segments = urlKey.split("/").filter(Boolean);
-                        let acc = "";
-                        return segments.map((seg, idx) => {
-                          const isLast = idx === segments.length - 1;
-                          acc += (acc ? `/${seg}` : seg);
-                          const segLower = seg.toLowerCase();
-
-                          let label = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
-                          let href = `/${acc}`;
-
-                          if (segLower === "tyres") {
-                            label = "Tyres";
-                            href = "/tyres";
-                          } else if (segLower === "brand" || segLower === "brands") {
-                            label = "Brand";
-                            href = "/brands";
-                          } else if (isLast && category?.name) {
-                            label = category.name;
-                          }
-
-                          return (
-                            <React.Fragment key={acc}>
-                              <ChevronRight size={11} className="shrink-0 text-white/40 -mx-0.5" />
-                              {isLast ? (
-                                <span className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 bg-white text-gray-950 font-black text-xs uppercase tracking-wide rounded-full shadow-md border border-white shrink-0">
-                                  <span className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                                  </span>
-                                  <span>
-                                    {catLoading && !category?.name ? (
-                                      <span className="inline-block bg-gray-300 rounded animate-pulse w-14 h-3 align-middle" />
-                                    ) : (
-                                      label
-                                    )}
-                                  </span>
-                                </span>
-                              ) : (
-                                <Link
-                                  href={href}
-                                  className="inline-flex items-center px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold shrink-0"
-                                >
-                                  {label}
-                                </Link>
-                              )}
-                            </React.Fragment>
-                          );
-                        });
-                      })()
-                    )}
-                  </nav>
+              {!hideBreadcrumbs && displayTitle && (
+                <div className="relative z-10 flex justify-center w-full mt-3 sm:mt-4 max-w-full px-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <Breadcrumbs label={breadcrumbLabel} variant="banner" />
                 </div>
               )}
             </div>
@@ -738,93 +659,10 @@ export default function CategoryPageInner({
       )}
 
       {/* ── Breadcrumb fallback (when hero banner is hidden) ─────────── */}
-      {hideHeroBanner && !hideBreadcrumbs && (
+      {hideHeroBanner && !hideBreadcrumbs && displayTitle && (
         <div className="bg-white border-b border-gray-100">
-          <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2">
-            <nav className="flex justify-center w-full">
-              <div className="inline-flex items-center gap-1 p-1 bg-gray-100/90 border border-gray-200/80 rounded-full shadow-2xs text-xs font-medium max-w-full overflow-x-auto custom-scrollbar">
-                <Link
-                  href="/"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-gray-600 hover:text-gray-950 hover:bg-white transition-all text-xs font-semibold shrink-0 group"
-                >
-                  <span className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
-                    <Home size={10} />
-                  </span>
-                  <span>{"Home"}</span>
-                </Link>
-                {brandFilter ? (
-                  <>
-                    <ChevronRight size={11} className="shrink-0 text-gray-400 -mx-0.5" />
-                    <Link
-                      href="/tyres"
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-gray-600 hover:text-gray-950 hover:bg-white transition-all text-xs font-semibold shrink-0"
-                    >
-                      {"Tyres"}
-                    </Link>
-                    <ChevronRight size={11} className="shrink-0 text-gray-400 -mx-0.5" />
-                    <Link
-                      href="/brands"
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-gray-600 hover:text-gray-950 hover:bg-white transition-all text-xs font-semibold shrink-0"
-                    >
-                      {"Brands"}
-                    </Link>
-                    <ChevronRight size={11} className="shrink-0 text-gray-400 -mx-0.5" />
-                    <span className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 bg-white text-gray-900 font-bold text-xs uppercase tracking-wide rounded-full border border-gray-200 shadow-2xs shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#ed1c24]" />
-                      <span>{brandFilter}</span>
-                    </span>
-                  </>
-                ) : (
-                  (() => {
-                    const segments = urlKey.split("/").filter(Boolean);
-                    let acc = "";
-                    return segments.map((seg, idx) => {
-                      const isLast = idx === segments.length - 1;
-                      acc += (acc ? `/${seg}` : seg);
-                      const segLower = seg.toLowerCase();
-
-                      let label = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, " ");
-                      let href = `/${acc}`;
-
-                      if (segLower === "tyres") {
-                        label = "Tyres";
-                        href = "/tyres";
-                      } else if (segLower === "brand" || segLower === "brands") {
-                        label = "Brand";
-                        href = "/brands";
-                      } else if (isLast && category?.name) {
-                        label = category.name;
-                      }
-
-                      return (
-                        <React.Fragment key={acc}>
-                          <ChevronRight size={11} className="shrink-0 text-gray-400 -mx-0.5" />
-                          {isLast ? (
-                            <span className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 bg-white text-gray-900 font-bold text-xs uppercase tracking-wide rounded-full border border-gray-200 shadow-2xs shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#ed1c24]" />
-                              <span>
-                                {catLoading && !category?.name ? (
-                                  <span className="inline-block bg-gray-200 rounded animate-pulse w-14 h-3 align-middle" />
-                                ) : (
-                                  label
-                                )}
-                              </span>
-                            </span>
-                          ) : (
-                            <Link
-                              href={href}
-                              className="inline-flex items-center px-2.5 py-1 rounded-full text-gray-600 hover:text-gray-950 hover:bg-white transition-all text-xs font-semibold shrink-0"
-                            >
-                              {label}
-                            </Link>
-                          )}
-                        </React.Fragment>
-                      );
-                    });
-                  })()
-                )}
-              </div>
-            </nav>
+          <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-center w-full">
+            <Breadcrumbs label={breadcrumbLabel} variant="bar" />
           </div>
         </div>
       )}
@@ -865,16 +703,17 @@ export default function CategoryPageInner({
 
           {/* ── Toolbar: Total Count + Sort & Filter Controls ─ */}
           <div className="flex items-center justify-between gap-2 mb-2 sm:mb-2.5 flex-wrap">
-            <div className="text-sm font-black text-gray-900">
+            <div className="text-xs sm:text-sm font-black text-gray-900">
+              {total > 0 && <span>{productsLabel}</span>}
             </div>
 
             <div className="flex items-center gap-2 ml-auto">
-              <SortBar value={sort} onChange={setSort} />
+              {filterGroups.length === 0 && <SortBar value={sort} onChange={setSort} />}
             </div>
           </div>
 
           {catLoading && products.length === 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
               {Array.from({ length: PAGE_SIZE }).map((_, i) => <TyreListingCardSkeleton key={i} />)}
             </div>
           ) : apiError ? (
@@ -914,7 +753,7 @@ export default function CategoryPageInner({
                 }
 
                 return (
-                  <ul className="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5 list-none p-0 m-0 items-end">
+                  <ul className="products-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5 list-none p-0 m-0 items-end">
                     {products.map(product => (
                       <TyreListingCard
                         key={product.id}

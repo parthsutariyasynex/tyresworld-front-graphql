@@ -63,7 +63,6 @@ function ConfirmEmailInner() {
     <>
       <PageHeroBanner
         title="Verify Your Email"
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "Verify Email" }]}
         showCta={false}
       />
       <div className="container py-28 text-center max-w-sm mx-auto">

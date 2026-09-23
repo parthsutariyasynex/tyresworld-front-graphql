@@ -35,24 +35,28 @@ function getPatternName(p: Product): string {
   return clean || p.name;
 }
 
-/** Car icon — the sedan glyph from /icons/sprite.png (CSS sprite:
-    car region is 69×24 at (27,26) in the 800×800 sheet). */
-function CarSprite() {
+/** Car icon — sprite renderer supporting responsive sizing */
+function CarSprite({ className = "w-[41px] h-[14px] [background-size:466.67px_auto] [background-position:-15.75px_-15.17px]" }: { className?: string }) {
   return (
     <span
       role="img"
       aria-label="Compatible Vehicles"
-      className="inline-block align-middle select-none hover:opacity-75 transition-opacity"
+      className={`inline-block align-middle select-none hover:opacity-75 transition-opacity shrink-0 ${className}`}
       style={{
-        width: "41px",
-        height: "14px",
         backgroundImage: "url(/icons/sprite.png)",
         backgroundRepeat: "no-repeat",
-        backgroundSize: "466.67px auto",
-        backgroundPosition: "-15.75px -15.17px",
       }}
     />
   );
+}
+
+function formatWarrantyBadge(w?: string | null): string {
+  if (!w) return "3 YR WARRANTY";
+  const clean = w.trim();
+  const num = clean.match(/\d+/)?.[0];
+  if (num) return `${num} YR WARRANTY`;
+  if (clean.toLowerCase().includes("warranty")) return clean.toUpperCase();
+  return `${clean.toUpperCase()} WARRANTY`;
 }
 
 /** Motorcycle icon — same /icons/sprite.png sheet, the "bike" region.
@@ -231,36 +235,36 @@ export default function TyreListingCard({
 
         <div className="flex flex-col flex-1 p-2.5 sm:p-3 pt-1">
 
-          {/* ── 1. Tyre Image Section (with Top-Left Warranty & Top-Right Brand Logo) ── */}
-          <div className="relative w-full pb-0.5">
-            {/* Top-Left Warranty Badge & Top-Right Brand Logo */}
-            <div className="absolute inset-x-0 top-0.5 z-10 flex items-center justify-between px-0.5 pointer-events-none">
-              {/* Warranty Badge (Top Left, opposite Logo) */}
-              <span className="inline-block bg-[#f0f2f5] text-gray-800 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs pointer-events-auto max-w-[50%] truncate">
-                {warranty.toLowerCase().includes("warranty") ? warranty.toUpperCase() : warranty ? `${warranty} WARRANTY` : "3 YEAR WARRANTY"}
-              </span>
+          {/* ── 1. Top Header: Warranty Badge (Left) & Brand Logo (Right) ── */}
+          <div className="flex items-center justify-between gap-1.5 w-full min-h-[20px] sm:min-h-[24px] mb-1">
+            {/* Warranty Badge (Top Left) */}
+            <span className="inline-flex items-center bg-[#f0f2f5] text-gray-800 text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-tight shadow-2xs shrink-0 max-w-[48%] truncate">
+              {formatWarrantyBadge(warranty)}
+            </span>
 
-              {/* Brand Logo (Top Right) */}
-              <div className="flex items-center justify-end pointer-events-auto max-w-[50%]">
-                {brandHref ? (
-                  <Link href={brandHref} aria-label={`${brandLabel} tyres`}>
-                    {brandLogo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={brandLogo} alt={brandLabel} className="max-h-5 sm:max-h-5.5 max-w-[80px] sm:max-w-[100px] w-auto object-contain" loading="lazy" />
-                    ) : (
-                      <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
-                    )}
-                  </Link>
-                ) : brandLogo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={brandLogo} alt={brandLabel} className="max-h-5 sm:max-h-5.5 max-w-[80px] sm:max-w-[100px] w-auto object-contain" loading="lazy" />
-                ) : (
-                  <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
-                )}
-              </div>
+            {/* Brand Logo (Top Right) */}
+            <div className="flex items-center justify-end max-w-[50%] shrink-0">
+              {brandHref ? (
+                <Link href={brandHref} aria-label={`${brandLabel} tyres`}>
+                  {brandLogo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={brandLogo} alt={brandLabel} className="max-h-4.5 sm:max-h-5.5 max-w-[65px] sm:max-w-[85px] w-auto object-contain" loading="lazy" />
+                  ) : (
+                    <span className="text-[9.5px] sm:text-[11px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
+                  )}
+                </Link>
+              ) : brandLogo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={brandLogo} alt={brandLabel} className="max-h-4.5 sm:max-h-5.5 max-w-[65px] sm:max-w-[85px] w-auto object-contain" loading="lazy" />
+              ) : (
+                <span className="text-[9.5px] sm:text-[11px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
+              )}
             </div>
+          </div>
 
-            <Link href={href} className="block relative w-full h-[110px] sm:h-[125px] pt-3.5" aria-label={product.name}>
+          {/* ── 2. Tyre Image Section (Clear, no text overlapping the tyre) ── */}
+          <div className="relative w-full h-[100px] sm:h-[120px] my-0.5">
+            <Link href={href} className="block relative w-full h-full" aria-label={product.name}>
               <ProductImage
                 src={product.image}
                 alt={product.name}
@@ -271,27 +275,103 @@ export default function TyreListingCard({
             </Link>
           </div>
 
-          {/* ── 2. Two-Column Information Section ── */}
-          <div className="grid grid-cols-2 gap-1.5 sm:gap-2 my-1 flex-1">
+          {/* ── 2A. Mobile & Tablet Information Section (< 1024px) ── */}
+          <div className="flex lg:hidden flex-col flex-1 justify-between my-1">
+            {/* Row A: Pattern Name & Origin on Left, Unit Price on Right */}
+            <div className="flex items-start justify-between gap-1.5">
+              <div className="min-w-0 flex-1">
+                <Link href={href} className="text-[12px] sm:text-[13.5px] font-black text-gray-900 hover:text-[#ed1c24] transition-colors leading-tight block truncate" title={pattern}>
+                  {pattern}
+                </Link>
+                {(year || origin) && (
+                  <div className="text-[8.5px] sm:text-[10px] font-medium text-gray-500 mt-0.5 truncate">
+                    {[year, origin].filter(Boolean).join(" | ")}
+                  </div>
+                )}
+              </div>
+              <div className="text-right shrink-0">
+                <div className="font-black text-gray-950 text-[14.5px] sm:text-[17.5px] leading-tight">
+                  <Money value={unitPrice} digits={2} />
+                </div>
+              </div>
+            </div>
+
+            {/* Row B: Tyre Size & Compatible Vehicle Fitment (Full Width, Never Truncated) */}
+            <div className="border border-gray-200/90 rounded-md h-[26px] sm:h-[29px] px-1.5 sm:px-2 flex items-center justify-between my-1 bg-white shadow-2xs w-full">
+              <span className="text-[9.5px] sm:text-[11px] font-black text-gray-900 tracking-tight truncate min-w-0 pr-1">
+                {tyreSize || "Standard"}
+              </span>
+
+              {isBike ? (
+                <span className="shrink-0 ml-1"><BikeSprite /></span>
+              ) : width && height && rim ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setFitmentOpen(true);
+                  }}
+                  aria-label={`Vehicles that fit ${tyreSize}`}
+                  title="See which cars fit this size"
+                  className="inline-flex items-center text-gray-900 hover:text-[#ed1c24] transition-colors cursor-pointer shrink-0 ml-1"
+                >
+                  <CarSprite className="w-[28px] h-[10px] [background-size:318px_auto] [background-position:-10.7px_-10.3px]" />
+                </button>
+              ) : (
+                <span className="shrink-0 ml-1"><CarSprite className="w-[28px] h-[10px] [background-size:318px_auto] [background-position:-10.7px_-10.3px]" /></span>
+              )}
+            </div>
+
+            {/* Row C: Set Price (Left) + Fully Fitted Link (Right) */}
+            <div className="flex items-center justify-between gap-1 my-0.5 text-[8.5px] sm:text-[10px]">
+              <span className="font-bold text-gray-700 whitespace-nowrap">
+                Set of {qty}: <span className="font-black text-gray-950"><Money value={setPrice} digits={2} /></span>
+              </span>
+
+              {!isBike && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
+                  className="text-[7.5px] sm:text-[9px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer whitespace-nowrap shrink-0 ml-auto"
+                  aria-label="What's included in the fully fitted price"
+                >
+                  Fully Fitted Price
+                </button>
+              )}
+            </div>
+
+            {/* Row D: Pay In Installments (Tabby & Tamara) */}
+            {!isBike && (
+              <div className="flex items-center gap-1 my-0.5">
+                <span className="text-[7.5px] sm:text-[8.5px] text-gray-500 font-medium shrink-0">Pay In</span>
+                <span className="inline-flex items-center justify-center bg-[#05FFD2] text-black text-[7px] sm:text-[8px] font-black px-1.5 py-0.5 rounded-xs leading-none select-none">tabby</span>
+                <span className="inline-flex items-center justify-center bg-gradient-to-r from-[#9CE6FE] via-[#FFAF75] to-[#DF82E0] text-black text-[7px] sm:text-[8px] font-black px-1.5 py-0.5 rounded-xs leading-none select-none">tamara</span>
+              </div>
+            )}
+          </div>
+
+          {/* ── 2B. Desktop Two-Column Information Section (>= 1024px) ── */}
+          <div className="hidden lg:grid grid-cols-2 gap-2 my-1 flex-1">
             {/* Left Column: Name, Year & Country, Size + Car Icon */}
             <div className="flex flex-col justify-between">
               <div>
                 {/* Pattern / Model Name */}
-                <Link href={href} className="text-[12px] sm:text-[13.5px] font-black text-gray-900 hover:text-[#ed1c24] transition-colors leading-tight block truncate" title={pattern}>
+                <Link href={href} className="text-[13.5px] font-black text-gray-900 hover:text-[#ed1c24] transition-colors leading-tight block truncate" title={pattern}>
                   {pattern}
                 </Link>
 
                 {/* Year & Origin */}
                 {(year || origin) && (
-                  <div className="text-[9.5px] sm:text-[10.5px] font-medium text-gray-500 mt-0.5 truncate">
+                  <div className="text-[10.5px] font-medium text-gray-500 mt-0.5 truncate">
                     {[year, origin].filter(Boolean).join(" | ")}
                   </div>
                 )}
               </div>
 
               {/* Tyre Size & Compatible Vehicle Box */}
-              <div className="border border-gray-200/90 rounded-md h-[28px] sm:h-[30px] px-1.5 sm:px-2 flex items-center justify-between mt-1 bg-white shadow-2xs">
-                <span className="text-[10px] sm:text-[11px] font-extrabold text-gray-900 truncate">
+              <div className="border border-gray-200/90 rounded-md h-[30px] px-2 flex items-center justify-between mt-1 bg-white shadow-2xs">
+                <span className="text-[11px] font-extrabold text-gray-900 truncate">
                   {tyreSize || "Standard"}
                 </span>
 
@@ -309,10 +389,10 @@ export default function TyreListingCard({
                     title="See which cars fit this size"
                     className="inline-flex items-center text-gray-900 hover:text-[#ed1c24] transition-colors cursor-pointer shrink-0 ml-1"
                   >
-                    <CarSprite />
+                    <CarSprite className="w-[41px] h-[14px] [background-size:466.67px_auto] [background-position:-15.75px_-15.17px]" />
                   </button>
                 ) : (
-                  <span className="shrink-0 ml-1"><CarSprite /></span>
+                  <span className="shrink-0 ml-1"><CarSprite className="w-[41px] h-[14px] [background-size:466.67px_auto] [background-position:-15.75px_-15.17px]" /></span>
                 )}
               </div>
             </div>
@@ -321,25 +401,25 @@ export default function TyreListingCard({
             <div className="flex flex-col justify-between text-right">
               <div>
                 {/* Price */}
-                <div className="font-black text-gray-900 text-[16px] sm:text-[18px] leading-tight">
+                <div className="font-black text-gray-900 text-[18px] leading-tight">
                   <Money value={unitPrice} digits={2} />
                 </div>
 
                 {/* Set of X Price */}
-                <div className="text-[9.5px] sm:text-[10.5px] font-bold text-gray-700">
+                <div className="text-[10.5px] font-bold text-gray-700">
                   Set of {qty}: <Money value={setPrice} digits={2} />
                 </div>
 
                 {/* Fully Fitted Price per item popup */}
                 {isBike ? (
-                  <span className="text-[9px] sm:text-[9.5px] font-medium text-gray-500 block mt-0.5">
+                  <span className="text-[9.5px] font-medium text-gray-500 block mt-0.5">
                     Fully Fitted Price
                   </span>
                 ) : (
                   <button
                     type="button"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
-                    className="text-[9px] sm:text-[9.5px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer block ml-auto mt-0.5"
+                    className="text-[9.5px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer block ml-auto mt-0.5"
                     aria-label="What's included in the fully fitted price"
                   >
                     Fully Fitted Price

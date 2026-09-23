@@ -21,6 +21,7 @@ import {
 import { useScrollLock } from "@/lib/useScrollLock";
 import { buildFilterParams, buildTyreSizeSlug } from "@/lib/filterBuilder";
 import { APP_CONFIG } from "@/src/config/app-config";
+import TyreSizeVisualizer from "@/components/TyreSizeVisualizer";
 
 /* ── types ───────────────────────────────────────────────────────── */
 type AttrOption = {
@@ -1032,409 +1033,254 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                   aria-modal="true"
                   aria-label="Select your tyre size"
                 >
-                  {/* ── TOP HEADER ── */}
-                  <div className="text-white px-5 sm:px-7 pt-4 pb-3.5 relative bg-gradient-to-r from-[#8f0d13] via-[#ed1c24] to-[#c7171e] shadow-md shrink-0">
-                    <div className="flex items-center justify-between gap-3">
-                      {/* Left: Title + Progress Chip */}
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2.5">
-                          <h4 className="text-lg sm:text-2xl font-black text-white leading-tight tracking-tight m-0">
-                            Select your tyre size
-                          </h4>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-black/30 backdrop-blur-md border border-white/25 text-[11px] sm:text-xs font-black text-white tracking-wide shadow-inner">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            {sizeStep === "summary" ? "Complete" : `${stepNumber} of 3`}
-                          </span>
+                  {/* ── TOP HEADER (REDESIGNED) ── */}
+                  <div className="relative shrink-0 overflow-hidden" style={{ background: "linear-gradient(135deg,#0d1117 0%,#111827 60%,#1a0a0c 100%)" }}>
+                    {/* Ambient red glow behind content */}
+                    <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 60% 120% at 20% 50%,rgba(237,28,36,0.18) 0%,transparent 70%)" }} />
+                    {/* Left accent bar */}
+                    <div className="absolute left-0 top-0 bottom-0 w-1" style={{ background: "linear-gradient(to bottom,#ed1c24,#8f0d13)" }} />
+
+                    <div className="pl-6 pr-5 sm:pr-7 pt-4 pb-3.5">
+                      <div className="flex items-start justify-between gap-3">
+
+                        {/* LEFT: Step number + title + subtitle */}
+                        <div className="flex items-start gap-4">
+                          {/* Giant step counter */}
+                          {sizeStep !== "summary" && (
+                            <div className="shrink-0 flex flex-col items-center justify-center w-11 h-11 rounded-xl border border-[#ed1c24]/40 bg-[#ed1c24]/10 shadow-[0_0_18px_rgba(237,28,36,0.25)]">
+                              <span className="text-[10px] font-extrabold text-[#ed1c24]/80 uppercase tracking-widest leading-none">STEP</span>
+                              <span className="text-xl font-black text-white leading-none mt-0.5">{stepNumber}</span>
+                            </div>
+                          )}
+                          {sizeStep === "summary" && (
+                            <div className="shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 shadow-[0_0_18px_rgba(16,185,129,0.2)]">
+                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                          )}
+
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="text-base sm:text-xl font-black text-white leading-tight tracking-tight m-0">
+                                {sizeStep === "summary" ? "Tyre Size Ready" : "Select Tyre Size"}
+                              </h4>
+                              {/* Step label chip */}
+                              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/8 border border-white/15 text-[10px] font-black text-white/70 tracking-widest uppercase">
+                                {sizeStep === "summary" ? "Complete ✓" : `${stepNumber} of 3`}
+                              </span>
+                            </div>
+                            <p className="text-white/55 text-[11px] sm:text-xs font-medium mt-1 mb-0 leading-snug max-w-xs sm:max-w-md">
+                              {sizeStep === "summary"
+                                ? "Review your specifications before searching inventory."
+                                : sizeStep === "width"
+                                ? "Select width in mm — the first number on your sidewall (e.g. 235)."
+                                : sizeStep === "height"
+                                ? "Select aspect ratio % — the second number on your sidewall (e.g. 40)."
+                                : "Select rim diameter in inches — the third number (e.g. R19)."}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-white/90 text-xs sm:text-[13px] font-medium mt-1 mb-0 leading-snug">
-                          {sizeStep === "summary"
-                            ? "Review your tyre specifications before searching available inventory."
-                            : sizeStep === "width"
-                            ? "Step 1 of 3: Select the tyre width in millimeters (first number, e.g. 235)."
-                            : sizeStep === "height"
-                            ? "Step 2 of 3: Select aspect ratio / height percentage (second number, e.g. 40)."
-                            : "Step 3 of 3: Select wheel rim diameter in inches (third number, e.g. R19)."}
-                        </p>
-                      </div>
 
-                      {/* Right: Spec pill + Close Button */}
-                      <div className="flex items-center gap-3">
-                        <div className="bg-black/35 backdrop-blur-md rounded-xl px-3.5 py-1.5 text-center min-w-[125px] border border-white/20 shrink-0 hidden md:block shadow-inner">
-                          <span className="text-[9px] uppercase font-extrabold tracking-wider text-red-200 block leading-tight">
-                            {hasRearTyre ? (activeSizeTab === "rear" ? "REAR AXLE SPEC" : "FRONT AXLE SPEC") : "TYRE SPEC"}
-                          </span>
-                          <span className="text-xs sm:text-sm font-black text-white block mt-0.5 leading-tight tracking-tight">
-                            {activeSizeTab === "rear" ? rearFormatted : frontFormatted}
-                          </span>
+                        {/* RIGHT: Spec badge + close */}
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          {/* Floating spec badge */}
+                          <div className="hidden md:flex flex-col items-center justify-center min-w-[120px] px-3 py-2 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-inner">
+                            <span className="text-[8px] uppercase font-extrabold tracking-[0.18em] text-[#ed1c24]/90 leading-none mb-1">
+                              {hasRearTyre ? (activeSizeTab === "rear" ? "REAR SPEC" : "FRONT SPEC") : "TYRE SPEC"}
+                            </span>
+                            <span className="text-sm font-black text-white leading-tight tracking-tight">
+                              {activeSizeTab === "rear" ? rearFormatted : frontFormatted}
+                            </span>
+                          </div>
+
+                          {/* Close */}
+                          <button
+                            type="button"
+                            className="w-8 h-8 rounded-lg bg-white/8 hover:bg-white/16 active:bg-white/25 border border-white/12 flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer"
+                            onClick={closeSize}
+                            aria-label="Close"
+                          >
+                            <X size={16} strokeWidth={2} />
+                          </button>
                         </div>
-
-                        <button
-                          type="button"
-                          className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 active:bg-white/35 flex items-center justify-center text-white transition-all cursor-pointer shrink-0"
-                          onClick={closeSize}
-                          aria-label="Close"
-                        >
-                          <X size={18} strokeWidth={2.5} />
-                        </button>
                       </div>
-                    </div>
 
-                    {/* Staggered Front / Rear Axle Switcher */}
-                    {hasRearTyre && (
-                      <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-white/20">
-                        <span className="text-[10px] font-extrabold text-white/80 uppercase tracking-wider">Axle:</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setActiveSizeTab("front");
-                            if (sizeStep !== "summary") setSizeStep("width");
-                          }}
-                          className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                            activeSizeTab === "front"
-                              ? "bg-white text-[#ed1c24] shadow-md font-black"
-                              : "border border-white/35 text-white hover:bg-white/10"
-                          }`}
-                        >
-                          <span>Front Axle:</span>
-                          <span className="font-extrabold">{frontFormatted}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setActiveSizeTab("rear");
-                            if (sizeStep !== "summary") setSizeStep("width");
-                          }}
-                          className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                            activeSizeTab === "rear"
-                              ? "bg-white text-[#ed1c24] shadow-md font-black"
-                              : "border border-white/35 text-white hover:bg-white/10"
-                          }`}
-                        >
-                          <span>Rear Axle:</span>
-                          <span className="font-extrabold">{rearFormatted}</span>
-                        </button>
+                      {/* 3-pill segmented step bar */}
+                      <div className="flex items-center gap-1.5 mt-3.5">
+                        {(["width", "height", "rim"] as const).map((s, idx) => {
+                          const isDone = stepNumber > idx + 1 || sizeStep === "summary";
+                          const isActive = sizeStep === s;
+                          return (
+                            <div
+                              key={s}
+                              className="flex-1 h-1 rounded-full overflow-hidden transition-all duration-300"
+                              style={{
+                                background: isDone
+                                  ? "#10b981"
+                                  : isActive
+                                  ? "#ed1c24"
+                                  : "rgba(255,255,255,0.1)",
+                                boxShadow: isActive ? "0 0 8px rgba(237,28,36,0.7)" : isDone ? "0 0 6px rgba(16,185,129,0.5)" : "none",
+                              }}
+                            />
+                          );
+                        })}
                       </div>
-                    )}
 
-                    {/* 3-Segment Progress Line */}
-                    <div className="w-full bg-black/20 h-1 rounded-full mt-3 overflow-hidden">
-                      <div
-                        className="bg-white h-full transition-all duration-300 rounded-full"
-                        style={{ width: `${progressPct}%` }}
-                      />
+                      {/* Front / Rear Axle Switcher (staggered tyre) */}
+                      {hasRearTyre && (
+                        <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-white/8">
+                          <span className="text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Axle:</span>
+                          <button
+                            type="button"
+                            onClick={() => { setActiveSizeTab("front"); if (sizeStep !== "summary") setSizeStep("width"); }}
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                              activeSizeTab === "front"
+                                ? "bg-[#ed1c24] text-white shadow-md font-black"
+                                : "border border-white/20 text-white/60 hover:bg-white/8"
+                            }`}
+                          >
+                            <span>Front:</span>
+                            <span className="font-extrabold">{frontFormatted}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setActiveSizeTab("rear"); if (sizeStep !== "summary") setSizeStep("width"); }}
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                              activeSizeTab === "rear"
+                                ? "bg-[#ed1c24] text-white shadow-md font-black"
+                                : "border border-white/20 text-white/60 hover:bg-white/8"
+                            }`}
+                          >
+                            <span>Rear:</span>
+                            <span className="font-extrabold">{rearFormatted}</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* ── BODY (2-COLUMN: HIGH-TECH STEPPER SIDEBAR + DYNAMIC GRID) ── */}
                   <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-white">
                     {/* LEFT COLUMN: INTERACTIVE VISUAL STEPPER & SIDEWALL DIAGRAM */}
-                    <div className="w-full md:w-72 lg:w-80 bg-gradient-to-b from-gray-50 via-slate-50 to-gray-100/90 border-b md:border-b-0 md:border-r border-gray-200 p-4 sm:p-5 flex flex-col justify-between shrink-0 overflow-y-auto">
+                    <div className="hidden md:flex md:w-72 lg:w-80 bg-gradient-to-b from-gray-50 via-slate-50 to-gray-100/90 md:border-r border-gray-200 p-3.5 sm:p-4 flex-col justify-between shrink-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                       <div>
-                        {/* Interactive Sidewall Visual Diagram */}
-                        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-2xs mb-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[10px] uppercase font-black tracking-wider text-gray-400">
-                              Sidewall Anatomy
-                            </span>
-                            <span className="text-[10px] font-bold text-[#ed1c24] bg-red-50 px-1.5 py-0.5 rounded">
-                              {sizeStep === "width" ? "Width (mm)" : sizeStep === "height" ? "Aspect Ratio (%)" : sizeStep === "rim" ? "Rim (inches)" : "Complete"}
-                            </span>
+                        {/* Interactive 3D Animated Tyre Visualizer with Camera Zoom & Rotation */}
+                        <TyreSizeVisualizer
+                          step={sizeStep}
+                          width={currWidth}
+                          height={currHeight}
+                          rim={currRim}
+                          widthLabel={currWidth ? labelFor("width", currWidth) : undefined}
+                          heightLabel={currHeight ? labelFor("height", currHeight) : undefined}
+                          rimLabel={currRim ? labelFor("rim", currRim) : undefined}
+                          vehicleType={isMotorcyclePage ? "motorcycle" : "car"}
+                          className="mb-4"
+                        />
+
+                        {/* 1-Line Compact 3-Segment Interactive Tyre Spec Bar */}
+                        <div className="bg-white p-2.5 sm:p-3 rounded-2xl border border-gray-200 shadow-sm mt-3">
+                          <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-gray-400 mb-2 px-0.5">
+                            <span>Select Dimension</span>
+                            {currWidth && currHeight && currRim ? (
+                              <span className="text-emerald-600 font-extrabold flex items-center gap-1 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                <Check size={11} strokeWidth={3} /> Ready
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 font-bold">
+                                Step {sizeStep === "width" ? "1" : sizeStep === "height" ? "2" : sizeStep === "rim" ? "3" : "✓"} of 3
+                              </span>
+                            )}
                           </div>
 
-                          {/* Tyre Cross-Section SVG Diagram */}
-                          <div className="relative h-28 w-full flex items-center justify-center bg-gray-900 rounded-lg p-2 overflow-hidden shadow-inner">
-                            <svg viewBox="0 0 200 100" className="w-full h-full">
-                              {/* Outer Tyre Tread */}
-                              <rect
-                                x="40"
-                                y="8"
-                                width="120"
-                                height="20"
-                                rx="4"
-                                className={`transition-all duration-200 ${
-                                  sizeStep === "width"
-                                    ? "fill-[#ed1c24] stroke-white stroke-2 drop-shadow"
-                                    : currWidth
-                                    ? "fill-gray-700 stroke-emerald-400 stroke-1"
-                                    : "fill-gray-800 stroke-gray-600 stroke-1"
-                                }`}
-                              />
-                              <text
-                                x="100"
-                                y="22"
-                                textAnchor="middle"
-                                className="fill-white font-black text-[9px] uppercase tracking-wider"
-                              >
-                                {currWidth ? `${labelFor("width", currWidth)} mm` : "1. Width"}
-                              </text>
+                          {/* 3-Column Interactive Step Buttons in 1 Row */}
+                          <div className="grid grid-cols-3 gap-1.5 items-center">
+                            {/* 1. Width */}
+                            <button
+                              type="button"
+                              onClick={() => setSizeStep("width")}
+                              className={`p-2 rounded-xl text-center transition-all cursor-pointer border flex flex-col items-center justify-center ${
+                                sizeStep === "width"
+                                  ? "bg-red-50 border-[#ed1c24] text-[#ed1c24] shadow-xs ring-2 ring-red-500/20"
+                                  : currWidth
+                                  ? "bg-emerald-50/70 border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+                                  : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
+                              }`}
+                            >
+                              <span className="text-[9px] font-black uppercase tracking-wider block opacity-70">
+                                1. Width
+                              </span>
+                              <span className="text-xs sm:text-[13px] font-black truncate block mt-0.5 leading-tight">
+                                {currWidth ? `${labelFor("width", currWidth)}` : "Select"}
+                              </span>
+                            </button>
 
-                              {/* Left & Right Sidewall (Height) */}
-                              <path
-                                d="M 40 28 Q 28 55 42 82 L 58 82 Q 46 55 58 28 Z"
-                                className={`transition-all duration-200 ${
-                                  sizeStep === "height"
-                                    ? "fill-[#ed1c24] stroke-white stroke-2 drop-shadow"
-                                    : currHeight
-                                    ? "fill-gray-700 stroke-emerald-400 stroke-1"
-                                    : "fill-gray-800 stroke-gray-600 stroke-1"
-                                }`}
-                              />
-                              <path
-                                d="M 160 28 Q 172 55 158 82 L 142 82 Q 154 55 142 28 Z"
-                                className={`transition-all duration-200 ${
-                                  sizeStep === "height"
-                                    ? "fill-[#ed1c24] stroke-white stroke-2 drop-shadow"
-                                    : currHeight
-                                    ? "fill-gray-700 stroke-emerald-400 stroke-1"
-                                    : "fill-gray-800 stroke-gray-600 stroke-1"
-                                }`}
-                              />
-                              <text
-                                x="26"
-                                y="58"
-                                textAnchor="middle"
-                                className="fill-white font-bold text-[8px]"
-                              >
-                                {currHeight ? `${labelFor("height", currHeight)}%` : "2. Height"}
-                              </text>
+                            {/* 2. Height / Profile */}
+                            <button
+                              type="button"
+                              disabled={!currWidth}
+                              onClick={() => currWidth && setSizeStep("height")}
+                              className={`p-2 rounded-xl text-center transition-all border flex flex-col items-center justify-center ${
+                                !currWidth
+                                  ? "opacity-40 cursor-not-allowed bg-gray-50 border-gray-100 text-gray-400"
+                                  : sizeStep === "height"
+                                  ? "bg-red-50 border-[#ed1c24] text-[#ed1c24] shadow-xs ring-2 ring-red-500/20 cursor-pointer"
+                                  : currHeight
+                                  ? "bg-emerald-50/70 border-emerald-300 text-emerald-800 hover:bg-emerald-50 cursor-pointer"
+                                  : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300 cursor-pointer"
+                              }`}
+                            >
+                              <span className="text-[9px] font-black uppercase tracking-wider block opacity-70">
+                                2. Profile
+                              </span>
+                              <span className="text-xs sm:text-[13px] font-black truncate block mt-0.5 leading-tight">
+                                {currHeight ? `${labelFor("height", currHeight)}` : "Select"}
+                              </span>
+                            </button>
 
-                              {/* Center Wheel Rim */}
-                              <circle
-                                cx="100"
-                                cy="58"
-                                r="24"
-                                className={`transition-all duration-200 ${
-                                  sizeStep === "rim"
-                                    ? "fill-[#ed1c24] stroke-white stroke-2 drop-shadow"
-                                    : currRim
-                                    ? "fill-gray-700 stroke-emerald-400 stroke-1"
-                                    : "fill-gray-800 stroke-gray-600 stroke-1"
-                                }`}
-                              />
-                              <circle cx="100" cy="58" r="8" className="fill-gray-900 stroke-gray-600 stroke-1" />
-                              <text
-                                x="100"
-                                y="62"
-                                textAnchor="middle"
-                                className="fill-white font-black text-[9px] uppercase tracking-tight"
-                              >
-                                {currRim ? (currRim.startsWith("R") ? currRim : `R${labelFor("rim", currRim)}`) : "3. Rim"}
-                              </text>
-                            </svg>
+                            {/* 3. Rim */}
+                            <button
+                              type="button"
+                              disabled={!currWidth || !currHeight}
+                              onClick={() => currWidth && currHeight && setSizeStep("rim")}
+                              className={`p-2 rounded-xl text-center transition-all border flex flex-col items-center justify-center ${
+                                !currWidth || !currHeight
+                                  ? "opacity-40 cursor-not-allowed bg-gray-50 border-gray-100 text-gray-400"
+                                  : sizeStep === "rim"
+                                  ? "bg-red-50 border-[#ed1c24] text-[#ed1c24] shadow-xs ring-2 ring-red-500/20 cursor-pointer"
+                                  : currRim
+                                  ? "bg-emerald-50/70 border-emerald-300 text-emerald-800 hover:bg-emerald-50 cursor-pointer"
+                                  : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300 cursor-pointer"
+                              }`}
+                            >
+                              <span className="text-[9px] font-black uppercase tracking-wider block opacity-70">
+                                3. Rim
+                              </span>
+                              <span className="text-xs sm:text-[13px] font-black truncate block mt-0.5 leading-tight">
+                                {currRim
+                                  ? `${(labelFor("rim", currRim)).startsWith("R") ? labelFor("rim", currRim) : `R${labelFor("rim", currRim)}`}`
+                                  : "Select"}
+                              </span>
+                            </button>
                           </div>
-                        </div>
 
-                        {/* Stepper Card Buttons */}
-                        <div className="space-y-1.5">
-                          {/* Step 1: Width */}
-                          {(() => {
-                            const isDone = Boolean(currWidth) && sizeStep !== "width";
-                            const isActive = sizeStep === "width";
-                            return (
-                              <div className="relative">
-                                <button
-                                  type="button"
-                                  onClick={() => setSizeStep("width")}
-                                  className={`w-full p-3 rounded-xl flex items-center gap-3 text-left transition-all cursor-pointer border ${
-                                    isActive
-                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
-                                      : isDone
-                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
-                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
-                                  }`}
-                                >
-                                  <div
-                                    className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
-                                      isActive
-                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
-                                        : isDone
-                                        ? "bg-emerald-500 text-white shadow-xs"
-                                        : "bg-gray-200 text-gray-600"
-                                    }`}
-                                  >
-                                    {isDone ? <Check size={17} strokeWidth={3} /> : "1"}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <span
-                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
-                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
-                                        }`}
-                                      >
-                                        Width (mm)
-                                      </span>
-                                      {isDone && (
-                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                          ✓ Selected
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div
-                                      className={`text-sm sm:text-base font-black truncate leading-tight mt-0.5 ${
-                                        isActive
-                                          ? currWidth ? "text-[#ed1c24]" : "text-gray-900"
-                                          : isDone
-                                          ? "text-gray-900 font-extrabold"
-                                          : "text-gray-400"
-                                      }`}
-                                    >
-                                      {currWidth ? `${labelFor("width", currWidth)} mm` : "Select Width"}
-                                    </div>
-                                  </div>
-                                </button>
-                                <div className="w-0.5 h-2 bg-gray-300/80 ml-7 my-0.5" />
-                              </div>
-                            );
-                          })()}
-
-                          {/* Step 2: Height */}
-                          {(() => {
-                            const isDone = Boolean(currHeight) && (sizeStep === "rim" || sizeStep === "summary");
-                            const isActive = sizeStep === "height";
-                            const isClickable = Boolean(currWidth);
-                            return (
-                              <div className="relative">
-                                <button
-                                  type="button"
-                                  disabled={!isClickable}
-                                  onClick={() => isClickable && setSizeStep("height")}
-                                  className={`w-full p-3 rounded-xl flex items-center gap-3 text-left transition-all border ${
-                                    !isClickable ? "cursor-not-allowed opacity-45 bg-transparent border-transparent" : "cursor-pointer"
-                                  } ${
-                                    isActive
-                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
-                                      : isDone
-                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
-                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
-                                  }`}
-                                >
-                                  <div
-                                    className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
-                                      isActive
-                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
-                                        : isDone
-                                        ? "bg-emerald-500 text-white shadow-xs"
-                                        : "bg-gray-200 text-gray-600"
-                                    }`}
-                                  >
-                                    {isDone ? <Check size={17} strokeWidth={3} /> : "2"}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <span
-                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
-                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
-                                        }`}
-                                      >
-                                        Height / Profile
-                                      </span>
-                                      {isDone && (
-                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                          ✓ Selected
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div
-                                      className={`text-sm sm:text-base font-black truncate leading-tight mt-0.5 ${
-                                        isActive
-                                          ? currHeight ? "text-[#ed1c24]" : "text-gray-900"
-                                          : isDone
-                                          ? "text-gray-900 font-extrabold"
-                                          : "text-gray-400"
-                                      }`}
-                                    >
-                                      {currHeight ? `${labelFor("height", currHeight)} %` : "Select Height"}
-                                    </div>
-                                  </div>
-                                </button>
-                                <div className="w-0.5 h-2 bg-gray-300/80 ml-7 my-0.5" />
-                              </div>
-                            );
-                          })()}
-
-                          {/* Step 3: Rim */}
-                          {(() => {
-                            const isDone = Boolean(currRim) && sizeStep === "summary";
-                            const isActive = sizeStep === "rim";
-                            const isClickable = Boolean(currWidth && currHeight);
-                            return (
-                              <div className="relative">
-                                <button
-                                  type="button"
-                                  disabled={!isClickable}
-                                  onClick={() => isClickable && setSizeStep("rim")}
-                                  className={`w-full p-3 rounded-xl flex items-center gap-3 text-left transition-all border ${
-                                    !isClickable ? "cursor-not-allowed opacity-45 bg-transparent border-transparent" : "cursor-pointer"
-                                  } ${
-                                    isActive
-                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
-                                      : isDone
-                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
-                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
-                                  }`}
-                                >
-                                  <div
-                                    className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
-                                      isActive
-                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
-                                        : isDone
-                                        ? "bg-emerald-500 text-white shadow-xs"
-                                        : "bg-gray-200 text-gray-600"
-                                    }`}
-                                  >
-                                    {isDone ? <Check size={17} strokeWidth={3} /> : "3"}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <span
-                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
-                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
-                                        }`}
-                                      >
-                                        Rim Diameter
-                                      </span>
-                                      {isDone && (
-                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                          ✓ Selected
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div
-                                      className={`text-sm sm:text-base font-black truncate leading-tight mt-0.5 ${
-                                        isActive
-                                          ? currRim ? "text-[#ed1c24]" : "text-gray-900"
-                                          : isDone
-                                          ? "text-gray-900 font-extrabold"
-                                          : "text-gray-400"
-                                      }`}
-                                    >
-                                      {currRim
-                                        ? currRim.startsWith("R")
-                                          ? currRim
-                                          : `R${labelFor("rim", currRim)}`
-                                        : "Select Rim"}
-                                    </div>
-                                  </div>
-                                </button>
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
-
-                      {/* Live Full Specification Capsule Card */}
-                      <div className="mt-4 pt-3 border-t border-gray-200/80 hidden md:block">
-                        <div className="bg-white rounded-xl p-3.5 border border-gray-200 shadow-2xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] uppercase font-black text-gray-400 tracking-wider">
-                              Configured Size
+                          {/* 1-Line Formatted Size Formula Display (e.g. 205 / 70 / R15) */}
+                          <div className="mt-2.5 pt-2 border-t border-gray-100 flex items-center justify-between">
+                            <span className="text-[9px] font-black uppercase text-gray-400 tracking-wider">
+                              Size Formula:
                             </span>
-                            <span className="text-[10px] font-black text-[#ed1c24] uppercase">
-                              {activeSizeTab === "rear" ? "Rear" : "Front"}
-                            </span>
-                          </div>
-                          <div className="text-lg font-black text-gray-900 tracking-tight mt-0.5">
-                            {activeSizeTab === "rear" ? rearFormatted : frontFormatted}
+                            <div className="flex items-center gap-1 font-black text-xs sm:text-[13px] text-gray-900 tracking-tight">
+                              <span className={currWidth ? "text-gray-900 font-black" : "text-gray-300"}>
+                                {currWidth ? labelFor("width", currWidth) : "---"}
+                              </span>
+                              <span className="text-gray-300 font-bold">/</span>
+                              <span className={currHeight ? "text-gray-900 font-black" : "text-gray-300"}>
+                                {currHeight ? labelFor("height", currHeight) : "--"}
+                              </span>
+                              <span className="text-gray-300 font-bold">/</span>
+                              <span className={currRim ? "text-[#ed1c24] font-black" : "text-gray-300"}>
+                                {currRim ? (labelFor("rim", currRim).startsWith("R") ? labelFor("rim", currRim) : `R${labelFor("rim", currRim)}`) : "---"}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1452,6 +1298,21 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         </div>
                       ) : sizeStep !== "summary" ? (
                         <>
+                          {/* Mobile-only Compact Animated Tyre Visualizer */}
+                          <div className="block md:hidden mb-3">
+                            <TyreSizeVisualizer
+                              step={sizeStep}
+                              width={currWidth}
+                              height={currHeight}
+                              rim={currRim}
+                              widthLabel={currWidth ? labelFor("width", currWidth) : undefined}
+                              heightLabel={currHeight ? labelFor("height", currHeight) : undefined}
+                              rimLabel={currRim ? labelFor("rim", currRim) : undefined}
+                              vehicleType={isMotorcyclePage ? "motorcycle" : "car"}
+                              isCompact={true}
+                            />
+                          </div>
+
                           {/* Search & Grid Header */}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
                             <div>
@@ -1769,429 +1630,317 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                   aria-modal="true"
                   aria-label="Select your vehicle"
                 >
-                  {/* ── TOP HEADER ── */}
-                  <div className="text-white px-5 sm:px-7 pt-4 pb-3.5 relative bg-gradient-to-r from-[#8f0d13] via-[#ed1c24] to-[#c7171e] shadow-md shrink-0">
-                    <div className="flex items-center justify-between gap-3">
-                      {/* Left: Title + Progress */}
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2.5">
-                          <h4 className="text-lg sm:text-2xl font-black text-white leading-tight tracking-tight m-0">
-                            Select your vehicle
-                          </h4>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-black/30 backdrop-blur-md border border-white/25 text-[11px] sm:text-xs font-black text-white tracking-wide shadow-inner">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            {vehStep === "summary" ? "Complete" : `${vehStepNumber} of 4`}
-                          </span>
+                  {/* ── TOP HEADER (DARK PREMIUM) ── */}
+                  <div className="relative shrink-0 overflow-hidden" style={{ background: "linear-gradient(135deg,#0d1117 0%,#111827 60%,#1a0a0c 100%)" }}>
+                    <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 60% 120% at 20% 50%,rgba(237,28,36,0.18) 0%,transparent 70%)" }} />
+                    <div className="absolute left-0 top-0 bottom-0 w-1" style={{ background: "linear-gradient(to bottom,#ed1c24,#8f0d13)" }} />
+
+                    <div className="pl-6 pr-5 sm:pr-7 pt-4 pb-3.5">
+                      <div className="flex items-start justify-between gap-3">
+                        {/* LEFT: step badge + title + subtitle */}
+                        <div className="flex items-start gap-4">
+                          {vehStep !== "summary" ? (
+                            <div className="shrink-0 flex flex-col items-center justify-center w-11 h-11 rounded-xl border border-[#ed1c24]/40 bg-[#ed1c24]/10 shadow-[0_0_18px_rgba(237,28,36,0.25)]">
+                              <span className="text-[10px] font-extrabold text-[#ed1c24]/80 uppercase tracking-widest leading-none">STEP</span>
+                              <span className="text-xl font-black text-white leading-none mt-0.5">{vehStepNumber}</span>
+                            </div>
+                          ) : (
+                            <div className="shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 shadow-[0_0_18px_rgba(16,185,129,0.2)]">
+                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                          )}
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="text-base sm:text-xl font-black text-white leading-tight tracking-tight m-0">
+                                {vehStep === "summary" ? "Vehicle Confirmed" : "Select Your Vehicle"}
+                              </h4>
+                              <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/8 border border-white/15 text-[10px] font-black text-white/70 tracking-widest uppercase">
+                                {vehStep === "summary" ? "Complete ✓" : `${vehStepNumber} of 4`}
+                              </span>
+                            </div>
+                            <p className="text-white/55 text-[11px] sm:text-xs font-medium mt-1 mb-0 leading-snug max-w-xs sm:max-w-md">
+                              {vehStep === "vehicle"
+                                ? "Choose your vehicle make — brand (e.g. BMW, Toyota, Mercedes)."
+                                : vehStep === "model"
+                                ? "Choose the exact model for your selected make."
+                                : vehStep === "year"
+                                ? "Select the manufacture year of your vehicle."
+                                : vehStep === "engine" || (vehStep as string) === "size"
+                                ? "Choose engine trim and factory-fitted tyre dimensions."
+                                : "Review your vehicle and confirmed tyre fitment below."}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-white/90 text-xs sm:text-[13px] font-medium mt-1 mb-0 leading-snug">
-                          {vehStep === "vehicle"
-                            ? "Step 1 of 4: Select your vehicle make (e.g. BMW, Toyota, Mercedes)."
-                            : vehStep === "model"
-                            ? "Step 2 of 4: Select your vehicle model."
-                            : vehStep === "year"
-                            ? "Step 3 of 4: Select the manufacture year."
-                            : vehStep === "engine" || (vehStep as string) === "size"
-                            ? "Step 4 of 4: Choose engine trim and factory tyre dimensions."
-                            : "Review vehicle and confirmed tyre fitment."}
-                        </p>
+
+                        {/* RIGHT: Spec badge + close */}
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <div className="hidden md:flex flex-col items-center justify-center min-w-[130px] px-3 py-2 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-inner">
+                            <span className="text-[8px] uppercase font-extrabold tracking-[0.18em] text-[#ed1c24]/90 leading-none mb-1">VEHICLE SPEC</span>
+                            <span className="text-xs font-black text-white leading-tight tracking-tight max-w-[160px] truncate text-center">{vehFormatted}</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="w-8 h-8 rounded-lg bg-white/8 hover:bg-white/16 active:bg-white/25 border border-white/12 flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer"
+                            onClick={closeVeh}
+                            aria-label="Close"
+                          >
+                            <X size={16} strokeWidth={2} />
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Right: Spec pill + Close Button */}
-                      <div className="flex items-center gap-3">
-                        <div className="bg-black/35 backdrop-blur-md rounded-xl px-3.5 py-1.5 text-center min-w-[130px] border border-white/20 shrink-0 hidden md:block shadow-inner">
-                          <span className="text-[9px] uppercase font-extrabold tracking-wider text-red-200 block leading-tight">
-                            VEHICLE SPEC
-                          </span>
-                          <span className="text-xs sm:text-sm font-black text-white block mt-0.5 max-w-[200px] truncate leading-tight tracking-tight">
-                            {vehFormatted}
-                          </span>
-                        </div>
-
-                        <button
-                          type="button"
-                          className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 active:bg-white/35 flex items-center justify-center text-white transition-all cursor-pointer shrink-0"
-                          onClick={closeVeh}
-                          aria-label="Close"
-                        >
-                          <X size={18} strokeWidth={2.5} />
-                        </button>
+                      {/* 4-pill segmented step bar */}
+                      <div className="flex items-center gap-1.5 mt-3.5">
+                        {(["vehicle", "model", "year", "engine"] as const).map((s, idx) => {
+                          const isDone = vehStepNumber > idx + 1 || vehStep === "summary";
+                          const isActive = vehStep === s;
+                          return (
+                            <div
+                              key={s}
+                              className="flex-1 h-1 rounded-full transition-all duration-300"
+                              style={{
+                                background: isDone ? "#10b981" : isActive ? "#ed1c24" : "rgba(255,255,255,0.1)",
+                                boxShadow: isActive ? "0 0 8px rgba(237,28,36,0.7)" : isDone ? "0 0 6px rgba(16,185,129,0.5)" : "none",
+                              }}
+                            />
+                          );
+                        })}
                       </div>
-                    </div>
-
-                    {/* 4-Segment Progress Bar */}
-                    <div className="w-full bg-black/20 h-1 rounded-full mt-3 overflow-hidden">
-                      <div
-                        className="bg-white h-full transition-all duration-300 rounded-full"
-                        style={{ width: `${vehProgressPct}%` }}
-                      />
                     </div>
                   </div>
 
-                  {/* ── BODY (2-COLUMN: VERTICAL STEPPER LEFT + OPTION GRID RIGHT) ── */}
+                  {/* ── BODY (2-COLUMN) ── */}
                   <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-white">
-                    {/* LEFT COLUMN: VEHICLE STEPPER & CAR ANATOMY */}
-                    <div className="w-full md:w-72 lg:w-80 bg-gradient-to-b from-gray-50 via-slate-50 to-gray-100/90 border-b md:border-b-0 md:border-r border-gray-200 p-4 sm:p-5 flex flex-col justify-between shrink-0 overflow-y-auto">
-                      <div>
-                        {/* Vehicle Anatomy Illustration Box */}
-                        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-2xs mb-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[10px] uppercase font-black tracking-wider text-gray-400">
-                              Vehicle Fitment
-                            </span>
-                            <span className="text-[10px] font-bold text-[#ed1c24] bg-red-50 px-1.5 py-0.5 rounded">
+                    {/* LEFT COLUMN: DARK PREMIUM VEHICLE SIDEBAR */}
+                    <div
+                      className="hidden md:flex md:w-72 lg:w-80 shrink-0 flex-col justify-between overflow-hidden"
+                      style={{ background: "linear-gradient(160deg,#0d1117 0%,#111827 55%,#0f1922 100%)" }}
+                    >
+                      {/* ambient glow */}
+                      <div className="absolute pointer-events-none w-48 h-48 rounded-full left-[-40px] top-8 opacity-20"
+                        style={{ background: "radial-gradient(circle,#ed1c24 0%,transparent 70%)" }} />
+
+                      <div className="p-4 sm:p-5">
+                        {/* ── Car Anatomy Panel ── */}
+                        <div
+                          className="rounded-2xl p-3 mb-5 border border-white/8 overflow-hidden"
+                          style={{ background: "linear-gradient(135deg,#141922 0%,#1a2030 100%)" }}
+                        >
+                          <div className="flex items-center justify-between mb-2.5">
+                            <span className="text-[9px] uppercase font-black tracking-[0.18em] text-white/40">Vehicle Fitment</span>
+                            <span
+                              className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                              style={{
+                                background: vehStep === "vehicle" ? "rgba(237,28,36,0.15)" : vehStep === "model" ? "rgba(251,146,60,0.15)" : vehStep === "year" ? "rgba(234,179,8,0.15)" : "rgba(16,185,129,0.15)",
+                                color: vehStep === "vehicle" ? "#ef4444" : vehStep === "model" ? "#fb923c" : vehStep === "year" ? "#eab308" : "#10b981",
+                                border: `1px solid ${vehStep === "vehicle" ? "rgba(239,68,68,0.3)" : vehStep === "model" ? "rgba(251,146,60,0.3)" : vehStep === "year" ? "rgba(234,179,8,0.3)" : "rgba(16,185,129,0.3)"}`,
+                              }}
+                            >
                               {vehStep === "vehicle" ? "Make" : vehStep === "model" ? "Model" : vehStep === "year" ? "Year" : "Engine & Size"}
                             </span>
                           </div>
 
-                          {/* Car Blueprint SVG Graphic */}
-                          <div className="relative h-24 w-full flex items-center justify-center bg-gray-900 rounded-lg p-2 overflow-hidden shadow-inner">
-                            <svg viewBox="0 0 220 90" className="w-full h-full">
-                              {/* Car Body Silhouette */}
-                              <path
-                                d="M 25 58 L 40 45 L 75 32 L 145 32 L 175 45 L 200 52 L 205 65 L 185 65 L 175 65 C 175 52 155 52 155 65 L 75 65 C 75 52 55 52 55 65 L 20 65 Z"
-                                className={`transition-all duration-200 ${
-                                  vehStep === "vehicle" || vehStep === "model"
-                                    ? "fill-[#ed1c24] stroke-white stroke-2 drop-shadow"
-                                    : selVehicle
-                                    ? "fill-gray-700 stroke-emerald-400 stroke-1"
-                                    : "fill-gray-800 stroke-gray-600 stroke-1"
-                                }`}
-                              />
-                              {/* Windows */}
-                              <path
-                                d="M 78 36 L 110 36 L 110 46 L 60 46 Z"
-                                className="fill-cyan-950/80 stroke-cyan-400/40 stroke-1"
-                              />
-                              <path
-                                d="M 115 36 L 142 36 L 165 46 L 115 46 Z"
-                                className="fill-cyan-950/80 stroke-cyan-400/40 stroke-1"
-                              />
-                              {/* Front Wheel */}
-                              <circle
-                                cx="165"
-                                cy="65"
-                                r="14"
-                                className={`transition-all duration-200 ${
-                                  vehStep === "engine"
-                                    ? "fill-[#ed1c24] stroke-white stroke-2"
-                                    : selSize
-                                    ? "fill-emerald-500 stroke-white stroke-1"
-                                    : "fill-gray-600 stroke-gray-400 stroke-1"
-                                }`}
-                              />
-                              <circle cx="165" cy="65" r="6" className="fill-gray-900" />
-                              {/* Rear Wheel */}
-                              <circle
-                                cx="65"
-                                cy="65"
-                                r="14"
-                                className={`transition-all duration-200 ${
-                                  vehStep === "engine"
-                                    ? "fill-[#ed1c24] stroke-white stroke-2"
-                                    : selSize
-                                    ? "fill-emerald-500 stroke-white stroke-1"
-                                    : "fill-gray-600 stroke-gray-400 stroke-1"
-                                }`}
-                              />
-                              <circle cx="65" cy="65" r="6" className="fill-gray-900" />
-                              {/* Car Model Text overlay */}
-                              <text
-                                x="110"
-                                y="78"
-                                textAnchor="middle"
-                                className="fill-white font-black text-[9px] uppercase tracking-wider"
-                              >
-                                {selModel ? `${labelFor("model", selModel)} (${selYear || "—"})` : selVehicle ? labelFor("vehicle", selVehicle) : "Select Car"}
-                              </text>
-                            </svg>
+                          {/* Real Car Photo */}
+                          <div
+                            className="relative h-[96px] w-full rounded-xl overflow-hidden"
+                            style={{ background: "#020408" }}
+                          >
+                            {/* Actual car image */}
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src="/images/vehicle-finder-car.jpg"
+                              alt="Vehicle"
+                              className="w-full h-full object-cover object-center"
+                              style={{ opacity: 0.92, mixBlendMode: "lighten" }}
+                            />
+                            {/* Bottom glow overlay based on step */}
+                            <div
+                              className="absolute inset-x-0 bottom-0 h-8 pointer-events-none"
+                              style={{
+                                background: `linear-gradient(to top, ${
+                                  vehStep === "engine" ? "rgba(16,185,129,0.35)" : "rgba(237,28,36,0.3)"
+                                }, transparent)`,
+                                transition: "background 0.4s",
+                              }}
+                            />
+                            {/* Vehicle label overlay */}
+                            <div className="absolute inset-x-0 top-0 h-7 pointer-events-none"
+                              style={{ background: "linear-gradient(to bottom,rgba(2,4,8,0.7),transparent)" }}
+                            />
+                            <span
+                              className="absolute top-1.5 left-0 right-0 text-center text-[8px] font-black uppercase tracking-[0.18em] pointer-events-none"
+                              style={{ color: "rgba(255,255,255,0.55)" }}
+                            >
+                              {selModel
+                                ? `${labelFor("vehicle", selVehicle)} ${labelFor("model", selModel)}${selYear ? ` · ${labelFor("year", selYear)}` : ""}`
+                                : selVehicle
+                                ? labelFor("vehicle", selVehicle)
+                                : "Select Vehicle"}
+                            </span>
                           </div>
                         </div>
 
-                        {/* Stepper Cards */}
-                        <div className="space-y-1.5">
-                          {/* Step 1: Make */}
-                          {(() => {
-                            const isDone = Boolean(selVehicle) && vehStep !== "vehicle";
-                            const isActive = vehStep === "vehicle";
-                            return (
-                              <div className="relative">
-                                <button
-                                  type="button"
-                                  onClick={() => setVehStep("vehicle")}
-                                  className={`w-full p-2.5 sm:p-3 rounded-xl flex items-center gap-3 text-left transition-all cursor-pointer border ${
-                                    isActive
-                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
-                                      : isDone
-                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
-                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
-                                  }`}
-                                >
-                                  <div
-                                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
-                                      isActive
-                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
-                                        : isDone
-                                        ? "bg-emerald-500 text-white shadow-xs"
-                                        : "bg-gray-200 text-gray-600"
-                                    }`}
-                                  >
-                                    {isDone ? <Check size={16} strokeWidth={3} /> : "1"}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <span
-                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
-                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
-                                        }`}
-                                      >
-                                        Make (Brand)
-                                      </span>
-                                      {isDone && (
-                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                          ✓ Selected
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div
-                                      className={`text-sm font-black truncate leading-tight mt-0.5 ${
-                                        isActive
-                                          ? selVehicle ? "text-[#ed1c24]" : "text-gray-900"
-                                          : isDone
-                                          ? "text-gray-900 font-extrabold"
-                                          : "text-gray-400"
-                                      }`}
-                                    >
-                                      {selVehicle ? labelFor("vehicle", selVehicle) : "Select Make"}
-                                    </div>
-                                  </div>
-                                </button>
-                                <div className="w-0.5 h-2 bg-gray-300/80 ml-6 my-0.5" />
-                              </div>
-                            );
-                          })()}
+                        {/* ── Horizontal Stepper Bar & Interactive Grid ── */}
+                        <div className="rounded-2xl p-3 border border-white/8 bg-white/[0.03] backdrop-blur-md">
+                          <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-white/40 mb-2 px-1">
+                            <span>Vehicle Steps</span>
+                            <span className="text-white/60 font-bold">
+                              Step {vehStep === "summary" ? "✓" : vehStepNumber} of 4
+                            </span>
+                          </div>
 
-                          {/* Step 2: Model */}
-                          {(() => {
-                            const isDone =
-                              Boolean(selModel) &&
-                              (vehStep === "year" || vehStep === "engine" || vehStep === "summary");
-                            const isActive = vehStep === "model";
-                            const isClickable = Boolean(selVehicle);
-                            return (
-                              <div className="relative">
-                                <button
-                                  type="button"
-                                  disabled={!isClickable}
-                                  onClick={() => isClickable && setVehStep("model")}
-                                  className={`w-full p-2.5 sm:p-3 rounded-xl flex items-center gap-3 text-left transition-all border ${
-                                    !isClickable ? "cursor-not-allowed opacity-45 bg-transparent border-transparent" : "cursor-pointer"
-                                  } ${
-                                    isActive
-                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
-                                      : isDone
-                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
-                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
-                                  }`}
-                                >
-                                  <div
-                                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
-                                      isActive
-                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
-                                        : isDone
-                                        ? "bg-emerald-500 text-white shadow-xs"
-                                        : "bg-gray-200 text-gray-600"
-                                    }`}
-                                  >
-                                    {isDone ? <Check size={16} strokeWidth={3} /> : "2"}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <span
-                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
-                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
-                                        }`}
-                                      >
-                                        Model
-                                      </span>
-                                      {isDone && (
-                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                          ✓ Selected
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div
-                                      className={`text-sm font-black truncate leading-tight mt-0.5 ${
-                                        isActive
-                                          ? selModel ? "text-[#ed1c24]" : "text-gray-900"
-                                          : isDone
-                                          ? "text-gray-900 font-extrabold"
-                                          : "text-gray-400"
-                                      }`}
-                                    >
-                                      {selModel ? labelFor("model", selModel) : "Select Model"}
-                                    </div>
-                                  </div>
-                                </button>
-                                <div className="w-0.5 h-2 bg-gray-300/80 ml-6 my-0.5" />
-                              </div>
-                            );
-                          })()}
+                          {/* Horizontal Connected Timeline Dots (1 ── 2 ── 3 ── 4) */}
+                          <div className="relative flex items-center justify-between px-3 py-1 mb-3">
+                            {/* Background track line */}
+                            <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-white/10 z-0" />
+                            {/* Active progress line fill */}
+                            <div
+                              className="absolute left-6 top-1/2 -translate-y-1/2 h-0.5 bg-[#ed1c24] transition-all duration-300 z-0"
+                              style={{
+                                width:
+                                  vehStep === "summary"
+                                    ? "100%"
+                                    : vehStepNumber === 1
+                                    ? "0%"
+                                    : vehStepNumber === 2
+                                    ? "33.3%"
+                                    : vehStepNumber === 3
+                                    ? "66.6%"
+                                    : "100%",
+                              }}
+                            />
 
-                          {/* Step 3: Year */}
-                          {(() => {
-                            const isDone =
-                              Boolean(selYear) && (vehStep === "engine" || vehStep === "summary");
-                            const isActive = vehStep === "year";
-                            const isClickable = Boolean(selVehicle && selModel);
-                            return (
-                              <div className="relative">
+                            {([
+                              { step: "vehicle" as const, num: 1, label: "Make", value: selVehicle ? labelFor("vehicle", selVehicle) : null, canClick: true },
+                              { step: "model" as const, num: 2, label: "Model", value: selModel ? labelFor("model", selModel) : null, canClick: Boolean(selVehicle) },
+                              { step: "year" as const, num: 3, label: "Year", value: selYear ? labelFor("year", selYear) : null, canClick: Boolean(selVehicle && selModel) },
+                              { step: "engine" as const, num: 4, label: "Trim", value: selEngine ? (selEngine === "all" ? "All Trims" : labelFor("engine", selEngine)) : null, canClick: Boolean(selVehicle && selModel && selYear) },
+                            ]).map(({ step: s, num, label, value, canClick }) => {
+                              const isActive = vehStep === s;
+                              const isDone = value !== null && !isActive && (vehStep === "summary" || vehStepNumber > num);
+                              return (
                                 <button
+                                  key={s}
                                   type="button"
-                                  disabled={!isClickable}
-                                  onClick={() => isClickable && setVehStep("year")}
-                                  className={`w-full p-2.5 sm:p-3 rounded-xl flex items-center gap-3 text-left transition-all border ${
-                                    !isClickable ? "cursor-not-allowed opacity-45 bg-transparent border-transparent" : "cursor-pointer"
-                                  } ${
-                                    isActive
-                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
-                                      : isDone
-                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
-                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
-                                  }`}
+                                  disabled={!canClick}
+                                  onClick={() => canClick && setVehStep(s)}
+                                  className="relative z-10 flex flex-col items-center group cursor-pointer disabled:cursor-not-allowed"
                                 >
                                   <div
-                                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
-                                      isActive
-                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
+                                    className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs transition-all"
+                                    style={{
+                                      background: isActive
+                                        ? "linear-gradient(135deg,#ed1c24,#b71218)"
                                         : isDone
-                                        ? "bg-emerald-500 text-white shadow-xs"
-                                        : "bg-gray-200 text-gray-600"
-                                    }`}
+                                        ? "#10b981"
+                                        : "#161b22",
+                                      border: isActive
+                                        ? "2px solid rgba(255,255,255,0.4)"
+                                        : isDone
+                                        ? "2px solid rgba(16,185,129,0.5)"
+                                        : "2px solid rgba(255,255,255,0.15)",
+                                      boxShadow: isActive
+                                        ? "0 0 12px rgba(237,28,36,0.6)"
+                                        : isDone
+                                        ? "0 0 8px rgba(16,185,129,0.4)"
+                                        : "none",
+                                      color: isActive || isDone ? "#fff" : "rgba(255,255,255,0.3)",
+                                    }}
                                   >
-                                    {isDone ? <Check size={16} strokeWidth={3} /> : "3"}
+                                    {isDone ? (
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    ) : num}
                                   </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <span
-                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
-                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
-                                        }`}
-                                      >
-                                        Year
-                                      </span>
-                                      {isDone && (
-                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                          ✓ Selected
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div
-                                      className={`text-sm font-black truncate leading-tight mt-0.5 ${
-                                        isActive
-                                          ? selYear ? "text-[#ed1c24]" : "text-gray-900"
-                                          : isDone
-                                          ? "text-gray-900 font-extrabold"
-                                          : "text-gray-400"
-                                      }`}
-                                    >
-                                      {selYear ? labelFor("year", selYear) : "Select Year"}
-                                    </div>
-                                  </div>
+                                  <span
+                                    className="text-[9px] font-black uppercase tracking-wider mt-1"
+                                    style={{ color: isActive ? "#f87171" : isDone ? "#34d399" : "rgba(255,255,255,0.35)" }}
+                                  >
+                                    {label}
+                                  </span>
                                 </button>
-                                <div className="w-0.5 h-2 bg-gray-300/80 ml-6 my-0.5" />
-                              </div>
-                            );
-                          })()}
+                              );
+                            })}
+                          </div>
 
-                          {/* Step 4: Engine & Size */}
-                          {(() => {
-                            const isDone = Boolean(selEngine && selSize);
-                            const isActive = vehStep === "engine";
-                            const isClickable = Boolean(selVehicle && selModel && selYear);
-                            return (
-                              <div className="relative">
+                          {/* 4 Interactive Step Buttons (2x2 Horizontal Layout) */}
+                          <div className="grid grid-cols-2 gap-1.5 mt-2">
+                            {([
+                              { step: "vehicle" as const, num: 1, label: "1. Make", value: selVehicle ? labelFor("vehicle", selVehicle) : null, placeholder: "Select Make", canClick: true },
+                              { step: "model" as const, num: 2, label: "2. Model", value: selModel ? labelFor("model", selModel) : null, placeholder: "Select Model", canClick: Boolean(selVehicle) },
+                              { step: "year" as const, num: 3, label: "3. Year", value: selYear ? labelFor("year", selYear) : null, placeholder: "Select Year", canClick: Boolean(selVehicle && selModel) },
+                              { step: "engine" as const, num: 4, label: "4. Trim & Size", value: selEngine ? (selEngine === "all" ? "All Trims" : labelFor("engine", selEngine)) : null, placeholder: "Select Trim", canClick: Boolean(selVehicle && selModel && selYear) },
+                            ]).map(({ step: s, num, label, value, placeholder, canClick }) => {
+                              const isActive = vehStep === s;
+                              const isDone = value !== null && !isActive && (vehStep === "summary" || vehStepNumber > num);
+                              return (
                                 <button
+                                  key={s}
                                   type="button"
-                                  disabled={!isClickable}
-                                  onClick={() => isClickable && setVehStep("engine")}
-                                  className={`w-full p-2.5 sm:p-3 rounded-xl flex items-center gap-3 text-left transition-all border ${
-                                    !isClickable ? "cursor-not-allowed opacity-45 bg-transparent border-transparent" : "cursor-pointer"
-                                  } ${
-                                    isActive
-                                      ? "bg-white border-[#ed1c24] shadow-md ring-2 ring-[#ed1c24]/20 scale-[1.01]"
+                                  disabled={!canClick}
+                                  onClick={() => canClick && setVehStep(s)}
+                                  className="p-2 rounded-xl text-left transition-all border flex flex-col justify-center"
+                                  style={{
+                                    background: isActive
+                                      ? "rgba(237,28,36,0.12)"
                                       : isDone
-                                      ? "bg-white/80 border-gray-200 hover:border-gray-300 hover:bg-white shadow-2xs"
-                                      : "bg-white/40 border-transparent opacity-75 hover:opacity-100"
-                                  }`}
+                                      ? "rgba(16,185,129,0.08)"
+                                      : "rgba(255,255,255,0.03)",
+                                    borderColor: isActive
+                                      ? "rgba(237,28,36,0.4)"
+                                      : isDone
+                                      ? "rgba(16,185,129,0.25)"
+                                      : "rgba(255,255,255,0.07)",
+                                    cursor: canClick ? "pointer" : "not-allowed",
+                                    opacity: !canClick && !isActive && !isDone ? 0.4 : 1,
+                                  }}
                                 >
-                                  <div
-                                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all ${
-                                      isActive
-                                        ? "bg-gradient-to-br from-[#ed1c24] to-[#b71218] text-white shadow-md shadow-red-500/30"
-                                        : isDone
-                                        ? "bg-emerald-500 text-white shadow-xs"
-                                        : "bg-gray-200 text-gray-600"
-                                    }`}
-                                  >
-                                    {isDone ? <Check size={16} strokeWidth={3} /> : "4"}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <span
-                                        className={`text-[10px] font-extrabold uppercase tracking-wider ${
-                                          isActive ? "text-[#ed1c24]" : "text-gray-500"
-                                        }`}
-                                      >
-                                        Engine & Fitment
-                                      </span>
-                                      {isDone && (
-                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                          ✓ Selected
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div
-                                      className={`text-sm font-black truncate leading-tight mt-0.5 ${
-                                        isActive
-                                          ? selEngine ? "text-[#ed1c24]" : "text-gray-900"
-                                          : isDone
-                                          ? "text-gray-900 font-extrabold"
-                                          : "text-gray-400"
-                                      }`}
+                                  <div className="flex items-center justify-between">
+                                    <span
+                                      className="text-[9px] font-black uppercase tracking-wider block opacity-70 truncate"
+                                      style={{ color: isActive ? "#f87171" : isDone ? "#34d399" : "rgba(255,255,255,0.4)" }}
                                     >
-                                      {selEngine
-                                        ? selEngine === "all"
-                                          ? "All Trims"
-                                          : labelFor("engine", selEngine)
-                                        : "Select Trim & Size"}
-                                    </div>
+                                      {label}
+                                    </span>
+                                    {isDone && (
+                                      <span className="text-[8px] font-black text-[#34d399]">✓</span>
+                                    )}
                                   </div>
+                                  <span
+                                    className="text-xs font-black truncate block mt-0.5 leading-tight"
+                                    style={{
+                                      color: isActive
+                                        ? value ? "#fca5a5" : "#ffffff"
+                                        : isDone
+                                        ? "rgba(255,255,255,0.9)"
+                                        : "rgba(255,255,255,0.3)",
+                                    }}
+                                  >
+                                    {value || placeholder}
+                                  </span>
                                 </button>
-                              </div>
-                            );
-                          })()}
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Configured Vehicle Badge */}
-                      <div className="mt-4 pt-3 border-t border-gray-200/80 hidden md:block">
-                        <div className="bg-white rounded-xl p-3.5 border border-gray-200 shadow-2xs">
-                          <span className="text-[9px] uppercase font-black text-gray-400 block tracking-wider">
-                            SELECTED VEHICLE
-                          </span>
-                          <div className="text-sm font-black text-gray-900 tracking-tight mt-0.5 truncate">
-                            {vehFormatted}
-                          </div>
+                      {/* Selected vehicle summary badge */}
+                      <div className="px-4 pb-5 pt-2">
+                        <div
+                          className="rounded-xl p-3 border border-white/8"
+                          style={{ background: "rgba(255,255,255,0.04)" }}
+                        >
+                          <span className="text-[9px] uppercase font-black tracking-[0.16em] block mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>Selected Vehicle</span>
+                          <div className="text-xs font-black text-white/80 tracking-tight truncate">{vehFormatted}</div>
                           {selSize && (
-                            <div className="text-xs font-bold text-[#ed1c24] mt-1 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#ed1c24]" />
-                              <span>Tyre: {selSize.label}</span>
+                            <div className="flex items-center gap-1 mt-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                              <span className="text-[10px] font-bold text-emerald-400">Tyre: {selSize.label}</span>
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
-
                     {/* RIGHT COLUMN: API-DRIVEN GRID / SUMMARY */}
                     <div className="flex-1 flex flex-col p-4 sm:p-6 overflow-y-auto finder-modal-scroll bg-white">
                       {depLoading && (vehStep === "vehicle" || vehStep === "model" || vehStep === "year") ? (

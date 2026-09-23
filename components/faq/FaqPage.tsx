@@ -65,14 +65,39 @@ export default function FaqPage() {
   return (
     <div className="bg-white min-h-screen" dir="ltr">
       <PageHeroBanner
-        title="Frequently Asked Questions | TyresWorld UAE"
-        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "FAQ" }]}
+        title="Frequently Asked Questions"
+        breadcrumbLabel="FAQ"
+        description="Find clear answers to common questions about buying tyres, booking mobile fitting, warranty, and our services across the UAE."
       />
 
       {/* ── Main Content ── */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-14">
         {loading ? (
-          <div className="text-center py-20 text-gray-400 text-sm">Loading…</div>
+          <>
+            {/* ── Category Navigation Cards Skeleton ── */}
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-32 sm:w-36 h-32 sm:h-36 bg-gray-100 border border-gray-200/90 rounded-2xl animate-pulse"
+                />
+              ))}
+            </div>
+
+            {/* ── FAQ List Skeleton ── */}
+            <div className="space-y-12 sm:space-y-14">
+              {Array.from({ length: 2 }).map((_, groupIdx) => (
+                <div key={groupIdx}>
+                  <div className="h-5 w-48 bg-gray-200 rounded animate-pulse mb-4 sm:mb-5" />
+                  <div className="space-y-2.5">
+                    {Array.from({ length: 4 }).map((_, itemIdx) => (
+                      <div key={itemIdx} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : groups.length === 0 ? (
           <div className="text-center py-20 text-gray-400 text-sm">FAQs are unavailable right now.</div>
         ) : (

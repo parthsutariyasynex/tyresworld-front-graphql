@@ -179,11 +179,8 @@ function InstallerNetworkContent() {
     <div className="bg-white pb-8 sm:pb-12">
       <PageHeroBanner
         title="Book Tyre Fitting Near You Anywhere in the UAE"
+        breadcrumbLabel="Installers"
         description="Search our network of trusted installers, pick a slot that works for you, and get your tyres fitted at a workshop or wherever suits you best."
-        breadcrumb={[
-          { label: "Home", href: `/${locale}` },
-          { label: "Installer Network" },
-        ]}
       />
 
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8">

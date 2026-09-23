@@ -438,7 +438,8 @@ function StoreLocatorContent() {
     <div dir={"ltr"} className="bg-[#f9fafb] min-h-screen pb-20 text-gray-900 font-sans">
       <PageHeroBanner
         title="Select Delivery Option"
-        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Store Locator" }]}
+        breadcrumbLabel="Delivery Options"
+        description="Choose your preferred fitting method — certified workshop partner, mobile fitting van, or doorstep delivery across the UAE."
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -82,12 +82,8 @@ export default function CarsBrandBrowserPage() {
     <div className="bg-white pb-8 sm:pb-12">
       <PageHeroBanner
         title="Buy Car Tyres Online – Select by Make & Model"
+        breadcrumbLabel="Car Tyres"
         description="Shop premium tyres in UAE with free mobile fitting, manufacturer warranty, and best prices across Dubai, Abu Dhabi, and UAE."
-        breadcrumb={[
-          { label: "Home", href: `/${locale}` },
-          { label: "Tyres", href: `/${locale}/tyres` },
-          { label: "Cars" },
-        ]}
       />
 
       <div className="container py-8 lg:py-10">

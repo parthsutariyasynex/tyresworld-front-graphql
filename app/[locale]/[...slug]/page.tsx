@@ -14,7 +14,7 @@ import { CATEGORY_HERO } from "@/src/config/routes";
 import { storeCode, t, type Locale } from "@/lib/i18n";
 import { APP_CONFIG } from "@/src/config/app-config";
 import JsonLd from "@/components/JsonLd";
-import PageHeroBanner, { type BreadcrumbItem } from "@/components/PageHeroBanner";
+import PageHeroBanner from "@/components/PageHeroBanner";
 
 const SITE_URL = `https://${APP_CONFIG.brand.domain}`;
 
@@ -324,16 +324,19 @@ export default async function DynamicSlugPage({ params }: PageProps) {
           }
           return html.replace(/((?:src|href))="\/media\//g, `$1="/api/media/`);
         })();
-    const cmsBreadcrumb: BreadcrumbItem[] = [
-      { label: t(locale, "common.home"), href: `/${locale}` },
-      { label: page.title },
-    ];
-
     return (
       <main dir="ltr" className="bg-white">
         <PageHeroBanner
           title={page.content_heading || page.title}
-          breadcrumb={cmsBreadcrumb}
+          breadcrumbLabel={
+            (route.identifier ?? slug) === "car-battery-replacement" || (route.identifier ?? slug) === "car-battery"
+              ? "Car Battery"
+              : (route.identifier ?? slug) === "car-insurance"
+              ? "Car Insurance"
+              : (route.identifier ?? slug) === "motorcycle-tyres"
+              ? "Motorcycle Tyres"
+              : page.title || page.content_heading
+          }
         />
 
         {((route.identifier ?? slug) === "car-battery-replacement" || (route.identifier ?? slug) === "car-battery") ? (

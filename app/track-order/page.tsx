@@ -115,7 +115,8 @@ function TrackOrderInner() {
     <>
       <PageHeroBanner
         title="Track Your Order"
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "Track Order" }]}
+        breadcrumbLabel="Track Order"
+        description="Check real-time status and delivery updates for your tyres and fitting appointment."
       />
 
       <div className="container py-12 lg:py-16 max-w-2xl mx-auto">
@@ -219,6 +220,22 @@ function TrackOrderInner() {
             </button>
           </form>
         </div>
+
+        {/* Order Result Skeleton — while the lookup is in flight */}
+        {loading && !order && (
+          <div className="flex flex-col gap-5">
+            <div className="h-[68px] bg-gray-100 border border-gray-100 rounded-sm animate-pulse" />
+            <div className="bg-white border border-gray-100 shadow-sm rounded-sm overflow-hidden">
+              <div className="h-[52px] bg-gray-50 border-b border-gray-100" />
+              <div className="p-5 flex flex-col gap-4">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="h-10 bg-gray-100 rounded animate-pulse" />
+                ))}
+              </div>
+            </div>
+            <div className="h-24 bg-gray-100 border border-gray-100 rounded-sm animate-pulse" />
+          </div>
+        )}
 
         {/* Order Result */}
         {order && statusCfg && (

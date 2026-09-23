@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
 import { X } from "lucide-react";
 import { useScrollLock } from "@/lib/useScrollLock";
+import { useOverviewDrawer } from "@/lib/overview-drawer-context";
+import type { AddedModalProduct } from "@/lib/cart-context";
 
 interface AddToCartModalProps {
-  productName: string | null;
+  product?: AddedModalProduct | null;
+  productName?: string | null;
   open: boolean;
   onClose: () => void;
 }
@@ -18,7 +20,7 @@ export default function AddToCartModal({
   onClose,
 }: AddToCartModalProps) {
   const [mounted, setMounted] = useState(false);
-  const locale = "en";
+  const { openDrawer } = useOverviewDrawer();
 
   useScrollLock(open);
 
@@ -44,7 +46,7 @@ export default function AddToCartModal({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/65 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/65 backdrop-blur-xs p-4 animate-in fade-in duration-200"
       dir="ltr"
     >
       {/* Click backdrop to close */}
@@ -73,24 +75,27 @@ export default function AddToCartModal({
         </button>
 
         {/* Modal Title */}
-        <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-gray-950 mt-1 mb-3">
+        <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-gray-950 mt-1 mb-3 font-sans">
           {"ADDED TO CART"}
         </h3>
 
         {/* Product Name */}
-        <p className="text-sm sm:text-[15px] font-black text-gray-900 uppercase tracking-tight max-w-[440px] mx-auto leading-snug mb-7">
+        <p className="text-sm sm:text-[15px] font-black text-gray-900 uppercase tracking-tight max-w-[440px] mx-auto leading-snug mb-7 font-sans">
           {productName}
         </p>
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
-          <Link
-            href={`/${locale}/cart`}
-            onClick={onClose}
-            className="btn-cta w-full sm:w-auto min-w-[190px] text-[13px] py-3.5 px-6 rounded-lg shadow-md"
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              openDrawer("cart");
+            }}
+            className="btn-cta w-full sm:w-auto min-w-[190px] text-[13px] py-3.5 px-6 rounded-lg shadow-md cursor-pointer"
           >
             <span>{"PROCEED TO CART"}</span>
-          </Link>
+          </button>
 
           <button
             type="button"

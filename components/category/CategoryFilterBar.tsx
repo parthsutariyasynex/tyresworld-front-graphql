@@ -24,7 +24,7 @@ interface CategoryFilterBarProps {
 }
 
 /** Sort button styled for the dark red bar — same dropdown behavior as the
-    page's standalone SortBar, just themed to match Clear All/More Filters. */
+    page's standalone SortBar, with proper z-index and touch-friendly mobile display. */
 function RedBarSortButton({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const cur = SORT_OPTS.find((o) => o.value === value) ?? SORT_OPTS[0];
@@ -34,17 +34,23 @@ function RedBarSortButton({ value, onChange }: { value: string; onChange: (v: st
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 px-3 py-1 bg-black/25 hover:bg-black/35 active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider rounded-lg border border-white/20 shadow-xs transition-all cursor-pointer"
+        className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 bg-black/25 hover:bg-black/35 active:scale-95 text-white font-bold text-[10px] sm:text-[11px] uppercase tracking-wider rounded-lg border border-white/20 shadow-xs transition-all cursor-pointer select-none"
         aria-label="Sort"
       >
-        <span>{cur.en}</span>
-        <ChevronDown size={12} strokeWidth={2.5} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        <span className="truncate max-w-[130px] sm:max-w-none">{cur.en}</span>
+        <ChevronDown size={12} strokeWidth={2.5} className={`transition-transform duration-200 shrink-0 ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
         <>
-          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1.5 z-30 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 min-w-[190px] overflow-hidden">
+          {/* Backdrop overlay */}
+          <div className="fixed inset-0 z-40 bg-black/25 sm:bg-transparent" onClick={() => setOpen(false)} />
+
+          {/* Dropdown Menu (High Z-Index so it appears cleanly above all cards and elements) */}
+          <div className="absolute right-0 top-full mt-2 z-50 bg-white rounded-xl shadow-2xl border border-gray-200/90 py-1 min-w-[200px] sm:min-w-[220px] overflow-hidden">
+            <div className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 mb-0.5">
+              Sort Tyres By
+            </div>
             {SORT_OPTS.map((opt) => (
               <button
                 key={opt.value}
@@ -53,11 +59,12 @@ function RedBarSortButton({ value, onChange }: { value: string; onChange: (v: st
                   onChange(opt.value);
                   setOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2.5 text-[11px] font-black uppercase tracking-wider transition-colors cursor-pointer ${
+                className={`w-full text-left px-3.5 py-2.5 text-[11px] font-black uppercase tracking-wider flex items-center justify-between transition-colors cursor-pointer ${
                   opt.value === value ? "text-[#ed1c24] bg-red-50" : "text-gray-800 hover:bg-gray-50"
                 }`}
               >
-                {opt.en}
+                <span>{opt.en}</span>
+                {opt.value === value && <span className="w-1.5 h-1.5 rounded-full bg-[#ed1c24]" />}
               </button>
             ))}
           </div>
@@ -240,104 +247,156 @@ export default function CategoryFilterBar({
     router.replace(p.toString() ? `${targetBase}?${p}` : targetBase, { scroll: false });
   };
 
+  const totalActiveCount =
+    (hasSize ? 1 : 0) +
+    otherFilterEntries.reduce((sum, [, vals]) => sum + vals.length, 0);
+
   return (
     <div className="w-full mb-2 sm:mb-2.5">
-      <div className="bg-white rounded-xl border border-gray-200/90 shadow-xs">
+      <div className="bg-white rounded-xl border border-gray-200/90 shadow-xs relative">
         {/* ── Top Red Header Bar ── */}
-        <div className="bg-[#ed1c24] rounded-t-xl px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <div className="inline-flex items-center gap-1.5 text-white font-black text-xs uppercase tracking-wider bg-black/20 px-2.5 py-0.5 rounded-md">
-              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              <span>Filters</span>
-            </div>
-
-            {/* Size Filter Pill in Red Bar */}
-            {hasSize && sizeFormatted && (
-              <button
-                type="button"
-                onClick={handleRemoveSizeFilter}
-                className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-900 rounded-md text-[11px] font-bold shadow-xs hover:bg-gray-100 transition-colors cursor-pointer group"
-                title={`Remove ${sizeFormatted}`}
-              >
-                <span className="text-[#ed1c24] font-black text-[10px] group-hover:scale-110 transition-transform">✕</span>
-                <span>{sizeFormatted}</span>
-              </button>
-            )}
-
-            {/* Other Active Filter Pills in Red Bar */}
-            {otherFilterEntries.map(([code, values]) => {
-              const group = filterGroups.find((g) => g.code === code);
-              return values.map((val) => {
-                const opt = group?.options.find(
-                  (o) => o.value === val || o.label.toLowerCase() === val.toLowerCase()
-                );
-                const label = opt?.label ?? val;
-                return (
-                  <button
-                    key={`${code}-${val}`}
-                    type="button"
-                    onClick={() => {
-                      if (onChange) {
-                        onChange(code, values.filter((v) => v !== val));
-                      }
-                    }}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-900 rounded-md text-[11px] font-bold shadow-xs hover:bg-gray-100 transition-colors cursor-pointer group"
-                    title={`Remove ${label}`}
-                  >
-                    <span className="text-[#ed1c24] font-black text-[10px] group-hover:scale-110 transition-transform">✕</span>
-                    <span>{label}</span>
-                  </button>
-                );
-              });
-            })}
-          </div>
-
-
-
-
-          {/* Right side of Red Bar: Sort, Clear All & More Filters Button */}
-          <div className="flex items-center gap-2 ml-auto">
-             {(hasSize || otherFilterEntries.length > 0) && (
-              <button
-                type="button"
-                onClick={onClearAll}
-                className="inline-flex items-center gap-1 px-2.5 py-1 bg-black/25 hover:bg-black/35 text-white rounded-md text-[11px] font-bold transition-colors cursor-pointer border border-white/20"
-              >
-                <span>✕ Clear All</span>
-              </button>
-            )}
-            {/* Sort Button inside Red Bar — same sort state as the page's toolbar SortBar */}
-            {onSortChange && (
-              <RedBarSortButton value={sort ?? "low-to-high"} onChange={onSortChange} />
-            )}
-
-            {/* Clear All Button inside Red Bar */}
-            {/* {(hasSize || otherFilterEntries.length > 0) && (
-              <button
-                type="button"
-                onClick={onClearAll}
-                className="inline-flex items-center gap-1 px-2.5 py-1 bg-black/25 hover:bg-black/35 text-white rounded-md text-[11px] font-bold transition-colors cursor-pointer border border-white/20"
-              >
-                <span>✕ Clear All</span>
-              </button>
-            )} */}
-
-            {/* More Filters Action Button (Placed at the LAST of the Red Line, shown only when total filters > 5) */}
-            {hasMoreFilters && (
+        <div className="bg-[#ed1c24] rounded-xl lg:rounded-t-xl lg:rounded-b-none px-2.5 sm:px-4 py-1.5 sm:py-2">
+          {/* ── Single-Row Toolbar (No wrapping) ── */}
+          <div className="flex items-center justify-between gap-2 w-full">
+            {/* Left side */}
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              {/* Mobile (< lg): Single interactive Filters button */}
               <button
                 type="button"
                 onClick={onOpenMoreFilters}
-                className="inline-flex items-center gap-1.5 px-3 py-1 bg-black/25 hover:bg-black/35 active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider rounded-lg border border-white/20 shadow-xs transition-all cursor-pointer"
+                className="lg:hidden inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/25 hover:bg-black/35 active:scale-95 text-white font-black text-xs uppercase tracking-wider rounded-lg border border-white/20 shadow-xs transition-all cursor-pointer shrink-0"
               >
-                <SlidersHorizontal size={12} strokeWidth={2.5} />
-                <span>More Filters</span>
+                <SlidersHorizontal size={13} strokeWidth={2.5} />
+                <span>Filters</span>
+                {totalActiveCount > 0 && (
+                  <span className="inline-flex items-center justify-center min-w-[17px] h-[17px] px-1 bg-white text-[#ed1c24] text-[9.5px] font-black rounded-full shadow-xs">
+                    {totalActiveCount}
+                  </span>
+                )}
               </button>
-            )}
+
+              {/* Desktop (≥ lg): Static Badge */}
+              <div className="hidden lg:inline-flex items-center gap-1.5 text-white font-black text-xs uppercase tracking-wider bg-black/20 px-2.5 py-1 rounded-md shrink-0">
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                <span>Filters</span>
+              </div>
+
+              {/* Desktop Active Filter Chips */}
+              <div className="hidden lg:flex items-center gap-1.5 flex-wrap">
+                {hasSize && sizeFormatted && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveSizeFilter}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-900 rounded-md text-[11px] font-bold shadow-xs hover:bg-gray-100 transition-colors cursor-pointer group"
+                    title={`Remove ${sizeFormatted}`}
+                  >
+                    <span className="text-[#ed1c24] font-black text-[10px] group-hover:scale-110 transition-transform">✕</span>
+                    <span>{sizeFormatted}</span>
+                  </button>
+                )}
+
+                {otherFilterEntries.map(([code, values]) => {
+                  const group = filterGroups.find((g) => g.code === code);
+                  return values.map((val) => {
+                    const opt = group?.options.find(
+                      (o) => o.value === val || o.label.toLowerCase() === val.toLowerCase()
+                    );
+                    const label = opt?.label ?? val;
+                    return (
+                      <button
+                        key={`${code}-${val}`}
+                        type="button"
+                        onClick={() => {
+                          if (onChange) {
+                            onChange(code, values.filter((v) => v !== val));
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-900 rounded-md text-[11px] font-bold shadow-xs hover:bg-gray-100 transition-colors cursor-pointer group"
+                        title={`Remove ${label}`}
+                      >
+                        <span className="text-[#ed1c24] font-black text-[10px] group-hover:scale-110 transition-transform">✕</span>
+                        <span>{label}</span>
+                      </button>
+                    );
+                  });
+                })}
+              </div>
+            </div>
+
+            {/* Right side: Sort, Clear All & More Filters (Desktop) */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {totalActiveCount > 0 && (
+                <button
+                  type="button"
+                  onClick={onClearAll}
+                  className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 bg-black/25 hover:bg-black/35 text-white rounded-md text-[10.5px] sm:text-[11px] font-bold transition-colors cursor-pointer border border-white/20 shrink-0"
+                >
+                  <span>✕ Clear</span>
+                </button>
+              )}
+
+              {/* Sort Button inside Red Bar */}
+              {onSortChange && (
+                <RedBarSortButton value={sort ?? "low-to-high"} onChange={onSortChange} />
+              )}
+
+              {/* Desktop More Filters Button (only if >5 filters) */}
+              {hasMoreFilters && (
+                <button
+                  type="button"
+                  onClick={onOpenMoreFilters}
+                  className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 bg-black/25 hover:bg-black/35 active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider rounded-lg border border-white/20 shadow-xs transition-all cursor-pointer shrink-0"
+                >
+                  <SlidersHorizontal size={12} strokeWidth={2.5} />
+                  <span>More Filters</span>
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* ── Mobile Active Filter Chips Row (Scrollable, only when filters active) ── */}
+          {totalActiveCount > 0 && (
+            <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pt-1.5 mt-1 border-t border-white/15">
+              {hasSize && sizeFormatted && (
+                <button
+                  type="button"
+                  onClick={handleRemoveSizeFilter}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-900 rounded-md text-[11px] font-bold shadow-xs hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
+                >
+                  <span className="text-[#ed1c24] font-black text-[10px]">✕</span>
+                  <span>{sizeFormatted}</span>
+                </button>
+              )}
+              {otherFilterEntries.map(([code, values]) => {
+                const group = filterGroups.find((g) => g.code === code);
+                return values.map((val) => {
+                  const opt = group?.options.find(
+                    (o) => o.value === val || o.label.toLowerCase() === val.toLowerCase()
+                  );
+                  const label = opt?.label ?? val;
+                  return (
+                    <button
+                      key={`${code}-${val}`}
+                      type="button"
+                      onClick={() => {
+                        if (onChange) {
+                          onChange(code, values.filter((v) => v !== val));
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-white text-gray-900 rounded-md text-[11px] font-bold shadow-xs hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
+                    >
+                      <span className="text-[#ed1c24] font-black text-[10px]">✕</span>
+                      <span>{label}</span>
+                    </button>
+                  );
+                });
+              })}
+            </div>
+          )}
         </div>
 
-        {/* ── Dynamic Dropdown Selectors Row (100% from API aggregations) ── */}
-        <div className="p-2 sm:p-2.5 bg-white rounded-b-xl">
+        {/* ── Dynamic Dropdown Selectors Row (Hidden on mobile/tablet, shown on desktop lg+) ── */}
+        <div className="hidden lg:block p-2 sm:p-2.5 bg-white rounded-b-xl border-t border-gray-100">
           <div className={`grid grid-cols-2 sm:grid-cols-3 ${gridColsClass} gap-2 sm:gap-2.5 items-center`}>
             {barGroups.map((group) => {
               const currentValues = selected[group.code] ?? [];

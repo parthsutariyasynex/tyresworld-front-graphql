@@ -59,7 +59,7 @@ export default async function BlogPage({
     <div className="bg-white min-h-screen" dir="ltr">
       <PageHeroBanner
         title="Explore Our Blog – Tyre Advice & Car Maintenance Tips"
-        breadcrumb={[{ label: "Home", href: `/${locale}` }, { label: "Blog" }]}
+        breadcrumbLabel="Blog"
       />
 
       {/* ── Main Content Area ── */}

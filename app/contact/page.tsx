@@ -87,7 +87,8 @@ export default function ContactPage() {
     <div className="bg-white">
       <PageHeroBanner
         title="Contact Us"
-        breadcrumb={[{ label: "Home", href: "/" }, { label: "Contact Us" }]}
+        breadcrumbLabel="Contact Us"
+        description="Get in touch with the TyresWorld team for tyre enquiries, mobile fitting appointments, or customer support."
       />
 
       {/* ── Main Content ── */}

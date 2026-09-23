@@ -61,14 +61,7 @@ export default async function BlogPostPage({
     <div className="bg-white min-h-screen" dir="ltr">
       <JsonLd data={articleJsonLd} />
 
-      <PageHeroBanner
-        title={post.title || "Blog"}
-        breadcrumb={[
-          { label: "Home", href: `/${locale}` },
-          { label: "Blog", href: `/${locale}/blog` },
-          { label: post.title || "Blog" },
-        ]}
-      />
+      <PageHeroBanner title={post.title || "Blog"} />
 
       {/* ── Post Content Area ── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">

@@ -1,20 +1,18 @@
-import Link from "next/link";
-import { ChevronRight, Home } from "lucide-react";
+import Breadcrumbs, { type BreadcrumbExtraItem } from "@/components/Breadcrumbs";
 
-export interface BreadcrumbItem {
-  label: string;
-  /** Omit on the last (current-page) crumb. */
-  href?: string;
-  /** For a crumb that navigates via app state instead of a URL (e.g. "back to model"). */
-  onClick?: () => void;
-}
+export type { BreadcrumbExtraItem };
 
 interface PageHeroBannerProps {
-  /** Page H1. */
+  /** Page H1. Also used as this page's breadcrumb label, unless breadcrumbLabel is set. */
   title: string;
   /** Supporting line under the title. */
   description?: string;
-  breadcrumb: BreadcrumbItem[];
+  /** Overrides `title` as the label registered for this page in the breadcrumb trail. */
+  breadcrumbLabel?: string;
+  /** In-page wizard sub-steps (e.g. make → model → year) appended after the current page's crumb. */
+  breadcrumbExtra?: BreadcrumbExtraItem[];
+  /** When breadcrumbExtra is set, lets the current page's own crumb trigger in-page state instead of linking to its URL. */
+  onBreadcrumbCurrentClick?: () => void;
   /** Show a loading skeleton instead of the title/description. */
   loading?: boolean;
   /** Show the small TyresWorld wheel mark after the title. Default true. */
@@ -32,31 +30,33 @@ interface PageHeroBannerProps {
 export default function PageHeroBanner({
   title,
   description,
-  breadcrumb,
+  breadcrumbLabel,
+  breadcrumbExtra,
+  onBreadcrumbCurrentClick,
   loading = false,
 }: PageHeroBannerProps) {
   return (
     <div className="bg-gray-50 pt-2 pb-0.5">
-      <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#780a0f] via-[#b31219] to-[#ed1c24] p-3.5 sm:p-4 md:p-5 shadow-md border border-red-900/15">
+      <div className="max-w-[1600px] w-full mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#780a0f] via-[#b31219] to-[#ed1c24] px-3.5 py-4 sm:p-5 md:p-6 shadow-md border border-red-900/15">
           {/* Background ambient lighting */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/10 blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 rounded-full bg-black/25 blur-3xl pointer-events-none" />
 
           {/* ── Main Banner Content (Centered) ── */}
           <div className="relative z-10 flex flex-col items-center justify-center text-center w-full">
-            <div className="max-w-5xl mx-auto text-center flex flex-col items-center justify-center w-full">
+            <div className="max-w-4xl mx-auto text-center flex flex-col items-center justify-center w-full">
               {loading ? (
                 <div className="space-y-2 w-full flex flex-col items-center justify-center text-center">
-                  <div className="h-7 sm:h-8 bg-white/20 rounded-lg w-3/4 max-w-md animate-pulse mx-auto" />
+                  <div className="h-6 sm:h-8 bg-white/20 rounded-lg w-3/4 max-w-md animate-pulse mx-auto" />
                   <div className="h-3.5 bg-white/10 rounded w-1/2 max-w-xs animate-pulse mx-auto" />
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-center text-center w-full">
+                  <div className="flex items-center justify-center text-center w-full px-1">
                     <h1
                       id="page-title-heading"
-                      className="text-lg sm:text-2xl md:text-[26px] font-black text-white tracking-tight leading-tight drop-shadow-sm text-center mx-auto"
+                      className="text-base sm:text-xl md:text-2xl lg:text-[26px] font-black text-white tracking-tight leading-snug sm:leading-tight drop-shadow-sm text-center mx-auto"
                     >
                       <span className="base relative z-10" data-ui-id="page-title-wrapper">
                         {title}
@@ -65,7 +65,7 @@ export default function PageHeroBanner({
                   </div>
 
                   {description && (
-                    <p className="mt-1 sm:mt-1.5 text-[11px] sm:text-xs md:text-[13px] text-white/95 leading-relaxed font-normal max-w-4xl mx-auto text-center">
+                    <p className="mt-1 sm:mt-1.5 text-[11px] sm:text-xs md:text-[13px] text-white/95 leading-relaxed font-normal max-w-3xl mx-auto text-center px-2">
                       {description}
                     </p>
                   )}
@@ -74,61 +74,14 @@ export default function PageHeroBanner({
             </div>
 
             {/* ── Breadcrumb Inside Banner (Centered Connected Ribbon Style) ── */}
-            {breadcrumb && breadcrumb.length > 0 && (
-              <div className="relative z-10 flex justify-center w-full mt-3 sm:mt-4">
-                <nav className="inline-flex items-center gap-1 p-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-full shadow-lg max-w-full overflow-x-auto custom-scrollbar">
-                  {breadcrumb.map((crumb, idx) => {
-                    const isFirst = idx === 0;
-                    const isLast = idx === breadcrumb.length - 1;
-                    return (
-                      <span key={`${crumb.label}-${idx}`} className="inline-flex items-center gap-1 shrink-0">
-                        {idx > 0 && <ChevronRight size={11} className="shrink-0 text-white/40 -mx-0.5" />}
-                        {isLast ? (
-                          <span className="inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 bg-white text-gray-950 font-black text-xs uppercase tracking-wide rounded-full shadow-md border border-white shrink-0">
-                            <span className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                            </span>
-                            <span>{crumb.label}</span>
-                          </span>
-                        ) : crumb.onClick ? (
-                          <button
-                            type="button"
-                            onClick={crumb.onClick}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold cursor-pointer shrink-0 group"
-                          >
-                            {isFirst && (
-                              <span className="w-4 h-4 rounded-full bg-white/15 flex items-center justify-center text-white group-hover:bg-white group-hover:text-red-600 transition-colors">
-                                <Home size={10} />
-                              </span>
-                            )}
-                            <span>{crumb.label}</span>
-                          </button>
-                        ) : crumb.href ? (
-                          <Link
-                            href={crumb.href}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white/85 hover:text-white hover:bg-white/15 transition-all text-xs font-semibold shrink-0 group"
-                          >
-                            {isFirst && (
-                              <span className="w-4 h-4 rounded-full bg-white/15 flex items-center justify-center text-white group-hover:bg-white group-hover:text-red-600 transition-colors">
-                                <Home size={10} />
-                              </span>
-                            )}
-                            <span>{crumb.label}</span>
-                          </Link>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white/85 text-xs font-semibold shrink-0">
-                            {isFirst && (
-                              <span className="w-4 h-4 rounded-full bg-white/15 flex items-center justify-center text-white">
-                                <Home size={10} />
-                              </span>
-                            )}
-                            <span>{crumb.label}</span>
-                          </span>
-                        )}
-                      </span>
-                    );
-                  })}
-                </nav>
+            {!loading && (breadcrumbLabel || title) && (
+              <div className="relative z-10 flex justify-center w-full mt-2.5 sm:mt-3.5 max-w-full px-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <Breadcrumbs
+                  label={breadcrumbLabel || title}
+                  extra={breadcrumbExtra}
+                  onCurrentClick={onBreadcrumbCurrentClick}
+                  variant="banner"
+                />
               </div>
             )}
           </div>

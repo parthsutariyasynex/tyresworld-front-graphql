@@ -24,7 +24,7 @@ import { APP_CONFIG } from "@/src/config/app-config";
 import JsonLd from "@/components/JsonLd";
 import { useCurrencyCode } from "@/lib/store-config-context";
 import { buildBrandSlug } from "@/lib/filterBuilder";
-import PageHeroBanner, { type BreadcrumbItem } from "@/components/PageHeroBanner";
+import PageHeroBanner from "@/components/PageHeroBanner";
 import { Money } from "@/components/Price";
 
 
@@ -228,19 +228,19 @@ function SpecsTable({
         </h3>
       </div>
 
-      {/* ── 2-Column Table Grid ── */}
-      <div className="divide-y divide-gray-100 px-5">
+      {/* ── 2-Column Table Grid (1 col on mobile, 2 col on sm+) ── */}
+      <div className="divide-y divide-gray-100 px-3.5 sm:px-5">
         {rows.map((row, idx) => (
-          <div key={idx} className="grid grid-cols-2 py-3 text-[13px] items-center">
+          <div key={idx} className="grid grid-cols-1 sm:grid-cols-2 py-2 sm:py-2.5 text-xs sm:text-[13px] items-center gap-1.5 sm:gap-0">
             {/* Left Column */}
-            <div className="flex items-center gap-2 sm:gap-3 pr-2">
+            <div className="flex items-center gap-2 sm:gap-3 pr-0 sm:pr-2 min-w-0">
               <span className="text-gray-500 font-medium w-24 sm:w-28 shrink-0">{row.left.label}</span>
               <span className="text-gray-950 font-bold truncate">{row.left.value}</span>
             </div>
             {/* Right Column */}
             {row.right ? (
-              <div className="flex items-center gap-2 sm:gap-3 pl-2">
-                <span className="text-gray-500 font-medium w-20 sm:w-24 shrink-0">{row.right.label}</span>
+              <div className="flex items-center gap-2 sm:gap-3 pl-0 sm:pl-2 min-w-0">
+                <span className="text-gray-500 font-medium w-24 sm:w-24 shrink-0">{row.right.label}</span>
                 <span className="text-gray-950 font-bold truncate">{row.right.value}</span>
               </div>
             ) : <div />}
@@ -250,16 +250,16 @@ function SpecsTable({
 
       {/* ── Check Vehicle Section ── */}
       {!isMotorcycleProduct(product) && (
-        <div className="p-4 flex items-center gap-3 bg-[#f8f9fa] border-t border-gray-100 mt-2">
-          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-[#5ac8d8]/20 shadow-2xs">
-            <svg className="w-5 h-5 text-[#ed1c24]" viewBox="0 0 24 24" fill="currentColor">
+        <div className="p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 bg-[#f8f9fa] border-t border-gray-100 mt-2">
+          <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#5ac8d8]/20 shadow-2xs">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#ed1c24]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M23.5 11.5L20 8.5C19.5 8 18.5 7.5 17.5 7.5H6.5C5.5 7.5 4.5 8 4 8.5L0.5 11.5C0.2 11.8 0 12.1 0 12.5V17C0 17.6 0.4 18 1 18H3C3 19.7 4.3 21 6 21C7.7 21 9 19.7 9 18H15C15 19.7 16.3 21 18 21C19.7 21 21 19.7 21 18H23C23.6 18 24 17.6 24 17V12.5C24 12.1 23.8 11.8 23.5 11.5ZM6 19.5C5.2 19.5 4.5 18.8 4.5 18C4.5 17.2 5.2 16.5 6 16.5C6.8 16.5 7.5 17.2 7.5 18C7.5 18.8 6.8 19.5 6 19.5ZM18 19.5C17.2 19.5 16.5 18.8 16.5 18C16.5 17.2 17.2 16.5 18 16.5C18.8 16.5 19.5 17.2 19.5 18C19.5 18.8 18.8 19.5 18 19.5ZM21.5 13.5H2.5V12.5L5.5 9.8C5.8 9.5 6.2 9.4 6.6 9.4H17.4C17.8 9.4 18.2 9.5 18.5 9.8L21.5 12.5V13.5Z" />
             </svg>
           </div>
           <button
             type="button"
             onClick={onCheckFitment}
-            className="btn-slide-black text-[11px] sm:text-xs font-black uppercase tracking-wider py-3 px-5 rounded-md text-center cursor-pointer shadow-2xs"
+            className="btn-slide-black flex-1 text-[10.5px] sm:text-xs font-black uppercase tracking-wider py-2.5 sm:py-3 px-3 sm:px-5 rounded-md text-center cursor-pointer shadow-2xs"
           >
             <span>CHECK IF THIS TYRE FITS IN YOUR VEHICLE</span>
           </button>
@@ -364,9 +364,9 @@ function PricingCard({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4 items-start">
       {/* ── Main Pricing Box ── */}
-      <div className="bg-white border border-gray-200/90 rounded-xl p-5 shadow-2xs">
+      <div className="bg-white border border-gray-200/90 rounded-xl p-4 sm:p-5 shadow-2xs">
         {/* Label */}
         {isMotorcycleProduct(product) ? (
           <span className="text-xs text-gray-700 font-medium block cursor-default">
@@ -778,9 +778,9 @@ function ProductInfoTabs({
   product: ProductDetail;
 }) {
   return (
-    <div id="product-info-tabs" className="mt-8 lg:mt-10 scroll-mt-24">
+    <div id="product-info-tabs" className="mt-6 sm:mt-7 scroll-mt-24">
       {/* ── Tab bar ── */}
-      <div className="flex gap-8 border-b border-gray-200 pb-2 mb-6" role="tablist">
+      <div className="flex gap-8 border-b border-gray-200 pb-2 mb-3.5" role="tablist">
         {PRODUCT_TABS.map((t) => {
           const isActive = activeTab === t.key;
           return (
@@ -847,14 +847,23 @@ function RelatedProductsSection({
   useEffect(() => {
     if (!size) return;
     setLoading(true);
-    fetch(`/api/products?search=${encodeURIComponent(size)}&pageSize=12`)
+    // pageSize=12 was only pulling the top 12 free-text search hits by
+    // relevance — a real same-size product carrying an active offer
+    // (e.g. "Free Wheel Alignment") routinely ranks below that cutoff and
+    // never reached this carousel, so its offer badge never had a chance
+    // to render even though the badge itself works correctly. Fetching a
+    // wider pool (still only displaying up to 10) fixes that.
+    fetch(`/api/products?search=${encodeURIComponent(size)}&pageSize=40`)
       .then(r => r.json())
       .then((j: ApiProductsResponse) => {
-        setProducts(
-          (j.products ?? [])
-            .filter(p => !currentSku || p.sku !== currentSku)
-            .slice(0, 10)
-        );
+        // Same-size products that carry a real active offer (e.g. "Free
+        // Wheel Alignment") are surfaced first — otherwise they'd routinely
+        // sit past the 10-card cutoff and their offer badge, identical to
+        // the listing page's, would never actually get shown here.
+        const filtered = (j.products ?? []).filter(p => !currentSku || p.sku !== currentSku);
+        const withOffer = filtered.filter(p => p.offersId);
+        const withoutOffer = filtered.filter(p => !p.offersId);
+        setProducts([...withOffer, ...withoutOffer].slice(0, 10));
       })
       .catch(() => { })
       .finally(() => setLoading(false));
@@ -863,11 +872,15 @@ function RelatedProductsSection({
   if (!size || (!loading && products.length === 0)) return null;
 
   return (
-    <section className="py-10 bg-white border-t border-gray-100">
-      <div className="container">
+    <section className="pt-4 pb-8 sm:pt-5 sm:pb-10 bg-white border-t border-gray-100">
+      {/* Same outer width/padding as the listing page's own product grid
+          wrapper (not Tailwind's default .container, which caps out at
+          1280px — the listing page grows up to 1600px), so cards land at
+          an identical width on every screen size, not just up to ~1024px. */}
+      <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-black uppercase tracking-widest">
+        <div className="flex items-center justify-between mb-4 sm:mb-5">
+          <h2 className="text-base sm:text-lg font-black uppercase tracking-widest">
             SEE OTHER TYRES IN{" "}
             <span className="text-[#ed1c24]">SAME SIZE</span>
           </h2>
@@ -881,27 +894,38 @@ function RelatedProductsSection({
 
         {/* Carousel */}
         {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
             {Array.from({ length: 4 }).map((_, i) => <TyreListingCardSkeleton key={i} />)}
           </div>
         ) : (
           <div className="relative">
-            <div className="px-6 sm:px-10">
+            <div>
               <Swiper
                 onSwiper={(s) => { swiperRef.current = s; }}
                 modules={[Autoplay]}
-                slidesPerView={1}
-                spaceBetween={14}
+                /* Same per-row card count/gaps as the listing page's grid
+                   (grid-cols-2 sm:grid-cols-3 lg:grid-cols-4, gap-2.5/4/5)
+                   at the same breakpoints, so cards render at an identical
+                   width/proportion here as they do there. */
+                slidesPerView={2}
+                spaceBetween={10}
                 loop={products.length >= 4}
                 speed={600}
                 autoplay={{ delay: 3000, disableOnInteraction: false, pauseOnMouseEnter: true }}
                 breakpoints={{
-                  640: { slidesPerView: 2, spaceBetween: 16 },
+                  640: { slidesPerView: 3, spaceBetween: 16 },
                   1024: { slidesPerView: 4, spaceBetween: 20 },
                 }}
               >
                 {products.map(p => (
-                  <SwiperSlide key={p.id} className="!h-auto">
+                  // The listing page's grid bottom-aligns cards via CSS
+                  // Grid's `items-end` (so a shorter card without the offer
+                  // banner still lines its button up with a taller one that
+                  // has it). Swiper stretches every slide to the tallest
+                  // one's height but doesn't bottom-align content inside it
+                  // on its own, so `flex flex-col justify-end` here does the
+                  // same job for this row of slides.
+                  <SwiperSlide key={p.id} className="!h-auto !flex !flex-col !justify-end">
                     <TyreListingCard product={p} locale={locale as any} enableHoverZoom />
                   </SwiperSlide>
                 ))}
@@ -912,7 +936,7 @@ function RelatedProductsSection({
             <button
               type="button"
               onClick={() => swiperRef.current?.slidePrev()}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-[#ed1c24] hover:bg-[#c6181d] flex items-center justify-center text-white shadow-md transition-colors"
+              className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#ed1c24] hover:bg-[#c6181d] items-center justify-center text-white shadow-md transition-colors cursor-pointer"
               aria-label="Previous"
             >
               <ChevronLeft size={18} />
@@ -922,7 +946,7 @@ function RelatedProductsSection({
             <button
               type="button"
               onClick={() => swiperRef.current?.slideNext()}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-[#ed1c24] hover:bg-[#c6181d] flex items-center justify-center text-white shadow-md transition-colors"
+              className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#ed1c24] hover:bg-[#c6181d] items-center justify-center text-white shadow-md transition-colors cursor-pointer"
               aria-label="Next"
             >
               <ChevronRight size={18} />
@@ -1018,26 +1042,26 @@ export default function ProductDetailInner({
     */
   };
 
-  const productBreadcrumb: BreadcrumbItem[] = [
-    { label: "Home", href: `/${locale}` },
-    { label: tyreCategory?.name ?? "Tyres", href: `/${locale}/${tyreCategory?.urlKey ?? "tyres"}` },
-    ...(specs.size ? [{ label: specs.size }] : []),
-    { label: product.name },
-  ];
-
   return (
     <>
       <JsonLd data={productJsonLd} />
 
-      <PageHeroBanner title={product.name} breadcrumb={productBreadcrumb} />
+      <PageHeroBanner
+        title={product.name}
+        breadcrumbLabel={
+          product.brandName
+            ? `${product.brandName} ${specs.pattern || specs.size || ""}`.trim()
+            : specs.pattern || specs.size || product.name
+        }
+      />
 
       {/* ── Main product section ────────────────────────────────────── */}
-      <div className="bg-white py-6 lg:py-8">
+      <div className="bg-white pt-4 pb-2 sm:pt-6 sm:pb-3 lg:pt-6 lg:pb-4">
         <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr_300px] gap-6 lg:gap-8 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-12 lg:grid-cols-[360px_1fr_300px] gap-6 lg:gap-8 items-start">
 
             {/* ── LEFT: Image Card ─────────────────────────────────── */}
-            <div className="w-full">
+            <div className="w-full md:col-span-5 lg:col-span-1">
               <div className="group bg-white border border-gray-200 rounded-xl overflow-hidden shadow-2xs hover:shadow-md transition-shadow">
                 {/* Top Red Offer Banner — only for a real Magento offer.
                     This used to fall back to an invented "FREE Wheel
@@ -1054,23 +1078,23 @@ export default function ProductDetailInner({
                   </div>
                 )}
 
-                <div className="relative flex items-center justify-center p-6 bg-white overflow-hidden" style={{ minHeight: 340 }}>
+                <div className="relative flex items-center justify-center p-4 sm:p-6 bg-white overflow-hidden min-h-[260px] sm:min-h-[340px]">
                   <ProductImage
                     src={currentImg}
                     alt={product.name}
                     fill
                     className="object-contain group-hover:scale-105 transition-transform duration-300 ease-out"
-                    sizes="(max-width: 1024px) 90vw, 400px"
+                    sizes="(max-width: 768px) 90vw, (max-width: 1024px) 45vw, 400px"
                   />
                 </div>
 
                 {gallery.length > 1 && (
-                  <div className="flex gap-2 p-4 border-t border-gray-100 overflow-x-auto justify-center bg-gray-50">
+                  <div className="flex gap-2 p-3 sm:p-4 border-t border-gray-100 overflow-x-auto justify-center bg-gray-50">
                     {gallery.map((g, i) => (
                       <button
                         key={i}
                         onClick={() => setActiveImg(i)}
-                        className={`w-12 h-12 border rounded-md flex-shrink-0 flex items-center justify-center p-1 transition-all ${i === activeImg ? "border-[#ed1c24] ring-1 ring-[#ed1c24] bg-white" : "border-gray-200 hover:border-gray-400 bg-white"
+                        className={`w-11 h-11 sm:w-12 sm:h-12 border rounded-md flex-shrink-0 flex items-center justify-center p-1 transition-all cursor-pointer ${i === activeImg ? "border-[#ed1c24] ring-1 ring-[#ed1c24] bg-white" : "border-gray-200 hover:border-gray-400 bg-white"
                           }`}
                         aria-label={`Image ${i + 1}`}
                       >
@@ -1084,13 +1108,13 @@ export default function ProductDetailInner({
             </div>
 
             {/* ── MIDDLE: Info & Specs ────────────────────────────── */}
-            <div className="w-full">
+            <div className="w-full md:col-span-7 lg:col-span-1">
               {/* Brand logo */}
               <BrandLogoDisplay brandLogoUrl={product.brandLogoUrl} brandName={product.brandName} />
 
               {/* Title */}
               {displayTitle && (
-                <h2 className="text-2xl lg:text-3xl font-black text-gray-950 mt-2 mb-4 uppercase tracking-tight font-sans">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-950 mt-2 mb-3 sm:mb-4 uppercase tracking-tight font-sans">
                   {displayTitle}
                 </h2>
               )}
@@ -1103,10 +1127,17 @@ export default function ProductDetailInner({
                   onCheckFitment={() => setIsVehicleFitmentOpen(true)}
                 />
               </div>
+
+              {/* ── Overview / Details tab ────────── */}
+              <ProductInfoTabs
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                product={product}
+              />
             </div>
 
             {/* ── RIGHT: Pricing Card ────────────────────────────── */}
-            <div className="w-full">
+            <div className="w-full md:col-span-12 lg:col-span-1">
               <PricingCard
                 product={product}
                 onPriceInfoClick={() => setIsPriceInfoOpen(true)}
@@ -1115,13 +1146,6 @@ export default function ProductDetailInner({
             </div>
 
           </div>
-
-          {/* ── Overview / Specifications / Reviews tabs ────────── */}
-          <ProductInfoTabs
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            product={product}
-          />
         </div>
       </div>
 
@@ -1275,7 +1299,7 @@ function PdpPriceInfoModal({
           </div>
 
           {/* Amber chips — WIDTH / HEIGHT / RIM style */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {[
               { icon: <CheckCircle size={18} strokeWidth={2.5} />, label: "VAT",       val: "Included" },
               { icon: <Gauge       size={18} strokeWidth={2.5} />, label: "Balancing", val: "Free" },
@@ -1283,16 +1307,16 @@ function PdpPriceInfoModal({
             ].map((c) => (
               <div
                 key={c.label}
-                className="relative rounded-xl p-3 flex items-center gap-3 text-left bg-white/10 border border-white/20 select-none"
+                className="relative rounded-xl p-2 sm:p-3 flex items-center gap-2 sm:gap-3 text-left bg-white/10 border border-white/20 select-none"
               >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#f4a923] text-white">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#f4a923] text-white">
                   {c.icon}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
+                  <span className="text-[9px] sm:text-[11px] uppercase font-bold tracking-wider block leading-tight text-white">
                     {c.label}
                   </span>
-                  <span className="text-xs sm:text-[13px] font-bold block leading-tight mt-0.5 truncate text-[#f4a923]">
+                  <span className="text-[11px] sm:text-[13px] font-bold block leading-tight mt-0.5 truncate text-[#f4a923]">
                     {c.val}
                   </span>
                 </div>

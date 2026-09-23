@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
+import { useOverviewDrawer } from "@/lib/overview-drawer-context";
 import { useScrollLock } from "@/lib/useScrollLock";
 import { Money } from "@/components/Price";
 import { navHref, navLabel, isNavActive, type NavItem } from "@/src/config/navigation";
@@ -32,6 +33,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
   const pathname = usePathname();
   const router = useRouter();
   const { count: cartCount, items, currency, removeItem, updateQty, cart } = useCart();
+  const { openDrawer: openOverview } = useOverviewDrawer();
 
   const locale = "en";
 
@@ -82,7 +84,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
               alt="Tyresworld"
               width={232}
               height={70}
-              className="h-[38px] sm:h-[44px] w-auto object-contain"
+              className="h-[20px] min-[400px]:h-[26px] sm:h-[32px] xl:h-[36px] 2xl:h-[42px] w-auto object-contain shrink-0"
             />
           </Link>
 
@@ -154,7 +156,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
           )}
 
           {/* ── Right actions ─────────────────────────────── */}
-            <div className="flex items-center gap-2 flex-shrink-0 ml-auto lg:ml-0 relative">
+            <div className="flex items-center gap-1 xl:gap-1.5 2xl:gap-2 flex-shrink-0 ml-auto xl:ml-0 relative">
 
               {/* 1. Search Icon Button (First) */}
               <button
@@ -163,7 +165,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                 className="header-icon-dark cursor-pointer"
                 aria-label="Search"
               >
-                <Search size={22} className="stroke-[2.2]" />
+                <Search className="w-5 h-5 xl:w-[21px] xl:h-[21px] 2xl:w-[22px] 2xl:h-[22px] stroke-[2.2]" />
               </button>
 
               {/* 2. Account Dropdown Wrapper (Second) */}
@@ -177,7 +179,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                   className="header-icon-dark"
                   aria-label="My account"
                 >
-                  <User size={22} className="stroke-[2.2]" />
+                  <User className="w-5 h-5 xl:w-[21px] xl:h-[21px] 2xl:w-[22px] 2xl:h-[22px] stroke-[2.2]" />
                 </Link>
 
                 {/* Dropdown panel */}
@@ -229,18 +231,22 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                 onMouseEnter={() => setCartDropdownOpen(true)}
                 onMouseLeave={() => setCartDropdownOpen(false)}
               >
-                <Link
-                  href="/cart"
-                  className="header-icon-dark relative"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCartDropdownOpen(false);
+                    openOverview("cart");
+                  }}
+                  className="header-icon-dark relative cursor-pointer"
                   aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
                 >
-                  <ShoppingCart size={22} className="stroke-[2.2]" />
+                  <ShoppingCart className="w-5 h-5 xl:w-[21px] xl:h-[21px] 2xl:w-[22px] 2xl:h-[22px] stroke-[2.2]" />
                   {cartCount > 0 && (
                     <span className="header-cart-badge">
                       {cartCount}
                     </span>
                   )}
-                </Link>
+                </button>
 
                 {/* Dropdown panel */}
                 {cartDropdownOpen && (
@@ -367,14 +373,17 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
 
                           {/* View and Edit Cart Button */}
                           <div className="p-4 bg-white border-t border-gray-100">
-                            <Link
-                              href={`/${locale}/cart`}
-                              onClick={() => setCartDropdownOpen(false)}
-                              className="btn-cta w-full text-xs py-3.5 rounded-xl shadow-md"
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCartDropdownOpen(false);
+                                openOverview("cart");
+                              }}
+                              className="btn-cta w-full text-xs py-3.5 rounded-xl shadow-md cursor-pointer flex items-center justify-center gap-2"
                             >
                               <span>VIEW AND EDIT CART</span>
                               <ArrowRight size={14} strokeWidth={2.5} />
-                            </Link>
+                            </button>
                           </div>
                         </>
                       ) : (
@@ -405,11 +414,12 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
 
               {/* Mobile hamburger */}
               <button
+                type="button"
                 onClick={() => setMobileOpen(true)}
-                className="lg:hidden ml-1 p-1.5 text-ink hover:text-brand-red transition-colors"
+                className="xl:hidden header-icon-dark cursor-pointer ml-1"
                 aria-label="Open menu"
               >
-                <Menu size={22} />
+                <Menu size={22} className="stroke-[2.2]" />
               </button>
             </div>
 
@@ -422,7 +432,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
           MOBILE DRAWER (Smooth Slide-In & Slide-Out Transition)
       ══════════════════════════════════════════════════════════ */}
       <div
-        className={`fixed inset-0 z-[100] lg:hidden ${
+        className={`fixed inset-0 z-[100] xl:hidden ${
           mobileOpen ? "visible pointer-events-auto" : "invisible pointer-events-none"
         } transition-[visibility] duration-300 ease-in-out`}
         style={{
@@ -486,41 +496,43 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
 
               return (
                 <div key={item.id} className="border-b border-white/10">
-                  <div className="flex items-center justify-between">
+                  {hasChildren ? (
+                    <button
+                      type="button"
+                      onClick={() => setMobileSubOpen(isExpanded ? null : item.id)}
+                      className="w-full flex items-center justify-between py-3.5 text-left text-white/80 hover:text-white transition-colors cursor-pointer group"
+                      aria-expanded={isExpanded}
+                    >
+                      <span className={`text-[15px] font-semibold ${isActive || isExpanded ? "text-white" : ""}`}>
+                        {navLabel(item, locale)}
+                      </span>
+                      <ChevronDown
+                        size={18}
+                        className={`transition-transform duration-200 text-white/50 group-hover:text-white ${
+                          isExpanded ? "rotate-180 text-[#ed1c24]" : ""
+                        }`}
+                      />
+                    </button>
+                  ) : (
                     <Link
                       href={navHref(item, locale)}
                       onClick={() => setMobileOpen(false)}
-                      className="drawer-link"
+                      className="drawer-link block py-3.5"
                       data-active={isActive}
                     >
                       {navLabel(item, locale)}
                     </Link>
-
-                    {hasChildren && (
-                      <button
-                        type="button"
-                        onClick={() => setMobileSubOpen(isExpanded ? null : item.id)}
-                        className="w-9 h-9 -mr-1.5 flex items-center justify-center text-white/45 hover:text-white transition-colors cursor-pointer"
-                        aria-expanded={isExpanded}
-                        aria-label={`${isExpanded ? "Collapse" : "Expand"} ${item.label}`}
-                      >
-                        <ChevronDown
-                          size={16}
-                          className={`transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                        />
-                      </button>
-                    )}
-                  </div>
+                  )}
 
                   {/* Sub-menu accordion */}
                   {hasChildren && isExpanded && (
-                    <ul className="pb-2 pl-3 border-l-2 border-white/10">
+                    <ul className="pb-3 pl-3.5 pr-1 border-l-2 border-[#ed1c24]/50 my-1 space-y-1 animate-in fade-in duration-200">
                       {item.children!.map((child) => (
                         <li key={child.id}>
                           <Link
                             href={navHref(child, locale)}
                             onClick={() => setMobileOpen(false)}
-                            className="drawer-sublink"
+                            className="drawer-sublink block py-2 px-2 rounded-lg hover:bg-white/5 transition-colors font-medium text-[13.5px]"
                             data-active={isNavActive(child, pathname, locale)}
                           >
                             {navLabel(child, locale)}
@@ -543,10 +555,13 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
             >
               <User size={15} /> My Account
             </Link>
-            <Link
-              href="/cart"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center justify-center gap-2 py-3.5 bg-[#ed1c24] hover:bg-[#c6181d] text-white text-sm font-bold rounded-full transition-colors"
+            <button
+              type="button"
+              onClick={() => {
+                setMobileOpen(false);
+                openOverview("cart");
+              }}
+              className="flex items-center justify-center gap-2 py-3.5 bg-[#ed1c24] hover:bg-[#c6181d] text-white text-sm font-bold rounded-full transition-colors cursor-pointer"
             >
               <ShoppingBag size={16} /> View Cart
               {cartCount > 0 && (
@@ -554,7 +569,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                   {cartCount}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
         </div>
       </div>

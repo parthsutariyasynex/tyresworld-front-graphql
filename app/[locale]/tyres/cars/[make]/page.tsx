@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Check, ArrowLeft } from "lucide-react";
 import { buildTyreSizeSlug } from "@/lib/filterBuilder";
-import PageHeroBanner, { type BreadcrumbItem } from "@/components/PageHeroBanner";
+import PageHeroBanner from "@/components/PageHeroBanner";
+import type { BreadcrumbExtraItem } from "@/components/Breadcrumbs";
 import {
   fetchMakes,
   fetchModels,
@@ -294,13 +295,7 @@ export default function VehicleMakeBrowserPage() {
     ? `${makeLabel} ${selModel.label} Tyres and Car Services in UAE`
     : `${makeLabel} Tyres and Car Services in UAE`;
 
-  const makeModelBreadcrumb: BreadcrumbItem[] = [
-    { label: "Home", href: `/${locale}` },
-    { label: "Tyres", href: `/${locale}/tyres` },
-    { label: "Cars", href: `/${locale}/tyres/cars` },
-    selModel
-      ? { label: makeLabel, onClick: backToModel }
-      : { label: makeLabel },
+  const makeModelBreadcrumbExtra: BreadcrumbExtraItem[] = [
     ...(selModel
       ? [selYear ? { label: selModel.label, onClick: backToYear } : { label: selModel.label }]
       : []),
@@ -312,7 +307,9 @@ export default function VehicleMakeBrowserPage() {
       <PageHeroBanner
         title={heroTitle}
         description={`Shop genuine ${makeLabel} tyres online in UAE at TyresWorld. Free mobile tyre fitting in Dubai, Abu Dhabi & Sharjah, manufacturer warranty, and best prices.`}
-        breadcrumb={makeModelBreadcrumb}
+        breadcrumbLabel={makeLabel}
+        breadcrumbExtra={makeModelBreadcrumbExtra}
+        onBreadcrumbCurrentClick={selModel ? backToModel : undefined}
       />
 
       {/* ── MODEL SELECTION VIEW (when no model selected yet) ── */}

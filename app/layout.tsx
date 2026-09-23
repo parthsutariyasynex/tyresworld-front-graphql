@@ -9,6 +9,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
 import CartAuthSync from "@/components/CartAuthSync";
 import { StoreConfigProvider } from "@/lib/store-config-context";
+import { NavigationTrailProvider } from "@/lib/navigationTrail";
 import { getStoreConfig } from "@/lib/services/store.service";
 import { getMainMenu } from "@/lib/services/menu.service";
 import { APP_CONFIG } from "@/src/config/app-config";
@@ -46,6 +47,9 @@ export const metadata: Metadata = {
     siteName: BRAND,
   },
 };
+
+import { OverviewDrawerProvider } from "@/lib/overview-drawer-context";
+import OverviewDrawer from "@/components/OverviewDrawer";
 
 export default async function RootLayout({
   children,
@@ -97,12 +101,17 @@ export default async function RootLayout({
             <CartProvider>
               <WishlistProvider>
                 <CartAuthSync />
-                <Suspense fallback={null}>
-                  <Header menu={mainMenu} />
-                </Suspense>
-                <main>{children}</main>
-                <Footer />
-                <FloatingContact />
+                <OverviewDrawerProvider>
+                  <NavigationTrailProvider>
+                    <Suspense fallback={null}>
+                      <Header menu={mainMenu} />
+                    </Suspense>
+                    <main>{children}</main>
+                  </NavigationTrailProvider>
+                  <Footer />
+                  <FloatingContact />
+                  <OverviewDrawer />
+                </OverviewDrawerProvider>
               </WishlistProvider>
             </CartProvider>
           </AuthProvider>
