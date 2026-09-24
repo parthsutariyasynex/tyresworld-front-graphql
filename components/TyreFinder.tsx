@@ -1514,7 +1514,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                                   toggleRearMode();
                                 }
                               }}
-                              className="border border-dashed border-gray-300 hover:border-red-400 hover:bg-red-50/40 rounded-xl py-2.5 px-6 inline-flex items-center gap-3 font-bold text-xs uppercase tracking-wider text-gray-700 transition-all cursor-pointer select-none active:scale-95 shadow-2xs"
+                              className="btn-sweep-light border border-dashed border-gray-300 rounded-xl py-2.5 px-6 inline-flex items-center gap-3 font-bold text-xs uppercase tracking-wider cursor-pointer select-none active:scale-95 shadow-2xs"
                             >
                               <span className="w-5 h-5 rounded-full bg-[#ed1c24] text-white flex items-center justify-center text-xs font-black shrink-0">
                                 {hasRearTyre ? "—" : "+"}
@@ -1535,7 +1535,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                   <div className="px-5 sm:px-7 py-3.5 border-t border-gray-200 flex items-center justify-between bg-gray-50/80 shrink-0 rounded-b-2xl">
                     <button
                       type="button"
-                      className="text-xs sm:text-sm font-bold text-gray-700 hover:text-gray-900 flex items-center gap-2 transition-colors px-4 py-2.5 rounded-xl hover:bg-gray-200/60 cursor-pointer"
+                      className="btn-sweep-light text-xs sm:text-sm font-bold flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer"
                       onClick={handleBackOrCancel}
                     >
                       <ArrowLeft size={16} strokeWidth={2.5} />
@@ -1551,7 +1551,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         onClick={handleNextStep}
                         className={`rounded-xl px-7 sm:px-8 py-2.5 text-xs sm:text-sm font-bold flex items-center gap-2 transition-all ${
                           currVal
-                            ? "bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white cursor-pointer shadow-md shadow-red-500/25 active:scale-95 hover:scale-[1.01]"
+                            ? "btn-slide-red cursor-pointer shadow-md active:scale-95"
                             : "bg-gray-200 text-gray-400 border border-gray-200 cursor-not-allowed"
                         }`}
                       >
@@ -1565,7 +1565,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                           handleSizeSearch(e);
                           closeSize();
                         }}
-                        className="bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl px-8 py-2.5 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md shadow-red-500/25 cursor-pointer"
+                        className="btn-slide-red font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl px-8 py-2.5 flex items-center gap-2 active:scale-95 shadow-md cursor-pointer"
                       >
                         <span>Search Matching Tyres</span>
                         <ArrowRight size={16} strokeWidth={2.5} />
@@ -2296,7 +2296,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                   <div className="px-5 sm:px-7 py-3.5 border-t border-gray-200 flex items-center justify-between bg-gray-50/80 shrink-0 rounded-b-2xl">
                     <button
                       type="button"
-                      className="text-xs sm:text-sm font-bold text-gray-700 hover:text-gray-900 flex items-center gap-2 transition-colors px-4 py-2.5 rounded-xl hover:bg-gray-200/60 cursor-pointer"
+                      className="btn-sweep-light text-xs sm:text-sm font-bold flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer"
                       onClick={handleVehBack}
                     >
                       <ArrowLeft size={16} strokeWidth={2.5} />
@@ -2312,7 +2312,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                         onClick={handleVehNext}
                         className={`rounded-xl px-7 sm:px-8 py-2.5 text-xs sm:text-sm font-bold flex items-center gap-2 transition-all ${
                           currVehVal
-                            ? "bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white cursor-pointer shadow-md shadow-red-500/25 active:scale-95 hover:scale-[1.01]"
+                            ? "btn-slide-red cursor-pointer shadow-md active:scale-95"
                             : "bg-gray-200 text-gray-400 border border-gray-200 cursor-not-allowed"
                         }`}
                       >
@@ -2326,7 +2326,7 @@ export default function TyreFinder({ locale: localeProp, categoryUid, basePath, 
                           handleVehicleSearch(e);
                           closeVeh();
                         }}
-                        className="bg-gradient-to-r from-[#ed1c24] to-[#c9141b] hover:from-[#c9141b] hover:to-[#a30d12] text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl px-8 py-2.5 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md shadow-red-500/25 cursor-pointer"
+                        className="btn-slide-red font-black text-xs sm:text-sm uppercase tracking-wider rounded-xl px-8 py-2.5 flex items-center gap-2 active:scale-95 shadow-md cursor-pointer"
                       >
                         <span>Search Matching Tyres</span>
                         <ArrowRight size={16} strokeWidth={2.5} />

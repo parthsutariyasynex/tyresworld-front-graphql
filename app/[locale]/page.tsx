@@ -8,6 +8,9 @@ import WhyChooseUs from "@/components/WhyChooseUs";
 import BrandStrip from "@/components/BrandStrip";
 import AboutUs from "@/components/AboutUs";
 import AutomotiveBlog from "@/components/AutomotiveBlog";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import { getHomepageData } from "@/lib/services/homepage.service";
+import { storeCode, type Locale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -17,19 +20,20 @@ export function generateStaticParams() {
 }
 
 /**
- * Home page — Partora-style layout.
+ * Home page — Partora-style layout with 100% dynamic Magento data.
  */
-export default function LocaleHomePage({
+export default async function LocaleHomePage({
   params,
 }: {
   params?: { locale?: string };
 }) {
-  const locale = "en";
+  const locale = (params?.locale || "en") as Locale;
+  const homepage = await getHomepageData(storeCode(locale));
 
   return (
     <div className="ptr-home">
       {/* ── Hero: toolbar + category rail + banner slider ── */}
-      <PartoraHero locale={locale} />
+      <PartoraHero locale={locale} initialHero={homepage?.hero} />
 
       {/* ── Search / Finder (Hero Box) ───────────────────────────── */}
       <FinderShell locale={locale} />
@@ -38,25 +42,28 @@ export default function LocaleHomePage({
       <StickyBottomFinder locale={locale} />
 
       {/* ── Offers from Magento ─────────────────────────────────── */}
-      <OffersSection />
+      <OffersSection locale={locale} initialOffers={homepage?.offers} />
 
       {/* ── How It Works (Immediately after Offers) ──────────────── */}
-      <HowItWorks locale={locale} />
+      <HowItWorks locale={locale} initialHowItWorks={homepage?.how_it_works} />
 
       {/* ── Services: Auto Care Categories Carousel ──────────────── */}
-      <AutoCareServices locale={locale} />
+      <AutoCareServices locale={locale} initialServices={homepage?.services} />
 
       {/* ── Top Reasons To Buy Online Tyres (Why Choose Us) ──────── */}
-      <WhyChooseUs locale={locale} />
+      <WhyChooseUs locale={locale} initialReasons={homepage?.top_reasons} />
 
       {/* ── Brands ──────────────────────────────────────────────── */}
-      <BrandStrip />
+      <BrandStrip initialBrandsSection={homepage?.brands} />
 
       {/* ── The UAE's Premier Destination For Tyres Online (About Us) ─ */}
-      <AboutUs locale={locale} />
+      <AboutUs locale={locale} initialAbout={homepage?.about} />
 
       {/* ── Automotive Blog ─────────────────────────────────────── */}
-      <AutomotiveBlog locale={locale} />
+      <AutomotiveBlog locale={locale} initialBlogSection={homepage?.blog} />
+
+      {/* ── Testimonials (Dynamically enabled/disabled) ──────────── */}
+      <TestimonialsSection testimonials={homepage?.testimonials} />
     </div>
   );
 }

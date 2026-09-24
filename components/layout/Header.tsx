@@ -551,7 +551,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
             <Link
               href="/account"
               onClick={() => setMobileOpen(false)}
-              className="flex items-center justify-center gap-2 py-3 text-sm font-medium text-white/60 hover:text-white bg-white/8 hover:bg-white/12 rounded-xl transition-colors border border-white/10"
+              className="btn-sweep-light flex items-center justify-center gap-2 py-3 text-sm font-medium text-white/60 bg-white/8 rounded-xl border border-white/10"
             >
               <User size={15} /> My Account
             </Link>
@@ -561,7 +561,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
                 setMobileOpen(false);
                 openOverview("cart");
               }}
-              className="flex items-center justify-center gap-2 py-3.5 bg-[#ed1c24] hover:bg-[#c6181d] text-white text-sm font-bold rounded-full transition-colors cursor-pointer"
+              className="btn-slide-red flex items-center justify-center gap-2 py-3.5 text-sm font-bold rounded-full cursor-pointer"
             >
               <ShoppingBag size={16} /> View Cart
               {cartCount > 0 && (
@@ -605,7 +605,7 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
               <button
                 type="button"
                 onClick={() => setItemToRemove(null)}
-                className="flex-1 py-3 px-5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                className="btn-sweep-light flex-1 py-3 px-5 bg-gray-100 text-xs font-black uppercase tracking-wider rounded-xl cursor-pointer"
               >
                 Cancel
               </button>

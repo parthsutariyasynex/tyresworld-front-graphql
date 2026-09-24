@@ -4,9 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
+import type { KleverHomeSection } from "@/lib/services/homepage.service";
+import { isBrokenCmsHtml } from "@/lib/services/homepage.service";
 
 interface AutomotiveBlogProps {
   locale?: string;
+  /** kleverHomepage.blog — an admin-authored CMS HTML intro block, shown
+      above the (separately-fetched, already real) /api/blog carousel. */
+  initialBlogSection?: KleverHomeSection | null;
 }
 
 type BlogPost = {
@@ -60,7 +65,7 @@ function formatDate(raw: string, locale: string): string {
   });
 }
 
-export default function AutomotiveBlog({ locale = "en" }: AutomotiveBlogProps) {
+export default function AutomotiveBlog({ locale = "en", initialBlogSection }: AutomotiveBlogProps) {
   const [posts, setPosts] = useState<BlogPost[] | null>(null);
 
   useEffect(() => {
@@ -87,15 +92,22 @@ export default function AutomotiveBlog({ locale = "en" }: AutomotiveBlogProps) {
     <section className="section section-padding blogs py-14 lg:py-18 bg-white">
       <div className="container custom-width max-w-7xl mx-auto px-4 sm:px-6">
         
-        {/* Section Title */}
-        <div className="section-title mb-10 text-center">
-          <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black uppercase tracking-wide text-black m-0">
-            {"Automotive "}{" "}
-            <span className="text-[#ed1c24] theme_color">
-              {"Blog"}
-            </span>
-          </h2>
-        </div>
+        {/* Section Title — admin-authored CMS block when available */}
+        {initialBlogSection?.enabled && initialBlogSection.html && !isBrokenCmsHtml(initialBlogSection.html) ? (
+          <div
+            className="cms-content blog-heading mb-10 text-center"
+            dangerouslySetInnerHTML={{ __html: initialBlogSection.html }}
+          />
+        ) : (
+          <div className="section-title mb-10 text-center">
+            <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black uppercase tracking-wide text-black m-0">
+              {"Automotive "}{" "}
+              <span className="text-[#ed1c24] theme_color">
+                {"Blog"}
+              </span>
+            </h2>
+          </div>
+        )}
 
         {/* Blog Slider */}
         <div className="blog-slider relative">

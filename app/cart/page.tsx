@@ -131,6 +131,8 @@ export default function CartPage() {
   const [couponMsg, setCouponMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [updatingUid, setUpdatingUid] = useState<string | null>(null);
   const [cartError, setCartError] = useState<string | null>(null);
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [orderComments, setOrderComments] = useState("");
 
   const handleUpdateQty = async (uid: string, qty: number) => {
     setUpdatingUid(uid);
@@ -493,6 +495,36 @@ export default function CartPage() {
                 <span>PROCEED TO CHECKOUT</span>
                 <ArrowRight size={16} />
               </button>
+            </div>
+
+            {/* Accordion: Order Comments */}
+            <div className="border border-gray-200/90 rounded-2xl bg-white overflow-hidden mt-4 shadow-xs">
+              <button
+                type="button"
+                onClick={() => setIsCommentsOpen(!isCommentsOpen)}
+                className="w-full flex items-center justify-between px-4 py-3.5 text-xs font-extrabold text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer select-none"
+                aria-expanded={isCommentsOpen}
+              >
+                <span>Do you have any comments regarding the order?</span>
+                <ChevronDown
+                  size={15}
+                  className={`text-gray-500 transition-transform duration-200 ${
+                    isCommentsOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isCommentsOpen && (
+                <div className="p-3.5 bg-gray-50/70 border-t border-gray-100 animate-in fade-in duration-150">
+                  <textarea
+                    rows={3}
+                    value={orderComments}
+                    onChange={(e) => setOrderComments(e.target.value)}
+                    placeholder="Special requests or instructions..."
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-xs text-gray-900 outline-none focus:border-black resize-none bg-white"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

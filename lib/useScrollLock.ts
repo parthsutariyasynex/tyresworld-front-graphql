@@ -2,7 +2,6 @@ import { useEffect } from "react";
 
 let lockCount = 0;
 let originalBodyOverflow = "";
-let originalBodyPaddingRight = "";
 let originalHtmlOverflow = "";
 
 /**
@@ -25,17 +24,10 @@ export function useScrollLock(locked: boolean) {
 
     if (lockCount === 0) {
       originalBodyOverflow = body.style.overflow;
-      originalBodyPaddingRight = body.style.paddingRight;
       originalHtmlOverflow = html.style.overflow;
 
-      const prevClientWidth = html.clientWidth;
       body.style.overflow = "hidden";
       html.style.overflow = "hidden";
-
-      const delta = html.clientWidth - prevClientWidth;
-      if (delta > 0) {
-        body.style.paddingRight = `${delta}px`;
-      }
     }
     lockCount++;
 
@@ -44,7 +36,6 @@ export function useScrollLock(locked: boolean) {
       if (lockCount <= 0) {
         lockCount = 0;
         body.style.overflow = originalBodyOverflow;
-        body.style.paddingRight = originalBodyPaddingRight;
         html.style.overflow = originalHtmlOverflow;
       }
     };

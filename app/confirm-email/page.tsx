@@ -87,7 +87,7 @@ function ConfirmEmailInner() {
           <p className="text-gray-500 text-sm mb-6">
             Your account is now verified. Redirecting to your account…
           </p>
-          <Link href="/account" className="inline-block bg-black text-white font-black text-xs uppercase tracking-wider py-3 px-8 rounded-sm hover:bg-[#ed1c24] transition-colors">
+          <Link href="/account" className="btn-slide-black inline-block font-black text-xs uppercase tracking-wider py-3 px-8 rounded-sm">
             Go to My Account
           </Link>
         </>
@@ -106,7 +106,7 @@ function ConfirmEmailInner() {
             <button
               onClick={resendEmail}
               disabled={resending}
-              className="inline-flex items-center gap-2 bg-black text-white font-black text-xs uppercase tracking-wider py-3 px-8 rounded-sm hover:bg-[#ed1c24] transition-colors disabled:opacity-50"
+              className="btn-slide-black inline-flex items-center gap-2 font-black text-xs uppercase tracking-wider py-3 px-8 rounded-sm disabled:opacity-50"
             >
               {resending ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />}
               Resend Verification Email
@@ -133,14 +133,14 @@ function ConfirmEmailInner() {
               <button
                 onClick={resendEmail}
                 disabled={resending || resent}
-                className="inline-flex items-center justify-center gap-2 bg-black text-white font-black text-xs uppercase tracking-wider py-3 px-8 rounded-sm hover:bg-[#ed1c24] transition-colors disabled:opacity-50"
+                className="btn-slide-black inline-flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wider py-3 px-8 rounded-sm disabled:opacity-50"
               >
                 {resending ? <Loader2 size={13} className="animate-spin" /> : <Mail size={13} />}
                 {resent ? "Email Sent!" : "Resend Verification Email"}
               </button>
             </div>
           ) : (
-            <Link href="/account" className="inline-block bg-black text-white font-black text-xs uppercase tracking-wider py-3 px-8 rounded-sm hover:bg-[#ed1c24] transition-colors">
+            <Link href="/account" className="btn-slide-black inline-block font-black text-xs uppercase tracking-wider py-3 px-8 rounded-sm">
               Back to Account
             </Link>
           )}

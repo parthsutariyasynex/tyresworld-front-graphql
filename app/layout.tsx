@@ -9,7 +9,6 @@ import { AuthProvider } from "@/lib/auth-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
 import CartAuthSync from "@/components/CartAuthSync";
 import { StoreConfigProvider } from "@/lib/store-config-context";
-import { NavigationTrailProvider } from "@/lib/navigationTrail";
 import { getStoreConfig } from "@/lib/services/store.service";
 import { getMainMenu } from "@/lib/services/menu.service";
 import { APP_CONFIG } from "@/src/config/app-config";
@@ -102,12 +101,10 @@ export default async function RootLayout({
               <WishlistProvider>
                 <CartAuthSync />
                 <OverviewDrawerProvider>
-                  <NavigationTrailProvider>
-                    <Suspense fallback={null}>
-                      <Header menu={mainMenu} />
-                    </Suspense>
-                    <main>{children}</main>
-                  </NavigationTrailProvider>
+                  <Suspense fallback={null}>
+                    <Header menu={mainMenu} />
+                  </Suspense>
+                  <main>{children}</main>
                   <Footer />
                   <FloatingContact />
                   <OverviewDrawer />

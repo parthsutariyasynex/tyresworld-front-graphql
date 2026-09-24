@@ -25,6 +25,9 @@ export async function GET(req: NextRequest) {
       services: homepage?.services ?? null,
       topReasons: homepage?.top_reasons ?? null,
       about: homepage?.about ?? null,
+      brands: homepage?.brands ?? null,
+      blog: homepage?.blog ?? null,
+      testimonials: homepage?.testimonials ?? null,
     },
     { headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } },
   );

@@ -1,80 +1,76 @@
 /* ─────────────────────────────────────────────────────────────────
    HOMEPAGE SERVICE
-   Real dynamic homepage sections from Magento's Klever module (kleverHomepage):
+   Real dynamic homepage sections from Magento's Klever module (kleverHomepage).
+   Most sections are now admin-authored CMS HTML blocks (KleverHomeSection:
+   identifier/title/enabled/html), not structured fields — confirmed via
+   live schema introspection. Only hero.banners and offers.banners remain
+   structured banner-carousel data.
    - Hero banner (headings + images)
-   - Exclusive offers (banners + promo links)
-   - How it works (steps + descriptions)
-   - Services (auto care solution tiles)
-   - Top reasons (why buy online tyres)
-   - About us (intro paragraphs)
+   - Exclusive offers (heading CMS block + promo banners)
+   - How it works / Services / Top reasons / About / Brands / Blog /
+     Testimonials: each a KleverHomeSection { identifier, title, enabled, html }
 ───────────────────────────────────────────────────────────────── */
 import { magentoFetch } from "@/lib/graphql/client";
 import { KLEVER_HOMEPAGE_QUERY } from "@/lib/queries";
 
+export interface KleverHomeHeroBanner {
+  title?: string | null;
+  image?: string | null;
+  mobile_image?: string | null;
+  url?: string | null;
+  new_tab?: boolean | null;
+}
+
 export interface KleverHomeHero {
   heading_line1?: string | null;
   heading_line2?: string | null;
-  image?: string | null;
-  image_mobile?: string | null;
+  banners?: KleverHomeHeroBanner[] | null;
 }
 
 export interface KleverHomeBanner {
   title?: string | null;
   image?: string | null;
+  mobile_image?: string | null;
   url?: string | null;
+}
+
+/** Generic admin-authored CMS block — the shape of every homepage section
+    besides hero and offers.banners. */
+export interface KleverHomeSection {
+  identifier?: string | null;
+  title?: string | null;
+  enabled?: boolean | null;
+  html?: string | null;
 }
 
 export interface KleverHomeOffers {
-  title?: string | null;
-  subtitle?: string | null;
+  heading?: KleverHomeSection | null;
   banners?: KleverHomeBanner[] | null;
-}
-
-export interface KleverHomeStep {
-  number?: string | null;
-  title?: string | null;
-  description?: string | null;
-}
-
-export interface KleverHomeSteps {
-  title?: string | null;
-  steps?: KleverHomeStep[] | null;
-}
-
-export interface KleverHomeServiceTile {
-  title?: string | null;
-  description?: string | null;
-  image?: string | null;
-  url?: string | null;
-}
-
-export interface KleverHomeServices {
-  title?: string | null;
-  subtitle?: string | null;
-  tiles?: KleverHomeServiceTile[] | null;
-}
-
-export interface KleverHomeReasons {
-  title?: string | null;
-  items?: string[] | null;
-}
-
-export interface KleverHomeAbout {
-  title?: string | null;
-  paragraphs?: string[] | null;
 }
 
 export interface KleverHomepageData {
   hero?: KleverHomeHero | null;
   offers?: KleverHomeOffers | null;
-  how_it_works?: KleverHomeSteps | null;
-  services?: KleverHomeServices | null;
-  top_reasons?: KleverHomeReasons | null;
-  about?: KleverHomeAbout | null;
+  how_it_works?: KleverHomeSection | null;
+  services?: KleverHomeSection | null;
+  top_reasons?: KleverHomeSection | null;
+  brands?: KleverHomeSection | null;
+  about?: KleverHomeSection | null;
+  blog?: KleverHomeSection | null;
+  testimonials?: KleverHomeSection | null;
 }
 
 interface HomepageResponse {
   kleverHomepage?: KleverHomepageData | null;
+}
+
+/** When a Magento CMS/widget block fails to render server-side, its `html`
+    field comes back as this literal PHP error string instead of real
+    markup (seen live on `brands`/`blog`) — same check already used for the
+    CMS catch-all page. Callers should treat a match as "no content", not
+    render it. */
+export function isBrokenCmsHtml(html: string | null | undefined): boolean {
+  return !!html && /Error filtering template:/i.test(html);
 }
 
 export async function getHomepageData(store?: string): Promise<KleverHomepageData | null> {

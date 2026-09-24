@@ -4,8 +4,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { buildBrandSlug } from "@/lib/filterBuilder";
+import type { KleverHomeSection } from "@/lib/services/homepage.service";
+import { isBrokenCmsHtml } from "@/lib/services/homepage.service";
 
 const PREVIEW_COUNT = 20;
+
+interface BrandStripProps {
+  /** kleverHomepage.brands — an admin-authored CMS HTML intro block, shown
+      above the (separately-fetched, already real) /api/brands grid. */
+  initialBrandsSection?: KleverHomeSection | null;
+}
 
 /** One entry as /api/brands returns it. */
 type Brand = {
@@ -35,7 +43,7 @@ function toBrand(entry: Partial<Brand> | null | undefined): Brand | null {
   };
 }
 
-export default function BrandStrip() {
+export default function BrandStrip({ initialBrandsSection }: BrandStripProps) {
   const pathname = usePathname();
   const locale = pathname?.split("/")[1] || "en";
 
@@ -86,18 +94,28 @@ export default function BrandStrip() {
     <section className="section section-padding brands py-14 bg-white">
       <div className="container custom-width max-w-7xl mx-auto px-4 sm:px-6">
 
-        {/* ── Section title ───────────────────────────────────── */}
-        <div className="section-title mb-10 text-center max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black uppercase tracking-wide text-black mb-3 leading-tight">
-            {"Shop by "}{" "}
-            <span className="text-[#ed1c24] theme_color">
-              {"Tyre Brands"}
-            </span>
-          </h2>
-          <p className="text-gray-700 text-xs sm:text-[13.5px] leading-relaxed font-normal max-w-2xl mx-auto m-0 tracking-normal">
-            {"Browse a wide selection of car tyre brands and purchase tyres online at the best prices. Our customer friendly fitment partners across the UAE are ready to provide you with exceptional service."}
-          </p>
-        </div>
+        {/* ── Section title — admin-authored CMS block when available,
+             matching the real kleverHomepage.brands section (this strip's
+             own brand grid below is separate, real /api/brands data
+             regardless) ───────────────────────────────────────────── */}
+        {initialBrandsSection?.enabled && initialBrandsSection.html && !isBrokenCmsHtml(initialBrandsSection.html) ? (
+          <div
+            className="cms-content brand-strip-heading mb-10 text-center max-w-3xl mx-auto"
+            dangerouslySetInnerHTML={{ __html: initialBrandsSection.html }}
+          />
+        ) : (
+          <div className="section-title mb-10 text-center max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black uppercase tracking-wide text-black mb-3 leading-tight">
+              {"Shop by "}{" "}
+              <span className="text-[#ed1c24] theme_color">
+                {"Tyre Brands"}
+              </span>
+            </h2>
+            <p className="text-gray-700 text-xs sm:text-[13.5px] leading-relaxed font-normal max-w-2xl mx-auto m-0 tracking-normal">
+              {"Browse a wide selection of car tyre brands and purchase tyres online at the best prices. Our customer friendly fitment partners across the UAE are ready to provide you with exceptional service."}
+            </p>
+          </div>
+        )}
 
         {/* ── Brand grid — 2 / 3 / 4 / 5 columns ──────────────── */}
         {loading ? (

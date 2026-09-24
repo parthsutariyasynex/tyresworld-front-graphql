@@ -7,8 +7,10 @@ interface PageHeroBannerProps {
   title: string;
   /** Supporting line under the title. */
   description?: string;
-  /** Overrides `title` as the label registered for this page in the breadcrumb trail. */
+  /** Overrides `title` as this page's own breadcrumb label. */
   breadcrumbLabel?: string;
+  /** This page's real ancestor crumb(s) (e.g. "Tyres" on a brand page) — never derived from browsing history. */
+  breadcrumbParents?: BreadcrumbExtraItem[];
   /** In-page wizard sub-steps (e.g. make → model → year) appended after the current page's crumb. */
   breadcrumbExtra?: BreadcrumbExtraItem[];
   /** When breadcrumbExtra is set, lets the current page's own crumb trigger in-page state instead of linking to its URL. */
@@ -31,6 +33,7 @@ export default function PageHeroBanner({
   title,
   description,
   breadcrumbLabel,
+  breadcrumbParents,
   breadcrumbExtra,
   onBreadcrumbCurrentClick,
   loading = false,
@@ -78,6 +81,7 @@ export default function PageHeroBanner({
               <div className="relative z-10 flex justify-center w-full mt-2.5 sm:mt-3.5 max-w-full px-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <Breadcrumbs
                   label={breadcrumbLabel || title}
+                  parents={breadcrumbParents}
                   extra={breadcrumbExtra}
                   onCurrentClick={onBreadcrumbCurrentClick}
                   variant="banner"

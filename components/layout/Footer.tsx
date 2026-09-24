@@ -238,7 +238,7 @@ export default function Footer({ forceShow }: { forceShow?: boolean } = {}) {
       </div>
 
       {/* Copyright strip */}
-      <div className="footer-copyright bg-[#1e1e20] py-4 sm:py-5 pb-28 sm:pb-5 border-t border-white/5">
+      <div className="footer-copyright bg-[#1e1e20] pt-4 sm:pt-4 pb-[130px] sm:pb-[118px] border-t border-white/5">
         <div className="container custom-width max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col xl:flex-row items-center justify-between gap-4 xl:gap-6 text-center xl:text-left">
 

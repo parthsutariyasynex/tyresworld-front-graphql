@@ -134,7 +134,7 @@ export default async function BlogPage({
             </p>
             <Link
               href={`/${locale}/blog`}
-              className="inline-block px-5 py-2.5 bg-[#ed1c24] text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-red-700 transition-colors"
+              className="btn-slide-red inline-block px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-lg"
             >
               View All Posts
             </Link>

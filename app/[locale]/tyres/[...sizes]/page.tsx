@@ -23,7 +23,7 @@ function asLocale(l?: string): Locale {
   return "en";
 }
 
-const SIZE_RE = /^(\d{1,3}(?:\.\d+)?)-(\d{1,3}(?:\.\d+)?)-(\d{1,3}(?:\.\d+)?)$/;
+const SIZE_RE = /^(\d{1,3}(?:\.\d+)?)-(None|\d{1,3}(?:\.\d+)?)-(\d{1,3}(?:\.\d+)?)$/i;
 
 interface ParsedSizes {
   width: string;
@@ -34,8 +34,8 @@ interface ParsedSizes {
   rearRim?: string;
 }
 
-/** Parses ["155-70-13"] or ["245-35-20", "285-35-20"]. Anything else (wrong
-    segment count, non-numeric parts) is not a real size URL — notFound(). */
+/** Parses ["155-70-13"] or ["245-35-20", "285-35-20"] or ["155-70-13", "165-None-13"]. Anything else (wrong
+    segment count, invalid parts) is not a real size URL — notFound(). */
 function parseSizes(sizes: string[] | undefined): ParsedSizes | null {
   if (!sizes || sizes.length < 1 || sizes.length > 2) return null;
 
@@ -56,15 +56,16 @@ function parseSizes(sizes: string[] | undefined): ParsedSizes | null {
 
 function canonicalSlug(p: ParsedSizes): string {
   const front = `${p.width}-${p.height}-${p.rim}`;
-  return p.rearWidth && p.rearHeight && p.rearRim
-    ? `${front}/${p.rearWidth}-${p.rearHeight}-${p.rearRim}`
+  return p.rearWidth && p.rearRim
+    ? `${front}/${p.rearWidth}-${p.rearHeight || "None"}-${p.rearRim}`
     : front;
 }
 
 function sizeLabel(p: ParsedSizes): string {
   const front = `${p.width}/${p.height} R${p.rim}`;
-  return p.rearWidth && p.rearHeight && p.rearRim
-    ? `${front} Front, ${p.rearWidth}/${p.rearHeight} R${p.rearRim} Rear`
+  const rearH = p.rearHeight && p.rearHeight.toLowerCase() !== "none" ? `/${p.rearHeight}` : "";
+  return p.rearWidth && p.rearRim
+    ? `${front} Front, ${p.rearWidth}${rearH} R${p.rearRim} Rear`
     : front;
 }
 
@@ -122,9 +123,11 @@ export default async function TyreSizePage({ params }: PageProps) {
     height: parsed.height,
     rim: parsed.rim,
   };
-  if (parsed.rearWidth && parsed.rearHeight && parsed.rearRim) {
+  if (parsed.rearWidth && parsed.rearRim) {
     sizeFilters.rear_width = parsed.rearWidth;
-    sizeFilters.rear_height = parsed.rearHeight;
+    if (parsed.rearHeight && parsed.rearHeight.toLowerCase() !== "none") {
+      sizeFilters.rear_height = parsed.rearHeight;
+    }
     sizeFilters.rear_rim = parsed.rearRim;
   }
 

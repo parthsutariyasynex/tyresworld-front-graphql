@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -160,8 +160,17 @@ function CheckoutContent() {
     email: "",
   });
   const [saveInAddressBook, setSaveInAddressBook] = useState(true);
+  // Billing and shipping are the same address by default — this flag is
+  // what makes `activeShipping` (below, in handlePlaceOrder) read from the
+  // billing `form` instead of the separate `shippingForm`.
   const [sameAsShipping, setSameAsShipping] = useState(true);
 
+  // Keep `shippingForm` itself in sync with the billing `form` while
+  // "same as shipping" is on, so the two stay identical at the state level
+  // too — not just via the `activeShipping` selector used at submit time.
+  useEffect(() => {
+    if (sameAsShipping) setShippingForm(form);
+  }, [sameAsShipping, form]);
 
   // Dynamic Payment Methods from Magento cart
   const [paymentMethods, setPaymentMethods] = useState(DEFAULT_PAYMENT_METHODS);
@@ -170,7 +179,16 @@ function CheckoutContent() {
   const [selPayment, setSelPayment] = useState("payment_link");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const errorRef = useRef<HTMLDivElement>(null);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+
+  // The error banner renders above the form, but a validation/order-
+  // placement error is usually triggered by a "Place Order" click after
+  // scrolling deep into the page — without this the message appears
+  // off-screen and looks like nothing happened.
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [error]);
 
   // Vehicle State (100% dynamic from /api/vehicles)
   const [vehiclePlate, setVehiclePlate] = useState("");
@@ -185,6 +203,7 @@ function CheckoutContent() {
   const [installation, setInstallation] = useState<{
     type?: string;
     branch?: { id?: string; name?: string; address?: string; city?: string };
+    vanId?: string;
     vanName?: string;
     mobileAddress?: string;
     city?: string;
@@ -532,33 +551,69 @@ function CheckoutContent() {
         telephone: form.telephone,
       };
 
-      await api({ op: "setEmail", cartId, email: emailToUse, token: tok });
-      await api({ op: "setShippingAddress", cartId, address: shippingPayload, token: tok });
+      const emailRes = await api({ op: "setEmail", cartId, email: emailToUse, token: tok });
+      if (emailRes.error) throw new Error(String(emailRes.error));
 
-      // Save delivery mode / free shipping on the quote
-      if (installation?.type === "free_shipping") {
-        await api({
+      const shipRes = await api({ op: "setShippingAddress", cartId, address: shippingPayload, token: tok });
+      if (shipRes.error) throw new Error(String(shipRes.error));
+
+      // Re-apply the delivery/installer selection the user made on the Store
+      // Locator page — setShippingAddress above resets whatever shipping
+      // method Magento had assigned to the cart, so without this, placeOrder
+      // fails with "The shipping method is missing" for every delivery type
+      // (this used to only re-apply for free_shipping, leaving
+      // install_outlet/mobile_van orders broken even with a valid address).
+      if (installation?.type === "install_outlet") {
+        const methodRes = await api({
+          op: "setInstallerSelection",
+          cartId,
+          deliveryMode: "install_at_outlet",
+          storeId: installation.branch?.id,
+          pickupDate: installation.date,
+          pickupTime: installation.time,
+          token: tok,
+        });
+        if (methodRes.error) throw new Error(String(methodRes.error));
+      } else if (installation?.type === "mobile_van") {
+        const methodRes = await api({
+          op: "setInstallerSelection",
+          cartId,
+          deliveryMode: "mobile_van_service",
+          storeId: installation.vanId,
+          pickupLocation: installation.mobileAddress
+            ? `${installation.mobileAddress}, ${installation.city ?? ""}`.replace(/, $/, "")
+            : undefined,
+          pickupDate: installation.date,
+          pickupTime: installation.time,
+          token: tok,
+        });
+        if (methodRes.error) throw new Error(String(methodRes.error));
+      } else if (installation?.type === "free_shipping") {
+        const methodRes = await api({
           op: "setInstallerSelection",
           cartId,
           deliveryMode: "free_shipping",
           token: tok,
         });
+        if (methodRes.error) throw new Error(String(methodRes.error));
       }
 
-      await api({
+      const billingRes = await api({
         op: "setBilling",
         cartId,
         sameAsShipping,
         address: billingPayload,
         token: tok,
       });
+      if (billingRes.error) throw new Error(String(billingRes.error));
 
       const pmRes = await api({ op: "setPayment", cartId, code: selPayment, token: tok });
       if (pmRes.error) throw new Error(String(pmRes.error));
 
       const ordRes = await api({ op: "placeOrder", cartId, token: tok });
+      if (ordRes.error) throw new Error(String(ordRes.error));
       const placedNum = ordRes.orderNumber ? String(ordRes.orderNumber) : `TC-${Date.now()}`;
-      
+
       setOrderNumber(placedNum);
       clearLocal();
     } catch (err) {
@@ -589,7 +644,7 @@ function CheckoutContent() {
               <div className="pt-3">
                 <Link
                   href={`/${locale}`}
-                  className="inline-block bg-black hover:bg-[#ed1c24] text-white font-bold text-xs uppercase px-8 py-3 rounded-md transition-colors shadow-2xs"
+                  className="btn-slide-black inline-block font-bold text-xs uppercase px-8 py-3 rounded-md shadow-2xs"
                 >
                   {"Continue Shopping"}
                 </Link>
@@ -653,7 +708,7 @@ function CheckoutContent() {
           <p className="text-xs text-gray-500 mb-6">Add products to your cart before checking out.</p>
           <Link
             href={`/${locale}`}
-            className="inline-block bg-black hover:bg-[#ed1c24] text-white font-bold text-xs uppercase px-6 py-3 rounded-lg transition-colors"
+            className="btn-slide-black inline-block font-bold text-xs uppercase px-6 py-3 rounded-lg"
           >
             Start Shopping
           </Link>
@@ -672,7 +727,10 @@ function CheckoutContent() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-4 font-medium">
+          <div
+            ref={errorRef}
+            className="mb-6 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl p-4 font-medium"
+          >
             {error}
           </div>
         )}
@@ -718,7 +776,7 @@ function CheckoutContent() {
                       });
                       setShowNewAddressModal(true);
                     }}
-                    className="bg-black hover:bg-[#ed1c24] text-white text-xs font-bold px-4 py-2 rounded-md transition-colors cursor-pointer shadow-2xs"
+                    className="btn-slide-black text-xs font-bold px-4 py-2 rounded-md cursor-pointer shadow-2xs"
                   >
                     {"New Address"}
                   </button>
@@ -1339,7 +1397,7 @@ function CheckoutContent() {
                       <button
                         type="submit"
                         disabled={couponLoading || !couponInput.trim()}
-                        className="bg-black text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#ed1c24] transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                        className="btn-slide-black px-4 py-2 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                       >
                         {couponLoading && <Loader2 size={12} className="animate-spin" />}
                         <span>{"Apply"}</span>
@@ -1385,7 +1443,7 @@ function CheckoutContent() {
               type="button"
               onClick={handlePlaceOrder}
               disabled={busy || items.length === 0}
-              className="w-full bg-black hover:bg-[#ed1c24] active:bg-[#c6181d] text-white font-black text-xs sm:text-sm uppercase tracking-wider py-4 rounded-xl transition-all duration-150 flex items-center justify-center gap-2 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="btn-slide-black w-full font-black text-xs sm:text-sm uppercase tracking-wider py-4 rounded-xl flex items-center justify-center gap-2 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {busy ? (
                 <>
@@ -1550,14 +1608,14 @@ function CheckoutContent() {
                     }
                     setShowNewAddressModal(false);
                   }}
-                  className="bg-black hover:bg-[#ed1c24] text-white text-xs font-bold px-7 py-2.5 rounded-md transition-colors cursor-pointer"
+                  className="btn-slide-black text-xs font-bold px-7 py-2.5 rounded-md cursor-pointer"
                 >
                   {"Ship Here"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowNewAddressModal(false)}
-                  className="bg-black hover:bg-neutral-800 text-white text-xs font-bold px-7 py-2.5 rounded-md transition-colors cursor-pointer"
+                  className="btn-slide-black text-xs font-bold px-7 py-2.5 rounded-md cursor-pointer"
                 >
                   {"Cancel"}
                 </button>

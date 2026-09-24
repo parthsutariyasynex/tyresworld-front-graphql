@@ -472,7 +472,7 @@ export default function DynamicAddressForm({
           <button
             type="submit"
             disabled={saving}
-            className="bg-black hover:bg-gray-800 text-white px-6 py-2.5 rounded font-semibold text-xs transition-colors disabled:opacity-60"
+            className="btn-slide-black px-6 py-2.5 rounded font-semibold text-xs disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save Address"}
           </button>

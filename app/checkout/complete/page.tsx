@@ -108,13 +108,13 @@ function CheckoutCompleteInner() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/checkout"
-              className="inline-flex items-center gap-2 bg-black hover:bg-[#ed1c24] text-white font-black text-xs uppercase tracking-wider py-4 px-8 rounded-sm transition-colors"
+              className="btn-slide-black inline-flex items-center gap-2 font-black text-xs uppercase tracking-wider py-4 px-8 rounded-sm"
             >
               Try Again
             </Link>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-sm hover:border-gray-500 transition-colors"
+              className="btn-sweep-light inline-flex items-center gap-2 border border-gray-300 font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-sm"
             >
               Continue Shopping
             </Link>
@@ -174,7 +174,7 @@ function CheckoutCompleteInner() {
 
         <Link
           href="/"
-          className="inline-flex items-center gap-2 bg-black hover:bg-[#ed1c24] text-white font-black text-xs uppercase tracking-wider py-4 px-8 rounded-sm transition-colors"
+          className="btn-slide-black inline-flex items-center gap-2 font-black text-xs uppercase tracking-wider py-4 px-8 rounded-sm"
         >
           Continue Shopping <ArrowRight size={14} />
         </Link>

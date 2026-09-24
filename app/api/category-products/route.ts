@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   const categoryUid = searchParams.get("categoryUid") ?? "";
   const store       = searchParams.get("store") ?? "default";
-  const pageSize    = Math.min(Number(searchParams.get("pageSize") ?? 12) || 12, 48);
+  const pageSize    = Math.min(Number(searchParams.get("pageSize") ?? 24) || 24, 48);
   const currentPage = Math.max(Number(searchParams.get("page") ?? 1) || 1, 1);
   const sort        = buildSort(searchParams.get("sort") ?? "");
 

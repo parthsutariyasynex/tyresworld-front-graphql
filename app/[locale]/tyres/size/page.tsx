@@ -189,7 +189,7 @@ export default function TyreSizeBrowserPage() {
                     setSearchQuery("");
                     setSelectedRim("ALL");
                   }}
-                  className="mt-4 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                  className="btn-sweep-light mt-4 px-4 py-2 bg-gray-100 text-xs font-bold rounded-lg cursor-pointer"
                 >
                   Reset Filters
                 </button>

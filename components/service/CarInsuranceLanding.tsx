@@ -115,7 +115,7 @@ function CallbackForm() {
           className="btn-slide-red w-full text-white font-bold text-xs sm:text-sm py-2.5 rounded-md flex items-center justify-center gap-2 disabled:opacity-60 uppercase tracking-wider cursor-pointer mt-1"
         >
           {submitting && <Loader2 size={14} className="animate-spin" />}
-          {submitting ? "Submitting..." : "Get Quotes Now"}
+          <span>{submitting ? "Submitting..." : "Get Quotes Now"}</span>
         </button>
         {status && (
           <p className={`text-xs font-semibold ${status.ok ? "text-emerald-400" : "text-red-400"}`}>
@@ -418,7 +418,7 @@ export default function CarInsuranceLanding() {
               href="/en/contact"
               className="btn-slide-red inline-flex items-center gap-2 text-white font-bold text-sm px-8 py-3.5 rounded-lg shadow-md uppercase tracking-wider cursor-pointer"
             >
-              Contact Insurance Advisor
+              <span>Contact Insurance Advisor</span>
             </Link>
           </div>
         </div>

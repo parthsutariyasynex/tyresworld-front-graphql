@@ -85,7 +85,7 @@ export default function ProductDetailPage() {
         <p className="text-gray-500 mb-8">{error}</p>
         <Link
           href={`/${locale}`}
-          className="inline-flex items-center gap-2 bg-gray-900 text-white font-bold text-sm px-6 py-3"
+          className="btn-slide-black inline-flex items-center gap-2 font-bold text-sm px-6 py-3"
         >
           <ArrowLeft size={15} /> Back to Home
         </Link>

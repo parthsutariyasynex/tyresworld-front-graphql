@@ -259,7 +259,7 @@ function InstallerNetworkContent() {
               type="button"
               onClick={handleUseMyLocation}
               disabled={locating}
-              className="bg-white border border-gray-300 hover:border-gray-900 hover:bg-gray-50 text-gray-800 text-xs font-bold px-4 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap disabled:opacity-60"
+              className="btn-sweep-light bg-white border border-gray-300 text-xs font-bold px-4 py-2.5 rounded-lg flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-60"
             >
               {locating ? (
                 <Loader2 size={14} className="animate-spin text-gray-500" />

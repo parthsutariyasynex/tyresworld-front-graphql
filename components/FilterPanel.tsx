@@ -21,6 +21,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   filters: FilterGroup[];
+  allFilters?: FilterGroup[];
   loading: boolean;
   selected: Record<string, string[]>;
   onChange: (code: string, values: string[]) => void;
@@ -162,6 +163,7 @@ export default function FilterPanel({
   open,
   onClose,
   filters,
+  allFilters,
   loading,
   selected,
   onChange,
@@ -263,7 +265,11 @@ export default function FilterPanel({
         {/* Top Header: Pure Red banner with FILTER BY title and White X close button */}
         <div className="flex items-center justify-between px-5 py-3.5 bg-[#ed1c24] shrink-0 min-h-[50px]">
           <span className="text-white font-black text-sm uppercase tracking-wider">
-            {dir === "rtl" ? "تصفية حسب" : "FILTER BY"}
+            {dir === "rtl"
+              ? "تصفية حسب"
+              : allFilters && allFilters.length > filters.length
+              ? "MORE FILTERS"
+              : "FILTER BY"}
           </span>
           <button
             type="button"
@@ -296,7 +302,8 @@ export default function FilterPanel({
             <div className="flex flex-wrap gap-1.5 pt-0.5 max-h-[90px] overflow-y-auto">
               {activeFilterEntries.map(([code, vals]) =>
                 vals.map((val) => {
-                  const group = filters.find((g) => g.code === code);
+                  const lookupList = allFilters && allFilters.length > 0 ? allFilters : filters;
+                  const group = lookupList.find((g) => g.code === code);
                   const opt = group?.options.find((o) => o.value === val || o.label.toLowerCase() === val.toLowerCase());
                   const label = opt?.label ?? val;
                   return (

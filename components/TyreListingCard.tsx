@@ -10,6 +10,7 @@ import type { Product } from "@/lib/data";
 import { type Locale } from "@/lib/i18n";
 import { useOfferLabels } from "@/lib/useOfferLabels";
 import { useCart } from "@/lib/cart-context";
+import { useOverviewDrawer } from "@/lib/overview-drawer-context";
 import { buildTyreSizeSlug, buildBrandSlug } from "@/lib/filterBuilder";
 import { Money } from "@/components/Price";
 import { APP_CONFIG } from "@/src/config/app-config";
@@ -50,8 +51,8 @@ function CarSprite({ className = "w-[41px] h-[14px] [background-size:466.67px_au
   );
 }
 
-function formatWarrantyBadge(w?: string | null): string {
-  if (!w) return "3 YR WARRANTY";
+function formatWarrantyBadge(w?: string | null): string | null {
+  if (!w || !w.trim()) return null;
   const clean = w.trim();
   const num = clean.match(/\d+/)?.[0];
   if (num) return `${num} YR WARRANTY`;
@@ -129,6 +130,7 @@ export default function TyreListingCard({
   const offerLabel = product.offersId ? offerLabels[product.offersId] : undefined;
 
   const { addItem } = useCart();
+  const { openDrawer } = useOverviewDrawer();
 
   const isBike = vehicleIcon === "bike" || isMotorcycleProduct(product);
   const defaultCardQty =
@@ -215,6 +217,7 @@ export default function TyreListingCard({
       } else {
         setCartAdded(true);
         setTimeout(() => setCartAdded(false), 2000);
+        openDrawer("cart");
       }
     } finally {
       setAdding(false);
@@ -233,31 +236,35 @@ export default function TyreListingCard({
 
       <div className={`flex flex-col bg-white border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-md transition-shadow ${offerLabel ? "rounded-b-2xl border-t-0" : "rounded-2xl"}${enableHoverZoom ? " group" : ""}`}>
 
-        <div className="flex flex-col flex-1 p-2.5 sm:p-3 pt-1">
+        <div className="flex flex-col flex-1 p-2.5 sm:p-3 pt-1.5 sm:pt-2">
 
           {/* ── 1. Top Header: Warranty Badge (Left) & Brand Logo (Right) ── */}
-          <div className="flex items-center justify-between gap-1.5 w-full min-h-[20px] sm:min-h-[24px] mb-1">
-            {/* Warranty Badge (Top Left) */}
-            <span className="inline-flex items-center bg-[#f0f2f5] text-gray-800 text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-tight shadow-2xs shrink-0 max-w-[48%] truncate">
-              {formatWarrantyBadge(warranty)}
-            </span>
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full min-h-[28px] sm:min-h-[38px] mb-1.5 sm:mb-2">
+            {/* Warranty Badge (Top Left - only shown if present on product) */}
+            {formatWarrantyBadge(warranty) ? (
+              <span className="inline-flex items-center bg-[#f0f2f5] text-gray-800 text-[10px] sm:text-[12px] font-extrabold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full uppercase tracking-tight shadow-2xs shrink-0 max-w-[48%] truncate">
+                {formatWarrantyBadge(warranty)}
+              </span>
+            ) : (
+              <div />
+            )}
 
             {/* Brand Logo (Top Right) */}
-            <div className="flex items-center justify-end max-w-[50%] shrink-0">
+            <div className="flex items-center justify-end max-w-[65%] shrink-0">
               {brandHref ? (
                 <Link href={brandHref} aria-label={`${brandLabel} tyres`}>
                   {brandLogo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={brandLogo} alt={brandLabel} className="max-h-4.5 sm:max-h-5.5 max-w-[65px] sm:max-w-[85px] w-auto object-contain" loading="lazy" />
+                    <img src={brandLogo} alt={brandLabel} className="w-[85px] sm:w-[130px] h-auto max-h-8 sm:max-h-11 object-contain" loading="lazy" />
                   ) : (
-                    <span className="text-[9.5px] sm:text-[11px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
+                    <span className="text-[10px] sm:text-[12px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
                   )}
                 </Link>
               ) : brandLogo ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={brandLogo} alt={brandLabel} className="max-h-4.5 sm:max-h-5.5 max-w-[65px] sm:max-w-[85px] w-auto object-contain" loading="lazy" />
+                <img src={brandLogo} alt={brandLabel} className="w-[85px] sm:w-[130px] h-auto max-h-8 sm:max-h-11 object-contain" loading="lazy" />
               ) : (
-                <span className="text-[9.5px] sm:text-[11px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
+                <span className="text-[10px] sm:text-[12px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
               )}
             </div>
           </div>

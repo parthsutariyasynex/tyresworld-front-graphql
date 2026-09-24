@@ -11,19 +11,12 @@ import {
 import type { Product } from "./data";
 import type { ServerCart, ServerCartItem } from "./types";
 import { useAuth } from "./auth-context";
-import AddToCartModal from "@/components/AddToCartModal";
 
 const CART_KEY = "magento_cart_id";
 
 /* The customer token is no longer read on the client — it lives in an
    httpOnly cookie that the browser sends automatically to /api/cart, and
    the route reads it server-side. Login state comes from useAuth(). */
-
-export type AddedModalProduct = {
-  name: string;
-  sku?: string;
-  [key: string]: any;
-};
 
 type CartContextValue = {
   cart: ServerCart | null;
@@ -36,9 +29,6 @@ type CartContextValue = {
   currency: string;
   loading: boolean;
   ready: boolean;
-  addedModalProduct: AddedModalProduct | null;
-  openAddedModal: (product: AddedModalProduct) => void;
-  closeAddedModal: () => void;
   addItem: (product: Product, qty?: number) => Promise<{ error?: string }>;
   updateQty: (uid: string, qty: number) => Promise<{ error?: string } | void>;
   removeItem: (uid: string) => Promise<void>;
@@ -79,17 +69,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart]       = useState<ServerCart | null>(null);
   const [loading, setLoading] = useState(false);
   const [ready, setReady]     = useState(false);
-  const [addedModalProduct, setAddedModalProduct] = useState<AddedModalProduct | null>(null);
   const cartIdRef = useRef<string | null>(null);
   const hydratedRef = useRef(false);
-
-  const openAddedModal = useCallback((product: AddedModalProduct) => {
-    setAddedModalProduct(product);
-  }, []);
-
-  const closeAddedModal = useCallback(() => {
-    setAddedModalProduct(null);
-  }, []);
 
   const persistId = useCallback((id: string | null) => {
     cartIdRef.current = id;
@@ -186,7 +167,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (res.cart?.id) {
           persistId(res.cart.id as string);
           setCart(res.cart as ServerCart);
-          setAddedModalProduct(product);
           return {};
         }
         return { error: "Could not add item to cart." };
@@ -204,7 +184,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (retryRes.cart?.id) {
           persistId(retryRes.cart.id as string);
           setCart(retryRes.cart as ServerCart);
-          setAddedModalProduct(product);
           return {};
         }
         return { error: "Could not add item to cart." };
@@ -214,7 +193,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (res.error)     return { error: String(res.error) };
       if (res.cart)      {
         setCart(res.cart as ServerCart);
-        setAddedModalProduct(product);
         return {};
       }
       return { error: "Could not add item to cart." };
@@ -294,18 +272,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       value={{
         cart, cartId, cartToken: null, items, count,
         subtotal, grandTotal, currency, loading, ready,
-        addedModalProduct, openAddedModal, closeAddedModal,
         addItem, updateQty, removeItem, applyCoupon, removeCoupon,
         refresh, clearLocal, setInactive, syncCustomerCart, logoutCart,
       }}
     >
       {children}
-      <AddToCartModal
-        open={Boolean(addedModalProduct)}
-        product={addedModalProduct}
-        productName={addedModalProduct?.name ?? ""}
-        onClose={closeAddedModal}
-      />
     </CartContext.Provider>
   );
 }

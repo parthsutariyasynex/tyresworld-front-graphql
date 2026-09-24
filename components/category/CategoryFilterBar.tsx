@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlidersHorizontal, ChevronDown } from "lucide-react";
 import type { FilterGroup } from "@/components/FilterPanel";
@@ -11,6 +11,7 @@ interface CategoryFilterBarProps {
   selected: Record<string, string[]>;
   filterGroups: FilterGroup[];
   onOpenMoreFilters: () => void;
+  onExtraFiltersChange?: (extra: FilterGroup[]) => void;
   onChange?: (code: string, values: string[]) => void;
   onClearAll?: () => void;
   brandFilter?: string;
@@ -91,10 +92,29 @@ const SIZE_CODES = new Set([
   "rrim",
 ]);
 
+function getShortPlaceholder(label: string): string {
+  const norm = label.trim().toLowerCase();
+  if (norm === "tyres category" || norm === "tyre category") {
+    return "Select Category";
+  }
+  if (norm === "warranty period") {
+    return "Select Warranty";
+  }
+  if (norm === "oem tyres" || norm === "oem tyre") {
+    return "Select OEM";
+  }
+  const clean = label
+    .replace(/^tyres?\s+/i, "")
+    .replace(/\s+period$/i, "")
+    .trim();
+  return `Select ${clean}`;
+}
+
 export default function CategoryFilterBar({
   selected,
   filterGroups,
   onOpenMoreFilters,
+  onExtraFiltersChange,
   onChange,
   onClearAll,
   brandFilter,
@@ -106,20 +126,57 @@ export default function CategoryFilterBar({
   const searchParams = useSearchParams();
 
   // 100% Dynamic filter groups directly from API aggregations (matching the drawer)
-  const seenLabels = new Set<string>();
-  const dynamicGroups = filterGroups.filter((g) => {
-    if (SIZE_CODES.has(g.code.toLowerCase())) return false;
-    if (!g.options || g.options.length === 0) return false;
-    const norm = g.label.trim().toLowerCase();
-    if (seenLabels.has(norm)) return false;
-    seenLabels.add(norm);
-    return true;
-  });
+  const dynamicGroups = useMemo(() => {
+    const seenLabels = new Set<string>();
+    return filterGroups.filter((g) => {
+      if (SIZE_CODES.has(g.code.toLowerCase())) return false;
+      if (!g.options || g.options.length === 0) return false;
+      const norm = g.label.trim().toLowerCase();
+      if (seenLabels.has(norm)) return false;
+      seenLabels.add(norm);
+      return true;
+    });
+  }, [filterGroups]);
 
-  const hasMoreFilters = dynamicGroups.length > 5;
-  // If more than 5 filters exist, show top 5 + "More Filters" button.
-  // If 5 or fewer filters exist, show all of them and hide "More Filters".
-  const barGroups = hasMoreFilters ? dynamicGroups.slice(0, 5) : dynamicGroups;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [maxInLine, setMaxInLine] = useState<number>(dynamicGroups.length);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const calculateFit = () => {
+      const width = el.offsetWidth;
+      if (!width) return;
+      // Dropdown column min-width in px: each dropdown needs ~120px for comfortable label/text/chevron display
+      const minColWidth = 120;
+      const gap = 10;
+      const fitCount = Math.max(1, Math.floor((width + gap) / (minColWidth + gap)));
+      setMaxInLine((prev) => (prev !== fitCount ? fitCount : prev));
+    };
+
+    calculateFit();
+    const observer = new ResizeObserver(calculateFit);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [dynamicGroups.length]);
+
+  const lineGroups = useMemo(
+    () => dynamicGroups.slice(0, maxInLine),
+    [dynamicGroups, maxInLine]
+  );
+  const extraGroups = useMemo(
+    () => dynamicGroups.slice(maxInLine),
+    [dynamicGroups, maxInLine]
+  );
+
+  // The "More Filters" button should ONLY show if there are extra filters beyond what fits in the line
+  const hasMoreFilters = extraGroups.length > 0;
+
+  const extraCodesKey = extraGroups.map((g) => g.code).join(",");
+  useEffect(() => {
+    onExtraFiltersChange?.(extraGroups);
+  }, [extraCodesKey, extraGroups, onExtraFiltersChange]);
 
   const handleSelectChange = (code: string, value: string) => {
     if (onChange) {
@@ -154,20 +211,9 @@ export default function CategoryFilterBar({
     router.replace(p.toString() ? `${targetBase}?${p}` : targetBase, { scroll: false });
   };
 
-  if (barGroups.length === 0) {
+  if (dynamicGroups.length === 0) {
     return null;
   }
-
-  const gridColsClass =
-    barGroups.length === 5
-      ? "lg:grid-cols-5"
-      : barGroups.length === 4
-      ? "lg:grid-cols-4"
-      : barGroups.length === 3
-      ? "lg:grid-cols-3"
-      : barGroups.length === 2
-      ? "lg:grid-cols-2"
-      : "lg:grid-cols-1";
 
   // Active Filter Items to show directly inside the Red Header
   const hasSize = Array.from(SIZE_CODES).some((k) => (selected[k]?.length ?? 0) > 0);
@@ -340,7 +386,7 @@ export default function CategoryFilterBar({
                 <RedBarSortButton value={sort ?? "low-to-high"} onChange={onSortChange} />
               )}
 
-              {/* Desktop More Filters Button (only if >5 filters) */}
+              {/* Desktop More Filters Button (only if there are overflow filters beyond what fits in the line) */}
               {hasMoreFilters && (
                 <button
                   type="button"
@@ -348,7 +394,7 @@ export default function CategoryFilterBar({
                   className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 bg-black/25 hover:bg-black/35 active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider rounded-lg border border-white/20 shadow-xs transition-all cursor-pointer shrink-0"
                 >
                   <SlidersHorizontal size={12} strokeWidth={2.5} />
-                  <span>More Filters</span>
+                  <span>More Filters ({extraGroups.length})</span>
                 </button>
               )}
             </div>
@@ -397,8 +443,17 @@ export default function CategoryFilterBar({
 
         {/* ── Dynamic Dropdown Selectors Row (Hidden on mobile/tablet, shown on desktop lg+) ── */}
         <div className="hidden lg:block p-2 sm:p-2.5 bg-white rounded-b-xl border-t border-gray-100">
-          <div className={`grid grid-cols-2 sm:grid-cols-3 ${gridColsClass} gap-2 sm:gap-2.5 items-center`}>
-            {barGroups.map((group) => {
+          <div
+            ref={containerRef}
+            className="grid gap-2 sm:gap-2.5 items-center"
+            style={{
+              gridTemplateColumns:
+                lineGroups.length > 5
+                  ? `repeat(${lineGroups.length}, minmax(0, 1fr))`
+                  : `repeat(auto-fit, minmax(130px, 240px))`,
+            }}
+          >
+            {lineGroups.map((group) => {
               const currentValues = selected[group.code] ?? [];
               const matchedOption = group.options.find(
                 (o) =>
@@ -412,9 +467,9 @@ export default function CategoryFilterBar({
               );
               const currentValue = matchedOption ? matchedOption.value : (currentValues[0] ?? "");
               return (
-                <div key={group.code} className="relative">
+                <div key={group.code} className="relative min-w-0">
                   <label
-                    className="block text-[9.5px] sm:text-[10px] font-black text-gray-700 uppercase tracking-wider mb-0.5 truncate"
+                    className="block text-[9.5px] sm:text-[10px] font-black text-gray-700 uppercase tracking-wider mb-0.5 truncate whitespace-nowrap"
                     title={group.label}
                   >
                     {group.label}
@@ -423,9 +478,9 @@ export default function CategoryFilterBar({
                     <select
                       value={currentValue}
                       onChange={(e) => handleSelectChange(group.code, e.target.value)}
-                      className="w-full h-8 sm:h-8.5 pl-2.5 pr-7 bg-white border border-gray-200 hover:border-[#ed1c24] focus:border-[#ed1c24] focus:ring-1 focus:ring-[#ed1c24] rounded-md text-xs font-bold text-gray-900 appearance-none outline-none transition-colors cursor-pointer shadow-2xs truncate"
+                      className="w-full h-8 sm:h-8.5 pl-2 sm:pl-2.5 pr-5.5 sm:pr-6 bg-white border border-gray-200 hover:border-[#ed1c24] focus:border-[#ed1c24] focus:ring-1 focus:ring-[#ed1c24] rounded-md text-[10.5px] sm:text-[11px] font-bold text-gray-900 appearance-none outline-none transition-colors cursor-pointer shadow-2xs truncate"
                     >
-                      <option value="">{`Select ${group.label}`}</option>
+                      <option value="">{getShortPlaceholder(group.label)}</option>
                       {currentValue && !group.options.some((o) => o.value === currentValue) && (
                         <option value={currentValue}>{currentValues[0] || currentValue}</option>
                       )}
@@ -437,7 +492,7 @@ export default function CategoryFilterBar({
                     </select>
                     <ChevronDown
                       size={13}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                      className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                     />
                   </div>
                 </div>

@@ -625,13 +625,13 @@ function AccountDashboard() {
                         <div className="flex justify-start gap-2 mt-5 pt-4 border-t border-gray-100 w-full">
                           <button
                             onClick={() => setActiveTab("profile")}
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                            className="btn-sweep-light bg-gray-100 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => setActiveTab("profile")}
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                            className="btn-sweep-light bg-gray-100 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider"
                           >
                             Change Password
                           </button>
@@ -654,7 +654,7 @@ function AccountDashboard() {
                         setAddressMode(targetAddr ? "edit" : "create");
                         setActiveTab("addresses");
                       }}
-                      className="border border-gray-300 hover:bg-gray-50 text-gray-800 px-3.5 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                      className="btn-sweep-light border border-gray-300 px-3.5 py-1.5 rounded text-xs font-bold uppercase tracking-wider"
                     >
                       Manage Addresses
                     </button>
@@ -683,7 +683,7 @@ function AccountDashboard() {
                               setAddressMode(defaultBillingAddress ? "edit" : "create");
                               setActiveTab("addresses");
                             }}
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                            className="btn-sweep-light bg-gray-100 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider"
                           >
                             Edit Address
                           </button>
@@ -713,7 +713,7 @@ function AccountDashboard() {
                               setAddressMode(defaultShippingAddress ? "edit" : "create");
                               setActiveTab("addresses");
                             }}
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                            className="btn-sweep-light bg-gray-100 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider"
                           >
                             Edit Address
                           </button>
@@ -809,7 +809,7 @@ function AccountDashboard() {
                             </div>
                             <button
                               onClick={() => moveToCart(item.id)}
-                              className="bg-black hover:bg-[#ed1c24] text-white text-[11px] font-bold py-2 mt-3 rounded-lg uppercase tracking-wider transition-colors w-full"
+                              className="btn-slide-black text-[11px] font-bold py-2 mt-3 rounded-lg uppercase tracking-wider w-full"
                             >
                               Add to cart
                             </button>
@@ -857,7 +857,7 @@ function AccountDashboard() {
                             )}
                             <button
                               onClick={() => { setEditingAddress(defaultBillingAddress || null); setAddressMode(defaultBillingAddress ? "edit" : "create"); }}
-                              className="mt-4 border border-gray-300 hover:bg-gray-100 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                              className="btn-sweep-light mt-4 border border-gray-300 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider"
                             >
                               Change Billing Address
                             </button>
@@ -883,7 +883,7 @@ function AccountDashboard() {
                             )}
                             <button
                               onClick={() => { setEditingAddress(defaultShippingAddress || null); setAddressMode(defaultShippingAddress ? "edit" : "create"); }}
-                              className="mt-4 border border-gray-300 hover:bg-gray-100 text-gray-800 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                              className="btn-sweep-light mt-4 border border-gray-300 px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider"
                             >
                               Change Shipping Address
                             </button>
@@ -924,9 +924,9 @@ function AccountDashboard() {
                                     <td className="px-3 py-2.5 text-gray-800 whitespace-nowrap">{a.telephone ?? ""}</td>
                                     <td className="px-3 py-2.5 whitespace-nowrap">
                                       <button onClick={() => { setEditingAddress(a); setAddressMode("edit"); }}
-                                        className="border border-gray-300 hover:bg-gray-100 text-gray-800 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-colors mr-1.5">Edit</button>
+                                        className="btn-sweep-light border border-gray-300 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider mr-1.5">Edit</button>
                                       <button onClick={() => handleDeleteAddress(a.id)}
-                                        className="border border-red-300 hover:bg-red-50 text-red-600 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-colors">Delete</button>
+                                        className="btn-sweep-light border border-red-300 text-red-600 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider">Delete</button>
                                     </td>
                                   </tr>
                                 ))}
@@ -940,7 +940,7 @@ function AccountDashboard() {
                       })()}
                       <button
                         onClick={() => setAddressMode("create")}
-                        className="bg-black hover:bg-[#ed1c24] text-white px-5 py-2.5 rounded font-black text-xs uppercase tracking-wider transition-colors"
+                        className="btn-slide-black px-5 py-2.5 rounded font-black text-xs uppercase tracking-wider"
                       >
                         Add New Address
                       </button>
@@ -1144,7 +1144,7 @@ function AccountDashboard() {
                     <button
                       type="submit"
                       disabled={profileSaving}
-                      className="bg-black hover:bg-[#ed1c24] text-white px-6 py-2.5 rounded font-black text-xs uppercase tracking-wider transition-colors disabled:opacity-60"
+                      className="btn-slide-black px-6 py-2.5 rounded font-black text-xs uppercase tracking-wider disabled:opacity-60"
                     >
                       {profileSaving ? "Saving..." : "Save"}
                     </button>
@@ -1366,7 +1366,7 @@ function OrderDetailView({
         <p className="text-sm text-[#ed1c24] font-bold uppercase tracking-wider mb-4">Order not found.</p>
         <button
           onClick={onBack}
-          className="border border-gray-300 hover:bg-gray-50 text-gray-800 px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+          className="btn-sweep-light border border-gray-300 px-4 py-2 rounded text-xs font-bold uppercase tracking-wider"
         >
           Back to Orders
         </button>
@@ -1736,7 +1736,7 @@ function OrdersList({
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => onViewOrder?.(o.number)}
-                        className="w-[82px] h-[30px] flex items-center justify-center bg-[#f0f2f5] hover:bg-[#e4e7eb] text-gray-700 rounded text-xs font-normal transition-colors cursor-pointer"
+                        className="btn-sweep-light w-[82px] h-[30px] flex items-center justify-center bg-[#f0f2f5] rounded text-xs font-normal cursor-pointer"
                       >
                         View Order
                       </button>
@@ -1744,7 +1744,7 @@ function OrdersList({
                         <button
                           onClick={() => handleReorder(o.number)}
                           disabled={reordering === o.number}
-                          className="w-[82px] h-[30px] flex items-center justify-center gap-1.5 bg-[#f0f2f5] hover:bg-[#e4e7eb] text-gray-700 rounded text-xs font-normal transition-colors disabled:opacity-70 cursor-pointer"
+                          className="btn-sweep-light w-[82px] h-[30px] flex items-center justify-center gap-1.5 bg-[#f0f2f5] rounded text-xs font-normal disabled:opacity-70 cursor-pointer"
                         >
                           {reordering === o.number ? (
                             <>

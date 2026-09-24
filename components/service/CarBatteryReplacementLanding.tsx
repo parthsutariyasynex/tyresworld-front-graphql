@@ -208,7 +208,7 @@ function CallbackForm() {
           className="btn-slide-red w-full text-white font-bold text-xs sm:text-sm py-2.5 rounded-md flex items-center justify-center gap-2 disabled:opacity-60 uppercase tracking-wider cursor-pointer"
         >
           {submitting && <Loader2 size={14} className="animate-spin" />}
-          {submitting ? "Submitting..." : "Submit"}
+          <span>{submitting ? "Submitting..." : "Submit"}</span>
         </button>
         {status && (
           <p className={`text-xs font-semibold ${status.ok ? "text-emerald-400" : "text-red-400"}`}>
@@ -568,7 +568,7 @@ export default function CarBatteryReplacementLanding() {
             href="/en/car-battery"
             className="btn-slide-red inline-flex items-center gap-2 text-white font-bold text-sm px-8 py-3 rounded-lg shadow-sm uppercase tracking-wider cursor-pointer"
           >
-            Shop Car Battery
+            <span>Shop Car Battery</span>
           </Link>
         </div>
       </section>

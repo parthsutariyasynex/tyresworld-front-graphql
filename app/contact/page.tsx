@@ -6,6 +6,7 @@ import {
   Loader2,
 } from "lucide-react";
 import PageHeroBanner from "@/components/PageHeroBanner";
+import { APP_CONFIG } from "@/src/config/app-config";
 
 type ContactInfo = {
   address?: string | null;
@@ -107,23 +108,26 @@ export default function ContactPage() {
 
             <div className="space-y-5 mb-8">
               {/* ADDRESS */}
-              {(contactInfo?.address ?? true) && (
-                <div className="flex items-start gap-4">
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#d52d27] flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                    <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                    </svg>
-                  </div>
-                  <div className="pt-0.5">
-                    <h3 className="text-xs sm:text-[13px] font-black uppercase tracking-wide text-gray-950 mb-1">
-                      ADDRESS
-                    </h3>
-                    <p className="text-xs sm:text-[13.5px] text-gray-800 leading-snug">
-                      {contactInfo?.address || "DSP Trade Hub FZ-LLC, Compass Building, Al Shohada Road, AL Hamra Industrial Zone-FZ, Ras Al Khaimah, United Arab Emirates"}
-                    </p>
-                  </div>
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#d52d27] flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                  <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                  </svg>
                 </div>
-              )}
+                <div className="pt-0.5">
+                  <h3 className="text-xs sm:text-[13px] font-black uppercase tracking-wide text-gray-950 mb-1">
+                    ADDRESS
+                  </h3>
+                  {/* The site's own establishing config, not kleverFooter's
+                      contactInfo.address — that API field still reflects an
+                      old registered address. */}
+                  <p className="text-xs sm:text-[13.5px] text-gray-800 leading-snug">
+                    <span className="font-bold">{APP_CONFIG.contact.company}</span>
+                    <br />
+                    {APP_CONFIG.contact.address}
+                  </p>
+                </div>
+              </div>
 
               {/* WHATSAPP */}
               <div className="flex items-start gap-4">
@@ -249,7 +253,7 @@ export default function ContactPage() {
                 <button
                   type="button"
                   onClick={() => setSent(false)}
-                  className="mt-2 bg-black hover:bg-[#ed1c24] text-white px-6 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors"
+                  className="btn-slide-black mt-2 px-6 py-2 rounded text-xs font-bold uppercase tracking-wider"
                 >
                   Send another message
                 </button>
@@ -327,7 +331,7 @@ export default function ContactPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-black hover:bg-[#ed1c24] text-white px-8 py-2.5 rounded text-xs font-black uppercase tracking-wider transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                    className="btn-slide-black px-8 py-2.5 rounded text-xs font-black uppercase tracking-wider disabled:opacity-50 inline-flex items-center gap-2"
                   >
                     {loading && <Loader2 size={14} className="animate-spin" />}
                     <span>{loading ? "SUBMITTING…" : "SUBMIT"}</span>

@@ -553,7 +553,11 @@ body {
     transform: scaleY(0);
     transform-origin: bottom center;
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1;
+    /* Negative, not +1: a positioned pseudo-element always paints above
+       plain (unwrapped) text/inline content regardless of a positive
+       z-index — only a negative one reliably stays under the label
+       without requiring every caller to wrap its text in a <span>. */
+    z-index: -1;
     pointer-events: none;
   }
 
@@ -595,7 +599,7 @@ body {
     transform: scaleY(0);
     transform-origin: bottom center;
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1;
+    z-index: -1;
     pointer-events: none;
   }
 
@@ -632,7 +636,7 @@ body {
     transform: scaleY(0);
     transform-origin: bottom center;
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1;
+    z-index: -1;
     pointer-events: none;
   }
 
@@ -719,7 +723,11 @@ body {
 
   .btn-tocart::before {
     content: "";
-    @apply absolute inset-0 z-0;
+    @apply absolute inset-0;
+    /* Negative: a positioned pseudo-element paints above plain text
+       regardless of a positive z-index — negative is what actually
+       keeps it under the label without requiring a wrapping <span>. */
+    z-index: -1;
     background: var(--brand-ink);
     transform: scaleY(0);
     transform-origin: bottom center;
@@ -751,7 +759,8 @@ body {
 
   .btn-enquiry::before {
     content: "";
-    @apply absolute inset-0 z-0;
+    @apply absolute inset-0;
+    z-index: -1;
     background: var(--brand-red);
     transform: scaleY(0);
     transform-origin: bottom center;
@@ -787,7 +796,8 @@ body {
 
   .btn-cta::before {
     content: "";
-    @apply absolute inset-0 z-0;
+    @apply absolute inset-0;
+    z-index: -1;
     background: var(--brand-ink);
     transform: scaleY(0);
     transform-origin: bottom center;
@@ -2234,7 +2244,7 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   padding: 0;
   overflow: visible;
-  height: 72px;
+  height: 66px;
   position: relative;
 }
 
@@ -2248,7 +2258,7 @@ body {
   background-color: #353d41;
   border-radius: 50px 0 0 50px;
   border: none;
-  height: 60px;
+  height: 54px;
   column-gap: 6px;
   position: relative;
   padding-right: 18px;
@@ -2327,13 +2337,13 @@ html[lang="ar"] .nav-tabs::before {
 /* Right inputs tab content — White Pill with red surround and light grey divider between steps */
 .tab-content {
   background-color: #ffffff;
-  height: 56px;
+  height: 48px;
   width: 65%;
   border-radius: 50px;
   display: flex;
   align-items: center;
-  margin-right: 10px;
-  margin-left: 14px;
+  margin-right: 8px;
+  margin-left: 20px;
   padding: 0;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -2341,8 +2351,8 @@ html[lang="ar"] .nav-tabs::before {
 }
 
 html[lang="ar"] .tab-content {
-  margin-left: 10px;
-  margin-right: 14px;
+  margin-left: 8px;
+  margin-right: 20px;
 }
 
 .tab-inner {
@@ -2425,7 +2435,7 @@ html[lang="ar"] .tab-content {
     top: 50%;
     transform: translateY(-50%);
     width: 1px;
-    height: 28px;
+    height: 24px;
     background: rgba(0, 0, 0, 0.12);
   }
 }
@@ -2438,7 +2448,7 @@ html[lang="ar"] .tab-content {
   width: 100%;
   padding: 0 14px;
   height: 100%;
-  min-height: 54px;
+  min-height: 48px;
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -2682,6 +2692,21 @@ html[lang="ar"] .tab-content {
   line-height: 1.2;
 }
 
+/* ── Dark-background CMS blocks (How It Works / Top Reasons — both sit on
+   bg-black) — same admin-authored HTML, inverted text colors only. ── */
+.cms-content-dark h1,
+.cms-content-dark h2,
+.cms-content-dark h3,
+.cms-content-dark h4,
+.cms-content-dark strong {
+  color: #ffffff;
+}
+
+.cms-content-dark p,
+.cms-content-dark li {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 /* ── CMS legacy grid + utility classes ────────────────────────────
    Magento's Page Builder content (Car Tyre Service, Car Battery
    Service, and every other page rendered through the CMS_PAGE branch
@@ -2827,6 +2852,10 @@ html[lang="ar"] .tab-content {
     flex: 0 0 50%;
     max-width: 50%;
   }
+  .cms-content .col-md-4 {
+    flex: 0 0 33.3333%;
+    max-width: 33.3333%;
+  }
 }
 @media (min-width: 1024px) {
   .cms-content .col-lg-3 {
@@ -2855,6 +2884,96 @@ html[lang="ar"] .tab-content {
     flex: 0 0 100%;
     max-width: 100%;
   }
+  .cms-content .col-xl-2 {
+    flex: 0 0 16.6667%;
+    max-width: 16.6667%;
+  }
+}
+
+/* ── "How It Works" numbered step grid (.steps .box .icon .number
+   .text-block) — the admin's raw SVGs carry no size of their own, so
+   without this every step's icon rendered at its own arbitrary intrinsic
+   size and threw the row out of alignment. ── */
+.cms-content .steps .box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  cursor: default;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cms-content .steps .box:hover {
+  transform: translateY(-4px);
+}
+
+.cms-content .steps .icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  margin-bottom: 1.25rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  transition:
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cms-content .steps .box:hover .icon {
+  transform: scale(1.06);
+  border-color: #ed1c24;
+  box-shadow: 0 0 0 5px rgba(237, 28, 36, 0.18);
+}
+
+.cms-content .steps .icon svg {
+  width: 56px;
+  height: 56px;
+  max-width: 100%;
+  max-height: 100%;
+  /* Only reaches paths that declare no fill of their own (e.g. the
+     calendar/pay/wrench icons) — a path with its own fill="#.." attribute
+     (e.g. the multi-tone tyre icon) always keeps that instead, since CSS
+     inheritance only applies where nothing more specific is declared. */
+  fill: #ffffff;
+}
+
+.cms-content .steps .icon .number {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: var(--brand-red, #ed1c24);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cms-content .steps .box:hover .icon .number {
+  transform: scale(1.1);
+}
+
+.cms-content .steps .text-block h4 {
+  margin-top: 0;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cms-content .steps .box:hover .text-block h4 {
+  color: #ed1c24;
 }
 
 /* Alternating image/text service rows (checks-service) */
@@ -4800,7 +4919,7 @@ html[lang="ar"] .disable-sticky .nav-tabs {
 
 .ptr-finder-slot {
   position: relative;
-  min-height: 72px;
+  min-height: 66px;
 }
 
 @media (max-width: 767px) {
@@ -4948,6 +5067,10 @@ html[lang="ar"] .disable-sticky .nav-tabs {
   background: rgb(var(--c-surface));
 }
 
+.ptr-home .tyres-finder-inner .finder-box {
+  cursor: pointer;
+}
+
 .ptr-home .tyres-finder-inner .finder-box .box-image > a {
   width: 100%;
   height: 10rem;
@@ -4963,7 +5086,10 @@ html[lang="ar"] .disable-sticky .nav-tabs {
     transform 0.25s ease;
 }
 
-.ptr-home .tyres-finder-inner .finder-box .box-image > a:hover {
+/* Hovering anywhere on the card (not just the image itself) lifts the
+   image and highlights the title together, matching the hover pattern
+   used by every other card on the site. */
+.ptr-home .tyres-finder-inner .finder-box:hover .box-image > a {
   transform: translateY(-2px);
   box-shadow:
     0 20px 25px -5px rgb(0 0 0 / 0.12),
@@ -4972,11 +5098,45 @@ html[lang="ar"] .disable-sticky .nav-tabs {
 
 .ptr-home .tyres-finder-inner .finder-box .box-image > a img {
   border-radius: 0.75rem;
+  transition: transform 0.3s ease;
+}
+
+.ptr-home .tyres-finder-inner .finder-box:hover .box-image > a img {
+  transform: scale(1.04);
 }
 
 .ptr-home .tyres-finder-inner .finder-box h3 {
+  position: relative;
+  display: inline-block;
   font-size: 0.8125rem;
   font-weight: 600;
+  padding-bottom: 0.4rem;
+}
+
+.ptr-home .tyres-finder-inner .finder-box h3 a {
+  color: #111;
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.ptr-home .tyres-finder-inner .finder-box:hover h3 a {
+  color: var(--brand-red, #ed1c24);
+}
+
+/* Red accent line under the title, grows in from the left on hover. */
+.ptr-home .tyres-finder-inner .finder-box h3::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background: var(--brand-red, #ed1c24);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ptr-home .tyres-finder-inner .finder-box:hover h3::after {
+  width: 100%;
 }
 
 /* Dark sections become inset rounded panels rather than full-bleed bands. */
@@ -5120,7 +5280,7 @@ body:has(.ptr-home) .site-footer .widget-col > h4 {
 .ptr-offers-slide-img {
   display: block;
   width: 100%;
-  aspect-ratio: 559 / 391;
+  aspect-ratio: 1920 / 605;
   border-radius: 0.75rem;
   overflow: hidden;
   background: rgb(var(--c-fill));
@@ -5386,7 +5546,11 @@ body:has(.ptr-home) .site-footer .widget-col > h4 {
 
   html[lang="ar"] .ptr-sticky-bottom-card .selection-list > li + li::before,
   html[lang="ar"] .ptr-finder .selection-list > li + li::before,
-  html[lang="ar"] .disable-sticky.static-finder .selection-list > li + li::before {
+  html[lang="ar"]
+    .disable-sticky.static-finder
+    .selection-list
+    > li
+    + li::before {
     left: auto !important;
     right: 0 !important;
   }

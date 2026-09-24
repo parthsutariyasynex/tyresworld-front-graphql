@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
-import { useNavigationTrail } from "@/lib/navigationTrail";
 
 export interface BreadcrumbExtraItem {
   label: string;
@@ -16,6 +15,13 @@ export interface BreadcrumbExtraItem {
 interface BreadcrumbsProps {
   /** Current page's display label — normally the same text as the page's H1/title. */
   label: string;
+  /**
+   * Ancestor crumbs shown between Home and `label` (e.g. "Tyres" on a brand
+   * page). Always this page's own real parent, never the visitor's browsing
+   * history — so a page's breadcrumb is the same no matter where they came
+   * from.
+   */
+  parents?: BreadcrumbExtraItem[];
   /** In-page wizard sub-steps (e.g. make → model → year) appended after the current page. */
   extra?: BreadcrumbExtraItem[];
   /**
@@ -39,40 +45,42 @@ interface RenderCrumb {
 }
 
 /**
- * Site-wide breadcrumb driven by the visitor's actual navigation history for
- * this tab (tracked by NavigationTrailProvider), not a hardcoded per-page
- * hierarchy — so it reflects wherever they actually came from.
+ * Site-wide breadcrumb driven by each page's own declared context (an
+ * optional parent chain + this page's label), not the visitor's session
+ * navigation history — a page's breadcrumb must be identical whether they
+ * arrived from Home, a search engine, or three unrelated pages earlier in
+ * the same tab.
  */
 export default function Breadcrumbs({
   label,
+  parents = [],
   extra = [],
   onCurrentClick,
   variant = "banner",
 }: BreadcrumbsProps) {
   const pathname = usePathname();
-  const { trail, visit } = useNavigationTrail();
-
-  useEffect(() => {
-    if (!pathname || !label) return;
-    visit(pathname, label);
-  }, [pathname, label, visit]);
-
   const hasExtra = extra.length > 0;
 
   const crumbs: RenderCrumb[] = useMemo(() => {
-    const pageCrumbs: RenderCrumb[] = trail.map((entry, idx) => {
-      const isLastPageCrumb = idx === trail.length - 1;
-      const isCurrent = isLastPageCrumb && !hasExtra;
-      const backHandler = isLastPageCrumb && hasExtra ? onCurrentClick : undefined;
-      return {
-        key: entry.path,
-        label: entry.label,
-        href: isCurrent || backHandler ? undefined : entry.path,
-        onClick: backHandler,
-        isHome: false,
-        isCurrent,
-      };
-    });
+    const parentCrumbs: RenderCrumb[] = parents.map((p, idx) => ({
+      key: `parent-${idx}-${p.label}`,
+      label: p.label,
+      href: p.href,
+      onClick: p.onClick,
+      isHome: false,
+      isCurrent: false,
+    }));
+    const backHandler = hasExtra ? onCurrentClick : undefined;
+    const currentCrumb: RenderCrumb = {
+      key: "current",
+      label,
+      // When wizard sub-steps follow, this page's own crumb becomes a "back"
+      // step — via the given handler, or else a plain link to this same URL.
+      href: hasExtra && !backHandler ? pathname || undefined : undefined,
+      onClick: backHandler,
+      isHome: false,
+      isCurrent: !hasExtra,
+    };
     const extraCrumbs: RenderCrumb[] = extra.map((e, idx) => ({
       key: `extra-${idx}-${e.label}`,
       label: e.label,
@@ -83,10 +91,11 @@ export default function Breadcrumbs({
     }));
     return [
       { key: "home", label: "Home", href: "/", isHome: true, isCurrent: false },
-      ...pageCrumbs,
+      ...parentCrumbs,
+      currentCrumb,
       ...extraCrumbs,
     ];
-  }, [trail, extra, hasExtra, onCurrentClick]);
+  }, [label, parents, extra, hasExtra, onCurrentClick, pathname]);
 
   const isDark = variant === "banner";
 

@@ -507,7 +507,7 @@ function StoreLocatorContent() {
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              className="bg-black hover:bg-[#ed1c24] text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-xs sm:text-sm transition-colors cursor-pointer shrink-0 shadow-2xs"
+              className="btn-slide-black px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-xs sm:text-sm cursor-pointer shrink-0 shadow-2xs"
             >
               <Search size={15} />
               <span>{"Search"}</span>
@@ -517,14 +517,14 @@ function StoreLocatorContent() {
               type="button"
               onClick={handleUseMyLocation}
               disabled={locating}
-              className="border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 font-semibold text-xs sm:text-sm transition-colors cursor-pointer shrink-0 disabled:opacity-60 shadow-2xs"
+              className="btn-sweep-light border border-gray-300 bg-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 font-semibold text-xs sm:text-sm cursor-pointer shrink-0 disabled:opacity-60 shadow-2xs"
             >
               {locating ? (
-                <Loader2 size={15} className="animate-spin text-[#ed1c24]" />
+                <Loader2 size={15} className="animate-spin" />
               ) : (
-                <Crosshair size={15} className="text-emerald-700" />
+                <Crosshair size={15} />
               )}
-              <span className="text-emerald-950 font-semibold">
+              <span className="font-semibold">
                 {locating ? ("Locating...") : "Use my location"}
               </span>
             </button>
@@ -701,7 +701,7 @@ function StoreLocatorContent() {
                             setSelectedStoreId(branch.id);
                             setExpandedStoreId(isExpanded ? null : branch.id);
                           }}
-                          className="bg-[#ed1c24] hover:bg-[#c6181d] active:bg-[#aa1217] text-white font-bold text-xs px-4 py-2 rounded-lg transition-all shadow-xs flex items-center gap-1.5 cursor-pointer rtl:mr-auto ltr:ml-auto"
+                          className="btn-slide-red font-bold text-xs px-4 py-2 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer rtl:mr-auto ltr:ml-auto"
                         >
                           <span>{"Book Installer"}</span>
                           <ArrowRight size={13} className="rtl:rotate-180" />
@@ -763,7 +763,7 @@ function StoreLocatorContent() {
                           <button
                             type="button"
                             onClick={() => handleConfirmStoreBooking(branch)}
-                            className="w-full bg-black hover:bg-[#ed1c24] text-white font-extrabold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                            className="btn-slide-black w-full font-extrabold text-xs uppercase tracking-wider py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer"
                           >
                             <span>{"Confirm & Proceed to Checkout"}</span>
                             <ArrowRight size={14} className="rtl:rotate-180" />
@@ -779,7 +779,7 @@ function StoreLocatorContent() {
               <div className="pt-2">
                 <Link
                   href={`/${locale}/cart`}
-                  className="inline-flex items-center gap-2 bg-[#f3f4f6] hover:bg-gray-200 text-gray-800 font-bold text-xs px-4 py-2.5 rounded-lg border border-gray-300 transition-colors shadow-2xs cursor-pointer"
+                  className="btn-sweep-light inline-flex items-center gap-2 bg-[#f3f4f6] font-bold text-xs px-4 py-2.5 rounded-lg border border-gray-300 shadow-2xs cursor-pointer"
                 >
                   <span className="rtl:rotate-180">←</span>
                   <span>{"Back to Cart"}</span>
@@ -880,7 +880,7 @@ function StoreLocatorContent() {
                         <button
                           type="button"
                           onClick={() => setExpandedVanId(isExpanded ? null : van.id)}
-                          className="bg-[#ed1c24] hover:bg-[#c6181d] active:bg-[#aa1217] text-white font-bold text-xs px-4 py-2 rounded-lg transition-all shadow-xs flex items-center gap-1.5 cursor-pointer rtl:mr-auto ltr:ml-auto"
+                          className="btn-slide-red font-bold text-xs px-4 py-2 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer rtl:mr-auto ltr:ml-auto"
                         >
                           <span>{"Book Mobile Van"}</span>
                           <ArrowRight size={13} className="rtl:rotate-180" />
@@ -959,7 +959,7 @@ function StoreLocatorContent() {
                           <button
                             type="button"
                             onClick={() => handleConfirmMobileVan(van)}
-                            className="w-full bg-black hover:bg-[#ed1c24] text-white font-extrabold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                            className="btn-slide-black w-full font-extrabold text-xs uppercase tracking-wider py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer"
                           >
                             <span>{"Confirm Mobile Van & Proceed to Checkout"}</span>
                             <ArrowRight size={14} className="rtl:rotate-180" />
@@ -990,7 +990,7 @@ function StoreLocatorContent() {
             <button
               type="button"
               onClick={handleConfirmFreeShipping}
-              className="w-full bg-black hover:bg-[#ed1c24] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider py-4 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+              className="btn-slide-black w-full font-extrabold text-xs sm:text-sm uppercase tracking-wider py-4 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-sm"
             >
               <span>{"PROCEED TO CHECKOUT"}</span>
               <ArrowRight size={16} className="rtl:rotate-180" />

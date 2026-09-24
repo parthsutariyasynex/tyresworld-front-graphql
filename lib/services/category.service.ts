@@ -93,7 +93,7 @@ export async function getCategoryProducts(params: {
   currentPage?: number;
   store?: string;
 }): Promise<CategoryProductsResult> {
-  const pageSize = params.pageSize ?? 12;
+  const pageSize = params.pageSize ?? 24;
   const currentPage = params.currentPage ?? 1;
 
   const variables: Record<string, unknown> = {

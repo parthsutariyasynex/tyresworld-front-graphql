@@ -13,6 +13,7 @@ import type { Product } from "@/lib/data";
 import type { ApiProductsResponse } from "@/lib/magento";
 import { useOfferLabels } from "@/lib/useOfferLabels";
 import { useCart } from "@/lib/cart-context";
+import { useOverviewDrawer } from "@/lib/overview-drawer-context";
 import ProductImage from "@/components/ProductImage";
 import TyreListingCard from "@/components/TyreListingCard";
 import TyreListingCardSkeleton from "@/components/TyreListingCardSkeleton";
@@ -290,6 +291,7 @@ function PricingCard({
       ? product.qtyOptions.defaultQty
       : setSize;
   const { addItem } = useCart();
+  const { openDrawer } = useOverviewDrawer();
   const [qty, setQty] = useState(defaultPdpQty);
   const [qtyOpen, setQtyOpen] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -357,6 +359,7 @@ function PricingCard({
       } else {
         setCartAdded(true);
         setTimeout(() => setCartAdded(false), 2000);
+        openDrawer("cart");
       }
     } finally {
       setAdding(false);
@@ -1000,11 +1003,6 @@ export default function ProductDetailInner({
 
   const currentImg = gallery[activeImg]?.url ?? product.image;
 
-  /* ── Breadcrumb categories ──────────────────────────────────── */
-  const tyreCategory = product.categories?.find(c =>
-    /tyre|tire|wheel/i.test(c.name) || c.urlKey?.includes("tyre") || c.urlKey?.includes("tire")
-  ) ?? product.categories?.[0];
-
   const displayTitle = [
     specs.size,
     specs.pattern?.toUpperCase(),
@@ -1048,10 +1046,18 @@ export default function ProductDetailInner({
 
       <PageHeroBanner
         title={product.name}
+        // Never fall back to specs.size here — that's a raw tyre-size string
+        // (e.g. "205/55 R16"), not real page context. product.name is
+        // always a clean, human-readable label.
         breadcrumbLabel={
-          product.brandName
-            ? `${product.brandName} ${specs.pattern || specs.size || ""}`.trim()
-            : specs.pattern || specs.size || product.name
+          product.brandName && specs.pattern
+            ? `${product.brandName} ${specs.pattern}`.trim()
+            : product.name
+        }
+        breadcrumbParents={
+          product.categories?.some(c => /tyre|tire/i.test(c.name) || c.urlKey?.includes("tyre"))
+            ? [{ label: "Tyres", href: "/tyres" }]
+            : undefined
         }
       />
 
@@ -1362,7 +1368,7 @@ function PdpPriceInfoModal({
           <button
             type="button"
             onClick={onClose}
-            className="bg-black hover:bg-gray-900 text-white font-bold text-xs sm:text-sm uppercase tracking-wider rounded-lg px-8 py-2.5 sm:py-3 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
+            className="btn-slide-black font-bold text-xs sm:text-sm uppercase tracking-wider rounded-lg px-8 py-2.5 sm:py-3 flex items-center gap-2 shadow-md cursor-pointer"
           >
             <span>Done</span>
             <ArrowRight size={16} strokeWidth={2.5} />
@@ -1552,7 +1558,7 @@ function ShareModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+              className="btn-sweep-light px-5 py-2.5 rounded text-xs font-bold bg-gray-100 cursor-pointer"
             >
               Cancel
             </button>

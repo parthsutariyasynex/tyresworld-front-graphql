@@ -9,6 +9,7 @@ import VehicleFitmentModal from "@/components/VehicleFitmentModal";
 import type { Product } from "@/lib/data";
 import { type Locale } from "@/lib/i18n";
 import { useCart } from "@/lib/cart-context";
+import { useOverviewDrawer } from "@/lib/overview-drawer-context";
 import { Money } from "@/components/Price";
 import { APP_CONFIG } from "@/src/config/app-config";
 import { buildBrandSlug } from "@/lib/filterBuilder";
@@ -34,40 +35,28 @@ function getPatternName(p: Product): string {
   return clean || p.name;
 }
 
+function formatWarrantyBadge(w?: string | null): string | null {
+  if (!w || !w.trim()) return null;
+  const clean = w.trim();
+  const num = clean.match(/\d+/)?.[0];
+  if (num) return `${num} YR WARRANTY`;
+  if (clean.toLowerCase().includes("warranty")) return clean.toUpperCase();
+  return `${clean.toUpperCase()} WARRANTY`;
+}
+
 /** Car icon sprite */
-function CarSprite() {
+function CarSprite({ className = "w-[41px] h-[14px] [background-size:466.67px_auto] [background-position:-15.75px_-15.17px]" }: { className?: string }) {
   return (
     <span
       role="img"
       aria-label="Compatible Vehicles"
-      className="inline-block align-middle select-none hover:opacity-75 transition-opacity"
+      className={`inline-block align-middle select-none hover:opacity-75 transition-opacity shrink-0 ${className}`}
       style={{
-        width: "41px",
-        height: "14px",
         backgroundImage: "url(/icons/sprite.png)",
         backgroundRepeat: "no-repeat",
-        backgroundSize: "466.67px auto",
-        backgroundPosition: "-15.75px -15.17px",
       }}
     />
   );
-}
-
-/** Brand Logo Box */
-function BrandLogoDisplay({ brandLabel, brandLogo }: { brandLabel: string; brandLogo?: string | null }) {
-  if (brandLogo) {
-    return (
-      /* eslint-disable-next-line @next/next/no-img-element */
-      <img
-        src={brandLogo}
-        alt={brandLabel}
-        className="max-h-7 max-w-[130px] w-auto object-contain"
-        loading="lazy"
-      />
-    );
-  }
-
-  return <span className="text-[13px] font-black uppercase tracking-wider text-gray-900">{brandLabel}</span>;
 }
 
 /** Single Tyre Half Column inside the Staggered Card */
@@ -76,14 +65,13 @@ function TyreHalfColumn({
   set2Price,
   locale,
   onOpenFitment,
+  labelPrefix,
 }: {
   product: Product;
-  /** Real set2_price for this side from Klever's kleverTyreBundles — falls
-      back to unitPrice*2 only if the bundle API didn't return one for this
-      SKU, since that's still a real per-unit price, not a fabricated number. */
   set2Price?: number;
   locale: Locale;
   onOpenFitment: () => void;
+  labelPrefix: "FRONT" | "REAR";
 }) {
   const href = product.urlKey ? `/${locale}/product/${product.urlKey}` : "#";
   const tyreSize = getTyreSizeWithIndex(product);
@@ -104,86 +92,114 @@ function TyreHalfColumn({
   const [priceInfoOpen, setPriceInfoOpen] = useState(false);
 
   return (
-    <div className="flex flex-col flex-1 p-3.5 sm:p-4 bg-white">
-      {/* ── Brand Logo Box ────────────────────────────────────────── */}
-      <div className="flex items-center justify-center h-9 my-1 px-2">
-        {brandHref ? (
-          <Link href={brandHref} aria-label={`${brandLabel} tyres`} className="inline-block">
-            <BrandLogoDisplay brandLabel={brandLabel} brandLogo={brandLogo} />
-          </Link>
-        ) : (
-          <BrandLogoDisplay brandLabel={brandLabel} brandLogo={brandLogo} />
-        )}
+    <div className="flex flex-col flex-1 p-2.5 sm:p-3 bg-white group">
+      {/* ── 0. Axle Tag (FRONT / REAR) ── */}
+      <div className="flex items-center justify-between gap-1 mb-1">
+        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-slate-900 text-white leading-none">
+          {labelPrefix}
+        </span>
+        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+          (2x Tyres)
+        </span>
       </div>
 
-      {/* ── Tyre Image with Warranty & Year Overlays ──────────────── */}
-      <div className="relative w-full my-2">
-        <Link href={href} className="block relative w-full h-[145px] sm:h-[160px]" aria-label={product.name}>
+      {/* ── 1. Top Header: Warranty Badge (Left) & Brand Logo (Right) ──
+          Same sizing as TyreListingCard.tsx (plain listing page) — kept
+          identical on purpose so the badge/logo look the same across the
+          plain and staggered (bundle) card types. */}
+      <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full min-h-[28px] sm:min-h-[38px] mb-1.5 sm:mb-2">
+        {/* Warranty Badge (Top Left - only shown when present on product) */}
+        {formatWarrantyBadge(warranty) ? (
+          <span className="inline-flex items-center bg-[#f0f2f5] text-gray-800 text-[10px] sm:text-[12px] font-extrabold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full uppercase tracking-tight shadow-2xs shrink-0 max-w-[48%] truncate">
+            {formatWarrantyBadge(warranty)}
+          </span>
+        ) : (
+          <div />
+        )}
+
+        {/* Brand Logo (Top Right) */}
+        <div className="flex items-center justify-end max-w-[65%] shrink-0">
+          {brandHref ? (
+            <Link href={brandHref} aria-label={`${brandLabel} tyres`}>
+              {brandLogo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={brandLogo} alt={brandLabel} className="w-[85px] sm:w-[130px] h-auto max-h-8 sm:max-h-11 object-contain" loading="lazy" />
+              ) : (
+                <span className="text-[10px] sm:text-[12px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
+              )}
+            </Link>
+          ) : brandLogo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={brandLogo} alt={brandLabel} className="w-[85px] sm:w-[130px] h-auto max-h-8 sm:max-h-11 object-contain" loading="lazy" />
+          ) : (
+            <span className="text-[10px] sm:text-[12px] font-black uppercase tracking-tight text-gray-900 truncate">{brandLabel}</span>
+          )}
+        </div>
+      </div>
+
+      {/* ── 2. Tyre Image Section ── */}
+      <div className="relative w-full h-[95px] sm:h-[110px] my-0.5">
+        <Link href={href} className="block relative w-full h-full" aria-label={product.name}>
           <ProductImage
             src={product.image}
             alt={product.name}
             fill
-            className="object-contain p-1 hover:scale-105 transition-transform duration-300 ease-out"
-            sizes="(max-width: 640px) 50vw, 320px"
+            className="object-contain p-0.5 drop-shadow-xs group-hover:scale-105 transition-transform duration-300 ease-out"
+            sizes="(max-width: 640px) 50vw, 260px"
           />
         </Link>
-
-        {/* Bottom-left warranty */}
-        {warranty && (
-          <span className="absolute left-0 bottom-0 z-10 text-[10px] sm:text-[10.5px] font-black uppercase text-gray-900 leading-none bg-white/70 px-1 py-0.5 rounded-xs backdrop-blur-xs">
-            {warranty}
-          </span>
-        )}
-
-        {/* Bottom-right year */}
-        {year && (
-          <span className="absolute right-0 bottom-0 z-10 text-[11px] font-black text-gray-900 leading-none">
-            {year}
-          </span>
-        )}
       </div>
 
-      {/* ── Pattern & Tyre Size ───────────────────────────────────── */}
-      <div className="text-center mt-2 px-1">
-        <Link href={href} className="block text-[14px] sm:text-[15.5px] font-black text-gray-900 hover:text-[#ed1c24] transition-colors leading-tight line-clamp-1">
-          {pattern}
-        </Link>
-        {tyreSize && (
-          <span className="block text-[13px] sm:text-[14px] font-bold text-gray-800 mt-0.5">
-            {tyreSize}
-          </span>
-        )}
-      </div>
+      {/* ── 3. 2-Column Split Information Section (Matching Image 2 / TyreListingCard layout) ── */}
+      <div className="grid grid-cols-2 gap-1.5 my-1 flex-1 items-end">
+        {/* Left Column: Pattern Name, Year/Origin, Size Box */}
+        <div className="flex flex-col justify-between min-w-0">
+          <div>
+            <Link href={href} className="text-[12px] sm:text-[13px] font-black text-gray-900 hover:text-[#ed1c24] transition-colors leading-tight block truncate" title={pattern}>
+              {pattern}
+            </Link>
+            {(year || origin) && (
+              <div className="text-[8.5px] sm:text-[9.5px] font-medium text-gray-500 mt-0.5 truncate">
+                {[year, origin].filter(Boolean).join(" | ")}
+              </div>
+            )}
+          </div>
 
-      {/* ── Car Icon + Country Origin ─────────────────────────────── */}
-      <div className="border-t border-b border-gray-100 py-1.5 px-2 flex items-center justify-between my-2.5">
-        <button
-          type="button"
-          onClick={onOpenFitment}
-          aria-label={`Vehicles that fit ${tyreSize}`}
-          title="See which cars fit this size"
-          className="inline-flex items-center text-gray-900 hover:text-[#ed1c24] transition-colors cursor-pointer"
-        >
-          <CarSprite />
-        </button>
-        {origin && <span className="text-[11px] font-bold text-gray-800">{origin}</span>}
-      </div>
-
-      {/* ── Price Section ─────────────────────────────────────────── */}
-      <div className="text-center px-1 mt-auto">
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
-          className="text-[10.5px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer"
-          aria-label="What's included in the fully fitted price"
-        >
-          Fully Fitted Price per Item
-        </button>
-        <div className="flex items-center justify-center gap-1 font-black text-gray-900 text-[19px] sm:text-[21px] leading-tight my-0.5">
-          <Money value={unitPrice} digits={2} />
+          {/* Tyre Size & Compatible Vehicle Box */}
+          <div className="border border-gray-200/90 rounded-md h-[26px] sm:h-[28px] px-1.5 flex items-center justify-between mt-1 bg-white shadow-2xs w-full">
+            <span className="text-[9.5px] sm:text-[11px] font-extrabold text-gray-900 truncate">
+              {tyreSize}
+            </span>
+            <button
+              type="button"
+              onClick={onOpenFitment}
+              aria-label={`Vehicles that fit ${tyreSize}`}
+              title="See which cars fit this size"
+              className="inline-flex items-center text-gray-900 hover:text-[#ed1c24] transition-colors cursor-pointer shrink-0 ml-1"
+            >
+              <CarSprite className="w-[28px] h-[10px] [background-size:318px_auto] [background-position:-10.7px_-10.3px]" />
+            </button>
+          </div>
         </div>
-        <div className="text-[11.5px] font-bold text-gray-700">
-          Set of 2: <Money value={resolvedSet2Price} digits={2} />
+
+        {/* Right Column: Price, Set of 2 Price, Fully Fitted Price */}
+        <div className="flex flex-col justify-between text-right shrink-0">
+          <div>
+            <div className="font-black text-gray-950 text-[15px] sm:text-[17px] leading-tight">
+              <Money value={unitPrice} digits={2} />
+            </div>
+            <div className="text-[9.5px] sm:text-[10.5px] font-bold text-gray-700 whitespace-nowrap mt-0.5">
+              Set of 2: <Money value={resolvedSet2Price} digits={2} />
+            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPriceInfoOpen(true); }}
+              className="text-[8.5px] sm:text-[9.5px] font-medium text-gray-500 hover:text-gray-800 hover:underline cursor-pointer block ml-auto mt-0.5 whitespace-nowrap"
+              aria-label="What's included in the fully fitted price"
+            >
+              Fully Fitted Price
+            </button>
+          </div>
         </div>
       </div>
 
@@ -205,21 +221,19 @@ export default function StaggeredTyreCard({
 }: {
   frontProduct: Product;
   rearProduct: Product;
-  /** Real combined price from Klever's kleverTyreBundles — the source of
-      truth for this pairing in the first place, so it's expected whenever
-      a pair reaches this card. Falls back to unitPrice*2+unitPrice*2 (still
-      real per-unit prices, not a fabricated number) only if it's ever
-      missing. */
   bundlePrice?: number;
   frontSet2Price?: number;
   rearSet2Price?: number;
   locale?: Locale;
 }) {
   const { addItem } = useCart();
+  const { openDrawer } = useOverviewDrawer();
   const [adding, setAdding] = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [activeFitmentProduct, setActiveFitmentProduct] = useState<Product | null>(null);
+
+  if (!frontProduct || !rearProduct) return null;
 
   const frontPrice = frontProduct.price > 0 ? frontProduct.price : 0;
   const rearPrice = rearProduct.price > 0 ? rearProduct.price : 0;
@@ -236,7 +250,6 @@ export default function StaggeredTyreCard({
     setAdding(true);
     setAddError(null);
     try {
-      // Add 2 front tyres and 2 rear tyres
       const resFront = await addItem(frontProduct, 2);
       const resRear = await addItem(rearProduct, 2);
       if (resFront?.error || resRear?.error) {
@@ -245,6 +258,7 @@ export default function StaggeredTyreCard({
       } else {
         setCartAdded(true);
         setTimeout(() => setCartAdded(false), 2500);
+        openDrawer("cart");
       }
     } finally {
       setAdding(false);
@@ -255,33 +269,35 @@ export default function StaggeredTyreCard({
 
   return (
     <li className="list-none h-full col-span-1">
-      <div className="flex flex-col h-full bg-white rounded-lg border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow">
+      <div className="flex flex-col h-full bg-white rounded-2xl border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-md transition-shadow">
         
         {/* ── Dual Columns (Left: Front, Right: Rear) ─────────────── */}
-        <div className="grid grid-cols-2 divide-x divide-gray-200 flex-1">
+        <div className="grid grid-cols-2 divide-x divide-gray-200/90 flex-1">
           <TyreHalfColumn
             product={frontProduct}
             set2Price={frontSet2Price}
             locale={locale}
             onOpenFitment={() => setActiveFitmentProduct(frontProduct)}
+            labelPrefix="FRONT"
           />
           <TyreHalfColumn
             product={rearProduct}
             set2Price={rearSet2Price}
             locale={locale}
             onOpenFitment={() => setActiveFitmentProduct(rearProduct)}
+            labelPrefix="REAR"
           />
         </div>
 
         {/* ── Bottom Combined Action Bar ──────────────────────────── */}
-        <div className="grid grid-cols-2 border-t border-gray-200 shrink-0">
+        <div className="grid grid-cols-2 border-t border-gray-200/90 shrink-0">
           {/* Left Button: SET OF 4 */}
           <button
             type="button"
             onClick={handleAddSetOf4}
             disabled={adding || isOutOfStock}
-            className={`btn-slide-black py-3.5 px-3 text-[12px] sm:text-[13px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99] ${
-              cartAdded ? "!bg-emerald-600" : ""
+            className={`btn-tocart py-3 px-2 text-[11px] sm:text-[12.5px] tracking-wider flex-none w-full h-auto rounded-none ${
+              cartAdded ? "is-added" : ""
             }`}
           >
             {adding ? (
@@ -307,7 +323,7 @@ export default function StaggeredTyreCard({
             target="_blank"
             rel="noopener noreferrer"
             title="Make Enquiry"
-            className="btn-slide-red py-3.5 px-3 text-[12px] sm:text-[13px] font-black uppercase tracking-wider flex items-center justify-center text-center cursor-pointer active:scale-[0.99]"
+            className="btn-enquiry py-3 px-2 text-[11px] sm:text-[12.5px] tracking-wider h-auto rounded-none"
           >
             <span>MAKE ENQUIRY</span>
           </a>

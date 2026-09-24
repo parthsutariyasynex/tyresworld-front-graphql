@@ -214,7 +214,7 @@ function TrackOrderInner() {
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center justify-center gap-2 bg-black hover:bg-[#ed1c24] text-white font-black text-[12px] uppercase tracking-wider py-3.5 px-8 rounded-sm transition-colors disabled:opacity-50"
+              className="btn-slide-black flex items-center justify-center gap-2 font-black text-[12px] uppercase tracking-wider py-3.5 px-8 rounded-sm disabled:opacity-50"
             >
               {loading ? "Searching…" : <><Search size={13} /> Find My Order <ArrowRight size={13} /></>}
             </button>

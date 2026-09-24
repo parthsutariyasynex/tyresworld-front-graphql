@@ -9,6 +9,8 @@ import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 import CategoryRail from "@/components/home/partora/CategoryRail";
 import HomeSearchBar from "@/components/home/partora/HomeSearchBar";
 
+import type { KleverHomeHero } from "@/lib/services/homepage.service";
+
 /* Shapes as /api/homepage already returns them — unchanged. */
 type Slide = {
   id: string;
@@ -17,7 +19,25 @@ type Slide = {
   href?: string;
   alt?: string;
   heading?: string;
+  newTab?: boolean;
 };
+
+interface PartoraHeroProps {
+  locale: string;
+  initialHero?: KleverHomeHero | null;
+}
+
+function mapHeroBanners(banners?: KleverHomeHero["banners"]): Slide[] {
+  return (banners ?? []).map((b, idx) => ({
+    id: `hero-banner-${idx}`,
+    image: b.image || "",
+    imageMobile: b.mobile_image || b.image || "",
+    href: b.url || "/tyres",
+    alt: b.title ?? "TyresWorld",
+    heading: b.title ?? "",
+    newTab: Boolean(b.new_tab),
+  }));
+}
 
 /**
  * Homepage hero, laid out the way Partora lays out theirs:
@@ -27,23 +47,23 @@ type Slide = {
  *   └───────────────────────────────────────────────────────────┘
  *     [ category rail 3 ][ banner slider 9 ]
  *
- * The banner slider is fed by /api/homepage — the same request and the
- * same `banners` shape the previous hero used.
+ * The banner slider is fed by dynamic Magento kleverHomepage.hero.banners.
  */
-export default function PartoraHero({ locale }: { locale: string }) {
+export default function PartoraHero({ locale, initialHero }: PartoraHeroProps) {
   const swiperRef = useRef<SwiperType | null>(null);
   const reducedMotion = usePrefersReducedMotion();
 
-  const [slides, setSlides] = useState<Slide[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [slides, setSlides] = useState<Slide[]>(() => mapHeroBanners(initialHero?.banners));
+  const [loading, setLoading] = useState(() => !initialHero?.banners?.length);
 
   useEffect(() => {
+    if (initialHero?.banners?.length) return;
     let active = true;
 
     fetch("/api/homepage")
       .then((res) => res.json())
       .then((data) => {
-        if (active) setSlides(data?.banners ?? []);
+        if (active && data?.banners) setSlides(data.banners);
       })
       .catch((err) => console.error("Failed to load hero slides", err))
       .finally(() => {
@@ -53,7 +73,7 @@ export default function PartoraHero({ locale }: { locale: string }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialHero]);
 
   return (
     <section className="ptr-hero pt-1 sm:pt-2">
@@ -115,7 +135,15 @@ export default function PartoraHero({ locale }: { locale: string }) {
                       <SwiperSlide key={slide.id}>
                         {slide.href ? (
                           <Link
-                            href={`/${locale}${slide.href}`}
+                            href={
+                              slide.href.startsWith("http")
+                                ? slide.href
+                                : slide.href.startsWith(`/${locale}`)
+                                ? slide.href
+                                : `/${locale}${slide.href.startsWith("/") ? "" : "/"}${slide.href}`
+                            }
+                            target={slide.newTab ? "_blank" : undefined}
+                            rel={slide.newTab ? "noopener noreferrer" : undefined}
                             aria-label={alt}
                             className="block w-full h-full relative"
                           >

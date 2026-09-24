@@ -342,20 +342,46 @@ export default function OverviewDrawer() {
     email: string;
   }>>([]);
   const [selectedBillingOption, setSelectedBillingOption] = useState<string>("0");
+  // Billing and shipping are the same address by default.
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [saveInAddressBook, setSaveInAddressBook] = useState(true);
-  const [showNewAddressModal, setShowNewAddressModal] = useState(false);
-  const [modalAddress, setModalAddress] = useState({
-    firstname: "",
-    lastname: "",
-    company: "",
-    street: "",
-    telephone: "",
-    city: "",
-    country_code: "AE",
-    postcode: "00000",
-    email: "",
-  });
+
+  // Every address input in this drawer (firstname/lastname/company/street/
+  // city/country_code/telephone) writes to `shippingForm` — `form` is only
+  // ever pre-filled once from the logged-in customer (see the "Pre-fill
+  // contact from auth" effect below) and is otherwise never updated by user
+  // input. Mirror the address fields from `shippingForm` into `form` on
+  // every change so the "Billing" address (used for the order-confirmed
+  // summary and the Contact & Vehicle step's preview line) automatically
+  // stays in sync with whatever the user actually typed as their address.
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      firstname: shippingForm.firstname || prev.firstname,
+      lastname: shippingForm.lastname || prev.lastname,
+      company: shippingForm.company,
+      phone: shippingForm.telephone || prev.phone,
+      email: shippingForm.email || prev.email,
+      street: shippingForm.street,
+      city: shippingForm.city,
+      country_code: shippingForm.country_code,
+      postcode: shippingForm.postcode,
+    }));
+  }, [shippingForm]);
+
+  // [COMMENTED OUT] Modal popup state for address addition
+  // const [showNewAddressModal, setShowNewAddressModal] = useState(false);
+  // const [modalAddress, setModalAddress] = useState({
+  //   firstname: "",
+  //   lastname: "",
+  //   company: "",
+  //   street: "",
+  //   telephone: "",
+  //   city: "",
+  //   country_code: "AE",
+  //   postcode: "00000",
+  //   email: "",
+  // });
 
   // Dynamic Vehicle state from /api/vehicles
   const [vehiclePlate, setVehiclePlate] = useState("");
@@ -383,6 +409,36 @@ export default function OverviewDrawer() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderError, setOrderError] = useState("");
   const [completedOrderNumber, setCompletedOrderNumber] = useState<string | null>(null);
+
+  // Error refs for auto-scrolling to error position
+  const orderErrorRef = useRef<HTMLDivElement | null>(null);
+  const cartErrorRef = useRef<HTMLDivElement | null>(null);
+  const couponErrorRef = useRef<HTMLParagraphElement | null>(null);
+
+  // Auto-scroll directly to orderError when error occurs
+  useEffect(() => {
+    if (orderError) {
+      if (activeSection !== "contact") {
+        setActiveSection("contact");
+      }
+      const timer = setTimeout(() => {
+        orderErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 80);
+      return () => clearTimeout(timer);
+    }
+  }, [orderError, activeSection, setActiveSection]);
+
+
+
+  // Auto-scroll to couponError
+  useEffect(() => {
+    if (couponError) {
+      const timer = setTimeout(() => {
+        couponErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 80);
+      return () => clearTimeout(timer);
+    }
+  }, [couponError]);
 
   // 1. Sync saved addresses from Customer Account or localStorage
   useEffect(() => {
@@ -679,6 +735,19 @@ export default function OverviewDrawer() {
   const [updatingCartUid, setUpdatingCartUid] = useState<string | null>(null);
   const [cartError, setCartError] = useState<string | null>(null);
 
+  // Auto-scroll to cartError
+  useEffect(() => {
+    if (cartError) {
+      if (activeSection !== "cart") {
+        setActiveSection("cart");
+      }
+      const timer = setTimeout(() => {
+        cartErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 80);
+      return () => clearTimeout(timer);
+    }
+  }, [cartError, activeSection, setActiveSection]);
+
   const handleCartUpdateQty = async (uid: string, qty: number) => {
     setUpdatingCartUid(uid);
     setCartError(null);
@@ -926,7 +995,12 @@ export default function OverviewDrawer() {
       return;
     }
 
-    const activeShipping = sameAsShipping ? form : {
+    // Always read from `shippingForm` — every address input in this drawer
+    // writes there regardless of `sameAsShipping` (there's no separate
+    // "different shipping address" sub-form to fall back to), so reading
+    // from the stale `form` object here would silently submit whatever it
+    // was last pre-filled with instead of what the user actually typed.
+    const activeShipping = {
       firstname: shippingForm.firstname,
       lastname: shippingForm.lastname,
       company: shippingForm.company,
@@ -938,32 +1012,17 @@ export default function OverviewDrawer() {
       email: shippingForm.email,
     };
 
-    if (!form.firstname || !form.lastname) {
-      setOrderError("Please enter your Billing First Name and Last Name.");
+    if (!activeShipping.firstname || !activeShipping.lastname) {
+      setOrderError("Please enter your First Name and Last Name.");
       return;
     }
-    if (!form.street || !form.city) {
-      setOrderError("Please enter your Billing Street Address and City.");
+    if (!activeShipping.street || !activeShipping.city) {
+      setOrderError("Please enter your Street Address and City.");
       return;
     }
-    if (!form.phone) {
-      setOrderError("Please enter your Billing Mobile Number.");
+    if (!activeShipping.phone) {
+      setOrderError("Please enter your Mobile Number.");
       return;
-    }
-
-    if (!sameAsShipping) {
-      if (!activeShipping.firstname || !activeShipping.lastname) {
-        setOrderError("Please enter your Shipping First Name and Last Name.");
-        return;
-      }
-      if (!activeShipping.street || !activeShipping.city) {
-        setOrderError("Please enter your Shipping Street Address and City.");
-        return;
-      }
-      if (!activeShipping.phone) {
-        setOrderError("Please enter your Shipping Mobile Number.");
-        return;
-      }
     }
 
     setPlacingOrder(true);
@@ -971,7 +1030,7 @@ export default function OverviewDrawer() {
 
     try {
       const tok = cartToken || undefined;
-      const emailToUse = form.email || activeShipping.email || `${form.phone.replace(/\D/g, "")}@tyresworld.ae`;
+      const emailToUse = activeShipping.email || customer?.email || form.email || `${activeShipping.phone.replace(/\D/g, "")}@tyresworld.ae`;
 
       const vehicleString = [
         selectedMake ? `Make: ${selectedMake}` : "",
@@ -994,33 +1053,75 @@ export default function OverviewDrawer() {
       };
 
       const billingPayload = {
-        firstname: form.firstname,
-        lastname: form.lastname,
-        company: form.company || undefined,
-        street: [form.street],
-        city: form.city || "",
-        postcode: form.postcode || "00000",
-        country_code: form.country_code || "AE",
-        telephone: form.phone,
+        firstname: activeShipping.firstname,
+        lastname: activeShipping.lastname,
+        company: activeShipping.company || undefined,
+        street: [activeShipping.street],
+        city: activeShipping.city || form.city || "",
+        postcode: activeShipping.postcode || "00000",
+        country_code: activeShipping.country_code || "AE",
+        telephone: activeShipping.phone,
       };
 
       // 1. Set guest email
-      await fetch("/api/cart", {
+      const emailRes = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ op: "setEmail", cartId, email: emailToUse, token: tok }),
       });
+      const emailData = await emailRes.json();
+      if (emailData.error) throw new Error(String(emailData.error));
 
       // 2. Set Shipping Address
-      await fetch("/api/cart", {
+      const shipRes = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ op: "setShippingAddress", cartId, address: shippingPayload, token: tok }),
       });
+      const shipData = await shipRes.json();
+      if (shipData.error) throw new Error(String(shipData.error));
 
-      // 3. Set Installer Selection if free shipping
-      if (deliveryMode === "free_shipping") {
-        await fetch("/api/cart", {
+      // 3. Re-apply the delivery/installer selection — setShippingAddress
+      // above resets whatever shipping method Magento had assigned to the
+      // cart (set back in handleSaveFitting), so without this, placeOrder
+      // fails with "The shipping method is missing" for install_outlet and
+      // mobile_van too, not just free_shipping.
+      if (deliveryMode === "install_outlet" && selectedStore) {
+        const methodRes = await fetch("/api/cart", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            op: "setInstallerSelection",
+            cartId,
+            deliveryMode: "install_at_outlet",
+            storeId: selectedStore.id,
+            pickupDate: selectedDate,
+            pickupTime: selectedTimeSlot,
+            token: tok,
+          }),
+        });
+        const methodData = await methodRes.json();
+        if (methodData.error) throw new Error(String(methodData.error));
+      } else if (deliveryMode === "mobile_van") {
+        const van = mobileVans[0] || { id: "", name: "Mobile Fitting", address: mobileAddress || "", city: "" };
+        const methodRes = await fetch("/api/cart", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            op: "setInstallerSelection",
+            cartId,
+            deliveryMode: "mobile_van_service",
+            storeId: van.id,
+            pickupLocation: mobileAddress || "Customer Location (UAE)",
+            pickupDate: selectedDate,
+            pickupTime: selectedTimeSlot,
+            token: tok,
+          }),
+        });
+        const methodData = await methodRes.json();
+        if (methodData.error) throw new Error(String(methodData.error));
+      } else if (deliveryMode === "free_shipping") {
+        const methodRes = await fetch("/api/cart", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1030,10 +1131,12 @@ export default function OverviewDrawer() {
             token: tok,
           }),
         });
+        const methodData = await methodRes.json();
+        if (methodData.error) throw new Error(String(methodData.error));
       }
 
       // 4. Set Billing Address
-      await fetch("/api/cart", {
+      const billingRes = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1044,6 +1147,8 @@ export default function OverviewDrawer() {
           token: tok,
         }),
       });
+      const billingData = await billingRes.json();
+      if (billingData.error) throw new Error(String(billingData.error));
 
       // 5. Set Payment Method
       const selectedPm = paymentMethods.find((p) => p.id === paymentMethod);
@@ -1072,6 +1177,26 @@ export default function OverviewDrawer() {
 
       const placedNumber = ordData.orderNumber ? String(ordData.orderNumber) : `TW-${Date.now().toString().slice(-6)}`;
       setCompletedOrderNumber(placedNumber);
+
+      if (saveInAddressBook && (selectedBillingOption === "new" || savedAddresses.length === 0)) {
+        const newSaved = {
+          firstname: activeShipping.firstname,
+          lastname: activeShipping.lastname,
+          company: activeShipping.company || "",
+          street: activeShipping.street,
+          city: activeShipping.city,
+          country_code: activeShipping.country_code || "AE",
+          postcode: activeShipping.postcode || "00000",
+          telephone: activeShipping.phone,
+          email: activeShipping.email,
+        };
+        const updated = [newSaved, ...savedAddresses.filter((a) => a.street !== newSaved.street)];
+        setSavedAddresses(updated);
+        try {
+          localStorage.setItem("checkout_saved_addresses", JSON.stringify(updated));
+        } catch {}
+      }
+
       clearLocal();
     } catch (err) {
       setOrderError(err instanceof Error ? err.message : "Failed to place order. Please try again.");
@@ -1081,11 +1206,11 @@ export default function OverviewDrawer() {
   };
 
   const stepsList = [
-    { num: 1, name: "Select Tyres", desc: "Choose genuine branded tyres", key: "browse" },
-    { num: 2, name: "Shopping Cart", desc: "Review items & quantities", key: "cart" },
-    { num: 3, name: "Installer Network", desc: "Select delivery & fitting option", key: "fitting" },
-    { num: 4, name: "Contact & Vehicle", desc: "Customer info, address & payment", key: "contact" },
-    { num: 5, name: "Order Confirmed", desc: "Live order placement & receipt", key: "success" },
+    { num: 1, name: "Select Tyres", short: "Tyres", desc: "Choose genuine branded tyres", key: "browse" },
+    { num: 2, name: "Shopping Cart", short: "Cart", desc: "Review items & quantities", key: "cart" },
+    { num: 3, name: "Installer Network", short: "Fitting", desc: "Select delivery & fitting option", key: "fitting" },
+    { num: 4, name: "Contact & Vehicle", short: "Contact", desc: "Customer info, address & payment", key: "contact" },
+    { num: 5, name: "Order Confirmed", short: "Confirm", desc: "Live order placement & receipt", key: "success" },
   ];
 
   return (
@@ -1095,7 +1220,7 @@ export default function OverviewDrawer() {
         type="button"
         onClick={toggleDrawer}
         aria-label="Open Overview"
-        className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-gray-950 hover:bg-[#ed1c24] text-white py-3 px-2 rounded-l-2xl shadow-2xl border-y border-l border-white/20 transition-all duration-300 flex flex-col items-center gap-2 group cursor-pointer"
+        className="btn-slide-black fixed right-0 top-1/2 -translate-y-1/2 z-40 py-3 px-2 rounded-l-2xl shadow-2xl border-y border-l border-white/20 transition-all duration-300 flex flex-col items-center gap-2 group cursor-pointer"
       >
         <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
           <Sparkles size={13} className="text-amber-400" />
@@ -1112,7 +1237,7 @@ export default function OverviewDrawer() {
 
       {/* ── Backdrop Overlay ── */}
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-xs z-50 transition-opacity duration-300 overscroll-contain touch-none ${
+        className={`fixed inset-0 bg-black/60 backdrop-blur-xs z-[70] transition-opacity duration-300 overscroll-contain touch-none ${
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
         onClick={closeDrawer}
@@ -1121,7 +1246,7 @@ export default function OverviewDrawer() {
 
       {/* ── Overview Drawer Panel (Complete In-Drawer Purchase Flow) ── */}
       <aside
-        className={`fixed inset-y-0 right-0 z-50 w-full max-w-[420px] sm:max-w-[540px] md:max-w-[620px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out transform overscroll-contain ${
+        className={`fixed inset-y-0 right-0 z-[70] w-full max-w-[420px] sm:max-w-[540px] md:max-w-[620px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out transform overscroll-contain ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         aria-label="Your Overview"
@@ -1220,7 +1345,7 @@ export default function OverviewDrawer() {
                   setCompletedOrderNumber(null);
                   closeDrawer();
                 }}
-                className="w-full py-3 px-4 rounded-xl bg-gray-950 hover:bg-[#ed1c24] text-white text-xs font-black uppercase tracking-wider transition-colors cursor-pointer"
+                className="btn-slide-black w-full py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer"
               >
                 Continue Shopping
               </button>
@@ -1230,109 +1355,82 @@ export default function OverviewDrawer() {
           /* ── MAIN IN-DRAWER ACCORDION FLOW ── */
           <div className="flex-1 overflow-y-scroll divide-y divide-gray-100 custom-scrollbar [scrollbar-gutter:stable]">
             
-            {/* ── 1. Progress Row (Toggles directly in drawer) ── */}
+            {/* ── 1. Progress (always-visible checkbox list, no dropdown) ── */}
             <div className="bg-white">
-              <button
-                type="button"
-                onClick={() => toggleSection("progress")}
-                className="w-full px-5 sm:px-6 py-4 flex items-center justify-between hover:bg-gray-50/80 transition-colors cursor-pointer text-left"
-              >
-                <div>
-                  <h3 className="text-[15px] font-black text-gray-950">Progress</h3>
-                  <p className="text-xs text-gray-500 font-medium mt-0.5">
-                    Step {currentStep} of 5 • {
-                      currentStep === 1 ? "Select Tyres" :
-                      currentStep === 2 ? "Cart Review" :
-                      currentStep === 3 ? "Installer Network" :
-                      currentStep === 4 ? "Contact & Vehicle" : "Confirmed"
-                    }
-                  </p>
-                </div>
-                <div className="text-gray-400">
-                  {activeSection === "progress" ? (
-                    <ChevronDown size={18} strokeWidth={2.5} />
-                  ) : (
-                    <ChevronRight size={18} strokeWidth={2.5} />
-                  )}
-                </div>
-              </button>
+              <div className="px-5 sm:px-6 pt-4">
+                <h3 className="text-[15px] font-black text-gray-950">Progress</h3>
+                <p className="text-xs text-gray-500 font-medium mt-0.5">
+                  Step {currentStep} of 5 • {
+                    currentStep === 1 ? "Select Tyres" :
+                    currentStep === 2 ? "Cart Review" :
+                    currentStep === 3 ? "Installer Network" :
+                    currentStep === 4 ? "Contact & Vehicle" : "Confirmed"
+                  }
+                </p>
+              </div>
 
-              {/* In-drawer Progress details */}
-              {activeSection === "progress" && (
-                <div className="px-5 sm:px-6 pb-5 pt-2 bg-gray-50/70 border-t border-gray-100 space-y-2 animate-in fade-in duration-200">
+              {/* Horizontal stepper: checkbox circles connected by a fill
+                  line — width is computed (not hardcoded per-step) so it
+                  stays correct if steps are ever added/removed. The current
+                  step counts as checked too (currentStep >= st.num), not
+                  just strictly-passed steps, so the line visibly reaches
+                  the step you're actually on. */}
+              <div className="px-5 sm:px-6 pb-5 pt-3">
+                <div className="relative flex items-start justify-between">
+                  <div className="absolute left-4 right-4 top-4 h-0.5 bg-gray-200 z-0" />
+                  <div
+                    className="absolute left-4 top-4 h-0.5 bg-[#ed1c24] z-0 transition-all duration-300"
+                    style={{
+                      width: `calc((100% - 2rem) * ${Math.max(0, Math.min(1, (currentStep - 1) / (stepsList.length - 1)))})`,
+                    }}
+                  />
                   {stepsList.map((st) => {
-                    const isPassed = currentStep > st.num;
+                    const isChecked = currentStep >= st.num;
                     const isCurr = currentStep === st.num;
                     const isClickable = st.key !== "success";
 
                     return (
-                      <div
+                      <button
                         key={st.num}
-                        onClick={
-                          isClickable
-                            ? () => {
-                                if (st.key === "browse") {
-                                  closeDrawer();
-                                  router.push(`/${locale}`);
-                                } else if (st.key === "cart") {
-                                  setActiveSection("cart");
-                                } else if (st.key === "fitting") {
-                                  setActiveSection("fitting");
-                                } else if (st.key === "contact") {
-                                  setActiveSection("contact");
-                                }
-                              }
-                            : undefined
-                        }
-                        className={`p-3 rounded-xl border transition-all flex items-center justify-between ${
-                          isClickable ? "cursor-pointer" : "cursor-default"
-                        } ${
-                          isCurr
-                            ? "bg-white border-[#ed1c24] shadow-xs"
-                            : isPassed
-                            ? "bg-white border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50/20 text-gray-900 shadow-2xs"
-                            : "bg-white/80 border-gray-200 hover:border-gray-300 text-gray-700"
-                        }`}
+                        type="button"
+                        disabled={!isClickable}
+                        onClick={() => {
+                          if (st.key === "browse") {
+                            closeDrawer();
+                            router.push(`/${locale}`);
+                          } else if (st.key === "cart") {
+                            setActiveSection("cart");
+                          } else if (st.key === "fitting") {
+                            setActiveSection("fitting");
+                          } else if (st.key === "contact") {
+                            setActiveSection("contact");
+                          }
+                        }}
+                        className="relative z-10 flex flex-col items-center gap-1 flex-1 cursor-pointer disabled:cursor-default"
                       >
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0 ${
-                              isCurr
-                                ? "bg-[#ed1c24] text-white shadow-xs"
-                                : isPassed
-                                ? "bg-emerald-600 text-white"
-                                : "bg-gray-200 text-gray-500"
-                            }`}
-                          >
-                            {isPassed ? "✓" : st.num}
-                          </span>
-                          <div>
-                            <h4
-                              className={`text-xs font-bold ${
-                                isCurr || isPassed ? "text-gray-900" : "text-gray-800"
-                              }`}
-                            >
-                              {st.name}
-                            </h4>
-                            <p
-                              className={`text-[11px] ${
-                                isCurr || isPassed ? "text-gray-500" : "text-gray-400"
-                              }`}
-                            >
-                              {st.desc}
-                            </p>
-                          </div>
-                        </div>
-                        {isCurr && (
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#ed1c24] bg-red-50 px-2 py-0.5 rounded-md shrink-0">
-                            Current
-                          </span>
-                        )}
-                      </div>
+                        <span
+                          className={`w-8 h-8 rounded-md text-xs font-bold flex items-center justify-center shrink-0 border ${
+                            isCurr
+                              ? "bg-[#ed1c24] border-[#ed1c24] text-white shadow-xs"
+                              : isChecked
+                              ? "bg-emerald-600 border-emerald-600 text-white"
+                              : "bg-white border-gray-300 text-gray-500"
+                          }`}
+                        >
+                          {isChecked ? <Check size={14} strokeWidth={3} /> : st.num}
+                        </span>
+                        <span
+                          className={`text-[9.5px] font-bold uppercase tracking-wide text-center leading-tight ${
+                            isCurr ? "text-[#ed1c24]" : isChecked ? "text-emerald-700" : "text-gray-400"
+                          }`}
+                        >
+                          {st.short}
+                        </span>
+                      </button>
                     );
                   })}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* ── 2. Shopping Cart Row ── */}
@@ -1348,12 +1446,24 @@ export default function OverviewDrawer() {
                     {totalTyres > 0 ? `${totalTyres} ${totalTyres === 1 ? "tyre" : "tyres"}` : "Empty cart"}
                   </p>
                 </div>
-                <div className="text-gray-400">
-                  {activeSection === "cart" ? (
-                    <ChevronDown size={18} strokeWidth={2.5} />
-                  ) : (
-                    <ChevronRight size={18} strokeWidth={2.5} />
+                <div className="flex items-center gap-3">
+                  {grandTotalValue > 0 && (
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block leading-tight">
+                        Order Total
+                      </span>
+                      <span className="text-sm font-black text-gray-950 tabular-nums">
+                        <Money value={grandTotalValue} currency={currency} digits={2} />
+                      </span>
+                    </div>
                   )}
+                  <div className="text-gray-400">
+                    {activeSection === "cart" ? (
+                      <ChevronDown size={18} strokeWidth={2.5} />
+                    ) : (
+                      <ChevronRight size={18} strokeWidth={2.5} />
+                    )}
+                  </div>
                 </div>
               </button>
 
@@ -1361,7 +1471,7 @@ export default function OverviewDrawer() {
               {activeSection === "cart" && (
                 <div className="px-4 sm:px-6 pb-5 pt-3 bg-gray-50/70 border-t border-gray-100 space-y-3.5 animate-in fade-in duration-200">
                   {cartError && (
-                    <div className="p-2.5 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-[#ed1c24] flex items-center justify-between animate-in fade-in duration-200">
+                    <div ref={cartErrorRef} className="p-2.5 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-[#ed1c24] flex items-center justify-between animate-in fade-in duration-200">
                       <span>{cartError}</span>
                       <button
                         type="button"
@@ -1385,7 +1495,7 @@ export default function OverviewDrawer() {
                       <button
                         type="button"
                         onClick={closeDrawer}
-                        className="inline-flex items-center justify-center gap-1.5 bg-[#ed1c24] hover:bg-[#c6181d] text-white font-bold text-xs uppercase tracking-wider py-2.5 px-5 rounded-xl shadow-xs transition-colors cursor-pointer"
+                        className="btn-slide-red inline-flex items-center justify-center gap-1.5 font-bold text-xs uppercase tracking-wider py-2.5 px-5 rounded-xl shadow-xs cursor-pointer"
                       >
                         <span>Browse Tyres</span>
                         <ArrowRight size={13} />
@@ -1393,6 +1503,21 @@ export default function OverviewDrawer() {
                     </div>
                   ) : (
                     <div className="space-y-3">
+                      {/* Top Order Total Banner */}
+                      <div className="flex items-center justify-between bg-white border border-gray-200/90 rounded-xl px-4 py-3 shadow-2xs">
+                        <div>
+                          <span className="text-xs font-black text-gray-950 uppercase tracking-wide block">
+                            Order Total
+                          </span>
+                          <span className="text-[11px] text-gray-500 font-medium">
+                            {totalTyres} {totalTyres === 1 ? "tyre" : "tyres"} in your cart
+                          </span>
+                        </div>
+                        <span className="text-base font-black text-[#ed1c24] tabular-nums">
+                          <Money value={grandTotalValue} currency={currency} digits={2} />
+                        </span>
+                      </div>
+
                       {/* Items List matching Cart Page Exactly */}
                       <div className="space-y-2.5">
                         {items.map((item) => {
@@ -1476,39 +1601,97 @@ export default function OverviewDrawer() {
                         })}
                       </div>
 
-                      {/* Coupon Code Box */}
-                      <div className="bg-white p-3 rounded-xl border border-gray-200 space-y-2 shadow-2xs">
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={couponCode}
-                            onChange={(e) => setCouponCode(e.target.value)}
-                            placeholder="Enter coupon code"
-                            className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs uppercase font-semibold focus:outline-hidden focus:border-[#ed1c24]"
-                          />
+                      {/* ── Coupon & Comments Accordions ── */}
+                      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-2xs">
+                        {/* Accordion: Use Coupon Code */}
+                        <div>
                           <button
                             type="button"
-                            onClick={handleApplyCoupon}
-                            disabled={couponLoading || !couponCode.trim()}
-                            className="px-4 py-2 bg-gray-900 hover:bg-[#ed1c24] disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0"
+                            onClick={() => setIsCouponOpen(!isCouponOpen)}
+                            className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer select-none"
+                            aria-expanded={isCouponOpen}
                           >
-                            {couponLoading ? "Applying..." : "Apply"}
+                            <span>Use Coupon Code</span>
+                            <ChevronDown
+                              size={15}
+                              className={`text-gray-500 transition-transform duration-200 ${
+                                isCouponOpen ? "rotate-180" : ""
+                              }`}
+                            />
                           </button>
+
+                          {isCouponOpen && (
+                            <div className="p-3.5 bg-gray-50/70 border-t border-gray-100 animate-in fade-in slide-in-from-top-1 duration-150">
+                              {appliedCoupon ? (
+                                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                                  <div>
+                                    <p className="text-[10px] text-gray-500 font-medium">Applied Code</p>
+                                    <p className="text-xs font-bold text-emerald-800">{appliedCoupon}</p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={handleRemoveCoupon}
+                                    disabled={couponLoading}
+                                    className="text-[11px] font-bold text-red-600 hover:underline cursor-pointer disabled:opacity-50"
+                                  >
+                                    {couponLoading ? "Removing..." : "Remove"}
+                                  </button>
+                                </div>
+                              ) : (
+                                <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Enter coupon code"
+                                    value={couponCode}
+                                    onChange={(e) => setCouponCode(e.target.value)}
+                                    disabled={couponLoading}
+                                    className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-900 outline-none focus:border-black bg-white"
+                                  />
+                                  <button
+                                    type="submit"
+                                    disabled={couponLoading || !couponCode.trim()}
+                                    className="btn-slide-black px-3.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center gap-1 shrink-0"
+                                  >
+                                    {couponLoading && <Loader2 size={11} className="animate-spin" />}
+                                    <span>Apply</span>
+                                  </button>
+                                </form>
+                              )}
+                              {couponError && <p ref={couponErrorRef} className="text-[10px] text-red-600 font-medium mt-1">{couponError}</p>}
+                              {couponSuccess && <p className="text-[10px] text-emerald-600 font-medium mt-1">Coupon applied!</p>}
+                            </div>
+                          )}
                         </div>
-                        {couponError && <p className="text-[11px] text-red-600 font-bold">{couponError}</p>}
-                        {couponSuccess && <p className="text-[11px] text-emerald-600 font-bold">Coupon applied successfully!</p>}
-                        {appliedCoupons.map((c) => (
-                          <div key={c.code} className="flex items-center justify-between text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg font-medium">
-                            <span>Coupon <strong>{c.code}</strong> applied</span>
-                            <button
-                              type="button"
-                              onClick={() => removeCoupon()}
-                              className="text-gray-400 hover:text-red-600 font-bold px-1"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
+
+                        {/* Accordion: Order Comments */}
+                        <div className="border-t border-gray-100">
+                          <button
+                            type="button"
+                            onClick={() => setIsCommentsOpen(!isCommentsOpen)}
+                            className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer select-none"
+                            aria-expanded={isCommentsOpen}
+                          >
+                            <span>Do you have any comments regarding the order?</span>
+                            <ChevronDown
+                              size={15}
+                              className={`text-gray-500 transition-transform duration-200 ${
+                                isCommentsOpen ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+
+                          {isCommentsOpen && (
+                            <div className="p-3.5 bg-gray-50/70 border-t border-gray-100 animate-in fade-in slide-in-from-top-1 duration-150">
+                              <textarea
+                                rows={2}
+                                value={orderComments}
+                                onChange={(e) => setOrderComments(e.target.value)}
+                                placeholder="Special requests or instructions..."
+                                className="w-full border border-gray-300 rounded-lg p-2.5 text-xs text-gray-900 outline-none focus:border-black resize-none bg-white"
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Order Summary Pricing Breakdown */}
@@ -1562,7 +1745,7 @@ export default function OverviewDrawer() {
                       <button
                         type="button"
                         onClick={() => setActiveSection("fitting")}
-                        className="w-full py-3 px-4 rounded-xl bg-black hover:bg-[#ed1c24] text-center text-xs font-extrabold uppercase tracking-wider text-white transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+                        className="btn-slide-black w-full py-3 px-4 rounded-xl text-center text-xs font-extrabold uppercase tracking-wider cursor-pointer flex items-center justify-center gap-2 shadow-xs"
                       >
                         <span>CONTINUE TO INSTALLER NETWORK</span>
                         <ArrowRight size={14} />
@@ -1690,7 +1873,7 @@ export default function OverviewDrawer() {
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         type="button"
-                        className="bg-black hover:bg-[#ed1c24] text-white px-3.5 py-2.5 rounded-xl flex items-center justify-center gap-1.5 font-bold text-xs transition-colors cursor-pointer shrink-0 shadow-2xs"
+                        className="btn-slide-black px-3.5 py-2.5 rounded-xl flex items-center justify-center gap-1.5 font-bold text-xs cursor-pointer shrink-0 shadow-2xs"
                       >
                         <Search size={13} />
                         <span>Search</span>
@@ -1700,14 +1883,14 @@ export default function OverviewDrawer() {
                         type="button"
                         onClick={handleUseMyLocation}
                         disabled={locating}
-                        className="border border-gray-300 bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-800 px-3 py-2.5 rounded-xl flex items-center justify-center gap-1.5 font-semibold text-xs transition-colors cursor-pointer shrink-0 disabled:opacity-75 shadow-2xs min-w-[130px] sm:min-w-[138px]"
+                        className="btn-sweep-light border border-gray-300 bg-white px-3 py-2.5 rounded-xl flex items-center justify-center gap-1.5 font-semibold text-xs cursor-pointer shrink-0 disabled:opacity-75 shadow-2xs min-w-[130px] sm:min-w-[138px]"
                       >
                         {locating ? (
-                          <Loader2 size={13} className="animate-spin text-[#ed1c24] shrink-0" />
+                          <Loader2 size={13} className="animate-spin shrink-0" />
                         ) : (
-                          <Crosshair size={13} className="text-emerald-700 shrink-0" />
+                          <Crosshair size={13} className="shrink-0" />
                         )}
-                        <span className="text-emerald-950 font-semibold text-[11px] sm:text-xs whitespace-nowrap">
+                        <span className="font-semibold text-[11px] sm:text-xs whitespace-nowrap">
                           {locating ? "Locating..." : "Use my location"}
                         </span>
                       </button>
@@ -1977,7 +2160,7 @@ export default function OverviewDrawer() {
                                   <button
                                     type="button"
                                     onClick={() => handleSaveFitting(branch)}
-                                    className="relative w-full bg-black hover:bg-[#ed1c24] text-white font-extrabold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                                    className="btn-slide-black relative w-full font-extrabold text-xs uppercase tracking-wider py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                                   >
                                     <span>CONFIRM & PROCEED TO CHECKOUT</span>
                                     <ArrowRight size={14} />
@@ -2055,7 +2238,7 @@ export default function OverviewDrawer() {
                       <button
                         type="button"
                         onClick={() => handleSaveFitting()}
-                        className="w-full bg-black hover:bg-[#ed1c24] text-white font-extrabold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                        className="btn-slide-black w-full font-extrabold text-xs uppercase tracking-wider py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                       >
                         <span>CONFIRM & PROCEED TO CHECKOUT</span>
                         <ArrowRight size={14} />
@@ -2077,7 +2260,7 @@ export default function OverviewDrawer() {
                       <button
                         type="button"
                         onClick={() => handleSaveFitting()}
-                        className="w-full bg-black hover:bg-[#ed1c24] text-white font-extrabold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                        className="btn-slide-black w-full font-extrabold text-xs uppercase tracking-wider py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                       >
                         <span>CONFIRM & PROCEED TO CHECKOUT</span>
                         <ArrowRight size={14} />
@@ -2114,287 +2297,237 @@ export default function OverviewDrawer() {
               {activeSection === "contact" && (
                 <div className="px-4 sm:px-6 pb-6 pt-3 bg-[#f9fafb] border-t border-gray-100 space-y-4 animate-in fade-in duration-200">
                   {orderError && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-bold flex items-center gap-2">
-                      <AlertCircle size={15} className="shrink-0" />
+                    <div ref={orderErrorRef} className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-bold flex items-center gap-2 animate-in fade-in">
+                      <AlertCircle size={15} className="shrink-0 text-red-600" />
                       <span>{orderError}</span>
                     </div>
                   )}
 
-                  {/* ════ 1. BILLING ADDRESS (Matching Checkout Page Image 1 & 2) ════ */}
+                  {/* ════ 1. DELIVERY / SHIPPING ADDRESS (Billing Address hidden) ════ */}
                   <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-2xs">
                     <div className="bg-[#f2f3f5] px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-gray-700 shrink-0" />
+                      <Truck className="w-4 h-4 text-gray-700 shrink-0" />
                       <h4 className="font-extrabold text-xs uppercase tracking-wider text-gray-900 font-sans">
-                        BILLING ADDRESS
+                        DELIVERY ADDRESS
                       </h4>
                     </div>
 
                     <div className="p-4 space-y-3.5">
-                      {/* Green Bordered Selected Address Card */}
-                      {form.firstname && form.street && (
-                        <div className="border-2 border-[#16a34a] rounded-lg p-3.5 bg-white space-y-1 text-xs text-gray-900 font-medium">
-                          <p className="font-bold">{form.firstname} {form.lastname}</p>
-                          <p>{form.street}</p>
-                          <p>{form.city}, United Arab Emirates</p>
-                          <p>{form.phone}</p>
+                      {/* Saved Addresses Dropdown if customer has saved addresses */}
+                      {savedAddresses.length > 0 && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <label className="block text-xs font-bold text-gray-800">
+                              Select Delivery Address
+                            </label>
+                            {/* [COMMENTED OUT] Standalone Button:
+                            <button
+                              type="button"
+                              onClick={() => setShowNewAddressModal(true)}
+                              className="btn-slide-black text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer shadow-2xs"
+                            >
+                              + New Address
+                            </button>
+                            */}
+                          </div>
+                          <div className="relative">
+                            <select
+                              value={selectedBillingOption}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setSelectedBillingOption(val);
+                                if (val === "new") {
+                                  setShippingForm({
+                                    firstname: customer?.firstname || "",
+                                    lastname: customer?.lastname || "",
+                                    company: "",
+                                    street: "",
+                                    telephone: form.phone || shippingForm.telephone || "",
+                                    city: "",
+                                    country_code: "AE",
+                                    postcode: "00000",
+                                    email: customer?.email || form.email || "",
+                                  });
+                                } else {
+                                  const idx = Number(val);
+                                  if (savedAddresses[idx]) {
+                                    setShippingForm(savedAddresses[idx]);
+                                  }
+                                }
+                              }}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-xs text-gray-800 outline-none focus:border-black transition-all appearance-none pr-8 cursor-pointer bg-white font-medium shadow-2xs"
+                            >
+                              {savedAddresses.map((addr, idx) => (
+                                <option key={idx} value={String(idx)}>
+                                  {addr.firstname} {addr.lastname}, {addr.street}, {addr.city}, United Arab Emirates
+                                </option>
+                              ))}
+                              <option value="new">+ New Address</option>
+                            </select>
+                            <ChevronDown className="w-4 h-4 text-gray-500 absolute right-2.5 top-3 pointer-events-none" />
+                          </div>
                         </div>
                       )}
 
-                      {/* New Address Button (Opens Billing Address Popup Modal) */}
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setModalAddress({
-                              firstname: customer?.firstname || form.firstname || "",
-                              lastname: customer?.lastname || form.lastname || "",
-                              company: "",
-                              street: "",
-                              telephone: "",
-                              city: "",
-                              country_code: "AE",
-                              postcode: "00000",
-                              email: customer?.email || form.email || "",
-                            });
-                            setShowNewAddressModal(true);
-                          }}
-                          className="bg-black hover:bg-[#ed1c24] text-white text-xs font-bold px-3.5 py-2 rounded-md transition-colors cursor-pointer shadow-2xs"
-                        >
-                          New Address
-                        </button>
-                      </div>
+                      {/* Green Bordered Selected Address Card */}
+                      {shippingForm.firstname && shippingForm.street && selectedBillingOption !== "new" && savedAddresses.length > 0 && (
+                        <div className="border-2 border-[#16a34a] rounded-lg p-3.5 bg-[#f0fdf4]/50 space-y-1 text-xs text-gray-900 font-medium">
+                          <div className="flex items-center justify-between pb-1 border-b border-green-200">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-green-700">Selected Address</span>
+                            <span className="text-[10px] bg-green-100 text-green-800 font-bold px-1.5 py-0.5 rounded">Deliver Here</span>
+                          </div>
+                          <p className="font-bold pt-1">{shippingForm.firstname} {shippingForm.lastname}</p>
+                          <p>{shippingForm.street}</p>
+                          <p>{shippingForm.city}, United Arab Emirates</p>
+                          <p className="text-gray-600">{shippingForm.telephone}</p>
+                        </div>
+                      )}
 
-                      {/* Address is also shipping address checkbox */}
-                      <div className="border border-gray-200 rounded-lg p-3 bg-white">
-                        <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={sameAsShipping}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              setSameAsShipping(checked);
-                              if (checked) {
-                                setShippingForm({
-                                  firstname: form.firstname,
-                                  lastname: form.lastname,
-                                  company: form.company,
-                                  street: form.street,
-                                  telephone: form.phone,
-                                  city: form.city,
-                                  country_code: form.country_code,
-                                  postcode: form.postcode,
-                                  email: form.email,
-                                });
-                              } else {
-                                setShippingForm({
-                                  firstname: customer?.firstname || "",
-                                  lastname: customer?.lastname || "",
-                                  company: "",
-                                  street: "",
-                                  telephone: "",
-                                  city: "",
-                                  country_code: "AE",
-                                  postcode: "00000",
-                                  email: customer?.email || form.email || "",
-                                });
-                              }
-                            }}
-                            className="w-4 h-4 rounded text-black accent-black cursor-pointer"
-                          />
-                          <span className="text-xs text-gray-700 font-medium">
-                            This address is also my shipping address
-                          </span>
-                        </label>
-                      </div>
+                      {/* New Address Form (Opens up when 'new' is selected or when no saved addresses exist) */}
+                      {(selectedBillingOption === "new" || savedAddresses.length === 0) && (
+                        <div className="space-y-3 pt-1 border-t border-gray-100 animate-in fade-in duration-200">
+                          {savedAddresses.length > 0 ? (
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-gray-900">New Address</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedBillingOption("0");
+                                  if (savedAddresses[0]) setShippingForm(savedAddresses[0]);
+                                }}
+                                className="text-[11px] font-semibold text-gray-500 hover:text-black underline cursor-pointer"
+                              >
+                                Cancel & use saved address
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs font-bold text-gray-800 block">Address Details</span>
+                          )}
 
-                      {/* Saved Addresses Dropdown for Billing */}
-                      <div className="relative">
-                        <select
-                          value={selectedBillingOption}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setSelectedBillingOption(val);
-                            if (val === "new") {
-                              setShippingForm({
-                                firstname: customer?.firstname || "",
-                                lastname: customer?.lastname || "",
-                                company: "",
-                                street: "",
-                                telephone: "",
-                                city: "",
-                                country_code: "AE",
-                                postcode: "00000",
-                                email: customer?.email || form.email || "",
-                              });
-                            } else {
-                              const idx = Number(val);
-                              if (savedAddresses[idx]) {
-                                const addr = savedAddresses[idx];
-                                setForm({
-                                  firstname: addr.firstname,
-                                  lastname: addr.lastname,
-                                  company: addr.company || "",
-                                  phone: addr.telephone || "",
-                                  email: addr.email || "",
-                                  street: addr.street,
-                                  city: addr.city || "",
-                                  country_code: addr.country_code || "AE",
-                                  postcode: addr.postcode || "00000",
-                                });
-                                if (sameAsShipping) {
-                                  setShippingForm(addr);
-                                }
-                              }
-                            }
-                          }}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 outline-none focus:border-black transition-all appearance-none pr-8 cursor-pointer bg-white font-medium"
-                        >
-                          {savedAddresses.map((addr, idx) => (
-                            <option key={idx} value={String(idx)}>
-                              {addr.firstname} {addr.lastname}, {addr.street}, {addr.city}, United Arab Emirates
-                            </option>
-                          ))}
-                          <option value="new">New Address</option>
-                        </select>
-                        <ChevronDown className="w-4 h-4 text-gray-500 absolute right-2.5 top-2.5 pointer-events-none" />
-                      </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-bold text-gray-800 mb-1">
+                                First Name <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={shippingForm.firstname}
+                                onChange={(e) => setShippingForm({ ...shippingForm, firstname: e.target.value })}
+                                placeholder="First Name"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-bold text-gray-800 mb-1">
+                                Last Name <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={shippingForm.lastname}
+                                onChange={(e) => setShippingForm({ ...shippingForm, lastname: e.target.value })}
+                                placeholder="Last Name"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-gray-800 mb-1">
+                              Company
+                            </label>
+                            <input
+                              type="text"
+                              value={shippingForm.company}
+                              onChange={(e) => setShippingForm({ ...shippingForm, company: e.target.value })}
+                              placeholder="Company (optional)"
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-gray-800 mb-1">
+                              Street Address <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={shippingForm.street}
+                              onChange={(e) => setShippingForm({ ...shippingForm, street: e.target.value })}
+                              placeholder="Street, building, villa number"
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-bold text-gray-800 mb-1">
+                                City <span className="text-red-500">*</span>
+                              </label>
+                              <div className="relative">
+                                <select
+                                  value={shippingForm.city}
+                                  onChange={(e) => setShippingForm({ ...shippingForm, city: e.target.value })}
+                                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white appearance-none pr-8 cursor-pointer"
+                                >
+                                  <option value="">Select City</option>
+                                  {cities
+                                    .filter((c) => c.toLowerCase() !== "all")
+                                    .map((c) => (
+                                      <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="w-3.5 h-3.5 text-gray-500 absolute right-2.5 top-2.5 pointer-events-none" />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-bold text-gray-800 mb-1">
+                                Country
+                              </label>
+                              <div className="relative">
+                                <select
+                                  value={shippingForm.country_code}
+                                  onChange={(e) => setShippingForm({ ...shippingForm, country_code: e.target.value })}
+                                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white appearance-none pr-8 cursor-pointer"
+                                >
+                                  <option value="AE">United Arab Emirates</option>
+                                </select>
+                                <ChevronDown className="w-3.5 h-3.5 text-gray-500 absolute right-2.5 top-2.5 pointer-events-none" />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-gray-800 mb-1">
+                              Phone Number <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="tel"
+                              value={shippingForm.telephone}
+                              onChange={(e) => setShippingForm({ ...shippingForm, telephone: e.target.value })}
+                              placeholder="e.g. 050 123 4567"
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white"
+                            />
+                          </div>
+
+                          <div className="pt-1">
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={saveInAddressBook}
+                                onChange={(e) => setSaveInAddressBook(e.target.checked)}
+                                className="w-4 h-4 rounded text-black accent-black cursor-pointer"
+                              />
+                              <span className="text-xs text-gray-800 font-medium">
+                                Save in address book
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* ════ 2. SHIPPING ADDRESS (Shown when New Address or !sameAsShipping) ════ */}
-                  {(selectedBillingOption === "new" || !sameAsShipping || savedAddresses.length === 0) && (
-                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-2xs">
-                      <div className="bg-[#f2f3f5] px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-                        <Truck className="w-4 h-4 text-gray-700 shrink-0" />
-                        <h4 className="font-extrabold text-xs uppercase tracking-wider text-gray-900 font-sans">
-                          SHIPPING ADDRESS
-                        </h4>
-                      </div>
-
-                      <div className="p-4 space-y-3">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs font-bold text-gray-800 mb-1">
-                              First Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={shippingForm.firstname}
-                              onChange={(e) => setShippingForm({ ...shippingForm, firstname: e.target.value })}
-                              placeholder="First Name"
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-gray-800 mb-1">
-                              Last Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={shippingForm.lastname}
-                              onChange={(e) => setShippingForm({ ...shippingForm, lastname: e.target.value })}
-                              placeholder="Last Name"
-                              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-gray-800 mb-1">
-                            Company
-                          </label>
-                          <input
-                            type="text"
-                            value={shippingForm.company}
-                            onChange={(e) => setShippingForm({ ...shippingForm, company: e.target.value })}
-                            placeholder="Company (optional)"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-gray-800 mb-1">
-                            Street Address <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={shippingForm.street}
-                            onChange={(e) => setShippingForm({ ...shippingForm, street: e.target.value })}
-                            placeholder="Street, building, villa number"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs font-bold text-gray-800 mb-1">
-                              City <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <select
-                                value={shippingForm.city}
-                                onChange={(e) => setShippingForm({ ...shippingForm, city: e.target.value })}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white appearance-none pr-8 cursor-pointer"
-                              >
-                                <option value="">Select City</option>
-                                {cities
-                                  .filter((c) => c.toLowerCase() !== "all")
-                                  .map((c) => (
-                                    <option key={c} value={c}>{c}</option>
-                                  ))}
-                              </select>
-                              <ChevronDown className="w-3.5 h-3.5 text-gray-500 absolute right-2.5 top-2.5 pointer-events-none" />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-gray-800 mb-1">
-                              Country
-                            </label>
-                            <div className="relative">
-                              <select
-                                value={shippingForm.country_code}
-                                onChange={(e) => setShippingForm({ ...shippingForm, country_code: e.target.value })}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white appearance-none pr-8 cursor-pointer"
-                              >
-                                <option value="AE">United Arab Emirates</option>
-                              </select>
-                              <ChevronDown className="w-3.5 h-3.5 text-gray-500 absolute right-2.5 top-2.5 pointer-events-none" />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-gray-800 mb-1">
-                            Phone Number <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="tel"
-                            value={shippingForm.telephone}
-                            onChange={(e) => setShippingForm({ ...shippingForm, telephone: e.target.value })}
-                            placeholder="e.g. 050 123 4567"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-black transition-all bg-white"
-                          />
-                        </div>
-
-                        <div className="pt-1">
-                          <label className="flex items-center gap-2 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={saveInAddressBook}
-                              onChange={(e) => setSaveInAddressBook(e.target.checked)}
-                              className="w-4 h-4 rounded text-black accent-black cursor-pointer"
-                            />
-                            <span className="text-xs text-gray-800 font-medium">
-                              Save in address book
-                            </span>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ════ 3. VEHICLE INFORMATION (Dynamic from /api/vehicles) ════ */}
+                  {/* ════ 2. VEHICLE INFORMATION (Dynamic from /api/vehicles) ════ */}
                   {deliveryMode !== "free_shipping" && (
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-2xs">
                       <div className="bg-[#f2f3f5] px-4 py-3 border-b border-gray-200 flex items-center gap-2">
@@ -2644,208 +2777,12 @@ export default function OverviewDrawer() {
                     </div>
                   </div>
 
-                  {/* ════ 6. ORDER SUMMARY & COMMENTS ════ */}
-                  <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-2xs">
-                    <div className="bg-[#f2f3f5] px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-gray-700 shrink-0" />
-                      <h4 className="font-extrabold text-xs uppercase tracking-wider text-gray-900 font-sans">
-                        ORDER SUMMARY
-                      </h4>
-                    </div>
-
-                    {/* Items in Cart & Price Breakdown Accordion */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setIsSummaryItemsOpen(!isSummaryItemsOpen)}
-                        className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer select-none"
-                        aria-expanded={isSummaryItemsOpen}
-                      >
-                        <span>{totalTyres} {totalTyres === 1 ? "Item" : "Items"} in Cart</span>
-                        <ChevronDown
-                          size={15}
-                          className={`text-gray-500 transition-transform duration-200 ${
-                            isSummaryItemsOpen ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
-
-                      {isSummaryItemsOpen && (
-                        <div className="border-t border-gray-100 animate-in fade-in slide-in-from-top-1 duration-150">
-                          {/* Items List */}
-                          <div className="divide-y divide-gray-100 max-h-[220px] overflow-y-auto px-4 py-1.5 custom-scrollbar [scrollbar-gutter:stable] bg-gray-50/40">
-                            {items.length === 0 ? (
-                              <p className="text-xs text-gray-400 py-3 text-center italic">
-                                Your cart is empty
-                              </p>
-                            ) : (
-                              items.map((it) => (
-                                <div key={it.uid} className="flex items-center gap-3 py-2.5">
-                                  <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg overflow-hidden shrink-0 flex items-center justify-center p-0.5 shadow-2xs">
-                                    <img
-                                      src={it.product.thumbnail?.url ?? "/images/home/tyre.webp"}
-                                      alt={it.product.name}
-                                      className="w-full h-full object-contain"
-                                    />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-bold text-gray-900 truncate">
-                                      {it.product.name}
-                                    </p>
-                                    <p className="text-[11px] text-gray-500">Qty: {it.quantity}</p>
-                                  </div>
-                                  <div className="text-right shrink-0">
-                                    <span className="text-xs font-black text-[#ed1c24]">
-                                      <Money
-                                        value={it.prices?.row_total?.value || (it.prices?.price?.value || 0) * it.quantity}
-                                        currency={currency}
-                                        digits={2}
-                                      />
-                                    </span>
-                                  </div>
-                                </div>
-                              ))
-                            )}
-                          </div>
-
-                          {/* Price Breakdown */}
-                          <div className="px-4 py-3 space-y-2 text-xs bg-white border-t border-gray-100">
-                            <div className="flex justify-between text-gray-700 font-medium">
-                              <span>Cart Subtotal</span>
-                              <span className="font-bold text-gray-900">
-                                <Money value={subtotalExclTax} currency={currency} digits={2} />
-                              </span>
-                            </div>
-
-                            <div className="flex justify-between text-gray-700 font-medium">
-                              <span>Additional Charge</span>
-                              <span className="font-bold text-gray-900">
-                                <Money value={shippingAmount} currency={currency} digits={2} />
-                              </span>
-                            </div>
-
-                            {discountAmount > 0 && (
-                              <div className="flex justify-between text-[#ed1c24] font-bold">
-                                <span>Discount</span>
-                                <span>− <Money value={discountAmount} currency={currency} digits={2} /></span>
-                              </div>
-                            )}
-
-                            <div className="flex justify-between text-gray-700 font-medium">
-                              <span>{vatLabel} ({vatRatePct}%)</span>
-                              <span className="font-bold text-gray-900">
-                                <Money value={vatAmount} currency={currency} digits={2} />
-                              </span>
-                            </div>
-
-                            <div className="flex justify-between text-sm font-black text-gray-950 border-t border-gray-100 pt-2.5">
-                              <span>Order Total</span>
-                              <span className="font-black text-gray-950 text-base">
-                                <Money value={grandTotalValue} currency={currency} digits={2} />
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Accordion: Use Coupon Code */}
-                    <div className="border-t border-gray-100">
-                      <button
-                        type="button"
-                        onClick={() => setIsCouponOpen(!isCouponOpen)}
-                        className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer select-none"
-                        aria-expanded={isCouponOpen}
-                      >
-                        <span>Use Coupon Code</span>
-                        <ChevronDown
-                          size={15}
-                          className={`text-gray-500 transition-transform duration-200 ${
-                            isCouponOpen ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
-
-                      {isCouponOpen && (
-                        <div className="p-3.5 bg-gray-50/70 border-t border-gray-100 animate-in fade-in slide-in-from-top-1 duration-150">
-                          {appliedCoupon ? (
-                            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                              <div>
-                                <p className="text-[10px] text-gray-500 font-medium">Applied Code</p>
-                                <p className="text-xs font-bold text-emerald-800">{appliedCoupon}</p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={handleRemoveCoupon}
-                                disabled={couponLoading}
-                                className="text-[11px] font-bold text-red-600 hover:underline cursor-pointer disabled:opacity-50"
-                              >
-                                {couponLoading ? "Removing..." : "Remove"}
-                              </button>
-                            </div>
-                          ) : (
-                            <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                              <input
-                                type="text"
-                                placeholder="Enter coupon code"
-                                value={couponCode}
-                                onChange={(e) => setCouponCode(e.target.value)}
-                                disabled={couponLoading}
-                                className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-900 outline-none focus:border-black bg-white"
-                              />
-                              <button
-                                type="submit"
-                                disabled={couponLoading || !couponCode.trim()}
-                                className="bg-black text-white px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-[#ed1c24] transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1 shrink-0"
-                              >
-                                {couponLoading && <Loader2 size={11} className="animate-spin" />}
-                                <span>Apply</span>
-                              </button>
-                            </form>
-                          )}
-                          {couponError && <p className="text-[10px] text-red-600 font-medium mt-1">{couponError}</p>}
-                          {couponSuccess && <p className="text-[10px] text-emerald-600 font-medium mt-1">Coupon applied!</p>}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Accordion: Order Comments */}
-                    <div className="border-t border-gray-100">
-                      <button
-                        type="button"
-                        onClick={() => setIsCommentsOpen(!isCommentsOpen)}
-                        className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer select-none"
-                        aria-expanded={isCommentsOpen}
-                      >
-                        <span>Do you have any comments regarding the order?</span>
-                        <ChevronDown
-                          size={15}
-                          className={`text-gray-500 transition-transform duration-200 ${
-                            isCommentsOpen ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
-
-                      {isCommentsOpen && (
-                        <div className="p-3.5 bg-gray-50/70 border-t border-gray-100 animate-in fade-in slide-in-from-top-1 duration-150">
-                          <textarea
-                            rows={2}
-                            value={orderComments}
-                            onChange={(e) => setOrderComments(e.target.value)}
-                            placeholder="Special requests or instructions..."
-                            className="w-full border border-gray-300 rounded-lg p-2.5 text-xs text-gray-900 outline-none focus:border-black resize-none bg-white"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
                   {/* ════ PLACE ORDER CTA BUTTON ════ */}
                   <button
                     type="button"
                     onClick={handlePlaceOrder}
                     disabled={placingOrder || totalTyres === 0}
-                    className="w-full bg-black hover:bg-[#ed1c24] active:bg-[#c6181d] text-white font-black text-xs sm:text-sm uppercase tracking-wider py-4 rounded-xl transition-all duration-150 flex items-center justify-center gap-2 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className="btn-slide-black w-full font-black text-xs sm:text-sm uppercase tracking-wider py-4 rounded-xl flex items-center justify-center gap-2 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {placingOrder ? (
                       <>
@@ -2866,14 +2803,13 @@ export default function OverviewDrawer() {
           </div>
         )}
 
-        {/* ── ════════════════ BILLING ADDRESS POPUP MODAL ════════════════ ── */}
+        {/* ── ════════════════ DELIVERY ADDRESS POPUP MODAL (COMMENTED OUT) ════════════════ ──
         {showNewAddressModal && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-2xl max-w-xl w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              {/* Modal Header */}
               <div className="relative bg-[#f2f3f5] px-6 py-3.5 border-b border-gray-200">
                 <h3 className="font-black text-sm uppercase text-gray-900 tracking-wider text-center">
-                  BILLING ADDRESS
+                  DELIVERY ADDRESS
                 </h3>
                 <button
                   type="button"
@@ -2884,7 +2820,6 @@ export default function OverviewDrawer() {
                 </button>
               </div>
 
-              {/* Modal Body */}
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -2894,7 +2829,7 @@ export default function OverviewDrawer() {
                     <input
                       type="text"
                       value={modalAddress.firstname}
-                      onChange={(e) => setModalAddress((prev) => ({ ...prev, firstname: e.target.value }))}
+                      onChange={(e) => setModalAddress((prev: any) => ({ ...prev, firstname: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 outline-none focus:border-black transition-all bg-white"
                     />
                   </div>
@@ -2905,7 +2840,7 @@ export default function OverviewDrawer() {
                     <input
                       type="text"
                       value={modalAddress.lastname}
-                      onChange={(e) => setModalAddress((prev) => ({ ...prev, lastname: e.target.value }))}
+                      onChange={(e) => setModalAddress((prev: any) => ({ ...prev, lastname: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 outline-none focus:border-black transition-all bg-white"
                     />
                   </div>
@@ -2919,7 +2854,7 @@ export default function OverviewDrawer() {
                     <input
                       type="text"
                       value={modalAddress.company}
-                      onChange={(e) => setModalAddress((prev) => ({ ...prev, company: e.target.value }))}
+                      onChange={(e) => setModalAddress((prev: any) => ({ ...prev, company: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 outline-none focus:border-black transition-all bg-white"
                     />
                   </div>
@@ -2930,7 +2865,7 @@ export default function OverviewDrawer() {
                     <input
                       type="text"
                       value={modalAddress.street}
-                      onChange={(e) => setModalAddress((prev) => ({ ...prev, street: e.target.value }))}
+                      onChange={(e) => setModalAddress((prev: any) => ({ ...prev, street: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 outline-none focus:border-black transition-all bg-white"
                     />
                   </div>
@@ -2945,7 +2880,7 @@ export default function OverviewDrawer() {
                       type="tel"
                       placeholder="05XXXXXXXX"
                       value={modalAddress.telephone}
-                      onChange={(e) => setModalAddress((prev) => ({ ...prev, telephone: e.target.value }))}
+                      onChange={(e) => setModalAddress((prev: any) => ({ ...prev, telephone: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-black transition-all bg-white"
                     />
                   </div>
@@ -2956,7 +2891,7 @@ export default function OverviewDrawer() {
                     <div className="relative">
                       <select
                         value={modalAddress.city}
-                        onChange={(e) => setModalAddress((prev) => ({ ...prev, city: e.target.value }))}
+                        onChange={(e) => setModalAddress((prev: any) => ({ ...prev, city: e.target.value }))}
                         className="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-gray-900 outline-none focus:border-black transition-all appearance-none pr-9 cursor-pointer bg-white"
                       >
                         <option value="">Select City</option>
@@ -2987,7 +2922,6 @@ export default function OverviewDrawer() {
                   </label>
                 </div>
 
-                {/* Modal Action Buttons */}
                 <div className="flex items-center justify-center gap-3 pt-4">
                   <button
                     type="button"
@@ -2996,35 +2930,28 @@ export default function OverviewDrawer() {
                         alert("Please fill in First Name, Street Address, and City.");
                         return;
                       }
-                      setForm({
+                      const newAddr = {
                         firstname: modalAddress.firstname,
                         lastname: modalAddress.lastname,
                         company: modalAddress.company,
-                        phone: modalAddress.telephone,
-                        email: modalAddress.email || form.email,
                         street: modalAddress.street,
+                        telephone: modalAddress.telephone,
                         city: modalAddress.city,
-                        country_code: modalAddress.country_code,
-                        postcode: modalAddress.postcode,
-                      });
-                      if (saveInAddressBook) {
-                        const updated = [modalAddress, ...savedAddresses.filter((a) => a.street !== modalAddress.street)];
-                        setSavedAddresses(updated);
-                        setSelectedBillingOption("0");
-                        try {
-                          localStorage.setItem("checkout_saved_addresses", JSON.stringify(updated));
-                        } catch {}
-                      }
+                        country_code: modalAddress.country_code || "AE",
+                        postcode: modalAddress.postcode || "00000",
+                        email: modalAddress.email || customer?.email || form.email || "",
+                      };
+                      setShippingForm(newAddr);
                       setShowNewAddressModal(false);
                     }}
-                    className="bg-black hover:bg-[#ed1c24] text-white text-xs font-bold px-7 py-2.5 rounded-md transition-colors cursor-pointer"
+                    className="btn-slide-black text-xs font-bold px-7 py-2.5 rounded-md cursor-pointer"
                   >
                     Ship Here
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowNewAddressModal(false)}
-                    className="bg-black hover:bg-neutral-800 text-white text-xs font-bold px-7 py-2.5 rounded-md transition-colors cursor-pointer"
+                    className="btn-slide-black text-xs font-bold px-7 py-2.5 rounded-md cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -3033,6 +2960,7 @@ export default function OverviewDrawer() {
             </div>
           </div>
         )}
+        ── */}
 
       </aside>
     </>

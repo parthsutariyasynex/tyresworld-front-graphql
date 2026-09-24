@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { SORT_OPTS } from "@/components/category/sortOptions";
@@ -19,7 +20,7 @@ import type { Product } from "@/lib/data";
 import Pagination from "@/components/tyre/Pagination";
 import { buildBrandSlug } from "@/lib/filterBuilder";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 24;
 
 const SIZE_KEYS = new Set([
   "width",
@@ -213,6 +214,15 @@ export default function CategoryPageInner({
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterGroups, setFilterGroups] = useState<FilterGroup[]>([]);
   const [filtersLoading, setFiltersLoading] = useState(false);
+  const [desktopExtraFilters, setDesktopExtraFilters] = useState<FilterGroup[]>([]);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth >= 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
   /* Lazily seeded from the URL on first render (not an empty object then
      patched in a follow-up effect) — otherwise the very first product
      request fires with zero filters before this hydrates, so the page
@@ -357,29 +367,35 @@ export default function CategoryPageInner({
           let pairs: {
             front: Product; rear: Product; bundlePrice: number | undefined;
             frontSet2Price: number | undefined; rearSet2Price: number | undefined;
-          }[] = (j.staggered.products ?? []).map(
-            (front: Product, i: number) => ({
+          }[] = (j.staggered.products ?? [])
+            .map((front: Product, i: number) => ({
               front,
               rear: j.staggered?.rearProducts?.[i] as Product,
               bundlePrice: j.staggered?.bundlePrices?.[i],
               frontSet2Price: j.staggered?.frontSet2Prices?.[i],
               rearSet2Price: j.staggered?.rearSet2Prices?.[i],
-            }),
-          );
+            }))
+            .filter((p) => Boolean(p.front && p.rear));
+
           // Sort by the real bundle price (kleverTyreBundles) — the actual
           // "Set of 4" number shown on the card, not just the front tyre's
           // own unit price.
           if (sort === "high-to-low") pairs = [...pairs].sort((a, b) => (b.bundlePrice ?? 0) - (a.bundlePrice ?? 0));
           else if (sort === "low-to-high") pairs = [...pairs].sort((a, b) => (a.bundlePrice ?? 0) - (b.bundlePrice ?? 0));
-          setStaggered({
-            total: j.staggered.total ?? 0,
-            totalPages: j.staggered.totalPages ?? 1,
-            products: pairs.map((p) => p.front),
-            rearProducts: pairs.map((p) => p.rear),
-            bundlePrices: pairs.map((p) => p.bundlePrice),
-            frontSet2Prices: pairs.map((p) => p.frontSet2Price),
-            rearSet2Prices: pairs.map((p) => p.rearSet2Price),
-          });
+
+          if (pairs.length > 0) {
+            setStaggered({
+              total: pairs.length,
+              totalPages: Math.max(1, Math.ceil(pairs.length / PAGE_SIZE)),
+              products: pairs.map((p) => p.front),
+              rearProducts: pairs.map((p) => p.rear),
+              bundlePrices: pairs.map((p) => p.bundlePrice),
+              frontSet2Prices: pairs.map((p) => p.frontSet2Price),
+              rearSet2Prices: pairs.map((p) => p.rearSet2Price),
+            });
+          } else {
+            setStaggered(null);
+          }
         } else {
           setStaggered(null);
         }
@@ -539,6 +555,11 @@ export default function CategoryPageInner({
   // there's nothing to pair (see the /api/category-page staggered branch).
   const isStaggeredDisplay = !!staggered && staggered.total > 0;
   const displayTotalPages = isStaggeredDisplay ? staggered.totalPages : totalPages;
+  // The heading must count what's actually on screen: while showing paired
+  // front+rear cards, that's the real bundle count (staggered.total), not
+  // Magento's front-only total — a front tyre with no matching rear stock
+  // never becomes a card, so the two counts are legitimately different.
+  const displayTotal = isStaggeredDisplay ? staggered.total : total;
 
   // heroTitle (a manual per-slug override, src/config/routes.ts) wins when
   // configured; otherwise use Magento's real category_page_title verbatim
@@ -594,14 +615,25 @@ export default function CategoryPageInner({
       }
     : undefined;
 
-  const productsLabel = `${total.toLocaleString()} Tyres`;
+  const productsLabel = `${displayTotal.toLocaleString()} Tyres`;
 
+  const isTyresSection = basePath === "/tyres" || basePath.startsWith("/tyres");
+
+  // Never fall back to a raw url_key/slug here — displayTitle (heroTitle
+  // override, category.pageTitle, or category.name) is always a clean,
+  // human-readable label, so it's the safe last resort instead.
   const breadcrumbLabel =
     brandFilter ||
     category?.name ||
-    (basePath === "/tyres" || basePath.startsWith("/tyres") ? "Tyres" : undefined) ||
-    (urlKey ? urlKey.replace(/-/g, " ") : undefined) ||
+    (isTyresSection ? "Tyres" : undefined) ||
     displayTitle;
+
+  // A brand-filtered tyres page (e.g. /tyres/brand/kumho) is a real child of
+  // the Tyres catalog, so it gets "Tyres" as its one ancestor crumb — every
+  // other tyres page already shows "Tyres" as ITS OWN label above, not as an
+  // ancestor of something else.
+  const breadcrumbParents =
+    brandFilter && isTyresSection ? [{ label: "Tyres", href: "/tyres" }] : undefined;
 
   return (
     <div dir={dir}>
@@ -650,7 +682,7 @@ export default function CategoryPageInner({
               {/* ── Breadcrumb Inside Banner (Centered Connected Ribbon Style) ── */}
               {!hideBreadcrumbs && displayTitle && (
                 <div className="relative z-10 flex justify-center w-full mt-3 sm:mt-4 max-w-full px-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  <Breadcrumbs label={breadcrumbLabel} variant="banner" />
+                  <Breadcrumbs label={breadcrumbLabel} parents={breadcrumbParents} variant="banner" />
                 </div>
               )}
             </div>
@@ -662,7 +694,7 @@ export default function CategoryPageInner({
       {hideHeroBanner && !hideBreadcrumbs && displayTitle && (
         <div className="bg-white border-b border-gray-100">
           <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-center w-full">
-            <Breadcrumbs label={breadcrumbLabel} variant="bar" />
+            <Breadcrumbs label={breadcrumbLabel} parents={breadcrumbParents} variant="bar" />
           </div>
         </div>
       )}
@@ -672,7 +704,8 @@ export default function CategoryPageInner({
         <FilterPanel
           open={filterOpen}
           onClose={() => setFilterOpen(false)}
-          filters={filterGroups}
+          filters={isDesktop && desktopExtraFilters.length > 0 ? desktopExtraFilters : filterGroups}
+          allFilters={filterGroups}
           loading={filtersLoading}
           selected={selected}
           onChange={handleFilterChange}
@@ -691,6 +724,7 @@ export default function CategoryPageInner({
             selected={selected}
             filterGroups={filterGroups}
             onOpenMoreFilters={() => setFilterOpen(true)}
+            onExtraFiltersChange={setDesktopExtraFilters}
             onChange={handleFilterChange}
             onClearAll={clearAllFilters}
             brandFilter={brandFilter}
@@ -704,7 +738,7 @@ export default function CategoryPageInner({
           {/* ── Toolbar: Total Count + Sort & Filter Controls ─ */}
           <div className="flex items-center justify-between gap-2 mb-2 sm:mb-2.5 flex-wrap">
             <div className="text-xs sm:text-sm font-black text-gray-900">
-              {total > 0 && <span>{productsLabel}</span>}
+              {displayTotal > 0 && <span>{productsLabel}</span>}
             </div>
 
             <div className="flex items-center gap-2 ml-auto">
@@ -722,14 +756,39 @@ export default function CategoryPageInner({
               <p className="text-gray-500 font-medium">{apiError}</p>
             </div>
           ) : products.length === 0 && !loading ? (
-            <div className="text-center py-28">
-              <p className="text-4xl mb-4">🔍</p>
-              <p className="text-gray-400 text-lg font-medium">
-                {"No tyres found."}
+            <div className="text-center py-16 sm:py-20 px-4 bg-white rounded-2xl border border-gray-100 shadow-xs max-w-2xl mx-auto my-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-50 text-[#ed1c24] rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#ed1c24]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-gray-950 mb-2">
+                Could Not Match Any Products
+              </h3>
+              <p className="text-sm sm:text-base text-gray-500 max-w-md mx-auto mb-6">
+                We couldn&apos;t find any tyres matching your exact size or filter selections. Try searching with different dimensions or clearing your active filters.
               </p>
-              <p className="text-gray-400 text-sm mt-1">
-                {"Try a different search or check back later."}
-              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-[#ed1c24] text-white text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-black transition-colors shadow-sm cursor-pointer"
+                >
+                  Clear Filters &amp; View All
+                </button>
+                <Link
+                  href="/tyres"
+                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-gray-100 text-gray-800 text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors"
+                >
+                  Explore All Tyres
+                </Link>
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-full border border-gray-300 text-gray-700 text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-gray-50 transition-colors"
+                >
+                  Contact Experts
+                </Link>
+              </div>
             </div>
           ) : (
             <div className={`relative transition-opacity duration-200 ${loading ? "opacity-50 pointer-events-none" : "opacity-100"}`}>

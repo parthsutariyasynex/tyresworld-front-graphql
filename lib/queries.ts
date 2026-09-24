@@ -1732,49 +1732,72 @@ export const PICKUP_LOCATIONS_QUERY = /* GraphQL */ `
 `;
 
 // ── Homepage (Klever custom module) ────────────────────────────────
+// Most sections are now admin-authored CMS HTML blocks (KleverHomeSection:
+// identifier/title/enabled/html) rather than structured fields — confirmed
+// via live schema introspection. Only hero.banners and offers.banners
+// remain structured banner-carousel data.
 export const KLEVER_HOMEPAGE_QUERY = /* GraphQL */ `
   query KleverHomepage {
     kleverHomepage {
       hero {
-        heading_line1
-        heading_line2
-        image
-        image_mobile
-      }
-      offers {
-        title
-        subtitle
         banners {
           title
           image
+          mobile_image
+          url
+          new_tab
+        }
+        heading_line1
+        heading_line2
+      }
+      offers {
+        heading {
+          identifier
+          enabled
+          html
+        }
+        banners {
+          title
+          image
+          mobile_image
           url
         }
       }
       how_it_works {
+        identifier
         title
-        steps {
-          number
-          title
-          description
-        }
+        enabled
+        html
       }
       services {
-        title
-        subtitle
-        tiles {
-          title
-          description
-          image
-          url
-        }
+        identifier
+        enabled
+        html
       }
       top_reasons {
-        title
-        items
+        identifier
+        enabled
+        html
       }
       about {
-        title
-        paragraphs
+        identifier
+        enabled
+        html
+      }
+      brands {
+        identifier
+        enabled
+        html
+      }
+      blog {
+        identifier
+        enabled
+        html
+      }
+      testimonials {
+        identifier
+        enabled
+        html
       }
     }
   }
