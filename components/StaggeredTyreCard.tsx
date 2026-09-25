@@ -93,15 +93,6 @@ function TyreHalfColumn({
 
   return (
     <div className="flex flex-col flex-1 p-2.5 sm:p-3 bg-white group">
-      {/* ── 0. Axle Tag (FRONT / REAR) ── */}
-      <div className="flex items-center justify-between gap-1 mb-1">
-        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-slate-900 text-white leading-none">
-          {labelPrefix}
-        </span>
-        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
-          (2x Tyres)
-        </span>
-      </div>
 
       {/* ── 1. Top Header: Warranty Badge (Left) & Brand Logo (Right) ──
           Same sizing as TyreListingCard.tsx (plain listing page) — kept
@@ -246,7 +237,12 @@ export default function StaggeredTyreCard({
     rearPrice <= 0;
 
   async function handleAddSetOf4() {
-    if (adding || cartAdded || isOutOfStock) return;
+    if (adding || cartAdded) return;
+    if (isOutOfStock) {
+      setAddError("This product is currently out of stock.");
+      setTimeout(() => setAddError(null), 4000);
+      return;
+    }
     setAdding(true);
     setAddError(null);
     try {
@@ -295,9 +291,9 @@ export default function StaggeredTyreCard({
           <button
             type="button"
             onClick={handleAddSetOf4}
-            disabled={adding || isOutOfStock}
-            className={`btn-tocart py-3 px-2 text-[11px] sm:text-[12.5px] tracking-wider flex-none w-full h-auto rounded-none ${
-              cartAdded ? "is-added" : ""
+            disabled={adding}
+            className={`btn-slide-black !bg-black text-white py-3 px-2 text-[11px] sm:text-[12.5px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99] ${
+              cartAdded ? "!bg-emerald-600" : ""
             }`}
           >
             {adding ? (
@@ -323,7 +319,7 @@ export default function StaggeredTyreCard({
             target="_blank"
             rel="noopener noreferrer"
             title="Make Enquiry"
-            className="btn-enquiry py-3 px-2 text-[11px] sm:text-[12.5px] tracking-wider h-auto rounded-none"
+            className="btn-slide-red py-3 px-2 text-[11px] sm:text-[12.5px] font-black uppercase tracking-wider flex items-center justify-center text-center cursor-pointer active:scale-[0.99]"
           >
             <span>MAKE ENQUIRY</span>
           </a>

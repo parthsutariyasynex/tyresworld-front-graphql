@@ -358,16 +358,13 @@ export default function CategoryPageInner({
         if (requestUrlRef.current !== url) return;
         if (j.error && !j.products?.length) { setApiError(j.error); }
         if (j.category) setCategory(j.category);
-        const items: Product[] = j.products ?? [];
-        setProducts(items);
-        setTotal(j.total ?? 0);
-        setTotalPages(j.totalPages ?? 1);
 
+        let pairs: {
+          front: Product; rear: Product; bundlePrice: number | undefined;
+          frontSet2Price: number | undefined; rearSet2Price: number | undefined;
+        }[] = [];
         if (j.staggered) {
-          let pairs: {
-            front: Product; rear: Product; bundlePrice: number | undefined;
-            frontSet2Price: number | undefined; rearSet2Price: number | undefined;
-          }[] = (j.staggered.products ?? [])
+          pairs = (j.staggered.products ?? [])
             .map((front: Product, i: number) => ({
               front,
               rear: j.staggered?.rearProducts?.[i] as Product,
@@ -382,20 +379,30 @@ export default function CategoryPageInner({
           // own unit price.
           if (sort === "high-to-low") pairs = [...pairs].sort((a, b) => (b.bundlePrice ?? 0) - (a.bundlePrice ?? 0));
           else if (sort === "low-to-high") pairs = [...pairs].sort((a, b) => (a.bundlePrice ?? 0) - (b.bundlePrice ?? 0));
+        }
 
-          if (pairs.length > 0) {
-            setStaggered({
-              total: pairs.length,
-              totalPages: Math.max(1, Math.ceil(pairs.length / PAGE_SIZE)),
-              products: pairs.map((p) => p.front),
-              rearProducts: pairs.map((p) => p.rear),
-              bundlePrices: pairs.map((p) => p.bundlePrice),
-              frontSet2Prices: pairs.map((p) => p.frontSet2Price),
-              rearSet2Prices: pairs.map((p) => p.rearSet2Price),
-            });
-          } else {
-            setStaggered(null);
-          }
+        // A front+rear (staggered) request that Magento's own kleverTyreBundles
+        // has no real pair for must show the same "no products" state the
+        // live Magento site shows (confirmed live: it renders "We can't find
+        // products matching the selection", nothing else) — not silently
+        // fall back to a single unpaired front-size product, which would
+        // misrepresent a bundle search as having found something.
+        const staggeredRequestWithNoMatch = Boolean(j.staggered) && pairs.length === 0;
+        const items: Product[] = staggeredRequestWithNoMatch ? [] : (j.products ?? []);
+        setProducts(items);
+        setTotal(staggeredRequestWithNoMatch ? 0 : (j.total ?? 0));
+        setTotalPages(staggeredRequestWithNoMatch ? 1 : (j.totalPages ?? 1));
+
+        if (pairs.length > 0) {
+          setStaggered({
+            total: pairs.length,
+            totalPages: Math.max(1, Math.ceil(pairs.length / PAGE_SIZE)),
+            products: pairs.map((p) => p.front),
+            rearProducts: pairs.map((p) => p.rear),
+            bundlePrices: pairs.map((p) => p.bundlePrice),
+            frontSet2Prices: pairs.map((p) => p.frontSet2Price),
+            rearSet2Prices: pairs.map((p) => p.rearSet2Price),
+          });
         } else {
           setStaggered(null);
         }
