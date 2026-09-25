@@ -13,48 +13,6 @@
    Magento Admin, the copy has to live on this side.
 ───────────────────────────────────────────────────────────────── */
 
-/** Offer banners, mirroring the Mageplaza slider on the live page.
- *  Images are vendored under /public/offers so the storefront never
- *  depends on Magento's versioned media path. */
-export const OFFER_BANNERS = [
-  {
-    id: "matrax-3plus1",
-    image: "/offers/buy3-get1-free-matrax-tyres-uae.webp",
-    alt: "Buy 3 Matrax tyres and get 1 free in the UAE",
-    href: "/tyres/brand/matrax?offers=Buy+3+Get+1+Free",
-  },
-  {
-    id: "vredestein-3plus1",
-    image: "/offers/buy3-get1-free-vredestein-tyres-uae.webp",
-    alt: "Buy 3 Vredestein tyres and get 1 free in the UAE",
-    href: "/tyres/brand/vredestein?offers=Buy+3+Get+1+Free",
-  },
-  {
-    id: "free-wheel-alignment",
-    image: "/offers/free-wheel-alignment-offer-on-tyres-uae_1.webp",
-    alt: "Free wheel alignment on a purchase of 4 tyres",
-    href: "/tyres?offers=Free+Wheel+Alignment",
-  },
-  {
-    id: "installments",
-    image: "/offers/buy-tyres-pay-in-easy-installments-uae.webp",
-    alt: "Buy tyres online and pay in easy instalments",
-    href: "/tyres",
-  },
-  {
-    id: "2026-tyres",
-    image: "/offers/2026-tyres-online-uae_1.webp",
-    alt: "2026 tyres fresh from the factory",
-    href: "/tyres?year=2026",
-  },
-  {
-    id: "fit-near-you",
-    image: "/offers/shop-tyres-fit-near-you-uae_1.webp",
-    alt: "Shop tyres online and fit them near you across the UAE",
-    href: "/tyres",
-  },
-] as const;
-
 /** The prose block under the banners. */
 export const SEO_INTRO =
   "With so many tyre brands and price points out there, finding a good deal usually means comparing prices across several sites. TyresWorld does that work for you — bringing genuine tyres from major brands together with regular discounts, so you can compare, choose, and buy without the runaround.";

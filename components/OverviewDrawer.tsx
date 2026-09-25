@@ -103,6 +103,15 @@ interface MobileVanItem {
   lat?: number;
   lng?: number;
   distanceKm?: number;
+  distance?: number;
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+  shipping_amount?: string | null;
+  shipping_fee?: string;
+  installer_type?: string;
+  delivery_mode?: string;
+  openingHoursByDay?: string[][];
 }
 
 type PaymentMethodItem = {
@@ -260,15 +269,22 @@ export default function OverviewDrawer() {
   // 3 Delivery Modes: install_outlet | mobile_van | free_shipping
   const [deliveryMode, setDeliveryMode] = useState<"install_outlet" | "mobile_van" | "free_shipping">("install_outlet");
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
+  const [selectedVanId, setSelectedVanId] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [expandedStoreId, setExpandedStoreId] = useState<string | null>(null);
+  const [expandedVanId, setExpandedVanId] = useState<string | null>(null);
   const [spinningStoreId, setSpinningStoreId] = useState<string | null>(null);
   const [mobileAddress, setMobileAddress] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
+
+  const handleToggleVan = (vanId: string) => {
+    setSelectedVanId(vanId);
+    setExpandedVanId((prev) => (prev === vanId ? null : vanId));
+  };
 
   const handleToggleStore = (branchId: string) => {
     setSpinningStoreId(branchId);
@@ -623,18 +639,15 @@ export default function OverviewDrawer() {
 
   // Generate upcoming 10 dates for fitting selector (matching storelocator)
   const upcomingDates = useMemo(() => {
+    const monthAbbr = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     const dates = [];
     const today = new Date();
-    for (let i = 0; i < 10; i++) {
+    for (let i = 1; i <= 15; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       const val = d.toISOString().split("T")[0];
-      const lbl =
-        i === 0
-          ? `Today (${val})`
-          : i === 1
-          ? `Tomorrow (${val})`
-          : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+      const day = String(d.getDate()).padStart(2, "0");
+      const lbl = `${day}-${monthAbbr[d.getMonth()]}-${d.getFullYear()}`;
       dates.push({ value: val, label: lbl });
     }
     return dates;
@@ -836,9 +849,55 @@ export default function OverviewDrawer() {
     return branches.find((b) => b.id === selectedStoreId) || null;
   }, [branches, selectedStoreId]);
 
+  // Filter & calculate distances for mobile vans — same pattern as
+  // filteredBranches above, so "Mobile Van Service" actually shows the real
+  // fetched van locations (name, address, distance, shipping fee) instead
+  // of a bare address input with no connection to /api/store-locator data.
+  const filteredMobileVans = useMemo(() => {
+    const baseCoords = userCoords || { lat: 24.3682674, lng: 54.5124881 };
+    let result = mobileVans.map((van) => {
+      const distance =
+        van.lat && van.lng
+          ? calculateDistanceKm(baseCoords.lat, baseCoords.lng, van.lat, van.lng)
+          : 0;
+      return { ...van, distance };
+    });
+
+    if (selectedCity && selectedCity !== "All") {
+      result = result.filter(
+        (v) =>
+          v.city?.toLowerCase() === selectedCity.toLowerCase() ||
+          v.address?.toLowerCase().includes(selectedCity.toLowerCase())
+      );
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (v) =>
+          v.name?.toLowerCase().includes(q) ||
+          v.address?.toLowerCase().includes(q) ||
+          v.city?.toLowerCase().includes(q)
+      );
+    }
+
+    if (userCoords) {
+      result.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    }
+
+    return result;
+  }, [mobileVans, selectedCity, searchQuery, userCoords]);
+
+  // Selected mobile van details
+  const selectedVan = useMemo(() => {
+    if (!selectedVanId) return null;
+    return mobileVans.find((v) => v.id === selectedVanId) || null;
+  }, [mobileVans, selectedVanId]);
+
   // Save Fitting Selection to live cart & localStorage (Exact match to storelocator/page.tsx)
-  const handleSaveFitting = async (branchOverride?: StoreLocation) => {
+  const handleSaveFitting = async (branchOverride?: StoreLocation, vanOverride?: MobileVanItem) => {
     const storeToUse = branchOverride || selectedStore;
+    const vanToUse = vanOverride || selectedVan;
     if (!cartId) {
       setActiveSection("contact");
       return;
@@ -868,7 +927,7 @@ export default function OverviewDrawer() {
           }),
         });
       } else if (deliveryMode === "mobile_van") {
-        const van = mobileVans[0] || { id: "", name: "Mobile Fitting", address: mobileAddress || "", city: "" };
+        const van = vanToUse || { id: "", name: "Mobile Fitting", address: mobileAddress || "", city: "" };
         const installData = {
           type: "mobile_van",
           vanId: van.id,
@@ -921,7 +980,8 @@ export default function OverviewDrawer() {
       } else if (deliveryMode === "mobile_van") {
         setConfirmedFitting({
           type: "mobile_van",
-          address: mobileAddress || "Doorstep",
+          name: vanToUse?.name,
+          address: mobileAddress || vanToUse?.city || "Doorstep",
           date: selectedDate,
           time: selectedTimeSlot,
         });
@@ -1103,7 +1163,7 @@ export default function OverviewDrawer() {
         const methodData = await methodRes.json();
         if (methodData.error) throw new Error(String(methodData.error));
       } else if (deliveryMode === "mobile_van") {
-        const van = mobileVans[0] || { id: "", name: "Mobile Fitting", address: mobileAddress || "", city: "" };
+        const van = selectedVan || { id: "", name: "Mobile Fitting", address: mobileAddress || "", city: "" };
         const methodRes = await fetch("/api/cart", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -2174,75 +2234,200 @@ export default function OverviewDrawer() {
                     </div>
                   )}
 
-                  {/* ── Mode 2 Details: Mobile Van Service ── */}
+                  {/* ── Mode 2 Content: Mobile Van Service (real fetched van
+                      locations — name, address, distance, shipping fee —
+                      same parity as "Install at Outlet" above, instead of a
+                      bare address input disconnected from /api/store-locator
+                      data) ── */}
                   {deliveryMode === "mobile_van" && (
-                    <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-2xs space-y-3">
-                      <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
-                        <MobileVanBadgeIcon />
-                        <div>
-                          <h4 className="font-extrabold text-xs sm:text-sm text-gray-950 uppercase">
-                            Free Mobile Van Fitting Service
-                          </h4>
-                          <p className="text-[11px] text-gray-500">
-                            Our fully equipped mobile van fits tyres at your doorstep anywhere in UAE.
+                    <div className="space-y-3">
+                      {storesLoading ? (
+                        <div className="space-y-3">
+                          {[1, 2].map((i) => (
+                            <div key={i} className="h-[138px] bg-gray-200/70 rounded-xl animate-pulse" />
+                          ))}
+                        </div>
+                      ) : filteredMobileVans.length === 0 ? (
+                        <div className="bg-white border border-gray-200 rounded-xl p-6 text-center shadow-2xs">
+                          <p className="text-gray-500 text-xs">
+                            No Mobile Van service found for this search or city.
                           </p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-[10.5px] font-bold text-gray-700 uppercase mb-1">
-                          Doorstep Fitting Location in UAE *
-                        </label>
-                        <input
-                          type="text"
-                          value={mobileAddress}
-                          onChange={(e) => setMobileAddress(e.target.value)}
-                          placeholder="e.g. Villa 12, Al Barsha 2, Dubai"
-                          className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-semibold focus:outline-hidden focus:border-[#ed1c24]"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <div>
-                          <label className="block text-[10.5px] font-bold text-gray-700 uppercase mb-1">
-                            Fitting Date
-                          </label>
-                          <select
-                            value={selectedDate}
-                            onChange={(e) => setSelectedDate(e.target.value)}
-                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer"
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedCity("All");
+                              setSearchQuery("");
+                            }}
+                            className="mt-2 text-xs font-bold text-[#ed1c24] hover:underline cursor-pointer"
                           >
-                            <option value="">Select Date</option>
-                            {upcomingDates.map((d) => (
-                              <option key={d.value} value={d.value}>{d.label}</option>
-                            ))}
-                          </select>
+                            Reset Filters
+                          </button>
                         </div>
-                        <div>
-                          <label className="block text-[10.5px] font-bold text-gray-700 uppercase mb-1">
-                            Time Slot
-                          </label>
-                          <select
-                            value={selectedTimeSlot}
-                            onChange={(e) => setSelectedTimeSlot(e.target.value)}
-                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer"
-                          >
-                            <option value="">Select Time Slot</option>
-                            {timeSlots.map((ts) => (
-                              <option key={ts} value={ts}>{ts}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
+                      ) : (
+                        filteredMobileVans.map((van) => {
+                          const isExpanded = expandedVanId === van.id;
+                          const isReadyToBook = Boolean(mobileAddress.trim() && selectedDate && selectedTimeSlot);
+                          return (
+                            <div
+                              key={van.id}
+                              className={`bg-white rounded-xl border transition-colors duration-150 p-4 ${
+                                isExpanded ? "border-[#ed1c24] shadow-md" : "border-gray-200/90 hover:border-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start gap-3 min-w-0">
+                                  <MobileVanBadgeIcon />
+                                  <div className="min-w-0">
+                                    <h4 className="font-extrabold text-xs sm:text-sm text-gray-950 uppercase tracking-tight line-clamp-1">
+                                      {van.name}
+                                    </h4>
+                                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                      {van.city && (
+                                        <span className="text-[10.5px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md">
+                                          {van.city}
+                                        </span>
+                                      )}
+                                      {van.shipping_fee && (
+                                        <span className="text-[10.5px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
+                                          Fitting fee {van.shipping_fee}
+                                        </span>
+                                      )}
+                                      {van.distance !== undefined && (
+                                        <span className="text-[10.5px] font-bold text-gray-500 flex items-center gap-1">
+                                          <span className="w-1.5 h-1.5 rounded-full bg-[#ed1c24]" />
+                                          {van.distance.toFixed(2)} km
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                {isExpanded && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleVan(van.id)}
+                                    aria-label="Close"
+                                    className="btn-slide-red font-extrabold text-[10.5px] pl-3 pr-2 py-1.5 rounded-lg shrink-0 flex items-center gap-1.5 cursor-pointer"
+                                  >
+                                    <span>Selected</span>
+                                    <X size={12} />
+                                  </button>
+                                )}
+                              </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleSaveFitting()}
-                        className="btn-slide-black w-full font-extrabold text-xs uppercase tracking-wider py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                      >
-                        <span>CONFIRM & PROCEED TO CHECKOUT</span>
-                        <ArrowRight size={14} />
-                      </button>
+                              <div className="flex flex-wrap items-center justify-between gap-2.5 mt-3 pt-3 border-t border-gray-100">
+                                <div className="flex items-center gap-3 text-xs font-medium text-gray-600">
+                                  <p className="text-xs text-gray-500 flex items-start gap-1 leading-snug">
+                                    <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
+                                    <span>{van.address || van.city}</span>
+                                  </p>
+                                  {van.whatsapp && (
+                                    <a
+                                      href={`https://wa.me/${van.whatsapp.replace(/[^0-9]/g, "")}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="flex items-center gap-1 hover:text-emerald-600 transition-colors"
+                                    >
+                                      <WhatsAppIcon />
+                                      <span>WhatsApp</span>
+                                    </a>
+                                  )}
+                                  <a
+                                    href={`https://www.google.com/maps/dir/?api=1&destination=${van.lat || 24.36},${van.lng || 54.51}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center gap-1 hover:text-[#ed1c24] transition-colors"
+                                  >
+                                    <Navigation size={12} className="text-gray-400" />
+                                    <span>Directions</span>
+                                  </a>
+                                </div>
+                                {!isExpanded && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleVan(van.id)}
+                                    className="btn-slide-red font-bold text-[11px] px-3 py-1.5 rounded-lg shadow-xs flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <span>Select</span>
+                                  </button>
+                                )}
+                              </div>
+
+                              {isExpanded && (
+                                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div>
+                                      <label className="block text-[10.5px] font-bold text-gray-700 uppercase mb-1">
+                                        Preferred date
+                                      </label>
+                                      <select
+                                        value={selectedDate}
+                                        onChange={(e) => {
+                                          setSelectedDate(e.target.value);
+                                          setSelectedTimeSlot("");
+                                        }}
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer"
+                                      >
+                                        <option value="">Select a date</option>
+                                        {upcomingDates.map((d) => (
+                                          <option key={d.value} value={d.value}>{d.label}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="block text-[10.5px] font-bold text-gray-700 uppercase mb-1">
+                                        Preferred time
+                                      </label>
+                                      <select
+                                        value={selectedTimeSlot}
+                                        onChange={(e) => setSelectedTimeSlot(e.target.value)}
+                                        disabled={!selectedDate}
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer disabled:cursor-not-allowed disabled:text-gray-400"
+                                      >
+                                        <option value="">{selectedDate ? "Select Time Slot" : "Select a date first"}</option>
+                                        {selectedDate && timeSlots.map((ts) => (
+                                          <option key={ts} value={ts}>{ts}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-[10.5px] font-bold text-gray-700 uppercase mb-1">
+                                      Where should we come? *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={mobileAddress}
+                                      onChange={(e) => setMobileAddress(e.target.value)}
+                                      placeholder="Building, street, area"
+                                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-semibold focus:outline-hidden focus:border-[#ed1c24]"
+                                    />
+                                  </div>
+
+                                  <div className="flex items-center justify-between gap-3 pt-1">
+                                    <span className="text-[11px] text-gray-500">
+                                      {isReadyToBook ? "Ready to book!" : "Choose a date and time"}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      disabled={!isReadyToBook}
+                                      onClick={() => handleSaveFitting(undefined, van)}
+                                      className={`font-extrabold text-xs uppercase tracking-wider py-3 px-5 rounded-lg flex items-center justify-center gap-2 shrink-0 ${
+                                        isReadyToBook
+                                          ? "btn-slide-black cursor-pointer shadow-xs"
+                                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                      }`}
+                                    >
+                                      <span>CONFIRM & PROCEED TO CHECKOUT</span>
+                                      <ArrowRight size={14} />
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   )}
 

@@ -3,11 +3,29 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import JsonLd from "@/components/JsonLd";
-import LiveOfferTiles from "@/components/offers/LiveOfferTiles";
 import { getCmsPage } from "@/lib/services/cms.service";
+import { getHomepageData } from "@/lib/services/homepage.service";
 import { storeView } from "@/src/config/app-config";
-import { OFFER_BANNERS, SEO_INTRO, SEO_SECTIONS, FAQS } from "./content";
+import { SEO_INTRO, SEO_SECTIONS, FAQS } from "./content";
 import PageHeroBanner from "@/components/PageHeroBanner";
+
+/** Absolute Magento hrefs (e.g. https://www1.tyresworld.ae/tyres?...) need
+ *  to become relative, locale-prefixed paths for Next.js routing — same
+ *  normalization OffersSection.tsx applies on the homepage. */
+function toLocalHref(url: string | null | undefined, locale: string): string {
+  let href = url || "/tyres";
+  try {
+    if (href.startsWith("http://") || href.startsWith("https://")) {
+      href = new URL(href).pathname + new URL(href).search;
+    }
+  } catch {
+    /* relative already */
+  }
+  if (!href.startsWith(`/${locale}`)) {
+    href = `/${locale}${href.startsWith("/") ? "" : "/"}${href}`;
+  }
+  return href;
+}
 
 /**
  * Special Offers.
@@ -51,9 +69,13 @@ export default async function SpecialOffersPage({
   const { locale } = params;
   if (locale !== "en") notFound();
 
-  const page = await getCmsPage("special-offers", storeView(locale));
+  const [page, homepage] = await Promise.all([
+    getCmsPage("special-offers", storeView(locale)),
+    getHomepageData(storeView(locale)),
+  ]);
 
   const heading = page?.content_heading || page?.title || "Special Offers";
+  const banners = homepage?.offers?.banners ?? [];
 
   /* Marked up so the FAQ block is eligible for rich results, the same
      way the Magento page is. */
@@ -77,20 +99,29 @@ export default async function SpecialOffersPage({
       />
 
       <div className="so-container so-body">
-        {/* ── Offer banners ───────────────────────────────────── */}
-        <section aria-label="Offers">
-          <div className="so-banners">
-            {OFFER_BANNERS.map((b) => (
-              <Link key={b.id} href={`/${locale}${b.href}`} className="so-banner">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={b.image} alt={b.alt} width={559} height={391} loading="lazy" />
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Live offer aggregation from Magento ─────────────── */}
-        <LiveOfferTiles locale={locale} />
+        {/* ── Offer banners (live from Magento's kleverHomepage.offers.banners) ── */}
+        {banners.length > 0 && (
+          <section aria-label="Offers">
+            <div className="so-banners">
+              {banners.map((b, i) => (
+                <Link
+                  key={`${b.url}-${i}`}
+                  href={toLocalHref(b.url, locale)}
+                  className="so-banner"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={b.image || b.mobile_image || ""}
+                    alt={b.title || "Special offer"}
+                    width={559}
+                    height={391}
+                    loading="lazy"
+                  />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ── Prose ───────────────────────────────────────────── */}
         <section className="so-prose">

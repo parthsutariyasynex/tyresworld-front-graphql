@@ -228,8 +228,6 @@ export default function Header({ menu = [] }: { menu?: NavItem[] }) {
               {/* 3. Cart Dropdown wrapper (Third) */}
               <div
                 className="relative"
-                onMouseEnter={() => setCartDropdownOpen(true)}
-                onMouseLeave={() => setCartDropdownOpen(false)}
               >
                 <button
                   type="button"

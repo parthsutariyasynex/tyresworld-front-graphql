@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination } from "swiper/modules";
 import type { KleverHomeSection } from "@/lib/services/homepage.service";
 import { isBrokenCmsHtml } from "@/lib/services/homepage.service";
 
@@ -49,7 +47,7 @@ const DEFAULT_BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: "read-tyre-size-code",
-    title: "How to Read Your Tyre Size Code: A UAE Driver’s Visual Guide",
+    title: "How to Read Your Tyre Size Code: A UAE Driver's Visual Guide",
     date: "2026-06-11",
     excerpt:
       "All tyres have a sequence of letters and figures imprinted on their sidewalls. Most drivers are aware of these markings, but very few of them know what they entail. The code of tyre size is significan...",
@@ -70,12 +68,12 @@ export default function AutomotiveBlog({ locale = "en", initialBlogSection }: Au
 
   useEffect(() => {
     let active = true;
-    fetch(`/api/blog?pageSize=8&locale=${locale}`)
+    fetch(`/api/blog?pageSize=4&locale=${locale}`)
       .then((r) => r.json())
       .then((data) => {
         if (!active) return;
         const list = (data?.posts ?? []).filter((p: BlogPost) => p.slug && p.title);
-        setPosts(list.length > 0 ? list : DEFAULT_BLOG_POSTS);
+        setPosts(list.length > 0 ? list.slice(0, 4) : DEFAULT_BLOG_POSTS);
       })
       .catch((err) => {
         console.error("Failed to load blog posts", err);
@@ -86,12 +84,12 @@ export default function AutomotiveBlog({ locale = "en", initialBlogSection }: Au
     };
   }, [locale]);
 
-  const blogList = posts && posts.length > 0 ? posts : DEFAULT_BLOG_POSTS;
+  const blogList = (posts && posts.length > 0 ? posts : DEFAULT_BLOG_POSTS).slice(0, 4);
 
   return (
     <section className="section section-padding blogs py-14 lg:py-18 bg-white">
       <div className="container custom-width max-w-7xl mx-auto px-4 sm:px-6">
-        
+
         {/* Section Title — admin-authored CMS block when available */}
         {initialBlogSection?.enabled && initialBlogSection.html && !isBrokenCmsHtml(initialBlogSection.html) ? (
           <div
@@ -109,80 +107,55 @@ export default function AutomotiveBlog({ locale = "en", initialBlogSection }: Au
           </div>
         )}
 
-        {/* Blog Slider */}
-        <div className="blog-slider relative">
-          <Swiper
-            modules={[Autoplay, Pagination]}
-            autoplay={{
-              delay: 4500,
-              disableOnInteraction: false,
-              pauseOnMouseEnter: true,
-            }}
-            speed={600}
-            spaceBetween={20}
-            slidesPerView={1}
-            pagination={{
-              clickable: true,
-              bulletClass: "swiper-pagination-bullet !w-3 !h-3 !bg-gray-300 !opacity-100 transition-all cursor-pointer",
-              bulletActiveClass: "!bg-[#ed1c24] !w-6 !rounded-full",
-            }}
-            breakpoints={{
-              540: { slidesPerView: 2, spaceBetween: 16 },
-              768: { slidesPerView: 3, spaceBetween: 18 },
-              1024: { slidesPerView: 4, spaceBetween: 20 },
-            }}
-            className="pb-10"
-          >
-            {blogList.map((post) => {
-              const href = `/${locale}/blog/${post.slug}`;
+        {/* Blog Grid — same card design as before, no slider */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          {blogList.map((post) => {
+            const href = `/${locale}/blog/${post.slug}`;
 
-              return (
-                <SwiperSlide key={post.slug} className="h-auto">
-                  <div className="box flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 group">
+            return (
+              <div key={post.slug} className="box flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 group">
+                <Link
+                  href={href}
+                  className="image-wrap block relative w-full overflow-hidden bg-gray-100"
+                  style={{ height: "190px" }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </Link>
+
+                <div className="content flex flex-col flex-1 p-5">
+                  <div className="post-info mb-2">
+                    <span className="text-xs font-semibold text-gray-500">
+                      {formatDate(post.date, locale)}
+                    </span>
+                  </div>
+
+                  <h3 className="title text-sm sm:text-[15px] font-bold text-black leading-snug mb-2.5 line-clamp-2">
                     <Link
                       href={href}
-                      className="image-wrap block relative w-full aspect-[16/10] overflow-hidden bg-gray-100"
+                      className="text-black group-hover:text-[#ed1c24] transition-colors"
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={post.image}
-                        alt={post.title}
-                        width={600}
-                        height={375}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                      />
+                      {post.title}
                     </Link>
+                  </h3>
 
-                    <div className="content flex flex-col flex-1 p-5">
-                      <div className="post-info mb-2">
-                        <span className="text-xs font-semibold text-gray-500">
-                          {formatDate(post.date, locale)}
-                        </span>
-                      </div>
-
-                      <h3 className="title text-sm sm:text-[15px] font-bold text-black leading-snug mb-2.5 line-clamp-2">
-                        <Link
-                          href={href}
-                          className="text-black group-hover:text-[#ed1c24] transition-colors"
-                        >
-                          {post.title}
-                        </Link>
-                      </h3>
-
-                      <p className="text-xs sm:text-[13px] text-gray-600 leading-relaxed line-clamp-3 m-0">
-                        {post.excerpt}
-                      </p>
-                    </div>
-                  </div>
-                </SwiperSlide>
-              );
-            })}
-          </Swiper>
+                  <p className="text-xs sm:text-[13px] text-gray-600 leading-relaxed line-clamp-3 m-0">
+                    {post.excerpt}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* All Blog CTA Button */}
-        <div className="blog-more text-center mt-4">
+        <div className="blog-more text-center mt-8">
           <Link
             href={`/${locale}/blog`}
             className="button button-primary inline-flex items-center justify-center px-8 py-3 rounded-lg bg-[#ed1c24] text-white text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-[#c6181d] transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer"
